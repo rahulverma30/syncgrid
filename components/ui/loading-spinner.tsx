@@ -20,7 +20,13 @@ export function LoadingSpinner({ size = 'md', className }: LoadingSpinnerProps) 
   };
 
   return (
-    <div className={cn('inline-block animate-spin rounded-full border-2 border-border border-r-primary', sizeClasses[size], className)} />
+    <div
+      className={cn(
+        'inline-block animate-spin rounded-full border-2 border-border border-r-primary',
+        sizeClasses[size],
+        className
+      )}
+    />
   );
 }
 

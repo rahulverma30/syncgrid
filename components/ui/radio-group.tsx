@@ -44,12 +44,16 @@ export function RadioGroup({ options, value, onChange, label, error, className }
                 value === option.value ? 'border-primary bg-primary' : 'bg-background'
               )}
             >
-              {value === option.value && <div className="h-2 w-2 rounded-full bg-primary-foreground" />}
+              {value === option.value && (
+                <div className="h-2 w-2 rounded-full bg-primary-foreground" />
+              )}
             </div>
           </div>
           <div>
             <label className="text-sm font-medium cursor-pointer select-none">{option.label}</label>
-            {option.description && <p className="text-xs text-muted-foreground">{option.description}</p>}
+            {option.description && (
+              <p className="text-xs text-muted-foreground">{option.description}</p>
+            )}
           </div>
         </div>
       ))}

@@ -8,7 +8,7 @@
 import type { TextareaHTMLAttributes } from 'react';
 import { cn } from '@/lib/cn';
 
-interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
+export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: string;
   error?: string;
   hint?: string;

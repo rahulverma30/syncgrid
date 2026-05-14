@@ -5,6 +5,7 @@
 
 'use client';
 
+import React from 'react';
 import { ReactNode } from 'react';
 import { AlertCircle } from 'lucide-react';
 
@@ -49,5 +50,3 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
     return this.props.children;
   }
 }
-
-import React from 'react';

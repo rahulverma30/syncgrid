@@ -7,8 +7,9 @@ A premium, enterprise-grade SaaS foundation built with Next.js 16, React 19, and
 **Module 1: Foundation & Core Architecture** ✅
 
 This is ONLY the foundation and core architecture. Future modules include:
+
 - CRM Module
-- Projects Module  
+- Projects Module
 - Tasks Module
 - Finance Module
 - HR Module
@@ -17,12 +18,14 @@ This is ONLY the foundation and core architecture. Future modules include:
 ## 🏗️ Architecture Highlights
 
 ### Scalable & Modular
+
 - **Feature-based organization** for easy scaling
 - **Service layer** for API integration
 - **Schema validation** with Zod
 - **Type-safe** throughout the application
 
 ### Enterprise-Ready
+
 - Dark/Light theme system
 - Role-based navigation (ready for multi-role support)
 - Global state management with Zustand
@@ -30,6 +33,7 @@ This is ONLY the foundation and core architecture. Future modules include:
 - Performance optimized
 
 ### Developer Experience
+
 - Type-safe with TypeScript-ready paths
 - Centralized constants and config
 - Reusable component library
@@ -39,17 +43,20 @@ This is ONLY the foundation and core architecture. Future modules include:
 ## 📦 Tech Stack
 
 ### Core
+
 - **Next.js 16** - App Router with React 19
 - **React 19** - Latest React version
 - **JavaScript** - Clean, maintainable code
 - **Tailwind CSS 4** - Utility-first styling
 
 ### State Management & Forms
+
 - **Zustand** - Lightweight state management
 - **React Hook Form** - Efficient form handling
 - **Zod** - Runtime schema validation
 
 ### UI & Animation
+
 - **shadcn/ui patterns** - Accessible components
 - **Lucide React** - Icon library
 - **Framer Motion** - Smooth animations
@@ -57,6 +64,7 @@ This is ONLY the foundation and core architecture. Future modules include:
 - **next-themes** - Theme management
 
 ### Tooling
+
 - **ESLint** - Code quality
 - **Prettier** - Code formatting
 - **Husky** - Git hooks
@@ -176,6 +184,7 @@ Edit `tailwind.config.ts` to customize colors, spacing, and more.
 ## 📚 Documentation
 
 For detailed guides, see the `docs/` folder (to be created):
+
 - Architecture decisions
 - Component API reference
 - State management patterns

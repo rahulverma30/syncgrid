@@ -7,7 +7,7 @@ export const appConfig = {
   name: 'SyncGrid',
   description: 'Enterprise-Grade Agency ERP & Company Management System',
   version: '1.0.0',
-  
+
   features: {
     themeToggle: true,
     notifications: true,

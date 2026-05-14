@@ -13,6 +13,7 @@ import {
   Settings,
   Bell,
   LogOut,
+  ShieldCheck,
 } from 'lucide-react';
 
 export const SIDEBAR_GROUPS = [
@@ -26,6 +27,7 @@ export const SIDEBAR_GROUPS = [
         icon: LayoutDashboard,
         href: '/dashboard',
         badge: null,
+        roles: ['owner', 'admin', 'member'],
       },
     ],
   },
@@ -38,7 +40,9 @@ export const SIDEBAR_GROUPS = [
         label: 'CRM',
         icon: Users,
         href: '/dashboard/crm',
-        badge: null,
+        badge: 'Soon',
+        disabled: true,
+        roles: ['owner', 'admin', 'sales'],
         submenu: [
           { label: 'Contacts', href: '/dashboard/crm/contacts' },
           { label: 'Accounts', href: '/dashboard/crm/accounts' },
@@ -50,21 +54,27 @@ export const SIDEBAR_GROUPS = [
         label: 'Projects',
         icon: Briefcase,
         href: '/dashboard/projects',
-        badge: null,
+        badge: 'Soon',
+        disabled: true,
+        roles: ['owner', 'admin', 'member'],
       },
       {
         id: 'tasks',
         label: 'Tasks',
         icon: CheckSquare,
         href: '/dashboard/tasks',
-        badge: null,
+        badge: 'Soon',
+        disabled: true,
+        roles: ['owner', 'admin', 'member'],
       },
       {
         id: 'finance',
         label: 'Finance',
         icon: DollarSign,
         href: '/dashboard/finance',
-        badge: null,
+        badge: 'Soon',
+        disabled: true,
+        roles: ['owner', 'finance'],
         submenu: [
           { label: 'Invoices', href: '/dashboard/finance/invoices' },
           { label: 'Expenses', href: '/dashboard/finance/expenses' },
@@ -75,7 +85,9 @@ export const SIDEBAR_GROUPS = [
         label: 'HR',
         icon: Users,
         href: '/dashboard/hr',
-        badge: null,
+        badge: 'Soon',
+        disabled: true,
+        roles: ['owner', 'hr'],
         submenu: [
           { label: 'Employees', href: '/dashboard/hr/employees' },
           { label: 'Payroll', href: '/dashboard/hr/payroll' },
@@ -86,7 +98,9 @@ export const SIDEBAR_GROUPS = [
         label: 'Analytics',
         icon: TrendingUp,
         href: '/dashboard/analytics',
-        badge: null,
+        badge: 'Soon',
+        disabled: true,
+        roles: ['owner', 'admin'],
       },
     ],
   },
@@ -99,14 +113,27 @@ export const SIDEBAR_GROUPS = [
         label: 'Notifications',
         icon: Bell,
         href: '/dashboard/notifications',
-        badge: '3',
+        badge: 'Soon',
+        disabled: true,
+        roles: ['owner', 'admin', 'member'],
       },
       {
         id: 'settings',
         label: 'Settings',
         icon: Settings,
         href: '/dashboard/settings',
-        badge: null,
+        badge: 'Soon',
+        disabled: true,
+        roles: ['owner', 'admin'],
+      },
+      {
+        id: 'roles',
+        label: 'Roles & Access',
+        icon: ShieldCheck,
+        href: '/dashboard/roles',
+        badge: 'Soon',
+        disabled: true,
+        roles: ['owner', 'admin'],
       },
     ],
   },
@@ -127,6 +154,8 @@ export type NavItem = {
   icon: any;
   href: string;
   badge?: string | null;
+  disabled?: boolean;
+  roles?: string[];
   submenu?: Array<{ label: string; href: string }>;
 };
 

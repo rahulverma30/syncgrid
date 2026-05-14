@@ -23,6 +23,7 @@ npm install
 ```
 
 Or with your preferred package manager:
+
 ```bash
 yarn install
 pnpm install
@@ -49,6 +50,7 @@ The application will be available at [http://localhost:3000](http://localhost:30
 ## Project Commands
 
 ### Development
+
 ```bash
 npm run dev          # Start development server
 npm run build        # Build for production
@@ -86,6 +88,7 @@ npm run format      # Format code with Prettier
 ## Available Components
 
 ### Core UI Components
+
 - Button, Card, Badge, Input, Textarea
 - Select, Checkbox, RadioGroup
 - Modal, Drawer, AlertDialog
@@ -95,10 +98,12 @@ npm run format      # Format code with Prettier
 - ErrorBoundary
 
 ### Layout Components
+
 - DashboardLayout
 - AuthLayout
 
 ### Navigation Components
+
 - Header
 - Sidebar
 - CommandPalette
@@ -128,7 +133,7 @@ Edit `app/globals.css` to customize theme colors:
 
 ```css
 :root {
-  --primary: 0 0% 9.0%;
+  --primary: 0 0% 9%;
   --secondary: 0 0% 96.1%;
   /* ... more colors ... */
 }
@@ -169,18 +174,23 @@ export const SIDEBAR_GROUPS = [
 ## First Steps with the Project
 
 ### 1. Explore the Dashboard
+
 Visit [http://localhost:3000/dashboard](http://localhost:3000/dashboard) to see the main dashboard layout.
 
 ### 2. Try the Components
+
 Browse `components/ui/` to see available components and their patterns.
 
 ### 3. Check the Examples
+
 Look at `components/examples/` for working examples of forms, tables, and hooks.
 
 ### 4. Review the Structure
+
 Understand the folder structure for organizing your features.
 
 ### 5. Start Building
+
 Create your first feature following the established patterns.
 
 ## Deployment
@@ -202,15 +212,18 @@ npm start
 ## Troubleshooting
 
 ### Styles not loading
+
 - Clear `.next` folder: `rm -rf .next`
 - Restart development server
 
 ### Port 3000 in use
+
 ```bash
 npm run dev -- -p 3001
 ```
 
 ### Module not found errors
+
 - Check path aliases in `jsconfig.json`
 - Ensure imports use correct `@/` paths
 

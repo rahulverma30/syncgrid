@@ -16,10 +16,7 @@ class ApiService {
     this.baseUrl = baseUrl;
   }
 
-  private async request<T>(
-    endpoint: string,
-    options: ApiOptions = {}
-  ): Promise<T> {
+  private async request<T>(endpoint: string, options: ApiOptions = {}): Promise<T> {
     const { timeout = appConfig.api.timeout, ...fetchOptions } = options;
 
     const controller = new AbortController();

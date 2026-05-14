@@ -1,6 +1,6 @@
-import Link from "next/link";
-import { Card, CardDescription, CardHeader, CardTitle, CardContent } from "@/components/ui";
-import { Input, Button } from "@/components/ui";
+import Link from 'next/link';
+import { Card, CardDescription, CardHeader, CardTitle, CardContent } from '@/components/ui';
+import { Input, Button } from '@/components/ui';
 
 export default function LoginPage() {
   return (
@@ -11,11 +11,11 @@ export default function LoginPage() {
       </CardHeader>
       <CardContent className="space-y-4">
         <Input label="Email" type="email" placeholder="you@example.com" />
-        <Input label="Password" type="password" placeholder="••••••••" />
+        <Input label="Password" type="password" placeholder="Password" />
         <Button className="w-full">Sign in</Button>
         <p className="text-center text-sm text-muted-foreground">
-          Don&apos;t have an account?{" "}
-          <Link href="/auth/register" className="text-primary hover:underline">
+          Don&apos;t have an account?{' '}
+          <Link href="/register" className="text-primary hover:underline">
             Sign up
           </Link>
         </p>

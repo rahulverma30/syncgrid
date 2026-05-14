@@ -8,7 +8,7 @@
 import { ReactNode } from 'react';
 import { cn } from '@/lib/cn';
 
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
   hint?: string;
@@ -30,7 +30,9 @@ export function Input({
       {label && <label className="text-sm font-medium text-foreground">{label}</label>}
       <div className="relative flex items-center">
         {icon && iconPosition === 'left' && (
-          <div className="absolute left-3 flex items-center text-muted-foreground pointer-events-none">{icon}</div>
+          <div className="absolute left-3 flex items-center text-muted-foreground pointer-events-none">
+            {icon}
+          </div>
         )}
         <input
           className={cn(
@@ -43,7 +45,9 @@ export function Input({
           {...props}
         />
         {icon && iconPosition === 'right' && (
-          <div className="absolute right-3 flex items-center text-muted-foreground pointer-events-none">{icon}</div>
+          <div className="absolute right-3 flex items-center text-muted-foreground pointer-events-none">
+            {icon}
+          </div>
         )}
       </div>
       {error && <p className="text-xs text-destructive">{error}</p>}

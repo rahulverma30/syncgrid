@@ -15,11 +15,17 @@ export function Skeleton({ className }: SkeletonProps) {
   return <div className={cn('animate-pulse rounded-md bg-muted', className)} />;
 }
 
-export function SkeletonText() {
+interface SkeletonTextProps {
+  lines?: number;
+  className?: string;
+}
+
+export function SkeletonText({ lines = 2, className }: SkeletonTextProps) {
   return (
-    <div className="space-y-2">
-      <Skeleton className="h-4 w-full" />
-      <Skeleton className="h-4 w-5/6" />
+    <div className={cn('space-y-2', className)}>
+      {Array.from({ length: lines }).map((_, index) => (
+        <Skeleton key={index} className={cn('h-4', index === lines - 1 ? 'w-5/6' : 'w-full')} />
+      ))}
     </div>
   );
 }

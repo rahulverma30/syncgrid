@@ -58,9 +58,7 @@ export function ExampleHooksAndState() {
 
         <div>
           <h3 className="font-semibold mb-2">Notifications</h3>
-          <Button onClick={handleAddNotification}>
-            Add Notification
-          </Button>
+          <Button onClick={handleAddNotification}>Add Notification</Button>
         </div>
       </CardContent>
     </Card>

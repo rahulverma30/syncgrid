@@ -3,9 +3,11 @@ import type { Config } from 'tailwindcss';
 const config: Config = {
   darkMode: ['class'],
   content: [
-    './app/**/*.{js,jsx}',
-    './components/**/*.{js,jsx}',
-    './features/**/*.{js,jsx}',
+    './app/**/*.{js,jsx,ts,tsx}',
+    './components/**/*.{js,jsx,ts,tsx}',
+    './features/**/*.{js,jsx,ts,tsx}',
+    './providers/**/*.{js,jsx,ts,tsx}',
+    './constants/**/*.{js,jsx,ts,tsx}',
   ],
   theme: {
     extend: {
@@ -57,7 +59,7 @@ const config: Config = {
         '2xl': '0 25px 50px -12px rgb(0 0 0 / 0.25)',
       },
       fontFamily: {
-        sans: ['system-ui', 'san-serif'],
+        sans: ['Inter', 'system-ui', 'sans-serif'],
       },
       keyframes: {
         'accordion-down': {

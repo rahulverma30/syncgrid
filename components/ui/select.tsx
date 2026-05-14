@@ -24,7 +24,16 @@ interface SelectProps extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>
   value?: string;
 }
 
-export function Select({ label, error, hint, options, onChange, className, value, ...props }: SelectProps) {
+export function Select({
+  label,
+  error,
+  hint,
+  options,
+  onChange,
+  className,
+  value,
+  ...props
+}: SelectProps) {
   return (
     <div className="flex flex-col gap-1.5">
       {label && <label className="text-sm font-medium text-foreground">{label}</label>}

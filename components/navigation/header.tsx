@@ -6,26 +6,26 @@
 'use client';
 
 import { useTheme } from 'next-themes';
-import { Moon, Sun, Bell, Menu, X, Settings, LogOut } from 'lucide-react';
+import { Moon, Sun, Bell, Menu, X, Settings, LogOut, Search } from 'lucide-react';
 import { useMounted } from '@/hooks';
 import { APP_NAME } from '@/constants';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu } from '@/components/ui/dropdown-menu';
-import { useSidebarStore } from '@/store';
+import { useCommandPaletteStore, useSidebarStore } from '@/store';
 
 export function Header() {
   const isMounted = useMounted();
   const { theme, setTheme } = useTheme();
   const { isOpen, setIsOpen } = useSidebarStore();
+  const { togglePalette } = useCommandPaletteStore();
 
   if (!isMounted) return null;
 
   const isDark = theme === 'dark';
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-card">
-      <div className="flex items-center justify-between gap-4 px-4 py-4 sm:px-6">
-        {/* Left side - Logo and brand */}
+    <header className="fixed inset-x-0 top-0 z-40 h-16 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
+      <div className="flex h-full items-center justify-between gap-4 px-4 sm:px-6">
         <div className="flex items-center gap-2">
           <button
             onClick={() => setIsOpen(!isOpen)}
@@ -41,25 +41,34 @@ export function Header() {
           </div>
         </div>
 
-        {/* Right side - Actions */}
         <div className="flex items-center gap-2">
-          {/* Notifications */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={togglePalette}
+            className="hidden gap-2 text-muted-foreground md:inline-flex"
+          >
+            <Search className="h-4 w-4" />
+            <span>Search</span>
+            <kbd className="ml-4 rounded border border-border bg-muted px-1.5 py-0.5 text-[10px]">
+              Ctrl K
+            </kbd>
+          </Button>
+
           <Button variant="ghost" size="icon">
             <Bell className="h-5 w-5" />
           </Button>
 
-          {/* Theme toggle */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setTheme(isDark ? 'light' : 'dark')}
-          >
+          <Button variant="ghost" size="icon" onClick={() => setTheme(isDark ? 'light' : 'dark')}>
             {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
           </Button>
 
-          {/* User menu */}
           <DropdownMenu
-            trigger={<div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center cursor-pointer">R</div>}
+            trigger={
+              <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center cursor-pointer">
+                R
+              </div>
+            }
             items={[
               {
                 label: 'Settings',

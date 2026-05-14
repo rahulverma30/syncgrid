@@ -9,8 +9,18 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint . --fix",
-    "format": "prettier --write \"**/*.{js,jsx,json,md}\"",
+    "lint:check": "eslint .",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md,css}\"",
     "prepare": "husky install"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,css}": [
+      "prettier --write"
+    ]
   },
   "dependencies": {
     "next": "16.2.6",

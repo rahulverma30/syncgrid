@@ -6,13 +6,16 @@
 'use client';
 
 import { useEffect, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { useCommandPaletteStore } from '@/store';
 import { useDebounce } from '@/hooks';
 import { cn } from '@/lib/cn';
-import { Search, Command } from 'lucide-react';
+import { Home, LayoutDashboard, LogIn, Search, Command } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ROUTES } from '@/constants/routes';
 
 export function CommandPalette() {
+  const router = useRouter();
   const {
     isOpen,
     togglePalette,
@@ -21,10 +24,48 @@ export function CommandPalette() {
     selectedIndex,
     setSelectedIndex,
     actions,
+    registerActions,
     executeAction,
   } = useCommandPaletteStore();
 
+  const defaultActions = useMemo(
+    () => [
+      {
+        id: 'go-home',
+        title: 'Go to Home',
+        description: 'Open the public SyncGrid overview',
+        category: 'Navigation',
+        icon: <Home className="h-4 w-4" />,
+        shortcut: ['G', 'H'],
+        action: () => router.push(ROUTES.HOME),
+      },
+      {
+        id: 'go-dashboard',
+        title: 'Go to Dashboard',
+        description: 'Open the enterprise foundation workspace',
+        category: 'Navigation',
+        icon: <LayoutDashboard className="h-4 w-4" />,
+        shortcut: ['G', 'D'],
+        action: () => router.push(ROUTES.DASHBOARD.HOME),
+      },
+      {
+        id: 'go-login',
+        title: 'Go to Login',
+        description: 'Open the authentication screen',
+        category: 'Navigation',
+        icon: <LogIn className="h-4 w-4" />,
+        shortcut: ['G', 'L'],
+        action: () => router.push(ROUTES.AUTH.LOGIN),
+      },
+    ],
+    [router]
+  );
+
   const debouncedQuery = useDebounce(searchQuery, 200);
+
+  useEffect(() => {
+    registerActions(defaultActions);
+  }, [defaultActions, registerActions]);
 
   const filteredActions = useMemo(() => {
     if (!debouncedQuery) return actions;
@@ -34,6 +75,10 @@ export function CommandPalette() {
         action.description?.toLowerCase().includes(debouncedQuery.toLowerCase())
     );
   }, [debouncedQuery, actions]);
+
+  useEffect(() => {
+    setSelectedIndex(0);
+  }, [debouncedQuery, setSelectedIndex]);
 
   // Handle keyboard shortcuts
   useEffect(() => {
@@ -157,7 +202,9 @@ export function CommandPalette() {
                   <Command className="h-3 w-3 inline" />
                 </kbd>
                 <span>to select</span>
-                <kbd className="rounded-md border border-border bg-background px-2 py-1">↑↓</kbd>
+                <kbd className="rounded-md border border-border bg-background px-2 py-1">
+                  Up/Down
+                </kbd>
                 <span>to navigate</span>
               </div>
             </div>

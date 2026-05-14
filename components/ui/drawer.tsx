@@ -1,11 +1,12 @@
 /**
- * Drawer/Slide-out component
- * Reusable drawer that slides in from the side
+ * Drawer/slide-out component.
+ * Reusable animated drawer that can enter from either side.
  */
 
 'use client';
 
 import { ReactNode, useEffect } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
@@ -39,43 +40,49 @@ export function Drawer({
     };
   }, [isOpen]);
 
-  if (!isOpen) return null;
-
-  const sideClasses = {
-    left: 'left-0 animate-slide-in-right',
-    right: 'right-0 animate-slide-out-right',
-  };
+  const from = side === 'right' ? '100%' : '-100%';
 
   return (
-    <div className="fixed inset-0 z-50">
-      <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-fade-in"
-        onClick={onClose}
-      />
-      <div
-        className={cn(
-          'absolute top-0 h-full w-full max-w-sm rounded-l-lg bg-card shadow-xl overflow-y-auto',
-          sideClasses[side],
-          className
-        )}
-      >
-        <div className="flex items-start justify-between gap-4 border-b border-border p-6">
-          <div>
-            {title && <h2 className="text-lg font-semibold">{title}</h2>}
-            {description && <p className="text-sm text-muted-foreground">{description}</p>}
-          </div>
-          <button
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-50">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={onClose}
-            className="text-muted-foreground hover:text-foreground transition-colors"
+          />
+          <motion.div
+            initial={{ x: from }}
+            animate={{ x: 0 }}
+            exit={{ x: from }}
+            transition={{ duration: 0.22, ease: 'easeOut' }}
+            className={cn(
+              'absolute top-0 h-full w-full max-w-sm overflow-y-auto border-border bg-card shadow-xl',
+              side === 'right' ? 'right-0 border-l' : 'left-0 border-r',
+              className
+            )}
           >
-            <X className="h-5 w-5" />
-          </button>
+            <div className="flex items-start justify-between gap-4 border-b border-border p-6">
+              <div>
+                {title && <h2 className="text-lg font-semibold">{title}</h2>}
+                {description && <p className="text-sm text-muted-foreground">{description}</p>}
+              </div>
+              <button
+                onClick={onClose}
+                className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-6">{children}</div>
+
+            {footer && <div className="border-t border-border p-6">{footer}</div>}
+          </motion.div>
         </div>
-
-        <div className="p-6">{children}</div>
-
-        {footer && <div className="border-t border-border p-6">{footer}</div>}
-      </div>
-    </div>
+      )}
+    </AnimatePresence>
   );
 }

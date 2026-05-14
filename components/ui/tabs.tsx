@@ -52,9 +52,7 @@ export function Tabs({ tabs, defaultTab, onTabChange, className }: TabsProps) {
         ))}
       </div>
       <div className="mt-4">
-        {tabs.map((tab) => (
-          activeTab === tab.id && <div key={tab.id}>{tab.content}</div>
-        ))}
+        {tabs.map((tab) => activeTab === tab.id && <div key={tab.id}>{tab.content}</div>)}
       </div>
     </div>
   );

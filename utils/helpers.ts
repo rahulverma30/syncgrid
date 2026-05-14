@@ -33,7 +33,7 @@ export function throttle<T extends (...args: any[]) => any>(
 
 export function formatDate(date: Date | string, format: string = 'short'): string {
   const d = new Date(date);
-  
+
   if (format === 'short') {
     return d.toLocaleDateString('en-US', {
       month: 'short',
@@ -41,7 +41,7 @@ export function formatDate(date: Date | string, format: string = 'short'): strin
       year: 'numeric',
     });
   }
-  
+
   if (format === 'long') {
     return d.toLocaleDateString('en-US', {
       weekday: 'long',
@@ -50,7 +50,7 @@ export function formatDate(date: Date | string, format: string = 'short'): strin
       year: 'numeric',
     });
   }
-  
+
   return d.toISOString();
 }
 

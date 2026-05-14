@@ -12,6 +12,7 @@
 ## ✨ Features
 
 ### 🏗️ Architecture
+
 - ✅ **Scalable folder structure** organized by features
 - ✅ **Type-safe** throughout with TypeScript paths
 - ✅ **Global state management** with Zustand
@@ -21,6 +22,7 @@
 - ✅ **Performance optimized** with code splitting
 
 ### 🎨 UI & Design
+
 - ✅ **20+ reusable components** (buttons, cards, modals, tables, etc.)
 - ✅ **Dark/Light theme** with persistence
 - ✅ **Responsive design** (mobile, tablet, desktop)
@@ -29,6 +31,7 @@
 - ✅ **Accessibility support** with ARIA labels
 
 ### 🧭 Navigation & UX
+
 - ✅ **Collapsible sidebar** with animations
 - ✅ **Header/navbar** with theme toggle
 - ✅ **Command palette** (CMD+K)
@@ -37,6 +40,7 @@
 - ✅ **Modal system** for dialogs
 
 ### 💡 Developer Experience
+
 - ✅ **Custom hooks** collection
 - ✅ **Prettier formatting**
 - ✅ **ESLint configuration**
@@ -47,11 +51,13 @@
 ## 🚀 Quick Start
 
 ### Installation
+
 ```bash
 npm install
 ```
 
 ### Development
+
 ```bash
 npm run dev
 ```
@@ -59,6 +65,7 @@ npm run dev
 Open [http://localhost:3000](http://localhost:3000)
 
 ### Build & Deploy
+
 ```bash
 npm run build
 npm start
@@ -66,17 +73,17 @@ npm start
 
 ## 📦 Tech Stack
 
-| Category | Technology |
-|----------|-----------|
-| **Framework** | Next.js 16, React 19 |
-| **Styling** | Tailwind CSS 4, Framer Motion |
-| **State** | Zustand |
-| **Forms** | React Hook Form, Zod |
-| **UI** | shadcn/ui patterns, Lucide Icons |
-| **Notifications** | Sonner |
-| **Tables** | TanStack React Table |
-| **Theming** | next-themes |
-| **Tooling** | ESLint, Prettier, Husky |
+| Category          | Technology                       |
+| ----------------- | -------------------------------- |
+| **Framework**     | Next.js 16, React 19             |
+| **Styling**       | Tailwind CSS 4, Framer Motion    |
+| **State**         | Zustand                          |
+| **Forms**         | React Hook Form, Zod             |
+| **UI**            | shadcn/ui patterns, Lucide Icons |
+| **Notifications** | Sonner                           |
+| **Tables**        | TanStack React Table             |
+| **Theming**       | next-themes                      |
+| **Tooling**       | ESLint, Prettier, Husky          |
 
 ## 📁 Project Structure
 
@@ -84,7 +91,7 @@ npm start
 syncgrid/
 ├── app/                    # Next.js App Router
 │   ├── (auth)/            # Auth routes
-│   ├── (dashboard)/       # Dashboard routes  
+│   ├── (dashboard)/       # Dashboard routes
 │   ├── api/               # API routes
 │   ├── layout.js          # Root layout
 │   ├── page.js            # Home page
@@ -122,6 +129,7 @@ syncgrid/
 ## 🎯 Available Components
 
 ### Forms & Inputs
+
 ```jsx
 <Input label="Name" placeholder="..." />
 <Textarea label="Message" />
@@ -131,15 +139,19 @@ syncgrid/
 ```
 
 ### Containers
+
 ```jsx
 <Card>
-  <CardHeader><CardTitle>Title</CardTitle></CardHeader>
+  <CardHeader>
+    <CardTitle>Title</CardTitle>
+  </CardHeader>
   <CardContent>Content</CardContent>
   <CardFooter>Footer</CardFooter>
 </Card>
 ```
 
 ### Tables & Lists
+
 ```jsx
 <DataTable columns={columns} data={data} />
 <Tabs tabs={tabItems} />
@@ -147,6 +159,7 @@ syncgrid/
 ```
 
 ### Dialogs & Overlays
+
 ```jsx
 <Modal isOpen={open} onClose={close}>Content</Modal>
 <Drawer isOpen={open} onClose={close}>Content</Drawer>
@@ -154,6 +167,7 @@ syncgrid/
 ```
 
 ### Utilities
+
 ```jsx
 <Button variant="primary">Button</Button>
 <Badge variant="success">Success</Badge>
@@ -165,26 +179,32 @@ syncgrid/
 ## 🎨 Customization
 
 ### Colors
+
 Edit `app/globals.css`:
+
 ```css
 :root {
-  --primary: 0 0% 9.0%;
+  --primary: 0 0% 9%;
   --secondary: 0 0% 96.1%;
 }
 ```
 
 ### Tailwind
+
 Edit `tailwind.config.ts` to extend theme
 
 ### Routes
+
 Edit `constants/navigation.ts` for sidebar
 
 ### API
+
 Update `config/app.ts` for API configuration
 
 ## 📝 Usage Examples
 
 ### Form with Validation
+
 ```jsx
 'use client';
 import { useForm } from 'react-hook-form';
@@ -192,7 +212,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { contactSchema } from '@/schemas';
 
 export function ContactForm() {
-  const { register, handleSubmit, formState: { errors } } = useForm({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
     resolver: zodResolver(contactSchema),
   });
 
@@ -206,6 +230,7 @@ export function ContactForm() {
 ```
 
 ### Using Hooks
+
 ```jsx
 'use client';
 import { useDebounce, useMediaQuery } from '@/hooks';
@@ -220,6 +245,7 @@ export function SearchComponent() {
 ```
 
 ### State Management
+
 ```jsx
 'use client';
 import { useSidebarStore } from '@/store';
@@ -233,6 +259,7 @@ export function Navbar() {
 ## 🔄 Future Modules
 
 This is the foundation. Future modules:
+
 - 🔜 **CRM Module** - Contact & deal management
 - 🔜 **Projects Module** - Project tracking
 - 🔜 **Tasks Module** - Task management
@@ -243,6 +270,7 @@ This is the foundation. Future modules:
 ## ✅ What's Included
 
 ### Architecture (14/14)
+
 - ✅ Folder structure
 - ✅ Path aliases
 - ✅ Configuration system
@@ -259,6 +287,7 @@ This is the foundation. Future modules:
 - ✅ Best practices
 
 ### Components (21/21)
+
 - ✅ Button (5 variants)
 - ✅ Card (header, title, content, footer)
 - ✅ Input with validation
@@ -282,6 +311,7 @@ This is the foundation. Future modules:
 - ✅ Command Palette
 
 ### Features (8/8)
+
 - ✅ Dark/Light theme
 - ✅ Responsive design
 - ✅ Sidebar navigation
@@ -292,6 +322,7 @@ This is the foundation. Future modules:
 - ✅ Toast notifications
 
 ### Stores (6/6)
+
 - ✅ Sidebar store
 - ✅ Theme store
 - ✅ Modal store
@@ -300,6 +331,7 @@ This is the foundation. Future modules:
 - ✅ UI store
 
 ### Hooks (5/5)
+
 - ✅ useMounted
 - ✅ useMediaQuery
 - ✅ useDebounce
@@ -344,6 +376,7 @@ This is a foundation template. Extend it for your specific needs while maintaini
 ## 📞 Support
 
 For questions or issues:
+
 1. Check the documentation
 2. Review example implementations
 3. Examine the component source code
@@ -360,4 +393,4 @@ For questions or issues:
 
 **Built with ❤️ for enterprise SaaS applications**
 
-*Last Updated: 2024 | Next.js 16 | React 19*
+_Last Updated: 2024 | Next.js 16 | React 19_

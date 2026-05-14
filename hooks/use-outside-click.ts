@@ -7,10 +7,7 @@
 
 import { useEffect, useRef } from 'react';
 
-export function useOutsideClick(
-  callback: () => void,
-  exceptions: (HTMLElement | null)[] = []
-) {
+export function useOutsideClick(callback: () => void, exceptions: (HTMLElement | null)[] = []) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

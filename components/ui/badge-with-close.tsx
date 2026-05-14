@@ -15,7 +15,12 @@ interface BadgeWithCloseProps {
   className?: string;
 }
 
-export function BadgeWithClose({ label, onClose, variant = 'default', className }: BadgeWithCloseProps) {
+export function BadgeWithClose({
+  label,
+  onClose,
+  variant = 'default',
+  className,
+}: BadgeWithCloseProps) {
   return (
     <div
       className={cn(

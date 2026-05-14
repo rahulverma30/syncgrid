@@ -1,10 +1,10 @@
-import "./globals.css";
-import { RootProvider } from "@/providers";
-import { CommandPalette } from "@/components/command-palette";
+import './globals.css';
+import { RootProvider } from '@/providers';
+import { CommandPalette } from '@/components/command-palette';
 
 export const metadata = {
-  title: "SyncGrid - Enterprise ERP System",
-  description: "Enterprise-Grade Agency ERP & Company Management System",
+  title: 'SyncGrid - Enterprise ERP System',
+  description: 'Enterprise-Grade Agency ERP & Company Management System',
 };
 
 export default function RootLayout({ children }) {
@@ -19,4 +19,3 @@ export default function RootLayout({ children }) {
     </html>
   );
 }
- 
