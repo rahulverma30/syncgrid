@@ -1,0 +1,188 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 3.6%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 3.6%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 3.6%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
+    --accent: 0 0% 9.0%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 0 0% 3.6%;
+    --radius: 0.5rem;
+    --primary: 0 0% 9.0%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 96.1%;
+    --secondary-foreground: 0 0% 9.0%;
+  }
+
+  .dark {
+    --background: 0 0% 3.6%;
+    --foreground: 0 0% 98.2%;
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 98.2%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 98.2%;
+    --muted: 0 0% 20%;
+    --muted-foreground: 0 0% 60%;
+    --accent: 0 0% 98.2%;
+    --accent-foreground: 0 0% 9.0%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 9.0%;
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 0 0% 83.1%;
+    --primary: 0 0% 98.2%;
+    --primary-foreground: 0 0% 9.0%;
+    --secondary: 0 0% 20%;
+    --secondary-foreground: 0 0% 98.2%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+  /* Typography */
+  .text-h1 {
+    @apply text-4xl font-bold tracking-tight;
+  }
+
+  .text-h2 {
+    @apply text-3xl font-bold tracking-tight;
+  }
+
+  .text-h3 {
+    @apply text-2xl font-semibold tracking-tight;
+  }
+
+  .text-h4 {
+    @apply text-xl font-semibold;
+  }
+
+  /* Cards and Containers */
+  .card {
+    @apply rounded-lg border border-border bg-card p-6 text-card-foreground shadow-sm;
+  }
+
+  .card-hover {
+    @apply card transition-all duration-200 hover:shadow-md hover:border-border/80;
+  }
+
+  .card-interactive {
+    @apply card-hover cursor-pointer;
+  }
+
+  /* Buttons */
+  .btn {
+    @apply inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply btn bg-primary text-primary-foreground hover:bg-primary/90;
+  }
+
+  .btn-secondary {
+    @apply btn bg-secondary text-secondary-foreground hover:bg-secondary/80;
+  }
+
+  .btn-ghost {
+    @apply btn hover:bg-accent hover:text-accent-foreground;
+  }
+
+  .btn-destructive {
+    @apply btn bg-destructive text-destructive-foreground hover:bg-destructive/90;
+  }
+
+  /* Inputs */
+  .input {
+    @apply flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  /* Badge */
+  .badge {
+    @apply inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors;
+  }
+
+  .badge-primary {
+    @apply badge border-transparent bg-primary text-primary-foreground;
+  }
+
+  .badge-secondary {
+    @apply badge border-transparent bg-secondary text-secondary-foreground;
+  }
+
+  .badge-outline {
+    @apply badge border-border;
+  }
+
+  /* Loading */
+  .loading {
+    @apply inline-block h-4 w-4 animate-spin rounded-full border-2 border-border border-r-primary;
+  }
+
+  /* Page Container */
+  .page-container {
+    @apply mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8;
+  }
+
+  /* Fade animations */
+  .fade-in {
+    @apply animate-fade-in;
+  }
+
+  .fade-out {
+    @apply animate-fade-out;
+  }
+
+  /* Glass effect */
+  .glass {
+    @apply rounded-lg border border-white/20 bg-white/30 backdrop-blur-md dark:bg-black/30;
+  }
+
+  /* Section separator */
+  .section {
+    @apply border-b border-border py-8 last:border-0;
+  }
+}
+
+/* Utilities for specific components */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Smooth color transitions */
+:root {
+  color-scheme: light;
+}
+
+.dark {
+  color-scheme: dark;
+}
+

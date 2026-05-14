@@ -1,0 +1,40 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Start Development Server",
+			"type": "shell",
+			"command": "npm run dev"
+		},
+		{
+			"label": "Kill existing process and start dev server",
+			"type": "shell",
+			"command": "taskkill /PID 18256 /F && npm run dev"
+		},
+		{
+			"label": "Kill existing Next.js process",
+			"type": "shell",
+			"command": "taskkill /PID 18256 /F"
+		},
+		{
+			"label": "Start Development Server",
+			"type": "shell",
+			"command": "npm run dev"
+		},
+		{
+			"label": "Check Tailwind CSS version",
+			"type": "shell",
+			"command": "npm list tailwindcss"
+		},
+		{
+			"label": "Install updated dependencies",
+			"type": "shell",
+			"command": "npm install"
+		},
+		{
+			"label": "Start Development Server",
+			"type": "shell",
+			"command": "npm run dev"
+		}
+	]
+}
