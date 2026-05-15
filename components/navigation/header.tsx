@@ -6,6 +6,7 @@
 'use client';
 
 import { useTheme } from 'next-themes';
+import { signOut, useSession } from 'next-auth/react';
 import { Moon, Sun, Bell, Menu, X, Settings, LogOut, Search } from 'lucide-react';
 import { useMounted } from '@/hooks';
 import { APP_NAME } from '@/constants';
@@ -16,6 +17,7 @@ import { useCommandPaletteStore, useSidebarStore } from '@/store';
 export function Header() {
   const isMounted = useMounted();
   const { theme, setTheme } = useTheme();
+  const { data: session } = useSession();
   const { isOpen, setIsOpen } = useSidebarStore();
   const { togglePalette } = useCommandPaletteStore();
 
@@ -65,8 +67,8 @@ export function Header() {
 
           <DropdownMenu
             trigger={
-              <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center cursor-pointer">
-                R
+              <div className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-muted">
+                {session?.user?.name?.charAt(0) || 'U'}
               </div>
             }
             items={[
@@ -78,7 +80,7 @@ export function Header() {
               {
                 label: 'Logout',
                 icon: <LogOut className="h-4 w-4" />,
-                onClick: () => console.log('Logout clicked'),
+                onClick: () => signOut({ callbackUrl: '/login' }),
                 destructive: true,
               },
             ]}

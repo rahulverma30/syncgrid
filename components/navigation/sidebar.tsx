@@ -8,14 +8,17 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, PanelLeftClose, PanelLeftOpen, X } from 'lucide-react';
 import { useSidebarStore } from '@/store';
 import { SIDEBAR_GROUPS } from '@/constants/navigation';
+import { filterNavigationByUser } from '@/lib/auth/navigation';
 import { cn } from '@/lib/cn';
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { data: session } = useSession();
   const { isCollapsed, isOpen, toggleCollapse, setIsOpen } = useSidebarStore();
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
     new Set([SIDEBAR_GROUPS[0].id])
@@ -36,10 +39,11 @@ export function Sidebar() {
   };
 
   const isItemActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
+  const navigationGroups = filterNavigationByUser(SIDEBAR_GROUPS, session?.user);
 
   const renderNav = (mobile = false) => (
     <nav className="flex-1 space-y-6 overflow-y-auto p-4">
-      {SIDEBAR_GROUPS.map((group) => (
+      {navigationGroups.map((group) => (
         <div key={group.id}>
           <button
             onClick={() => toggleGroupExpanded(group.id)}

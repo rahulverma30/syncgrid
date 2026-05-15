@@ -10,6 +10,7 @@ import { ThemeProvider } from './theme-provider';
 import { ToastProvider } from './toast-provider';
 import { ModalProvider } from './modal-provider';
 import { QueryProvider } from './query-provider';
+import { SessionProvider } from './session-provider';
 import { TooltipProvider } from './tooltip-provider';
 
 interface RootProviderProps {
@@ -19,13 +20,15 @@ interface RootProviderProps {
 export function RootProvider({ children }: RootProviderProps) {
   return (
     <ThemeProvider>
-      <QueryProvider>
-        <TooltipProvider>
-          <ModalProvider>
-            <ToastProvider>{children}</ToastProvider>
-          </ModalProvider>
-        </TooltipProvider>
-      </QueryProvider>
+      <SessionProvider>
+        <QueryProvider>
+          <TooltipProvider>
+            <ModalProvider>
+              <ToastProvider>{children}</ToastProvider>
+            </ModalProvider>
+          </TooltipProvider>
+        </QueryProvider>
+      </SessionProvider>
     </ThemeProvider>
   );
 }

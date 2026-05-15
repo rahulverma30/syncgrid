@@ -27,7 +27,16 @@ export const SIDEBAR_GROUPS = [
         icon: LayoutDashboard,
         href: '/dashboard',
         badge: null,
-        roles: ['owner', 'admin', 'member'],
+        roles: [
+          'Super Admin',
+          'Admin',
+          'Project Manager',
+          'Team Lead',
+          'Developer',
+          'HR',
+          'Finance',
+        ],
+        permission: { resource: 'dashboard', action: 'read' },
       },
     ],
   },
@@ -42,7 +51,7 @@ export const SIDEBAR_GROUPS = [
         href: '/dashboard/crm',
         badge: 'Soon',
         disabled: true,
-        roles: ['owner', 'admin', 'sales'],
+        roles: ['Super Admin', 'Admin'],
         submenu: [
           { label: 'Contacts', href: '/dashboard/crm/contacts' },
           { label: 'Accounts', href: '/dashboard/crm/accounts' },
@@ -56,7 +65,7 @@ export const SIDEBAR_GROUPS = [
         href: '/dashboard/projects',
         badge: 'Soon',
         disabled: true,
-        roles: ['owner', 'admin', 'member'],
+        roles: ['Super Admin', 'Admin', 'Project Manager'],
       },
       {
         id: 'tasks',
@@ -65,7 +74,7 @@ export const SIDEBAR_GROUPS = [
         href: '/dashboard/tasks',
         badge: 'Soon',
         disabled: true,
-        roles: ['owner', 'admin', 'member'],
+        roles: ['Super Admin', 'Admin', 'Project Manager', 'Team Lead', 'Developer'],
       },
       {
         id: 'finance',
@@ -74,7 +83,7 @@ export const SIDEBAR_GROUPS = [
         href: '/dashboard/finance',
         badge: 'Soon',
         disabled: true,
-        roles: ['owner', 'finance'],
+        roles: ['Super Admin', 'Admin', 'Finance'],
         submenu: [
           { label: 'Invoices', href: '/dashboard/finance/invoices' },
           { label: 'Expenses', href: '/dashboard/finance/expenses' },
@@ -87,7 +96,7 @@ export const SIDEBAR_GROUPS = [
         href: '/dashboard/hr',
         badge: 'Soon',
         disabled: true,
-        roles: ['owner', 'hr'],
+        roles: ['Super Admin', 'Admin', 'HR'],
         submenu: [
           { label: 'Employees', href: '/dashboard/hr/employees' },
           { label: 'Payroll', href: '/dashboard/hr/payroll' },
@@ -100,7 +109,7 @@ export const SIDEBAR_GROUPS = [
         href: '/dashboard/analytics',
         badge: 'Soon',
         disabled: true,
-        roles: ['owner', 'admin'],
+        roles: ['Super Admin', 'Admin'],
       },
     ],
   },
@@ -115,7 +124,8 @@ export const SIDEBAR_GROUPS = [
         href: '/dashboard/notifications',
         badge: 'Soon',
         disabled: true,
-        roles: ['owner', 'admin', 'member'],
+        roles: ['Super Admin', 'Admin'],
+        permission: { resource: 'dashboard', action: 'read' },
       },
       {
         id: 'settings',
@@ -124,7 +134,8 @@ export const SIDEBAR_GROUPS = [
         href: '/dashboard/settings',
         badge: 'Soon',
         disabled: true,
-        roles: ['owner', 'admin'],
+        roles: ['Super Admin', 'Admin'],
+        permission: { resource: 'settings', action: 'read' },
       },
       {
         id: 'roles',
@@ -133,7 +144,8 @@ export const SIDEBAR_GROUPS = [
         href: '/dashboard/roles',
         badge: 'Soon',
         disabled: true,
-        roles: ['owner', 'admin'],
+        roles: ['Super Admin', 'Admin'],
+        permission: { resource: 'roles', action: 'read' },
       },
     ],
   },
@@ -156,6 +168,10 @@ export type NavItem = {
   badge?: string | null;
   disabled?: boolean;
   roles?: string[];
+  permission?: {
+    resource: string;
+    action: string;
+  };
   submenu?: Array<{ label: string; href: string }>;
 };
 
