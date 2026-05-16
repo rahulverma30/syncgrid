@@ -2,7 +2,7 @@
 
 import { Suspense, useState } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -16,6 +16,7 @@ import {
 } from '@/components/ui';
 
 function ResetPasswordForm() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -54,7 +55,11 @@ function ResetPasswordForm() {
     }
 
     toast.success('Password reset successfully!');
-    setMessage('Password reset successfully. You can sign in now.');
+    setMessage('Password reset successfully. Redirecting to login in 5 seconds...');
+
+    setTimeout(() => {
+      router.push('/login');
+    }, 5000);
   }
 
   return (
