@@ -9,6 +9,7 @@ import { ReactNode, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { useLockBodyScroll } from '@/hooks';
 
 interface DrawerProps {
   isOpen: boolean;
@@ -31,14 +32,7 @@ export function Drawer({
   side = 'right',
   className,
 }: DrawerProps) {
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [isOpen]);
+  useLockBodyScroll(isOpen);
 
   const from = side === 'right' ? '100%' : '-100%';
 

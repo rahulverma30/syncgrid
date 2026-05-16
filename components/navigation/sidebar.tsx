@@ -12,6 +12,7 @@ import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, PanelLeftClose, PanelLeftOpen, X } from 'lucide-react';
 import { useSidebarStore } from '@/store';
+import { useLockBodyScroll } from '@/hooks';
 import { SIDEBAR_GROUPS } from '@/constants/navigation';
 import { filterNavigationByUser } from '@/lib/auth/navigation';
 import { cn } from '@/lib/cn';
@@ -20,6 +21,9 @@ export function Sidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
   const { isCollapsed, isOpen, toggleCollapse, setIsOpen } = useSidebarStore();
+
+  useLockBodyScroll(isOpen);
+
   const [expandedGroups, setExpandedGroups] = useState<Set<unknown>>(
     new Set([SIDEBAR_GROUPS[0].id])
   );

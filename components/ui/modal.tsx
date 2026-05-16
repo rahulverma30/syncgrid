@@ -8,6 +8,7 @@
 import { ReactNode, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { useLockBodyScroll } from '@/hooks';
 
 interface ModalProps {
   isOpen: boolean;
@@ -30,14 +31,7 @@ export function Modal({
   size = 'md',
   className,
 }: ModalProps) {
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [isOpen]);
+  useLockBodyScroll(isOpen);
 
   if (!isOpen) return null;
 
