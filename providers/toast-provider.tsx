@@ -18,17 +18,24 @@ export function ToastProvider({ children }: ToastProviderProps) {
 
   useEffect(() => {
     notifications.forEach((notification) => {
+      const duration = notification.duration ?? 5000;
+
       toast[notification.type](notification.title, {
         description: notification.message,
-        duration: notification.duration,
+        duration: duration,
         action: notification.action
           ? {
               label: notification.action.label,
               onClick: notification.action.onClick,
             }
           : undefined,
-        // add entry animation class (Tailwind animation defined in tailwind.config)
-        className: 'animate-slide-in-right',
+        className: 'toast-slide toast-with-progress',
+        classNames: {
+          toast: 'toast-slide toast-with-progress',
+        },
+        style: {
+          ['--toast-duration' as any]: `${duration}ms`,
+        },
       });
 
       removeNotification(notification.id);
@@ -38,7 +45,22 @@ export function ToastProvider({ children }: ToastProviderProps) {
   return (
     <>
       {children}
-      <Toaster position="top-right" richColors closeButton expand />
+      <Toaster
+        position="top-right"
+        richColors
+        closeButton
+        expand
+        duration={5000}
+        toastOptions={{
+          className: 'toast-slide toast-with-progress',
+          classNames: {
+            toast: 'toast-slide toast-with-progress',
+          },
+          style: {
+            ['--toast-duration' as any]: '5000ms',
+          },
+        }}
+      />
     </>
   );
 }

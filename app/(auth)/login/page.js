@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
@@ -12,6 +12,7 @@ import { Input, Button } from '@/components/ui';
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const errorParam = searchParams.get('error');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -31,7 +32,9 @@ function LoginForm() {
     setIsLoading(false);
 
     if (result?.error) {
-      const errorMsg = 'Invalid email or password.';
+      const raw = result.error;
+      const decoded = decodeURIComponent(raw || 'Invalid email or password.');
+      const errorMsg = decoded || 'Invalid email or password.';
       setError(errorMsg);
       toast.error('Sign in failed', { description: errorMsg });
       return;
@@ -41,6 +44,15 @@ function LoginForm() {
     router.push(searchParams.get('callbackUrl') || '/dashboard');
     router.refresh();
   }
+
+  useEffect(() => {
+    if (errorParam) {
+      const decoded = decodeURIComponent(errorParam);
+      toast.error('Sign in failed', { description: decoded });
+      // Schedule state update to avoid synchronous cascading render and satisfy ESLint
+      setTimeout(() => setError(decoded), 0);
+    }
+  }, [errorParam]);
 
   return (
     <Card>

@@ -193,3 +193,93 @@
 .dark {
   color-scheme: dark;
 }
+
+/* Sonner toast custom slide animations (Right-side entry) */
+[data-sonner-toast].toast-slide {
+  transform: translateX(110%) !important;
+  opacity: 0 !important;
+  transition:
+    transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.1),
+    opacity 0.3s ease !important;
+  /* Premium glassmorphism and shadow */
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+}
+
+[data-sonner-toast].toast-slide[data-mounted='true'] {
+  transform: translateX(0) translateY(var(--y)) !important;
+  opacity: 1 !important;
+}
+
+/* Exit animation: distinct slide-out to the right */
+[data-sonner-toast].toast-slide[data-removed='true'] {
+  transform: translateX(110%) translateY(var(--y)) !important;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  opacity: 1 !important; /* Keep it solid while sliding out */
+}
+
+/* Close button styling for better visibility */
+[data-sonner-toast] [data-close-button] {
+  top: 8px !important;
+  left: 8px !important;
+  background: rgba(255, 255, 255, 0.2) !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  color: inherit !important;
+  opacity: 0.7;
+  transition: all 0.2s ease;
+  z-index: 10000;
+}
+
+[data-sonner-toast] [data-close-button]:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.4) !important;
+  transform: scale(1.1);
+}
+
+/* Bottom progress bar for toasts */
+[data-sonner-toast].toast-with-progress {
+  position: relative;
+  overflow: hidden !important;
+}
+
+[data-sonner-toast].toast-with-progress::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px; /* Thinner for cleaner look */
+  width: 100%;
+  transform-origin: left;
+  background: var(--progress-color, #3b82f6);
+  transform: scaleX(1);
+  animation: toast-progress var(--toast-duration, 5000ms) linear forwards;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+/* Ensure progress bar color stands out but blends with richColors */
+[data-sonner-toast][data-type='success'] {
+  --progress-color: #22c55e;
+}
+[data-sonner-toast][data-type='error'] {
+  --progress-color: #ef4444;
+}
+[data-sonner-toast][data-type='warning'] {
+  --progress-color: #f59e0b;
+}
+[data-sonner-toast][data-type='info'] {
+  --progress-color: #3b82f6;
+}
+
+@keyframes toast-progress {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
