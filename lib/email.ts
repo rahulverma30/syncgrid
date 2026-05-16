@@ -2,7 +2,27 @@ import nodemailer from 'nodemailer';
 import { env } from '@/lib/env';
 
 export function getEmailTransporter() {
+  const isDevelopment = env.NODE_ENV === 'development';
+
   if (!env.SMTP_HOST || !env.SMTP_USER || !env.SMTP_PASSWORD || !env.EMAIL_FROM) {
+    if (isDevelopment) {
+      console.warn(
+        '⚠️ SMTP configuration is incomplete. Emails will be logged to the console instead of being sent.'
+      );
+      // Return a mock transporter for development
+      return {
+        sendMail: async (message: any) => {
+          console.log('📧 DEVELOPMENT EMAIL SENT:');
+          console.log('From:', message.from);
+          console.log('To:', message.to);
+          console.log('Subject:', message.subject);
+          console.log('Text Content:', message.text);
+          console.log('---------------------------');
+          return { messageId: 'dev-mock-id' };
+        },
+      } as any;
+    }
+
     throw new Error(
       'SMTP email configuration is incomplete. Set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, and EMAIL_FROM.'
     );
@@ -24,7 +44,7 @@ export async function sendPasswordResetEmail({ to, token }: { to: string; token:
   const resetUrl = `${env.NEXTAUTH_URL}/reset-password?token=${encodeURIComponent(token)}`;
 
   const message = {
-    from: env.EMAIL_FROM,
+    from: env.EMAIL_FROM || 'SyncGrid CRM <syncgrid.crm@gmail.com>',
     to,
     subject: 'SyncGrid password reset instructions',
     text: `You requested a password reset for your SyncGrid account.
