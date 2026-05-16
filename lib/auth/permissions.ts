@@ -12,7 +12,7 @@ import { compactPermissions, permissionKey } from './permission-checks';
 export async function getUserPermissionKeys(userId: string) {
   await connectToDatabase();
 
-  const user = await User.findById(userId).populate({
+  const user = await (User as any).findById(userId).populate({
     path: 'roles',
     model: Role,
     populate: {

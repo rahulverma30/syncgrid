@@ -46,13 +46,13 @@ export function ExampleContactForm() {
               label="First Name"
               placeholder="John"
               {...register('firstName')}
-              error={errors.firstName?.message}
+              error={errors.firstName?.message as string}
             />
             <Input
               label="Last Name"
               placeholder="Doe"
               {...register('lastName')}
-              error={errors.lastName?.message}
+              error={errors.lastName?.message as string}
             />
           </div>
 
@@ -61,21 +61,21 @@ export function ExampleContactForm() {
             type="email"
             placeholder="john@example.com"
             {...register('email')}
-            error={errors.email?.message}
+            error={errors.email?.message as string}
           />
 
           <Input
             label="Company"
             placeholder="Acme Inc"
             {...register('company')}
-            error={errors.company?.message}
+            error={errors.company?.message as string}
           />
 
           <Textarea
             label="Notes"
             placeholder="Additional notes..."
             {...register('notes')}
-            error={errors.notes?.message}
+            error={errors.notes?.message as string}
           />
 
           <Button type="submit" className="w-full" isLoading={isSubmitting}>

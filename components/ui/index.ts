@@ -23,3 +23,4 @@ export { ErrorBoundary } from './error-boundary';
 export { Select, type SelectOption } from './select';
 export { Checkbox } from './checkbox';
 export { RadioGroup, type RadioOption } from './radio-group';
+export { PermissionGuard, RoleGuard, PermissionRequirement } from './permission-guard';

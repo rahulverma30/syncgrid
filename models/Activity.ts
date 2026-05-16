@@ -1,4 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
+import type { Model } from 'mongoose';
 
 const ActivitySchema = new Schema(
   {
@@ -40,4 +41,5 @@ const ActivitySchema = new Schema(
 
 ActivitySchema.index({ companyId: 1, createdAt: -1 });
 
-export const Activity = mongoose.models.Activity || mongoose.model('Activity', ActivitySchema);
+export const Activity = ((mongoose.models.Activity as Model<any>) ||
+  mongoose.model('Activity', ActivitySchema)) as Model<any>;

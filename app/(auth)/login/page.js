@@ -43,7 +43,7 @@ function LoginForm() {
         <CardDescription>Sign in to your account to get started</CardDescription>
       </CardHeader>
       <CardContent>
-        <form className="space-y-4" onSubmit={handleSubmit}>
+        <form className="space-y-4 pt-4" onSubmit={handleSubmit}>
           <Input name="email" label="Email" type="email" placeholder="you@example.com" required />
           <Input name="password" label="Password" type="password" placeholder="Password" required />
           {error && <p className="text-sm text-destructive">{error}</p>}

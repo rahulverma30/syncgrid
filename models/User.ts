@@ -1,4 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
+import type { Model } from 'mongoose';
 
 const PermissionOverrideSchema = new Schema(
   {
@@ -97,4 +98,5 @@ const UserSchema = new Schema(
 
 UserSchema.index({ companyId: 1, email: 1 }, { unique: true });
 
-export const User = mongoose.models.User || mongoose.model('User', UserSchema);
+export const User = ((mongoose.models.User as Model<any>) ||
+  mongoose.model('User', UserSchema)) as Model<any>;

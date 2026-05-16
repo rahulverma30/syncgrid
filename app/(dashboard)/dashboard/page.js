@@ -87,7 +87,7 @@ export default function DashboardPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 pt-6 sm:grid-cols-2 lg:grid-cols-3">
             {[
               'App Router route groups',
               'Provider composition',

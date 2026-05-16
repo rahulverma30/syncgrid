@@ -1,4 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
+import type { Model } from 'mongoose';
 
 const CompanySchema = new Schema(
   {
@@ -54,4 +55,5 @@ const CompanySchema = new Schema(
   }
 );
 
-export const Company = mongoose.models.Company || mongoose.model('Company', CompanySchema);
+export const Company = ((mongoose.models.Company as Model<any>) ||
+  mongoose.model('Company', CompanySchema)) as Model<any>;

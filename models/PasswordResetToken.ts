@@ -1,4 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
+import type { Model } from 'mongoose';
 
 const PasswordResetTokenSchema = new Schema(
   {
@@ -29,6 +30,5 @@ const PasswordResetTokenSchema = new Schema(
   }
 );
 
-export const PasswordResetToken =
-  mongoose.models.PasswordResetToken ||
-  mongoose.model('PasswordResetToken', PasswordResetTokenSchema);
+export const PasswordResetToken = ((mongoose.models.PasswordResetToken as Model<any>) ||
+  mongoose.model('PasswordResetToken', PasswordResetTokenSchema)) as Model<any>;

@@ -59,7 +59,8 @@ export const authOptions: NextAuthOptions = {
 
         await connectToDatabase();
 
-        const user = await User.findOne({ email: parsed.data.email })
+        const query = { email: parsed.data.email };
+        const user = await User.findOne(query as any)
           .select('+passwordHash')
           .populate({
             path: 'roles',

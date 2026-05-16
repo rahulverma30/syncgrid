@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Key, useEffect, useState, type ComponentType, type SVGProps } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
@@ -20,7 +20,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
   const { isCollapsed, isOpen, toggleCollapse, setIsOpen } = useSidebarStore();
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
+  const [expandedGroups, setExpandedGroups] = useState<Set<unknown>>(
     new Set([SIDEBAR_GROUPS[0].id])
   );
 
@@ -28,7 +28,7 @@ export function Sidebar() {
     setIsOpen(false);
   }, [pathname, setIsOpen]);
 
-  const toggleGroupExpanded = (groupId: string) => {
+  const toggleGroupExpanded = (groupId: unknown) => {
     const newExpanded = new Set(expandedGroups);
     if (newExpanded.has(groupId)) {
       newExpanded.delete(groupId);
@@ -39,14 +39,14 @@ export function Sidebar() {
   };
 
   const isItemActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
-  const navigationGroups = filterNavigationByUser(SIDEBAR_GROUPS, session?.user);
+  const navigationGroups = filterNavigationByUser(SIDEBAR_GROUPS as any, session?.user);
 
   const renderNav = (mobile = false) => (
     <nav className="flex-1 space-y-6 overflow-y-auto p-4">
       {navigationGroups.map((group) => (
-        <div key={group.id}>
+        <div key={group?.id || (group?.label as any)}>
           <button
-            onClick={() => toggleGroupExpanded(group.id)}
+            onClick={() => toggleGroupExpanded(group.id as Key)}
             className={cn(
               'flex w-full items-center justify-between rounded-md px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground',
               isCollapsed && !mobile && 'justify-center'
@@ -65,7 +65,7 @@ export function Sidebar() {
           </button>
 
           <AnimatePresence initial={false}>
-            {expandedGroups.has(group.id) && (
+            {expandedGroups.has(group.id as Key) && (
               <motion.div
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: 'auto', opacity: 1 }}
@@ -75,7 +75,7 @@ export function Sidebar() {
               >
                 {group.items.map((item) => {
                   const isActive = isItemActive(item.href);
-                  const Icon = item.icon;
+                  const Icon = item.icon as unknown as ComponentType<SVGProps<SVGSVGElement>>;
                   const labelVisible = !isCollapsed || mobile;
                   const itemClassName = cn(
                     'flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all',
@@ -93,7 +93,7 @@ export function Sidebar() {
                           <span className="flex-1 truncate text-left">{item.label}</span>
                           {item.badge && (
                             <span className="rounded-full border border-border bg-background px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-                              {item.badge}
+                              {typeof item.badge === 'string' ? item.badge : item.badge.text}
                             </span>
                           )}
                         </>
@@ -102,7 +102,7 @@ export function Sidebar() {
                   );
 
                   return (
-                    <div key={item.id}>
+                    <div key={(item.id as string) || item.label}>
                       {item.disabled ? (
                         <button className={itemClassName} title={item.label} disabled>
                           {content}

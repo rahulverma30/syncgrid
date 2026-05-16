@@ -1,4 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
+import type { Model } from 'mongoose';
 import { PERMISSION_ACTIONS } from '@/constants/rbac';
 
 const PermissionSchema = new Schema(
@@ -41,5 +42,5 @@ const PermissionSchema = new Schema(
 
 PermissionSchema.index({ resource: 1, action: 1 }, { unique: true });
 
-export const Permission =
-  mongoose.models.Permission || mongoose.model('Permission', PermissionSchema);
+export const Permission = ((mongoose.models.Permission as Model<any>) ||
+  mongoose.model('Permission', PermissionSchema)) as Model<any>;

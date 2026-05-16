@@ -1,4 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
+import type { Model } from 'mongoose';
 
 const RoleSchema = new Schema(
   {
@@ -48,4 +49,5 @@ const RoleSchema = new Schema(
 
 RoleSchema.index({ slug: 1, companyId: 1 }, { unique: true });
 
-export const Role = mongoose.models.Role || mongoose.model('Role', RoleSchema);
+export const Role = ((mongoose.models.Role as Model<any>) ||
+  mongoose.model('Role', RoleSchema)) as Model<any>;

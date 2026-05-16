@@ -29,7 +29,7 @@ export async function ensureSystemPermissions() {
     isSystem: true,
   });
 
-  await Permission.bulkWrite(
+  await (Permission as any).bulkWrite(
     docs.map((doc) => ({
       updateOne: {
         filter: { key: doc.key },
