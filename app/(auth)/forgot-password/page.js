@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { toast } from 'sonner';
 import {
   Button,
   Card,
@@ -14,7 +15,6 @@ import {
 
 export default function ForgotPasswordPage() {
   const [message, setMessage] = useState('');
-  const [devToken, setDevToken] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   async function handleSubmit(event) {
@@ -34,7 +34,17 @@ export default function ForgotPasswordPage() {
     const data = await response.json().catch(() => ({}));
 
     setMessage(data.message || 'If the account exists, password reset instructions will be sent.');
-    setDevToken(data.devResetToken || '');
+
+    if (response.ok) {
+      toast.success('Reset link sent', {
+        description: 'Check your email for password reset instructions.',
+      });
+    } else {
+      toast.error('Failed to send reset link', {
+        description: data.message || 'Please try again later.',
+      });
+    }
+
     setIsLoading(false);
   }
 
@@ -48,11 +58,6 @@ export default function ForgotPasswordPage() {
         <form className="space-y-4" onSubmit={handleSubmit}>
           <Input name="email" label="Email" type="email" placeholder="you@example.com" required />
           {message && <p className="text-sm text-muted-foreground">{message}</p>}
-          {devToken && (
-            <p className="break-all rounded-md border border-border bg-muted p-3 text-xs text-muted-foreground">
-              Development reset token: {devToken}
-            </p>
-          )}
           <Button type="submit" className="w-full" isLoading={isLoading}>
             Send reset link
           </Button>

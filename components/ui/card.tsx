@@ -70,7 +70,7 @@ interface CardContentProps {
 }
 
 export function CardContent({ children, className }: CardContentProps) {
-  return <div className={cn('p-6 pt-0', className)}>{children}</div>;
+  return <div className={cn('p-6 pt-4', className)}>{children}</div>;
 }
 
 interface CardFooterProps {
@@ -80,7 +80,7 @@ interface CardFooterProps {
 
 export function CardFooter({ children, className }: CardFooterProps) {
   return (
-    <div className={cn('flex items-center border-t border-border p-6 pt-0', className)}>
+    <div className={cn('flex items-center border-t border-border p-6 pt-4', className)}>
       {children}
     </div>
   );

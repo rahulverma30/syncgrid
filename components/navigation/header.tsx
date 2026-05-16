@@ -8,6 +8,7 @@
 import { useTheme } from 'next-themes';
 import { signOut, useSession } from 'next-auth/react';
 import { Moon, Sun, Bell, Menu, X, Settings, LogOut, Search } from 'lucide-react';
+import { toast } from 'sonner';
 import { useMounted } from '@/hooks';
 import { APP_NAME } from '@/constants';
 import { Button } from '@/components/ui/button';
@@ -80,7 +81,10 @@ export function Header() {
               {
                 label: 'Logout',
                 icon: <LogOut className="h-4 w-4" />,
-                onClick: () => signOut({ callbackUrl: '/login' }),
+                onClick: () => {
+                  toast.success('Logged out successfully');
+                  signOut({ callbackUrl: '/login' });
+                },
                 destructive: true,
               },
             ]}

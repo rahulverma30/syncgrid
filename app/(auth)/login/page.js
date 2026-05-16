@@ -4,6 +4,8 @@ import { Suspense, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
+import { Eye, EyeOff } from 'lucide-react';
+import { toast } from 'sonner';
 import { Card, CardDescription, CardHeader, CardTitle, CardContent } from '@/components/ui';
 import { Input, Button } from '@/components/ui';
 
@@ -12,6 +14,7 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -28,10 +31,13 @@ function LoginForm() {
     setIsLoading(false);
 
     if (result?.error) {
-      setError('Invalid email or password.');
+      const errorMsg = 'Invalid email or password.';
+      setError(errorMsg);
+      toast.error('Sign in failed', { description: errorMsg });
       return;
     }
 
+    toast.success('Signed in successfully!');
     router.push(searchParams.get('callbackUrl') || '/dashboard');
     router.refresh();
   }
@@ -43,9 +49,20 @@ function LoginForm() {
         <CardDescription>Sign in to your account to get started</CardDescription>
       </CardHeader>
       <CardContent>
-        <form className="space-y-4 pt-4" onSubmit={handleSubmit}>
+        <form className="space-y-4" onSubmit={handleSubmit}>
           <Input name="email" label="Email" type="email" placeholder="you@example.com" required />
-          <Input name="password" label="Password" type="password" placeholder="Password" required />
+          <Input
+            name="password"
+            label="Password"
+            type={showPassword ? 'text' : 'password'}
+            placeholder="Password"
+            required
+            icon={showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            iconPosition="right"
+            iconButton
+            iconButtonAriaLabel={showPassword ? 'Hide password' : 'Show password'}
+            onIconClick={() => setShowPassword((visible) => !visible)}
+          />
           {error && <p className="text-sm text-destructive">{error}</p>}
           <Button type="submit" className="w-full" isLoading={isLoading}>
             Sign in

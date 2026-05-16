@@ -3,6 +3,7 @@ import { connectToDatabase } from '@/lib/db';
 import { createExpiry, createSecureToken, hashToken } from '@/lib/security/tokens';
 import { forgotPasswordSchema } from '@/schemas/auth';
 import { AuditLog, PasswordResetToken, User } from '@/models';
+import { sendPasswordResetEmail } from '@/lib/email';
 
 export async function POST(request) {
   const genericResponse = {
@@ -41,6 +42,15 @@ export async function POST(request) {
       expiresAt: createExpiry(30),
     });
 
+    try {
+      await sendPasswordResetEmail({
+        to: user.email,
+        token,
+      });
+    } catch (error) {
+      console.error('Password reset email failed:', error);
+    }
+
     await AuditLog.create({
       companyId: user.companyId,
       actorId: user._id,
@@ -50,10 +60,7 @@ export async function POST(request) {
       status: 'success',
     });
 
-    return NextResponse.json({
-      ...genericResponse,
-      devResetToken: process.env.NODE_ENV === 'production' ? undefined : token,
-    });
+    return NextResponse.json(genericResponse);
   } catch (error) {
     return NextResponse.json(genericResponse);
   }

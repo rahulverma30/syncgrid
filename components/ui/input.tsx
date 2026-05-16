@@ -14,6 +14,9 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
   hint?: string;
   icon?: ReactNode;
   iconPosition?: 'left' | 'right';
+  iconButton?: boolean;
+  iconButtonAriaLabel?: string;
+  onIconClick?: React.MouseEventHandler<HTMLButtonElement>;
 }
 
 export function Input({
@@ -23,6 +26,9 @@ export function Input({
   hint,
   icon,
   iconPosition = 'left',
+  iconButton,
+  iconButtonAriaLabel,
+  onIconClick,
   ...props
 }: InputProps) {
   return (
@@ -44,11 +50,22 @@ export function Input({
           )}
           {...props}
         />
-        {icon && iconPosition === 'right' && (
-          <div className="absolute right-3 flex items-center text-muted-foreground pointer-events-none">
-            {icon}
-          </div>
-        )}
+        {icon &&
+          iconPosition === 'right' &&
+          (iconButton ? (
+            <button
+              type="button"
+              onClick={onIconClick}
+              aria-label={iconButtonAriaLabel}
+              className="absolute right-3 flex items-center text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring rounded"
+            >
+              {icon}
+            </button>
+          ) : (
+            <div className="absolute right-3 flex items-center text-muted-foreground pointer-events-none">
+              {icon}
+            </div>
+          ))}
       </div>
       {error && <p className="text-xs text-destructive">{error}</p>}
       {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
