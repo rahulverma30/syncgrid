@@ -100,7 +100,6 @@ export default function RegisterPage() {
             iconButtonAriaLabel={showPassword ? 'Hide password' : 'Show password'}
             onIconClick={() => setShowPassword((visible) => !visible)}
           />
-          {error && <p className="text-sm text-destructive">{error}</p>}
           <Button type="submit" className="w-full" isLoading={isLoading}>
             Create account
           </Button>

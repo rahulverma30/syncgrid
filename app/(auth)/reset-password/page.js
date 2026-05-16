@@ -100,7 +100,6 @@ function ResetPasswordForm() {
             }
             onIconClick={() => setShowConfirmPassword((visible) => !visible)}
           />
-          {error && <p className="text-sm text-destructive">{error}</p>}
           {message && <p className="text-sm text-muted-foreground">{message}</p>}
           <Button type="submit" className="w-full" isLoading={isLoading}>
             Reset password

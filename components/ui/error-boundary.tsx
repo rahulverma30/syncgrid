@@ -8,6 +8,7 @@
 import React from 'react';
 import { ReactNode } from 'react';
 import { AlertCircle } from 'lucide-react';
+import { useNotificationStore } from '@/store';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -30,21 +31,23 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
 
   componentDidCatch(error: Error) {
     console.error('Error boundary caught:', error);
+    try {
+      // Add a toast notification for the error and avoid rendering the error card
+      useNotificationStore.getState().addNotification({
+        type: 'error',
+        title: 'Something went wrong',
+        message: error.message,
+        duration: 5000,
+      });
+    } catch (e) {
+      // ignore errors from notification system
+    }
   }
 
   render() {
     if (this.state.hasError) {
-      return (
-        <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4">
-          <div className="flex gap-3">
-            <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0" />
-            <div>
-              <h3 className="font-semibold text-destructive">Something went wrong</h3>
-              <p className="mt-1 text-sm text-destructive/80">{this.state.error?.message}</p>
-            </div>
-          </div>
-        </div>
-      );
+      // Do not render the error card here; the error is surfaced via toast only.
+      return null;
     }
 
     return this.props.children;

@@ -27,6 +27,8 @@ export function ToastProvider({ children }: ToastProviderProps) {
               onClick: notification.action.onClick,
             }
           : undefined,
+        // add entry animation class (Tailwind animation defined in tailwind.config)
+        className: 'animate-slide-in-right',
       });
 
       removeNotification(notification.id);
@@ -36,7 +38,7 @@ export function ToastProvider({ children }: ToastProviderProps) {
   return (
     <>
       {children}
-      <Toaster position="bottom-right" richColors closeButton expand />
+      <Toaster position="top-right" richColors closeButton expand />
     </>
   );
 }
