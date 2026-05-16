@@ -55,11 +55,17 @@ function ResetPasswordForm() {
     }
 
     toast.success('Password reset successfully!');
-    setMessage('Password reset successfully. Redirecting to login in 5 seconds...');
+    let countdown = 5;
+    setMessage(`Redirecting to login in ${countdown} seconds...`);
 
-    setTimeout(() => {
-      router.push('/login');
-    }, 5000);
+    const timer = setInterval(() => {
+      countdown -= 1;
+      setMessage(`Redirecting to login in ${countdown} seconds...`);
+      if (countdown <= 0) {
+        clearInterval(timer);
+        router.push('/login');
+      }
+    }, 1000);
   }
 
   return (
