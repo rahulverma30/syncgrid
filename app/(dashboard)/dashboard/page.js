@@ -1,112 +1,201 @@
 'use client';
 
-import {
-  Badge,
-  Button,
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  PageHeader,
-} from '@/components/ui';
+import React, { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { PageHeader, Button } from '@/components/ui';
 import { useCommandPaletteStore } from '@/store';
-import { Boxes, Command, Database, LockKeyhole, PanelLeft, Sparkles } from 'lucide-react';
-
-const foundations = [
-  {
-    title: 'Application Shell',
-    description:
-      'Responsive dashboard frame with route-aware navigation, breadcrumbs, and page containers.',
-    icon: PanelLeft,
-  },
-  {
-    title: 'Reusable UI System',
-    description:
-      'Shared primitives for forms, dialogs, alerts, tables, loading states, and empty states.',
-    icon: Sparkles,
-  },
-  {
-    title: 'State Infrastructure',
-    description:
-      'Zustand stores for sidebar, theme, notifications, modals, and command palette behavior.',
-    icon: Database,
-  },
-  {
-    title: 'Access Ready',
-    description: 'Navigation config is role-aware and prepared for future enterprise permissions.',
-    icon: LockKeyhole,
-  },
-];
+import { Command, Shield, Sliders, RefreshCw } from 'lucide-react';
+import { getAnalyticsData } from '@/lib/services/analytics';
+import { DateFilter } from '@/components/dashboard/date-filter';
+import { QuickActions } from '@/components/dashboard/quick-actions';
+import { SuperAdminView, FinanceView, DeveloperView } from '@/components/dashboard/role-views';
+import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
 
 export default function DashboardPage() {
+  const { data: session } = useSession();
   const { togglePalette } = useCommandPaletteStore();
 
+  // Date filter state
+  const [dateFilter, setDateFilter] = useState({
+    range: 'monthly',
+    startDate: '',
+    endDate: '',
+  });
+
+  // Simulated role state to allow manual previewing of the different widgets
+  const [activeRole, setActiveRole] = useState('super-admin');
+  const [isLoading, setIsLoading] = useState(true);
+  const [analyticsData, setAnalyticsData] = useState(null);
+
+  // Sync role with logged-in user initially
+  useEffect(() => {
+    if (session?.user?.roles && session.user.roles.length > 0) {
+      const primaryRole = session.user.roles[0].toLowerCase();
+      setTimeout(() => {
+        if (['super-admin', 'admin'].includes(primaryRole)) {
+          setActiveRole('super-admin');
+        } else if (primaryRole === 'finance') {
+          setActiveRole('finance');
+        } else {
+          setActiveRole('developer');
+        }
+      }, 0);
+    }
+  }, [session]);
+
+  // Load analytics when filter range or role simulator changes
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const data = getAnalyticsData(dateFilter.range, dateFilter.startDate, dateFilter.endDate);
+      setAnalyticsData(data);
+      setIsLoading(false);
+    }, 450); // Small delay to show smooth skeleton animation transitions
+
+    return () => clearTimeout(timer);
+  }, [dateFilter]);
+
+  const handleRefreshAll = () => {
+    setIsLoading(true);
+    toast.success('Fetching fresh metrics from server database...');
+    setTimeout(() => {
+      const data = getAnalyticsData(dateFilter.range, dateFilter.startDate, dateFilter.endDate);
+      setAnalyticsData(data);
+      setIsLoading(false);
+    }, 400);
+  };
+
+  const handleRoleChange = (role) => {
+    setActiveRole(role);
+    toast.info(`Simulating dashboard layout for role: ${role.toUpperCase()}`);
+  };
+
+  // Resolve user info
+  const userName = session?.user?.name || 'Enterprise User';
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
+      {/* Dynamic Header */}
       <PageHeader
-        eyebrow="Module 1"
-        title="Enterprise Foundation"
-        description="Core architecture for SyncGrid before CRM, projects, finance, HR, and analytics modules are added."
+        eyebrow="Dashboard Analytics"
+        title={`Welcome back, ${userName}`}
+        description="Monitor real-time corporate pipelines, productivity indices, and financial ledgers"
         actions={
-          <Button variant="outline" onClick={togglePalette}>
-            <Command className="mr-2 h-4 w-4" />
-            Command K
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Quick Refresh */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefreshAll}
+              className="h-9 hover:bg-accent/40 text-xs gap-1.5"
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+              Sync Grid
+            </Button>
+
+            {/* Command Palette Trigger */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={togglePalette}
+              className="h-9 hover:bg-accent/40 text-xs gap-1.5"
+            >
+              <Command className="h-3.5 w-3.5" />
+              Shortcut (Ctrl + K)
+            </Button>
+          </div>
         }
       />
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {foundations.map((item) => {
-          const Icon = item.icon;
+      {/* Controller Controls Bar */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 rounded-xl border border-border/80 bg-muted/10">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <DateFilter
+            value={dateFilter}
+            onChange={(val) => {
+              setIsLoading(true);
+              setDateFilter(val);
+            }}
+          />
 
-          return (
-            <Card key={item.title} interactive>
-              <CardHeader className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-md border border-border bg-background shadow-sm">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <Badge variant="secondary">Ready</Badge>
-                </div>
-                <div>
-                  <CardTitle>{item.title}</CardTitle>
-                  <CardDescription>{item.description}</CardDescription>
-                </div>
-              </CardHeader>
-            </Card>
-          );
-        })}
+          {/* Quick Simulated Role Switcher to show off multivariant capabilities */}
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1 text-[10px] uppercase font-bold text-muted-foreground tracking-wider select-none">
+              <Shield className="h-3.5 w-3.5 text-primary" />
+              Role View:
+            </span>
+            <select
+              value={activeRole}
+              onChange={(e) => handleRoleChange(e.target.value)}
+              className="h-8.5 rounded-lg border border-border/80 bg-background/50 px-2 py-1 text-xs font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              <option value="super-admin">Super Admin Workspace</option>
+              <option value="finance">Finance Specialist Dashboard</option>
+              <option value="developer">Developer Sprint Velocity</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Global actions panel */}
+        <QuickActions />
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Scalable Architecture Map</CardTitle>
-          <CardDescription>
-            The foundation is intentionally module-neutral and ready for future feature domains.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              'App Router route groups',
-              'Provider composition',
-              'Role-ready navigation config',
-              'Command palette registry',
-              'Modal and drawer primitives',
-              'Reusable TanStack table',
-            ].map((label) => (
-              <div
-                key={label}
-                className="flex items-center gap-3 rounded-md border border-border bg-background px-4 py-3 text-sm"
-              >
-                <Boxes className="h-4 w-4 text-muted-foreground" />
-                <span>{label}</span>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      {/* Analytics Workspace Area */}
+      <div className="w-full relative min-h-[400px]">
+        <AnimatePresence mode="wait">
+          {isLoading || !analyticsData ? (
+            <motion.div
+              key="loading-skeleton"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-4"
+            >
+              {/* Dynamic KPI Skeletal grid */}
+              {[1, 2, 3, 4].map((i) => (
+                <div
+                  key={i}
+                  className="h-28 rounded-xl border border-border/80 bg-muted/10 animate-pulse"
+                />
+              ))}
+              {/* Large Chart Skeleton */}
+              <div className="col-span-1 md:col-span-2 xl:col-span-3 h-80 rounded-xl border border-border/80 bg-muted/10 animate-pulse" />
+              {/* Pie/Radial Skeleton */}
+              <div className="col-span-1 h-80 rounded-xl border border-border/80 bg-muted/10 animate-pulse" />
+            </motion.div>
+          ) : (
+            <motion.div
+              key={activeRole}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.25 }}
+            >
+              {activeRole === 'super-admin' && (
+                <SuperAdminView
+                  data={analyticsData}
+                  isLoading={isLoading}
+                  onRefresh={handleRefreshAll}
+                />
+              )}
+              {activeRole === 'finance' && (
+                <FinanceView
+                  data={analyticsData}
+                  isLoading={isLoading}
+                  onRefresh={handleRefreshAll}
+                />
+              )}
+              {activeRole === 'developer' && (
+                <DeveloperView
+                  data={analyticsData}
+                  isLoading={isLoading}
+                  onRefresh={handleRefreshAll}
+                />
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
