@@ -13,17 +13,29 @@ import {
   Input,
   Modal,
 } from '@/components/ui';
-import { Clock, Plus, History } from 'lucide-react';
+import {
+  Clock,
+  Plus,
+  History,
+  Calendar as CalendarIcon,
+  Gift,
+  AlertCircle,
+  ChevronLeft,
+  ChevronRight,
+  Info,
+  CheckCircle2,
+  AlertTriangle,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 export function HrLeaves() {
   const {
     leaveRequests,
     leaveBalances,
-    attendanceHistory,
-    requestLeave,
+    holidays,
     fetchLeaves,
-    fetchAttendance,
+    fetchHolidays,
+    requestLeave,
     loading,
   } = useHRStore();
 
@@ -35,10 +47,50 @@ export function HrLeaves() {
     reason: '',
   });
 
+  // Calendar Navigation State
+  const [currentDate, setCurrentDate] = useState(new Date(2026, 4, 1)); // Default to May 2026 for simulation sync
+
   useEffect(() => {
     fetchLeaves();
-    fetchAttendance();
-  }, [fetchLeaves, fetchAttendance]);
+    fetchHolidays();
+  }, [fetchLeaves, fetchHolidays]);
+
+  // Overlap and collision forecasting checks
+  const getLeaveOverlapAlert = () => {
+    if (!form.startDate || !form.endDate) return null;
+    const start = new Date(form.startDate);
+    const end = new Date(form.endDate);
+
+    // Check holiday overlaps
+    const matchedHoliday = holidays.find((h) => {
+      const hDate = new Date(h.date);
+      return hDate >= start && hDate <= end;
+    });
+
+    if (matchedHoliday) {
+      return {
+        type: 'holiday',
+        message: `Note: selected dates overlap with corporate holiday "${matchedHoliday.name}" (${new Date(matchedHoliday.date).toLocaleDateString()}). Corporate holidays do not consume your leave balances.`,
+      };
+    }
+
+    // Check request collisions
+    const overlappingRequest = leaveRequests.find((r) => {
+      if (r.status === 'rejected') return false;
+      const rStart = new Date(r.startDate);
+      const rEnd = new Date(r.endDate);
+      return start <= rEnd && end >= rStart;
+    });
+
+    if (overlappingRequest) {
+      return {
+        type: 'conflict',
+        message: `⚠️ Range overlaps with another leave request (${new Date(overlappingRequest.startDate).toLocaleDateString()} to ${new Date(overlappingRequest.endDate).toLocaleDateString()}) with status "${overlappingRequest.status}".`,
+      };
+    }
+
+    return null;
+  };
 
   const handleSubmitLeave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,11 +117,66 @@ export function HrLeaves() {
     }
   };
 
+  // Calendar Helpers
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+
+  const handlePrevMonth = () => {
+    setCurrentDate(new Date(year, month - 1, 1));
+  };
+
+  const handleNextMonth = () => {
+    setCurrentDate(new Date(year, month + 1, 1));
+  };
+
+  // Calendar Grid builder
+  const firstDayIndex = new Date(year, month, 1).getDay();
+  const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
+  const prevMonthTotalDays = new Date(year, month, 0).getDate();
+
+  const daysGrid: { day: number; isCurrentMonth: boolean; dateString: string }[] = [];
+
+  // Pad previous month days
+  for (let i = firstDayIndex - 1; i >= 0; i--) {
+    const prevDay = prevMonthTotalDays - i;
+    const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(prevDay).padStart(2, '0')}`;
+    daysGrid.push({ day: prevDay, isCurrentMonth: false, dateString: dateStr });
+  }
+
+  // Current month days
+  for (let d = 1; d <= totalDaysInMonth; d++) {
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    daysGrid.push({ day: d, isCurrentMonth: true, dateString: dateStr });
+  }
+
+  // Pad next month days to align grid to 42 cells (6 rows)
+  const remaining = 42 - daysGrid.length;
+  for (let n = 1; n <= remaining; n++) {
+    const dateStr = `${year}-${String(month + 2).padStart(2, '0')}-${String(n).padStart(2, '0')}`;
+    daysGrid.push({ day: n, isCurrentMonth: false, dateString: dateStr });
+  }
+
+  const monthNames = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+
+  const overlapAlert = getLeaveOverlapAlert();
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* Left 2 Columns: Time Off Allowances & Request History */}
+      {/* Left 2 Columns: Allowances & Request History */}
       <div className="lg:col-span-2 space-y-6">
-        {/* Balances Row */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Card className="bg-card/40 border-border/80 backdrop-blur-md">
             <CardContent className="pt-6">
@@ -116,7 +223,7 @@ export function HrLeaves() {
           </Card>
         </div>
 
-        {/* Leave Request Logs */}
+        {/* Request logs history */}
         <Card className="bg-card/40 border-border/80 backdrop-blur-md">
           <CardHeader className="flex flex-row items-center justify-between gap-4">
             <div className="space-y-1">
@@ -178,11 +285,6 @@ export function HrLeaves() {
                         </p>
                       )}
                     </div>
-                    {req.status === 'approved' && (
-                      <div className="text-[10px] text-muted-foreground font-medium self-end sm:self-center">
-                        Approved by: {req.approvedBy?.name || 'HR Team'}
-                      </div>
-                    )}
                   </div>
                 ))}
               </div>
@@ -191,81 +293,143 @@ export function HrLeaves() {
         </Card>
       </div>
 
-      {/* Right Column: Attendance Shift Logs Timeline */}
-      <div>
+      {/* Right Column: High-Fidelity Enterprise Calendar Grid */}
+      <div className="space-y-6">
         <Card className="bg-card/40 border-border/80 backdrop-blur-md">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Clock className="h-5 w-5 text-primary" />
-              Attendance logs (Past 7 Days)
-            </CardTitle>
-            <CardDescription>Time-stamps of checked shifts and punch locations.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {attendanceHistory.length === 0 ? (
-              <div className="py-10 text-center text-xs text-muted-foreground border border-dashed border-border/40 rounded-xl bg-card/10">
-                No active attendance records.
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-bold uppercase tracking-wide flex items-center gap-1.5">
+                <CalendarIcon className="h-4.5 w-4.5 text-primary" />
+                Corporate Calendar
+              </CardTitle>
+              <div className="flex items-center gap-1">
+                <Button size="icon" variant="outline" className="h-7 w-7" onClick={handlePrevMonth}>
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="text-xs font-bold px-1 text-foreground min-w-[75px] text-center">
+                  {monthNames[month]} {year}
+                </span>
+                <Button size="icon" variant="outline" className="h-7 w-7" onClick={handleNextMonth}>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
               </div>
-            ) : (
-              <div className="space-y-4 relative pl-4 border-l border-border/60">
-                {attendanceHistory.map((log) => {
-                  const checkInTime = new Date(log.checkIn).toLocaleTimeString([], {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  });
-                  const checkOutTime = log.checkOut
-                    ? new Date(log.checkOut).toLocaleTimeString([], {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })
-                    : 'Active';
+            </div>
+            <CardDescription className="text-[11px]">
+              Corporate timezone-safe calendar scheduler
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Days header */}
+            <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-black uppercase text-muted-foreground">
+              {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, idx) => (
+                <div key={idx} className="py-1">
+                  {day}
+                </div>
+              ))}
+            </div>
 
+            {/* Days grid */}
+            <div className="grid grid-cols-7 gap-1">
+              {daysGrid.map((cell, idx) => {
+                // Find matched holiday
+                const cellDate = new Date(cell.dateString);
+                const hasHoliday = holidays.some((h) => {
+                  const hDate = new Date(h.date);
                   return (
-                    <div key={log._id} className="relative space-y-1">
-                      {/* Timeline dot */}
-                      <div
-                        className={`absolute -left-[21px] top-1.5 h-3.5 w-3.5 rounded-full border-2 bg-card ${
-                          log.status === 'present' ? 'border-emerald-500' : 'border-amber-500'
-                        }`}
-                      ></div>
+                    hDate.getFullYear() === cellDate.getFullYear() &&
+                    hDate.getMonth() === cellDate.getMonth() &&
+                    hDate.getDate() === cellDate.getDate()
+                  );
+                });
 
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-foreground">
-                          {new Date(log.date).toLocaleDateString(undefined, {
-                            weekday: 'short',
-                            month: 'short',
-                            day: 'numeric',
-                          })}
-                        </span>
+                // Find active user leave
+                const hasLeave = leaveRequests.some((r) => {
+                  if (r.status === 'rejected') return false;
+                  const start = new Date(r.startDate);
+                  const end = new Date(r.endDate);
+                  const startMidnight = new Date(
+                    start.getFullYear(),
+                    start.getMonth(),
+                    start.getDate()
+                  );
+                  const endMidnight = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+                  const currentMidnight = new Date(
+                    cellDate.getFullYear(),
+                    cellDate.getMonth(),
+                    cellDate.getDate()
+                  );
+                  return currentMidnight >= startMidnight && currentMidnight <= endMidnight;
+                });
+
+                return (
+                  <div
+                    key={idx}
+                    className={`relative aspect-square flex flex-col items-center justify-center rounded-lg border text-xs font-bold transition-all duration-200 ${
+                      !cell.isCurrentMonth
+                        ? 'border-transparent text-muted-foreground/35 cursor-default'
+                        : hasHoliday
+                          ? 'bg-primary/10 border-primary text-primary shadow-[0_0_10px_rgba(var(--primary-rgb),0.1)]'
+                          : hasLeave
+                            ? 'bg-teal-500/10 border-teal-500/30 text-teal-400'
+                            : 'border-border/60 hover:border-primary/25 cursor-pointer bg-card/10'
+                    }`}
+                  >
+                    <span>{cell.day}</span>
+                    {hasHoliday && (
+                      <span className="absolute bottom-1 h-1 w-1 rounded-full bg-primary animate-pulse" />
+                    )}
+                    {hasLeave && !hasHoliday && (
+                      <span className="absolute bottom-1 h-1 w-1 rounded-full bg-teal-400" />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Corporate Holidays list footer */}
+            <div className="space-y-2 pt-2 border-t border-border/60">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                Upcoming Days Off This Month
+              </span>
+              {holidays.filter((h) => {
+                const hDate = new Date(h.date);
+                return hDate.getMonth() === month && hDate.getFullYear() === year;
+              }).length === 0 ? (
+                <p className="text-[10px] text-muted-foreground italic">
+                  No corporate holidays scheduled in this month.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {holidays
+                    .filter((h) => {
+                      const hDate = new Date(h.date);
+                      return hDate.getMonth() === month && hDate.getFullYear() === year;
+                    })
+                    .map((h, i) => (
+                      <div
+                        key={i}
+                        className="flex justify-between items-center p-2 rounded-lg border border-border/80 bg-card/20 text-xs"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Gift className="h-4 w-4 text-primary" />
+                          <div>
+                            <span className="font-bold block">{h.name}</span>
+                            <span className="text-[9px] text-muted-foreground uppercase font-black tracking-wider">
+                              Type: {h.type} • {h.scope}
+                            </span>
+                          </div>
+                        </div>
                         <Badge
                           variant="outline"
-                          className="text-[9px] uppercase font-semibold py-0"
+                          className="border-primary/25 text-primary text-[10px]"
                         >
-                          {log.workMode}
+                          {new Date(h.date).getDate()}d
                         </Badge>
                       </div>
-
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" /> {checkInTime} - {checkOutTime}
-                        </span>
-                        {log.overtimeMinutes > 0 && (
-                          <span className="text-emerald-500 text-[10px] font-bold">
-                            +{Math.round((log.overtimeMinutes / 60) * 10) / 10}h OT
-                          </span>
-                        )}
-                      </div>
-
-                      {log.notes && (
-                        <p className="text-[10px] text-muted-foreground/80 italic pl-1">
-                          &quot;{log.notes}&quot;
-                        </p>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+                    ))}
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -342,6 +506,24 @@ export function HrLeaves() {
               className="text-xs"
             />
           </div>
+
+          {/* Conflict overlap forecast notifications */}
+          {overlapAlert && (
+            <div
+              className={`p-3 border rounded-lg flex items-start gap-2 text-xs ${
+                overlapAlert.type === 'holiday'
+                  ? 'border-indigo-500/20 bg-indigo-500/5 text-indigo-500'
+                  : 'border-rose-500/20 bg-rose-500/5 text-rose-500'
+              }`}
+            >
+              {overlapAlert.type === 'holiday' ? (
+                <Info className="h-4.5 w-4.5 flex-shrink-0 mt-0.5" />
+              ) : (
+                <AlertTriangle className="h-4.5 w-4.5 flex-shrink-0 mt-0.5" />
+              )}
+              <p className="leading-normal">{overlapAlert.message}</p>
+            </div>
+          )}
 
           <div className="flex justify-end gap-2 pt-4 border-t border-border/40">
             <Button

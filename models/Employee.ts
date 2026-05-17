@@ -170,6 +170,27 @@ const EmployeeSchema = new Schema(
       sickDays: { type: Number, default: 10 },
       paidDays: { type: Number, default: 15 },
     },
+    presenceStatus: {
+      type: String,
+      enum: ['online', 'offline', 'away'],
+      default: 'offline',
+      index: true,
+    },
+    lastActiveAt: {
+      type: Date,
+      default: Date.now,
+    },
+    payrollMetadata: {
+      bankRouting: { type: String, default: '' },
+      bankAccount: { type: String, default: '' },
+      taxFormW4Signed: { type: Boolean, default: false },
+      taxFormW9Signed: { type: Boolean, default: false },
+      govIdVerified: { type: Boolean, default: false },
+    },
+    checklistTemplate: {
+      type: String,
+      default: 'standard',
+    },
     isArchived: {
       type: Boolean,
       default: false,

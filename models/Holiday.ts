@@ -23,6 +23,29 @@ const HolidaySchema = new Schema(
       type: String,
       default: '',
     },
+    scope: {
+      type: String,
+      enum: ['company-wide', 'regional', 'department-specific'],
+      default: 'company-wide',
+    },
+    region: {
+      type: String,
+      default: '',
+    },
+    departmentId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Department',
+      default: null,
+    },
+    type: {
+      type: String,
+      enum: ['public', 'optional'],
+      default: 'public',
+    },
+    isRecurring: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,

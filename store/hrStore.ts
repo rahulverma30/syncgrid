@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { toast } from 'sonner';
+import { socketGateway } from '@/lib/socketGateway';
 
 interface HRState {
   employees: any[];
@@ -14,6 +15,11 @@ interface HRState {
   loading: Record<string, boolean>;
   error: string | null;
 
+  // New hardened states
+  myProfile: any | null;
+  holidays: any[];
+  presenceState: Record<string, string>;
+
   // Actions
   fetchEmployees: (search?: string, filters?: Record<string, string>) => Promise<void>;
   fetchDepartments: () => Promise<void>;
@@ -21,6 +27,14 @@ interface HRState {
   fetchLeaves: () => Promise<void>;
   fetchReviews: (employeeId?: string) => Promise<void>;
   fetchAnnouncements: () => Promise<void>;
+
+  // Hardened actions
+  fetchMyProfile: () => Promise<void>;
+  updateMyProfile: (payload: any) => Promise<boolean>;
+  fetchHolidays: () => Promise<void>;
+  createHoliday: (payload: any) => Promise<boolean>;
+  initializeRealtime: (companyId: string) => () => void;
+  setPresence: (status: 'online' | 'offline' | 'away') => Promise<void>;
 
   // Mutations
   clockInOut: (workMode: string, location?: string, notes?: string) => Promise<boolean>;
@@ -56,6 +70,9 @@ export const useHRStore = create<HRState>((set, get) => ({
   announcements: [],
   loading: {},
   error: null,
+  myProfile: null,
+  holidays: [],
+  presenceState: {},
 
   fetchEmployees: async (search = '', filters = {}) => {
     set((state) => ({ loading: { ...state.loading, employees: true }, error: null }));
@@ -182,6 +199,22 @@ export const useHRStore = create<HRState>((set, get) => ({
         );
         // Refresh local punches
         await get().fetchAttendance();
+
+        // Broadcast realtime presence status
+        const myProfile = get().myProfile;
+        if (json.action === 'clocked_in') {
+          socketGateway.broadcastSimulated('employee_clocked_in', {
+            employeeId: myProfile?._id || 'me',
+            fullName: myProfile?.fullName || 'Active User',
+            workMode,
+          });
+        } else {
+          socketGateway.broadcastSimulated('employee_clocked_out', {
+            employeeId: myProfile?._id || 'me',
+            fullName: myProfile?.fullName || 'Active User',
+          });
+        }
+
         return true;
       } else {
         toast.error(json.message || 'Action failed');
@@ -207,6 +240,13 @@ export const useHRStore = create<HRState>((set, get) => ({
       if (json.success) {
         toast.success('Leave request submitted for approval!');
         await get().fetchLeaves();
+
+        // Broadcast realtime leave request
+        socketGateway.broadcastSimulated('leave_requested', {
+          fullName: get().myProfile?.fullName || 'Active User',
+          reason: payload.reason,
+        });
+
         return true;
       } else {
         toast.error(json.message || 'Failed to submit leave request');
@@ -234,6 +274,15 @@ export const useHRStore = create<HRState>((set, get) => ({
         await get().fetchLeaves();
         // Also refresh employee list to get updated leave balances
         await get().fetchEmployees();
+
+        // Broadcast approval/rejection
+        socketGateway.broadcastSimulated(
+          status === 'approved' ? 'leave_approved' : 'leave_rejected',
+          {
+            fullName: 'A Teammate',
+          }
+        );
+
         return true;
       } else {
         toast.error(json.message || 'Approvals action failed');
@@ -383,6 +432,12 @@ export const useHRStore = create<HRState>((set, get) => ({
       if (json.success) {
         toast.success('Announcement broadcast notice posted!');
         await get().fetchAnnouncements();
+
+        // Broadcast realtime announcement notice
+        socketGateway.broadcastSimulated('announcement_published', {
+          title: payload.title,
+        });
+
         return true;
       } else {
         toast.error(json.message || 'Failed to post announcement');
@@ -423,6 +478,199 @@ export const useHRStore = create<HRState>((set, get) => ({
       return false;
     } finally {
       set((state) => ({ loading: { ...state.loading, seeder: false } }));
+    }
+  },
+
+  fetchMyProfile: async () => {
+    set((state) => ({ loading: { ...state.loading, myProfile: true } }));
+    try {
+      const res = await fetch('/api/protected/hr/me');
+      const json = await res.json();
+      if (json.success) {
+        set({ myProfile: json.data });
+      }
+    } catch (err: any) {
+      console.error('Error fetching current employee profile:', err);
+    } finally {
+      set((state) => ({ loading: { ...state.loading, myProfile: false } }));
+    }
+  },
+
+  updateMyProfile: async (payload) => {
+    set((state) => ({ loading: { ...state.loading, editProfile: true } }));
+    try {
+      const res = await fetch('/api/protected/hr/me', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const json = await res.json();
+      if (json.success) {
+        toast.success('Your profile has been updated!');
+        await get().fetchMyProfile();
+        // Broadcast presence
+        const profile = get().myProfile;
+        if (profile) {
+          socketGateway.broadcastSimulated('presence_update', {
+            userId: profile.userId,
+            fullName: profile.fullName,
+            status: profile.presenceStatus || 'online',
+          });
+        }
+        return true;
+      } else {
+        toast.error(json.message || 'Failed to update profile');
+        return false;
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Error updating profile');
+      return false;
+    } finally {
+      set((state) => ({ loading: { ...state.loading, editProfile: false } }));
+    }
+  },
+
+  fetchHolidays: async () => {
+    set((state) => ({ loading: { ...state.loading, holidays: true } }));
+    try {
+      const res = await fetch('/api/protected/hr/holidays');
+      const json = await res.json();
+      if (json.success) {
+        set({ holidays: json.data });
+      }
+    } catch (err: any) {
+      console.error('Error fetching corporate calendar holidays:', err);
+    } finally {
+      set((state) => ({ loading: { ...state.loading, holidays: false } }));
+    }
+  },
+
+  createHoliday: async (payload) => {
+    set((state) => ({ loading: { ...state.loading, createHoliday: true } }));
+    try {
+      const res = await fetch('/api/protected/hr/holidays', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const json = await res.json();
+      if (json.success) {
+        toast.success(`Holiday "${payload.name}" added to calendar!`);
+        await get().fetchHolidays();
+        return true;
+      } else {
+        toast.error(json.message || 'Failed to register holiday');
+        return false;
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Error registering holiday');
+      return false;
+    } finally {
+      set((state) => ({ loading: { ...state.loading, createHoliday: false } }));
+    }
+  },
+
+  initializeRealtime: (companyId: string) => {
+    // Establish tenant connection
+    socketGateway.connect(companyId);
+
+    // Set online status on load
+    get().setPresence('online');
+
+    // Bind real-time workforce event listeners
+    const unsubClockIn = socketGateway.on('employee_clocked_in', (data: any) => {
+      toast.info(`[Realtime Presence] ${data.fullName} clocked in as ${data.workMode}!`);
+      set((state) => ({
+        employees: state.employees.map((emp) =>
+          emp._id === data.employeeId
+            ? { ...emp, workMode: data.workMode, presenceStatus: 'online' }
+            : emp
+        ),
+        presenceState: { ...state.presenceState, [data.employeeId]: 'online' },
+      }));
+    });
+
+    const unsubClockOut = socketGateway.on('employee_clocked_out', (data: any) => {
+      toast.info(`[Realtime Presence] ${data.fullName} clocked out!`);
+      set((state) => ({
+        employees: state.employees.map((emp) =>
+          emp._id === data.employeeId ? { ...emp, presenceStatus: 'offline' } : emp
+        ),
+        presenceState: { ...state.presenceState, [data.employeeId]: 'offline' },
+      }));
+    });
+
+    const unsubLeaveReq = socketGateway.on('leave_requested', (data: any) => {
+      toast.info(`[Realtime Leave] ${data.fullName} submitted a leave request: ${data.reason}`);
+      get().fetchLeaves();
+    });
+
+    const unsubLeaveApprove = socketGateway.on('leave_approved', (data: any) => {
+      toast.success(`[Realtime Leave] Leave request approved for ${data.fullName}!`);
+      get().fetchLeaves();
+      get().fetchEmployees();
+    });
+
+    const unsubLeaveReject = socketGateway.on('leave_rejected', (data: any) => {
+      toast.error(`[Realtime Leave] Leave request rejected for ${data.fullName}.`);
+      get().fetchLeaves();
+    });
+
+    const unsubAnnouncement = socketGateway.on('announcement_published', (data: any) => {
+      toast.info(`[Notice Board] New announcement posted: "${data.title}"`, {
+        duration: 5000,
+      });
+      get().fetchAnnouncements();
+    });
+
+    const unsubPresence = socketGateway.on('presence_update', (data: any) => {
+      if (data.userId && data.status) {
+        set((state) => ({
+          presenceState: { ...state.presenceState, [data.userId]: data.status },
+        }));
+      }
+    });
+
+    return () => {
+      unsubClockIn();
+      unsubClockOut();
+      unsubLeaveReq();
+      unsubLeaveApprove();
+      unsubLeaveReject();
+      unsubAnnouncement();
+      unsubPresence();
+      socketGateway.disconnect();
+    };
+  },
+
+  setPresence: async (status) => {
+    try {
+      set((state) => {
+        if (state.myProfile) {
+          return {
+            myProfile: { ...state.myProfile, presenceStatus: status },
+            presenceState: { ...state.presenceState, [state.myProfile.userId || 'me']: status },
+          };
+        }
+        return state;
+      });
+
+      await fetch('/api/protected/hr/me', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ presenceStatus: status }),
+      });
+
+      const profile = get().myProfile;
+      if (profile) {
+        socketGateway.broadcastSimulated('presence_update', {
+          userId: profile.userId,
+          fullName: profile.fullName,
+          status,
+        });
+      }
+    } catch (e) {
+      console.error('Failed to sync presence status:', e);
     }
   },
 }));
