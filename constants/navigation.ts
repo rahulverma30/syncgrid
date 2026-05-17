@@ -15,6 +15,7 @@ import {
   LogOut,
   ShieldCheck,
   Sparkles,
+  Building,
 } from 'lucide-react';
 
 export const SIDEBAR_GROUPS = [
@@ -57,6 +58,23 @@ export const SIDEBAR_GROUPS = [
           { label: 'Contacts', href: '/dashboard/crm/contacts' },
           { label: 'Accounts', href: '/dashboard/crm/accounts' },
           { label: 'Deals', href: '/dashboard/crm/deals' },
+        ],
+      },
+      {
+        id: 'clients',
+        label: 'Clients',
+        icon: Building,
+        href: '/clients',
+        badge: 'M6',
+        disabled: false,
+        roles: [
+          'Super Admin',
+          'Admin',
+          'Project Manager',
+          'Team Lead',
+          'Developer',
+          'HR',
+          'Finance',
         ],
       },
       {

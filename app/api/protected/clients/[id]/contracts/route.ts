@@ -1,0 +1,73 @@
+import { NextResponse } from 'next/server';
+import { withApiAuth } from '@/lib/auth/api';
+import { connectToDatabase } from '@/lib/db/mongodb';
+import { Client } from '@/models/Client';
+
+export const POST = withApiAuth(async (request: Request, context: any, session: any) => {
+  try {
+    await connectToDatabase();
+    const companyId = session.user.companyId;
+    const userName = session.user.name;
+    const { id } = context.params;
+    const body = await request.json();
+
+    const { title, value, startDate, endDate, status } = body;
+
+    if (!title) {
+      return NextResponse.json(
+        { success: false, error: 'VALIDATION_ERROR', message: 'Contract Title is required.' },
+        { status: 400 }
+      );
+    }
+
+    const client = await Client.findOne({ _id: id, companyId });
+
+    if (!client) {
+      return NextResponse.json(
+        { success: false, error: 'NOT_FOUND', message: 'Client account not found.' },
+        { status: 404 }
+      );
+    }
+
+    const newContract = {
+      title,
+      value: value || 0,
+      startDate: startDate ? new Date(startDate) : undefined,
+      endDate: endDate ? new Date(endDate) : undefined,
+      status: status || 'active',
+    };
+
+    client.contracts.push(newContract);
+
+    // Dynamic Recalculation: Tally total client contracts to update overall revenueContribution
+    const totalRevenue = client.contracts.reduce((sum: number, c: any) => {
+      if (c.status === 'active') {
+        return sum + (c.value || 0);
+      }
+      return sum;
+    }, 0);
+
+    client.revenueContribution = totalRevenue;
+
+    // Record timeline logs
+    client.timeline.push({
+      type: 'contract_added',
+      title: 'Contract Agreement Signed',
+      description: `Contract "${title}" valued at $${(value || 0).toLocaleString()} approved by ${userName}.`,
+      userName,
+      createdAt: new Date(),
+    });
+
+    await client.save();
+
+    return NextResponse.json({
+      success: true,
+      data: client,
+    });
+  } catch (error: any) {
+    return NextResponse.json(
+      { success: false, error: 'ACTION_ERROR', message: error.message },
+      { status: 500 }
+    );
+  }
+});

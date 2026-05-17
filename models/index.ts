@@ -7,3 +7,4 @@ export { Role } from './Role';
 export { User } from './User';
 export { Lead } from './Lead';
 export { CrmSettings } from './CrmSettings';
+export { Client } from './Client';
