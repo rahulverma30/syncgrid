@@ -164,6 +164,11 @@ const ClientSchema = new Schema(
       default: 80,
       index: true,
     },
+    tags: {
+      type: [String],
+      default: [],
+      index: true,
+    },
     customFields: {
       type: Map,
       of: String,

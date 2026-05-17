@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { withApiAuth } from '@/lib/auth/api';
 import { connectToDatabase } from '@/lib/db/mongodb';
 import { Client } from '@/models/Client';
+import { ClientActivity } from '@/models/ClientActivity';
 import { hasRole } from '@/lib/auth/permission-checks';
 
 export const GET = withApiAuth(async (request: Request, context: any, session: any) => {
@@ -19,9 +20,17 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
       );
     }
 
+    // Merge activities dynamically from decoupled ClientActivity collection
+    const activities = await ClientActivity.find({ clientId: id, companyId })
+      .sort({ createdAt: -1 })
+      .limit(100);
+
+    const clientObj = client.toObject();
+    clientObj.timeline = activities;
+
     return NextResponse.json({
       success: true,
-      data: client,
+      data: clientObj,
     });
   } catch (error: any) {
     return NextResponse.json(
@@ -84,16 +93,35 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
     if (body.phones) client.phones = body.phones;
     if (body.socialLinks) client.socialLinks = body.socialLinks;
     if (body.customFields) client.customFields = body.customFields;
+    if (body.tags) client.tags = body.tags;
 
+    // Decatur timeline logs - save to decoupled ClientActivity collection
     if (timelineUpdates.length > 0) {
-      client.timeline.push(...timelineUpdates);
+      const dbActivities = timelineUpdates.map((t) => ({
+        companyId,
+        clientId: id,
+        type: t.type,
+        title: t.title,
+        description: t.description,
+        userName: t.userName,
+        createdAt: t.createdAt,
+      }));
+      await ClientActivity.insertMany(dbActivities);
     }
 
     await client.save();
 
+    // Re-fetch timeline events to merge into returned client
+    const activities = await ClientActivity.find({ clientId: id, companyId })
+      .sort({ createdAt: -1 })
+      .limit(100);
+
+    const clientObj = client.toObject();
+    clientObj.timeline = activities;
+
     return NextResponse.json({
       success: true,
-      data: client,
+      data: clientObj,
     });
   } catch (error: any) {
     return NextResponse.json(
@@ -136,6 +164,9 @@ export const DELETE = withApiAuth(async (request: Request, context: any, session
         { status: 404 }
       );
     }
+
+    // Clean up corresponding activities
+    await ClientActivity.deleteMany({ clientId: id, companyId });
 
     return NextResponse.json({
       success: true,

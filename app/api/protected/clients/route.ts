@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { withApiAuth } from '@/lib/auth/api';
 import { connectToDatabase } from '@/lib/db/mongodb';
 import { Client } from '@/models/Client';
+import { ClientActivity } from '@/models/ClientActivity';
 import { hasRole } from '@/lib/auth/permission-checks';
 
 export const GET = withApiAuth(async (request: Request, context: any, session: any) => {
@@ -17,6 +18,7 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     const onboardingStatus = url.searchParams.get('onboardingStatus') || '';
     const retentionStatus = url.searchParams.get('retentionStatus') || '';
     const accountManager = url.searchParams.get('accountManager') || '';
+    const tagsParam = url.searchParams.get('tags') || '';
     const isArchivedParam = url.searchParams.get('isArchived');
     const isArchived = isArchivedParam === 'true';
 
@@ -40,6 +42,9 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     if (clientType) query.clientType = clientType;
     if (onboardingStatus) query.onboardingStatus = onboardingStatus;
     if (retentionStatus) query.retentionStatus = retentionStatus;
+    if (tagsParam) {
+      query.tags = { $all: tagsParam.split(',') };
+    }
 
     // Fuzzy search company name or industry
     if (search) {
@@ -88,6 +93,7 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
       retentionStatus,
       healthScore,
       customFields,
+      tags,
     } = body;
 
     if (!name) {
@@ -119,6 +125,7 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
       retentionStatus: retentionStatus || 'retained',
       healthScore: healthScore !== undefined ? healthScore : 80,
       customFields: customFields || {},
+      tags: tags || [],
       isArchived: false,
       contacts: [],
       notes: [],
@@ -126,17 +133,21 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
       contracts: [],
       meetings: [],
       communicationLogs: [],
-      timeline: [
-        {
-          type: 'created',
-          title: 'Client Account Onboarded',
-          description: `Client organization "${name}" recorded in core ERP ledger by ${userName}.`,
-          userName,
-        },
-      ],
+      timeline: [],
     });
 
     await newClient.save();
+
+    // Decatur timeline logs - log directly to decoupled ClientActivity collection
+    const activity = new ClientActivity({
+      companyId,
+      clientId: newClient._id,
+      type: 'created',
+      title: 'Client Account Onboarded',
+      description: `Client organization "${name}" recorded in core ERP ledger by ${userName}.`,
+      userName,
+    });
+    await activity.save();
 
     return NextResponse.json({
       success: true,

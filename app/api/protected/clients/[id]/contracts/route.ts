@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { withApiAuth } from '@/lib/auth/api';
 import { connectToDatabase } from '@/lib/db/mongodb';
 import { Client } from '@/models/Client';
+import { ClientActivity } from '@/models/ClientActivity';
 
 export const POST = withApiAuth(async (request: Request, context: any, session: any) => {
   try {
@@ -49,14 +50,16 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
 
     client.revenueContribution = totalRevenue;
 
-    // Record timeline logs
-    client.timeline.push({
+    // Record timeline logs - save to decoupled ClientActivity collection
+    const activity = new ClientActivity({
+      companyId,
+      clientId: id,
       type: 'contract_added',
       title: 'Contract Agreement Signed',
       description: `Contract "${title}" valued at $${(value || 0).toLocaleString()} approved by ${userName}.`,
       userName,
-      createdAt: new Date(),
     });
+    await activity.save();
 
     await client.save();
 

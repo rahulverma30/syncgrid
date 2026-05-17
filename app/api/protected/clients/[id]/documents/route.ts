@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { withApiAuth } from '@/lib/auth/api';
 import { connectToDatabase } from '@/lib/db/mongodb';
 import { Client } from '@/models/Client';
+import { ClientActivity } from '@/models/ClientActivity';
+import { validateUploadPayload } from '@/lib/validators/upload';
 
 export const POST = withApiAuth(async (request: Request, context: any, session: any) => {
   try {
@@ -13,12 +15,13 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
 
     const { name, category, url, size } = body;
 
-    if (!name || !url) {
+    const validation = validateUploadPayload({ name, category, url, size });
+    if (!validation.isValid) {
       return NextResponse.json(
         {
           success: false,
           error: 'VALIDATION_ERROR',
-          message: 'Document name and URL are required.',
+          message: validation.error,
         },
         { status: 400 }
       );
@@ -44,13 +47,15 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
 
     client.documents.push(newDoc);
 
-    client.timeline.push({
+    const activity = new ClientActivity({
+      companyId,
+      clientId: id,
       type: 'document_uploaded',
       title: 'Agreement Document Attached',
       description: `Uploaded document "${name}" (type: ${category}) under client folder.`,
       userName,
-      createdAt: new Date(),
     });
+    await activity.save();
 
     await client.save();
 

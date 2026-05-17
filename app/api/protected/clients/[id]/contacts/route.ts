@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { withApiAuth } from '@/lib/auth/api';
 import { connectToDatabase } from '@/lib/db/mongodb';
 import { Client } from '@/models/Client';
+import { ClientActivity } from '@/models/ClientActivity';
 
 export const POST = withApiAuth(async (request: Request, context: any, session: any) => {
   try {
@@ -47,14 +48,16 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
 
     client.contacts.push(newContact);
 
-    // Record inside account audit timeline
-    client.timeline.push({
+    // Record inside account audit timeline - save to decoupled ClientActivity collection
+    const activity = new ClientActivity({
+      companyId,
+      clientId: id,
       type: 'contact_added',
       title: 'New Account Contact Added',
       description: `Contact person "${name}" (${role}) registered by ${userName}.`,
       userName,
-      createdAt: new Date(),
     });
+    await activity.save();
 
     await client.save();
 
