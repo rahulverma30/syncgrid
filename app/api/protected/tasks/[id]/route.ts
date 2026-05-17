@@ -91,6 +91,40 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
 
     const validated = parseResult.data;
 
+    // Granular Field-Level Permissions Policy Check
+    try {
+      const { canEditTaskField } = require('@/lib/permissions/taskPolicy');
+      const userPolicy = {
+        id: userId,
+        role: session.user.role || 'developer',
+        companyId: companyId.toString(),
+      };
+      const taskPolicy = {
+        _id: task._id.toString(),
+        companyId: task.companyId.toString(),
+        projectId: task.projectId.toString(),
+        assignees: task.assignees.map((a: any) => a.toString()),
+        watchers: task.watchers.map((w: any) => w.toString()),
+      };
+
+      for (const key of Object.keys(validated)) {
+        if (validated[key as keyof typeof validated] !== undefined) {
+          if (!canEditTaskField(userPolicy, taskPolicy, key)) {
+            return NextResponse.json(
+              {
+                success: false,
+                error: 'FORBIDDEN',
+                message: `Action Blocked: You do not possess clearance to modify the task field: "${key}"`,
+              },
+              { status: 403 }
+            );
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Task policy evaluation error:', e);
+    }
+
     // Track transitions for audit trail
     const changes: string[] = [];
 
@@ -99,6 +133,38 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
       const oldStatus = await TaskStatus.findById(task.statusId);
       const newStatus = await TaskStatus.findById(validated.statusId);
       if (oldStatus && newStatus) {
+        // Enforce Workflow Transition QA Gates
+        try {
+          const { canTransitionWorkflow } = require('@/lib/permissions/taskPolicy');
+          const userPolicy = {
+            id: userId,
+            role: session.user.role || 'developer',
+            companyId: companyId.toString(),
+          };
+          const taskPolicy = {
+            _id: task._id.toString(),
+            companyId: task.companyId.toString(),
+            projectId: task.projectId.toString(),
+            assignees: task.assignees.map((a: any) => a.toString()),
+            watchers: task.watchers.map((w: any) => w.toString()),
+          };
+
+          if (
+            !canTransitionWorkflow(userPolicy, taskPolicy, oldStatus.category, newStatus.category)
+          ) {
+            return NextResponse.json(
+              {
+                success: false,
+                error: 'FORBIDDEN',
+                message: `Transition Gate Blocked: Standard developers are restricted from directly transitioning items to the Completed stage without supervisor review.`,
+              },
+              { status: 403 }
+            );
+          }
+        } catch (e) {
+          console.error('Workflow transition check error:', e);
+        }
+
         changes.push(`status from "${oldStatus.name}" to "${newStatus.name}"`);
 
         // If transitioning to Done/Completed, auto-fill completedDate
@@ -177,6 +243,20 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
       .populate({ path: 'assignees', select: 'name email image' })
       .populate({ path: 'watchers', select: 'name email image' })
       .populate({ path: 'parentId', select: 'title code' });
+
+    // Realtime Broadcast
+    try {
+      const { broadcastEvent } = require('@/lib/realtime');
+      broadcastEvent({
+        companyId,
+        projectId: task.projectId ? task.projectId.toString() : undefined,
+        taskId: task._id.toString(),
+        event: 'task_updated',
+        payload: populated,
+      });
+    } catch (e) {
+      console.error('SSE Broadcast error:', e);
+    }
 
     return NextResponse.json({ success: true, data: populated });
   } catch (error: any) {

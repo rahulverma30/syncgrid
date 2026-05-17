@@ -36,7 +36,16 @@ export function TaskTable({ onSelectTask }: TaskTableProps) {
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8;
+  const itemsPerPage = 50; // Increased to showcase high-scale virtualization performance
+
+  // Virtualization Scroll States
+  const [scrollTop, setScrollTop] = useState(0);
+  const rowHeight = 65; // exact row height in px
+  const viewportHeight = 350; // max visible height of viewport container
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    setScrollTop(e.currentTarget.scrollTop);
+  };
 
   // Toggle selection
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -161,6 +170,26 @@ export function TaskTable({ onSelectTask }: TaskTableProps) {
     return sortedTasks.slice(startIndex, startIndex + itemsPerPage);
   }, [sortedTasks, currentPage]);
 
+  // Virtualization Window Calculations
+  const virtualRows = useMemo(() => {
+    const totalItems = paginatedTasks.length;
+    const startIdx = Math.max(0, Math.floor(scrollTop / rowHeight) - 2); // 2 rows buffer top
+    const endIdx = Math.min(
+      totalItems - 1,
+      Math.ceil((scrollTop + viewportHeight) / rowHeight) + 2
+    ); // 2 rows buffer bottom
+
+    const sliced = paginatedTasks.slice(startIdx, endIdx + 1);
+    const paddingTop = startIdx * rowHeight;
+    const paddingBottom = Math.max(0, (totalItems - 1 - endIdx) * rowHeight);
+
+    return {
+      rows: sliced,
+      paddingTop,
+      paddingBottom,
+    };
+  }, [paginatedTasks, scrollTop, rowHeight, viewportHeight]);
+
   const totalPages = Math.ceil(sortedTasks.length / itemsPerPage) || 1;
 
   const getPriorityBadgeClass = (priority: string) => {
@@ -221,7 +250,11 @@ export function TaskTable({ onSelectTask }: TaskTableProps) {
       </div>
 
       {/* Grid container */}
-      <div className="border border-border/30 rounded-xl overflow-hidden shadow-sm bg-background">
+      <div
+        className="border border-border/30 rounded-xl overflow-auto shadow-sm bg-background"
+        style={{ maxHeight: `${viewportHeight}px` }}
+        onScroll={handleScroll}
+      >
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-muted/10 border-b border-border/40 text-[10px] font-bold text-muted-foreground uppercase tracking-wider select-none">
@@ -323,97 +356,109 @@ export function TaskTable({ onSelectTask }: TaskTableProps) {
                 </td>
               </tr>
             ) : (
-              paginatedTasks.map((t) => (
-                <tr
-                  key={t._id}
-                  className={`hover:bg-muted/5 transition duration-100 ${
-                    selectedIds.has(t._id) ? 'bg-primary/5 hover:bg-primary/5' : ''
-                  }`}
-                >
-                  <td className="py-3.5 px-4 text-center">
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.has(t._id)}
-                      onChange={() => handleSelectRow(t._id)}
-                      className="rounded border-border focus:ring-0 cursor-pointer"
-                    />
-                  </td>
-
-                  {/* Code */}
-                  <td className="py-3.5 px-3 font-mono text-[11px] font-bold text-muted-foreground select-all">
-                    {t.code}
-                  </td>
-
-                  {/* Title */}
-                  <td className="py-3.5 px-3">
-                    <div className="space-y-0.5">
-                      <span className="text-xs font-bold text-foreground line-clamp-1">
-                        {t.title}
-                      </span>
-                      <span className="text-[10px] text-muted-foreground block">
-                        {t.projectId?.name}
-                      </span>
-                    </div>
-                  </td>
-
-                  {/* Status */}
-                  <td className="py-3.5 px-3">
-                    <div className="flex items-center gap-1.5">
-                      <span
-                        className="w-2 h-2 rounded-full shrink-0"
-                        style={{ backgroundColor: t.statusId?.color || '#94a3b8' }}
+              <>
+                {virtualRows.paddingTop > 0 && (
+                  <tr style={{ height: `${virtualRows.paddingTop}px` }}>
+                    <td colSpan={10} className="p-0 border-0" />
+                  </tr>
+                )}
+                {virtualRows.rows.map((t) => (
+                  <tr
+                    key={t._id}
+                    className={`hover:bg-muted/5 transition duration-100 ${
+                      selectedIds.has(t._id) ? 'bg-primary/5 hover:bg-primary/5' : ''
+                    }`}
+                  >
+                    <td className="py-3.5 px-4 text-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(t._id)}
+                        onChange={() => handleSelectRow(t._id)}
+                        className="rounded border-border focus:ring-0 cursor-pointer"
                       />
-                      <span className="text-xs font-semibold text-foreground">
-                        {t.statusId?.name}
+                    </td>
+
+                    {/* Code */}
+                    <td className="py-3.5 px-3 font-mono text-[11px] font-bold text-muted-foreground select-all">
+                      {t.code}
+                    </td>
+
+                    {/* Title */}
+                    <td className="py-3.5 px-3">
+                      <div className="space-y-0.5">
+                        <span className="text-xs font-bold text-foreground line-clamp-1">
+                          {t.title}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground block">
+                          {t.projectId?.name}
+                        </span>
+                      </div>
+                    </td>
+
+                    {/* Status */}
+                    <td className="py-3.5 px-3">
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className="w-2 h-2 rounded-full shrink-0"
+                          style={{ backgroundColor: t.statusId?.color || '#94a3b8' }}
+                        />
+                        <span className="text-xs font-semibold text-foreground">
+                          {t.statusId?.name}
+                        </span>
+                      </div>
+                    </td>
+
+                    {/* Priority */}
+                    <td className="py-3.5 px-3">
+                      <span
+                        className={`text-[10px] px-1.5 py-0.2 rounded font-sans font-bold capitalize ${getPriorityBadgeClass(t.priority)}`}
+                      >
+                        {t.priority}
                       </span>
-                    </div>
-                  </td>
+                    </td>
 
-                  {/* Priority */}
-                  <td className="py-3.5 px-3">
-                    <span
-                      className={`text-[10px] px-1.5 py-0.2 rounded font-sans font-bold capitalize ${getPriorityBadgeClass(t.priority)}`}
-                    >
-                      {t.priority}
-                    </span>
-                  </td>
+                    {/* Points */}
+                    <td className="py-3.5 px-3 text-xs font-mono font-bold text-foreground">
+                      {t.storyPoints}
+                    </td>
 
-                  {/* Points */}
-                  <td className="py-3.5 px-3 text-xs font-mono font-bold text-foreground">
-                    {t.storyPoints}
-                  </td>
+                    {/* Hours */}
+                    <td className="py-3.5 px-3 text-xs font-mono text-muted-foreground">
+                      <strong className="text-foreground">{t.actualHours.toFixed(1)}h</strong> /{' '}
+                      {t.estimatedHours}h
+                    </td>
 
-                  {/* Hours */}
-                  <td className="py-3.5 px-3 text-xs font-mono text-muted-foreground">
-                    <strong className="text-foreground">{t.actualHours.toFixed(1)}h</strong> /{' '}
-                    {t.estimatedHours}h
-                  </td>
+                    {/* Due Date */}
+                    <td className="py-3.5 px-3 text-xs text-foreground font-medium">
+                      {t.dueDate ? (
+                        new Date(t.dueDate).toLocaleDateString()
+                      ) : (
+                        <em className="text-muted-foreground/60 text-[10px]">Not Set</em>
+                      )}
+                    </td>
 
-                  {/* Due Date */}
-                  <td className="py-3.5 px-3 text-xs text-foreground font-medium">
-                    {t.dueDate ? (
-                      new Date(t.dueDate).toLocaleDateString()
-                    ) : (
-                      <em className="text-muted-foreground/60 text-[10px]">Not Set</em>
-                    )}
-                  </td>
+                    {/* Health */}
+                    <td className="py-3.5 px-3 text-xs font-mono">
+                      <span className={getHealthTextClass(t.healthScore)}>{t.healthScore}%</span>
+                    </td>
 
-                  {/* Health */}
-                  <td className="py-3.5 px-3 text-xs font-mono">
-                    <span className={getHealthTextClass(t.healthScore)}>{t.healthScore}%</span>
-                  </td>
-
-                  {/* Actions */}
-                  <td className="py-3.5 px-4 text-center">
-                    <button
-                      onClick={() => onSelectTask(t.code)}
-                      className="p-1 hover:bg-muted/10 rounded-md text-muted-foreground hover:text-primary transition"
-                    >
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </button>
-                  </td>
-                </tr>
-              ))
+                    {/* Actions */}
+                    <td className="py-3.5 px-4 text-center">
+                      <button
+                        onClick={() => onSelectTask(t.code)}
+                        className="p-1 hover:bg-muted/10 rounded-md text-muted-foreground hover:text-primary transition"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {virtualRows.paddingBottom > 0 && (
+                  <tr style={{ height: `${virtualRows.paddingBottom}px` }}>
+                    <td colSpan={10} className="p-0 border-0" />
+                  </tr>
+                )}
+              </>
             )}
           </tbody>
         </table>

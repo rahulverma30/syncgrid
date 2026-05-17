@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useTasksStore, TaskType } from '@/store/tasksStore';
 import { DrawerModal } from '@/components/ui/modal-system';
+import { DependencyGraph } from '@/components/tasks/DependencyGraph';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -561,6 +562,9 @@ export function TaskDetailModal({ isOpen, onClose, taskCode }: TaskDetailModalPr
                   </Button>
                 </div>
               </form>
+
+              {/* Blocker network graph visualization */}
+              <DependencyGraph currentTaskId={activeTask._id} tasks={tasks} />
 
               {/* Linked relations list */}
               <div className="space-y-3">

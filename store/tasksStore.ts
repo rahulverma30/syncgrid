@@ -104,6 +104,9 @@ interface TasksState {
 
   // Seeder Action
   seedDemoData: () => Promise<void>;
+
+  // Realtime Connector
+  connectRealtime: (projectId?: string) => () => void;
 }
 
 const initialFilters: TasksFilter = {
@@ -466,6 +469,54 @@ export const useTasksStore = create<TasksState>()(
       } finally {
         set({ isLoading: false });
       }
+    },
+
+    connectRealtime: (projectId?: string) => {
+      if (typeof window === 'undefined') return () => {};
+
+      // Close any active event source
+      const existing = (window as any).__tasksEventSource__;
+      if (existing) {
+        existing.close();
+      }
+
+      const params = new URLSearchParams();
+      if (projectId) params.append('projectId', projectId);
+
+      const eventSource = new EventSource(`/api/protected/tasks/realtime?${params.toString()}`);
+      (window as any).__tasksEventSource__ = eventSource;
+
+      eventSource.addEventListener('task_updated', (event: any) => {
+        try {
+          const sseEvent = JSON.parse(event.data);
+          const updatedTask = sseEvent.payload;
+
+          set((state) => {
+            const index = state.tasks.findIndex((t) => t._id === updatedTask._id);
+            let newTasks = [...state.tasks];
+            if (index > -1) {
+              newTasks[index] = updatedTask;
+            } else {
+              newTasks = [updatedTask, ...newTasks];
+            }
+
+            return {
+              tasks: newTasks,
+              activeTask:
+                state.activeTask?._id === updatedTask._id ? updatedTask : state.activeTask,
+            };
+          });
+        } catch (err) {
+          console.error('SSE task_updated parse error:', err);
+        }
+      });
+
+      return () => {
+        eventSource.close();
+        if ((window as any).__tasksEventSource__ === eventSource) {
+          (window as any).__tasksEventSource__ = null;
+        }
+      };
     },
   }))
 );

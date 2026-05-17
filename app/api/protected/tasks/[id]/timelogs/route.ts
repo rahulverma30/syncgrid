@@ -98,6 +98,28 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
       });
       await activity.save();
 
+      // Populate returned task
+      const populated = await Task.findById(task._id)
+        .populate({ path: 'projectId', select: 'name code' })
+        .populate({ path: 'statusId', select: 'name key category color' })
+        .populate({ path: 'assignees', select: 'name email image' })
+        .populate({ path: 'watchers', select: 'name email image' })
+        .populate({ path: 'parentId', select: 'title code' });
+
+      // Realtime Broadcast
+      try {
+        const { broadcastEvent } = require('@/lib/realtime');
+        broadcastEvent({
+          companyId,
+          projectId: task.projectId ? task.projectId.toString() : undefined,
+          taskId: task._id.toString(),
+          event: 'task_updated',
+          payload: populated,
+        });
+      } catch (e) {
+        console.error('SSE Timelog Broadcast error:', e);
+      }
+
       return NextResponse.json({ success: true, data: timeLog });
     } else if (action === 'stop') {
       // Find the running timer
@@ -146,6 +168,28 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
       });
       await activity.save();
 
+      // Populate returned task
+      const populated = await Task.findById(task._id)
+        .populate({ path: 'projectId', select: 'name code' })
+        .populate({ path: 'statusId', select: 'name key category color' })
+        .populate({ path: 'assignees', select: 'name email image' })
+        .populate({ path: 'watchers', select: 'name email image' })
+        .populate({ path: 'parentId', select: 'title code' });
+
+      // Realtime Broadcast
+      try {
+        const { broadcastEvent } = require('@/lib/realtime');
+        broadcastEvent({
+          companyId,
+          projectId: task.projectId ? task.projectId.toString() : undefined,
+          taskId: task._id.toString(),
+          event: 'task_updated',
+          payload: populated,
+        });
+      } catch (e) {
+        console.error('SSE Timelog Broadcast error:', e);
+      }
+
       return NextResponse.json({ success: true, data: activeTimer });
     } else if (action === 'manual') {
       // Validate payload
@@ -193,6 +237,28 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
         description: `${userName} manually logged ${validated.durationMinutes} minutes on task "${task.title}".`,
       });
       await activity.save();
+
+      // Populate returned task
+      const populated = await Task.findById(task._id)
+        .populate({ path: 'projectId', select: 'name code' })
+        .populate({ path: 'statusId', select: 'name key category color' })
+        .populate({ path: 'assignees', select: 'name email image' })
+        .populate({ path: 'watchers', select: 'name email image' })
+        .populate({ path: 'parentId', select: 'title code' });
+
+      // Realtime Broadcast
+      try {
+        const { broadcastEvent } = require('@/lib/realtime');
+        broadcastEvent({
+          companyId,
+          projectId: task.projectId ? task.projectId.toString() : undefined,
+          taskId: task._id.toString(),
+          event: 'task_updated',
+          payload: populated,
+        });
+      } catch (e) {
+        console.error('SSE Timelog Broadcast error:', e);
+      }
 
       return NextResponse.json({ success: true, data: timeLog });
     } else {

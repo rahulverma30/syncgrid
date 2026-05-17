@@ -243,5 +243,38 @@ TaskSchema.pre('save', async function (this: any, next: any) {
   next();
 });
 
+// Recursive Subtask Rollup Hook
+TaskSchema.post('save', async function (doc: any) {
+  if (doc.parentId) {
+    try {
+      const TaskModel = mongoose.model('Task');
+      const parent = await TaskModel.findById(doc.parentId);
+      if (parent) {
+        // Retrieve sibling nodes in active states
+        const children = await TaskModel.find({ parentId: doc.parentId, isSoftDeleted: false });
+        let aggregatedPoints = 0;
+        let aggregatedEstHours = 0;
+        let aggregatedActHours = 0;
+
+        children.forEach((child: any) => {
+          aggregatedPoints += child.storyPoints || 0;
+          aggregatedEstHours += child.estimatedHours || 0;
+          aggregatedActHours += child.actualHours || 0;
+        });
+
+        // Reconcile aggregated metrics onto parent node
+        parent.storyPoints = aggregatedPoints;
+        parent.estimatedHours = aggregatedEstHours;
+        parent.actualHours = aggregatedActHours;
+
+        // Recursive save triggers parent's post-save hook up the hierarchy tree
+        await parent.save();
+      }
+    } catch (err) {
+      console.error('Failed to run subtask rollup aggregation hook:', err);
+    }
+  }
+});
+
 export const Task = ((mongoose.models.Task as Model<any>) ||
   mongoose.model('Task', TaskSchema)) as Model<any>;

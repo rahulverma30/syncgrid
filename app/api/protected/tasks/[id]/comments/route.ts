@@ -134,6 +134,20 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
       select: 'name email image',
     });
 
+    // Realtime Broadcast
+    try {
+      const { broadcastEvent } = require('@/lib/realtime');
+      broadcastEvent({
+        companyId,
+        projectId: task.projectId ? task.projectId.toString() : undefined,
+        taskId: task._id.toString(),
+        event: 'comment_posted',
+        payload: populated,
+      });
+    } catch (e) {
+      console.error('SSE Comment Broadcast error:', e);
+    }
+
     return NextResponse.json({ success: true, data: populated }, { status: 201 });
   } catch (error: any) {
     return NextResponse.json(

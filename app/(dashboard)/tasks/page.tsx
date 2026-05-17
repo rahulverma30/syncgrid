@@ -39,6 +39,7 @@ export default function TasksPage() {
     isLoading,
     runningTimer,
     stopTimer,
+    connectRealtime,
   } = useTasksStore();
 
   const [activeTab, setActiveTab] = useState<
@@ -53,6 +54,9 @@ export default function TasksPage() {
     fetchStatuses();
     fetchLabels();
     fetchTasks();
+
+    // Establish Realtime SSE Gateway Connection
+    const disconnect = connectRealtime(filters.projectId || undefined);
 
     // Fetch projects for filters
     fetch('/api/protected/projects')
@@ -72,7 +76,11 @@ export default function TasksPage() {
         console.error('Failed to parse running timer:', e);
       }
     }
-  }, [fetchStatuses, fetchLabels, fetchTasks]);
+
+    return () => {
+      disconnect();
+    };
+  }, [fetchStatuses, fetchLabels, fetchTasks, connectRealtime, filters.projectId]);
 
   const handleSeedWorkspace = async () => {
     toast.promise(seedDemoData(), {

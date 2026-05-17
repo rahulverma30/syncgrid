@@ -62,6 +62,28 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     });
     await activity.save();
 
+    // Populate returned task
+    const populated = await Task.findById(task._id)
+      .populate({ path: 'projectId', select: 'name code' })
+      .populate({ path: 'statusId', select: 'name key category color' })
+      .populate({ path: 'assignees', select: 'name email image' })
+      .populate({ path: 'watchers', select: 'name email image' })
+      .populate({ path: 'parentId', select: 'title code' });
+
+    // Realtime Broadcast
+    try {
+      const { broadcastEvent } = require('@/lib/realtime');
+      broadcastEvent({
+        companyId,
+        projectId: task.projectId ? task.projectId.toString() : undefined,
+        taskId: task._id.toString(),
+        event: 'task_updated',
+        payload: populated,
+      });
+    } catch (e) {
+      console.error('SSE Checklist Broadcast error:', e);
+    }
+
     return NextResponse.json({ success: true, data: task.checklistItems });
   } catch (error: any) {
     return NextResponse.json(
@@ -132,6 +154,28 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
       }.`,
     });
     await activity.save();
+
+    // Populate returned task
+    const populated = await Task.findById(task._id)
+      .populate({ path: 'projectId', select: 'name code' })
+      .populate({ path: 'statusId', select: 'name key category color' })
+      .populate({ path: 'assignees', select: 'name email image' })
+      .populate({ path: 'watchers', select: 'name email image' })
+      .populate({ path: 'parentId', select: 'title code' });
+
+    // Realtime Broadcast
+    try {
+      const { broadcastEvent } = require('@/lib/realtime');
+      broadcastEvent({
+        companyId,
+        projectId: task.projectId ? task.projectId.toString() : undefined,
+        taskId: task._id.toString(),
+        event: 'task_updated',
+        payload: populated,
+      });
+    } catch (e) {
+      console.error('SSE Checklist Broadcast error:', e);
+    }
 
     return NextResponse.json({ success: true, data: task.checklistItems });
   } catch (error: any) {

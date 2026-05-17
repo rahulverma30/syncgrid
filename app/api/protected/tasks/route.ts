@@ -3,49 +3,8 @@ import { withApiAuth } from '@/lib/auth/api';
 import { connectToDatabase } from '@/lib/db/mongodb';
 import { Task, TaskStatus, TaskActivity, Project } from '@/models';
 import { TaskCreateSchema } from '@/schemas/task';
-import { getLevenshteinDistance } from '@/utils/searchRanker';
 import { hasRole } from '@/lib/auth/permission-checks';
-
-// Helper to rank tasks based on search query
-function rankTasks(tasks: any[], query: string): any[] {
-  const q = query.trim().toLowerCase();
-  if (!q) return tasks;
-
-  return tasks
-    .map((task) => {
-      let score = 0;
-      const code = (task.code || '').toLowerCase();
-      const title = (task.title || '').toLowerCase();
-      const desc = (task.description || '').toLowerCase();
-
-      // 1. Match code exactly or as prefix (highest priority)
-      if (code === q) score += 30;
-      else if (code.startsWith(q)) score += 20;
-      else if (code.includes(q)) score += 10;
-
-      // 2. Title exact or prefix
-      if (title === q) score += 25;
-      else if (title.startsWith(q)) score += 15;
-      else if (title.includes(q)) score += 8;
-
-      // 3. Typo tolerance check for title words
-      const words = title.split(/\s+/);
-      words.forEach((word: string) => {
-        const dist = getLevenshteinDistance(word, q);
-        if (dist === 0) score += 12;
-        else if (dist === 1) score += 6;
-        else if (dist === 2) score += 3;
-      });
-
-      // 4. Description match
-      if (desc.includes(q)) score += 4;
-
-      return { task, score };
-    })
-    .filter((item) => item.score > 0)
-    .sort((a, b) => b.score - a.score)
-    .map((item) => item.task);
-}
+import { rankTasks } from '@/lib/searchEngine';
 
 export const GET = withApiAuth(async (request: Request, context: any, session: any) => {
   try {
@@ -121,7 +80,7 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
       .sort({ createdAt: -1 });
 
     // Apply ranking if search term is provided
-    const rankedTasks = search ? rankTasks(tasks, search) : tasks;
+    const rankedTasks = search ? rankTasks(tasks, search, userId) : tasks;
 
     return NextResponse.json({ success: true, data: rankedTasks });
   } catch (error: any) {

@@ -11,6 +11,10 @@ export function TaskBoard({ onSelectTask }: TaskBoardProps) {
   const { tasks, statuses, updateTaskStatusOptimistic } = useTasksStore();
   const [dragOverColumnId, setDragOverColumnId] = useState<string | null>(null);
 
+  // Keyboard Accessibility states
+  const [liftedTaskId, setLiftedTaskId] = useState<string | null>(null);
+  const [ariaAnnouncement, setAriaAnnouncement] = useState('');
+
   // WIP Capacity Limits configurations
   const WIP_LIMITS: Record<string, number> = {
     backlog: 15,
@@ -62,6 +66,59 @@ export function TaskBoard({ onSelectTask }: TaskBoardProps) {
 
   const handleDragLeave = () => {
     setDragOverColumnId(null);
+  };
+
+  // Keyboard navigation column shifter
+  const handleKeyDown = async (e: React.KeyboardEvent, task: TaskType) => {
+    const isLifted = liftedTaskId === task._id;
+
+    if (e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault();
+      if (isLifted) {
+        setLiftedTaskId(null);
+        setAriaAnnouncement(`Dropped task ${task.code}.`);
+      } else {
+        setLiftedTaskId(task._id);
+        setAriaAnnouncement(
+          `Lifted task ${task.code}. Use left and right arrow keys to shift columns, or Escape to drop.`
+        );
+      }
+      return;
+    }
+
+    if (e.key === 'Escape') {
+      if (isLifted) {
+        e.preventDefault();
+        setLiftedTaskId(null);
+        setAriaAnnouncement(`Dropped task ${task.code}.`);
+      }
+      return;
+    }
+
+    if (isLifted && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) {
+      e.preventDefault();
+      const currentStatusId = task.statusId?._id || task.statusId;
+      const currentColIdx = statuses.findIndex((s) => s._id === currentStatusId);
+      if (currentColIdx === -1) return;
+
+      let targetColIdx = currentColIdx;
+      if (e.key === 'ArrowRight' && currentColIdx < statuses.length - 1) {
+        targetColIdx = currentColIdx + 1;
+      } else if (e.key === 'ArrowLeft' && currentColIdx > 0) {
+        targetColIdx = currentColIdx - 1;
+      }
+
+      if (targetColIdx !== currentColIdx) {
+        const targetStatus = statuses[targetColIdx];
+        const ok = await updateTaskStatusOptimistic(task._id, targetStatus._id);
+        if (ok) {
+          setAriaAnnouncement(`Moved task ${task.code} to column ${targetStatus.name}.`);
+          toast.success(`Task ${task.code} shifted to ${targetStatus.name}`);
+        } else {
+          toast.error('Failed to shift task status.');
+        }
+      }
+    }
   };
 
   return (
@@ -136,9 +193,15 @@ export function TaskBoard({ onSelectTask }: TaskBoardProps) {
                     <div
                       key={task._id}
                       draggable
+                      tabIndex={0}
                       onDragStart={(e) => handleDragStart(e, task._id)}
                       onClick={() => onSelectTask(task.code)}
-                      className="bg-background border border-border/40 hover:border-primary/35 p-3.5 rounded-xl shadow-sm hover:shadow-md transition-all duration-150 cursor-grab active:cursor-grabbing space-y-3 group relative select-none"
+                      onKeyDown={(e) => handleKeyDown(e, task)}
+                      className={`bg-background border p-3.5 rounded-xl shadow-sm hover:shadow-md transition-all duration-150 cursor-grab active:cursor-grabbing space-y-3 group relative select-none focus:outline-none ${
+                        liftedTaskId === task._id
+                          ? 'border-dashed border-primary ring-2 ring-primary ring-offset-2 ring-offset-background shadow-lg shadow-primary/25 scale-[1.02]'
+                          : 'border-border/40 hover:border-primary/35 focus:ring-1 focus:ring-primary/40'
+                      }`}
                     >
                       {/* Top labels */}
                       <div className="flex justify-between items-center text-[10px]">
@@ -215,6 +278,10 @@ export function TaskBoard({ onSelectTask }: TaskBoardProps) {
           </div>
         );
       })}
+      {/* WAI-ARIA live region for keyboard board movements */}
+      <div aria-live="polite" className="sr-only">
+        {ariaAnnouncement}
+      </div>
     </div>
   );
 }
