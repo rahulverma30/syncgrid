@@ -32,3 +32,14 @@ export { Holiday } from './Holiday';
 export { EmployeePerformanceReview } from './EmployeePerformanceReview';
 export { EmployeeAnnouncement } from './EmployeeAnnouncement';
 export { EmployeeActivity } from './EmployeeActivity';
+
+// --- MODULE 10: FINANCE, ACCOUNTING & BILLING MODELS ---
+export { Invoice } from './Invoice';
+export { Transaction } from './Transaction';
+export { Expense } from './Expense';
+export { Budget } from './Budget';
+export { Vendor } from './Vendor';
+export { PurchaseOrder } from './PurchaseOrder';
+export { ClientBillingProfile } from './ClientBillingProfile';
+export { FinancialActivity } from './FinancialActivity';
+

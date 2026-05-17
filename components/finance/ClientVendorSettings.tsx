@@ -1,0 +1,937 @@
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Users, Truck, ShoppingCart, Plus, Save, X, Calendar, ClipboardCheck, ArrowUpRight, ShieldCheck, CheckCircle } from 'lucide-react';
+import { Button, Input } from '@/components/ui';
+import { toast } from 'sonner';
+
+interface ClientVendorSettingsProps {
+  clientBilling: any[];
+  vendors: any[];
+  purchaseOrders: any[];
+  onSaveBilling: (payload: any) => void;
+  onSaveVendor: (payload: any) => void;
+  onCreatePO: (payload: any) => void;
+  onApprovePO: (id: string, status: 'approved' | 'rejected', comments: string) => void;
+  role: string;
+}
+
+export const ClientVendorSettings: React.FC<ClientVendorSettingsProps> = ({
+  clientBilling,
+  vendors,
+  purchaseOrders,
+  onSaveBilling,
+  onSaveVendor,
+  onCreatePO,
+  onApprovePO,
+  role,
+}) => {
+  const [activeSubTab, setActiveSubTab] = useState<'clients' | 'vendors' | 'purchase_orders'>('clients');
+
+  // Client billing modal
+  const [billingModalOpen, setBillingModalOpen] = useState(false);
+  const [selectedClientBilling, setSelectedClientBilling] = useState<any | null>(null);
+  const [clientsList, setClientsList] = useState<any[]>([]);
+  const [clientIdVal, setClientIdVal] = useState('');
+  const [billEmail, setBillEmail] = useState('');
+  const [prefCurrency, setPrefCurrency] = useState('USD');
+  const [payTerms, setPayTerms] = useState('net_30');
+  const [taxExempt, setTaxExempt] = useState(false);
+  const [taxRegVal, setTaxRegVal] = useState('');
+  const [autoInvoice, setAutoInvoice] = useState(true);
+  const [creditLimit, setCreditLimit] = useState('50000');
+
+  // Vendor Modal
+  const [vendorModalOpen, setVendorModalOpen] = useState(false);
+  const [selectedVendor, setSelectedVendor] = useState<any | null>(null);
+  const [vName, setVName] = useState('');
+  const [vEmail, setVEmail] = useState('');
+  const [vPhone, setVPhone] = useState('');
+  const [vCat, setVCat] = useState('software');
+  const [vTaxId, setVTaxId] = useState('');
+  const [vPayTerms, setVPayTerms] = useState('net_30');
+  const [vNotes, setVNotes] = useState('');
+
+  // PO creation modal
+  const [poModalOpen, setPOModalOpen] = useState(false);
+  const [poVendorId, setPOVendorId] = useState('');
+  const [projects, setProjects] = useState<any[]>([]);
+  const [poProjectId, setPOProjectId] = useState('');
+  const [poItems, setPOItems] = useState<any[]>([{ description: '', quantity: 1, unitPrice: 0 }]);
+  const [poTax, setPOTax] = useState('0');
+  const [poNotes, setPONotes] = useState('');
+
+  // PO review modal
+  const [activeReviewPO, setActiveReviewPO] = useState<any | null>(null);
+  const [reviewPOComments, setReviewPOComments] = useState('');
+
+  useEffect(() => {
+    const fetchDropdowns = async () => {
+      try {
+        const [cRes, pRes] = await Promise.all([
+          fetch('/api/protected/clients'),
+          fetch('/api/protected/projects'),
+        ]);
+        const cJson = await cRes.json();
+        const pJson = await pRes.json();
+        if (cJson.success) setClientsList(cJson.data);
+        if (pJson.success) setProjects(pJson.data);
+      } catch (err) {
+        console.error('Error fetching settings dropdowns:', err);
+      }
+    };
+    fetchDropdowns();
+  }, []);
+
+  // Client billing actions
+  const handleOpenBilling = (profile?: any) => {
+    if (profile) {
+      setSelectedClientBilling(profile);
+      setClientIdVal(profile.clientId?._id || '');
+      setBillEmail(profile.billingEmail || '');
+      setPrefCurrency(profile.preferredCurrency || 'USD');
+      setPayTerms(profile.paymentTerms || 'net_30');
+      setTaxExempt(profile.taxExempt || false);
+      setTaxRegVal(profile.taxRegistrationNumber || '');
+      setAutoInvoice(profile.automaticInvoicing || true);
+      setCreditLimit(profile.creditLimit?.toString() || '50000');
+    } else {
+      setSelectedClientBilling(null);
+      setClientIdVal('');
+      setBillEmail('');
+      setPrefCurrency('USD');
+      setPayTerms('net_30');
+      setTaxExempt(false);
+      setTaxRegVal('');
+      setAutoInvoice(true);
+      setCreditLimit('50000');
+    }
+    setBillingModalOpen(true);
+  };
+
+  const handleSaveBillingSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!clientIdVal) {
+      toast.error('Client select is required');
+      return;
+    }
+
+    const payload = {
+      clientId: clientIdVal,
+      billingEmail: billEmail,
+      preferredCurrency: prefCurrency,
+      paymentTerms: payTerms,
+      taxExempt,
+      taxRegistrationNumber: taxRegVal,
+      automaticInvoicing: autoInvoice,
+      creditLimit: Number(creditLimit) || 50000,
+    };
+
+    onSaveBilling(payload);
+    setBillingModalOpen(false);
+  };
+
+  // Vendor actions
+  const handleOpenVendor = (vendor?: any) => {
+    if (vendor) {
+      setSelectedVendor(vendor);
+      setVName(vendor.name);
+      setVEmail(vendor.email || '');
+      setVPhone(vendor.phone || '');
+      setVCat(vendor.category || 'software');
+      setVTaxId(vendor.taxId || '');
+      setVPayTerms(vendor.paymentTerms || 'net_30');
+      setVNotes(vendor.notes || '');
+    } else {
+      setSelectedVendor(null);
+      setVName('');
+      setVEmail('');
+      setVPhone('');
+      setVCat('software');
+      setVTaxId('');
+      setVPayTerms('net_30');
+      setVNotes('');
+    }
+    setVendorModalOpen(true);
+  };
+
+  const handleSaveVendorSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!vName.trim()) {
+      toast.error('Vendor name is required');
+      return;
+    }
+
+    const payload: Record<string, any> = {
+      name: vName,
+      email: vEmail,
+      phone: vPhone,
+      category: vCat,
+      taxId: vTaxId,
+      paymentTerms: vPayTerms,
+      notes: vNotes || undefined,
+    };
+
+    if (selectedVendor) {
+      payload._id = selectedVendor._id;
+    }
+
+    onSaveVendor(payload);
+    setVendorModalOpen(false);
+  };
+
+  // PO actions
+  const handleAddPOItem = () => {
+    setPOItems([...poItems, { description: '', quantity: 1, unitPrice: 0 }]);
+  };
+
+  const handleUpdatePOItem = (index: number, key: string, val: any) => {
+    setPOItems(
+      poItems.map((item, idx) => (idx === index ? { ...item, [key]: val } : item))
+    );
+  };
+
+  const handleRemovePOItem = (index: number) => {
+    if (poItems.length === 1) return;
+    setPOItems(poItems.filter((_, idx) => idx !== index));
+  };
+
+  const handlePOSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!poVendorId) {
+      toast.error('Please select a target vendor');
+      return;
+    }
+
+    const payload = {
+      vendorId: poVendorId,
+      projectId: poProjectId || undefined,
+      lineItems: poItems.map((item) => ({
+        description: item.description,
+        quantity: Number(item.quantity),
+        unitPrice: Number(item.unitPrice),
+      })),
+      taxAmount: Number(poTax) || 0,
+      notes: poNotes || undefined,
+    };
+
+    onCreatePO(payload);
+    setPOModalOpen(false);
+    setPOVendorId('');
+    setPOProjectId('');
+    setPOItems([{ description: '', quantity: 1, unitPrice: 0 }]);
+    setPOTax('0');
+    setPONotes('');
+  };
+
+  const handleOpenPOReview = (po: any) => {
+    setActiveReviewPO(po);
+    setReviewPOComments('');
+  };
+
+  const handleResolvePOReview = (status: 'approved' | 'rejected') => {
+    if (!activeReviewPO) return;
+    onApprovePO(activeReviewPO._id, status, reviewPOComments);
+    setActiveReviewPO(null);
+  };
+
+  const isFinance = ['super-admin', 'admin', 'finance'].includes(role);
+
+  return (
+    <div className="space-y-6 select-none">
+      {/* Sub menu controls */}
+      <div className="flex justify-between items-center bg-card/25 border border-border/80 p-1.5 rounded-xl backdrop-blur-md select-none">
+        <div className="flex gap-2">
+          <button
+            onClick={() => setActiveSubTab('clients')}
+            className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer ${
+              activeSubTab === 'clients' ? 'bg-primary text-primary-foreground shadow' : 'hover:bg-accent/40 text-muted-foreground'
+            }`}
+          >
+            <Users className="h-4 w-4" />
+            Client preferences
+          </button>
+          <button
+            onClick={() => setActiveSubTab('vendors')}
+            className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer ${
+              activeSubTab === 'vendors' ? 'bg-primary text-primary-foreground shadow' : 'hover:bg-accent/40 text-muted-foreground'
+            }`}
+          >
+            <Truck className="h-4 w-4" />
+            Vendor catalog
+          </button>
+          <button
+            onClick={() => setActiveSubTab('purchase_orders')}
+            className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer ${
+              activeSubTab === 'purchase_orders' ? 'bg-primary text-primary-foreground shadow' : 'hover:bg-accent/40 text-muted-foreground'
+            }`}
+          >
+            <ShoppingCart className="h-4 w-4" />
+            Purchase orders
+          </button>
+        </div>
+
+        {isFinance && (
+          <div>
+            {activeSubTab === 'clients' && (
+              <Button onClick={() => handleOpenBilling()} size="sm" className="h-8 text-[10px] gap-1 cursor-pointer">
+                <Plus className="h-3.5 w-3.5" /> Configure billing
+              </Button>
+            )}
+            {activeSubTab === 'vendors' && (
+              <Button onClick={() => handleOpenVendor()} size="sm" className="h-8 text-[10px] gap-1 cursor-pointer">
+                <Plus className="h-3.5 w-3.5" /> register vendor
+              </Button>
+            )}
+            {activeSubTab === 'purchase_orders' && (
+              <Button onClick={() => setPOModalOpen(true)} size="sm" className="h-8 text-[10px] gap-1 cursor-pointer">
+                <Plus className="h-3.5 w-3.5" /> generate PO order
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Dynamic Sub-tab content sheets */}
+      <AnimatePresence mode="wait">
+        {activeSubTab === 'clients' && (
+          <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} className="border border-border/80 rounded-xl overflow-hidden backdrop-blur-md">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="bg-muted/20 border-b border-border/60 text-[10px] uppercase font-bold tracking-wider text-muted-foreground select-none">
+                  <th className="p-4">Customer Company</th>
+                  <th className="p-4">Billing Email</th>
+                  <th className="p-4">Preferred Currency</th>
+                  <th className="p-4">Payment Terms</th>
+                  <th className="p-4">VAT / Tax ID</th>
+                  <th className="p-4">Credit Limit</th>
+                  {isFinance && <th className="p-4 text-right">Actions</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {clientBilling.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="p-8 text-center text-muted-foreground">
+                      No custom billing profiles configured.
+                    </td>
+                  </tr>
+                ) : (
+                  clientBilling.map((cb) => (
+                    <tr key={cb._id} className="border-b border-border/40 hover:bg-muted/10 transition-colors">
+                      <td className="p-4 font-bold text-foreground">
+                        <div className="flex flex-col">
+                          <span>{cb.clientId?.name}</span>
+                          <span className="text-[9px] text-muted-foreground font-normal">{cb.clientId?.company}</span>
+                        </div>
+                      </td>
+                      <td className="p-4 text-muted-foreground">{cb.billingEmail}</td>
+                      <td className="p-4 font-bold">{cb.preferredCurrency}</td>
+                      <td className="p-4 uppercase tracking-wider text-[9px] font-extrabold text-primary">{cb.paymentTerms.replace('_', ' ')}</td>
+                      <td className="p-4 font-medium text-foreground">{cb.taxRegistrationNumber || 'None'}</td>
+                      <td className="p-4 text-muted-foreground">${cb.creditLimit.toLocaleString()}</td>
+                      {isFinance && (
+                        <td className="p-4 text-right">
+                          <button
+                            onClick={() => handleOpenBilling(cb)}
+                            className="px-2.5 py-1 border border-border/80 hover:bg-accent/40 text-foreground font-bold rounded text-[8px] uppercase tracking-wider cursor-pointer"
+                          >
+                            Edit
+                          </button>
+                        </td>
+                      )}
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </motion.div>
+        )}
+
+        {activeSubTab === 'vendors' && (
+          <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} className="border border-border/80 rounded-xl overflow-hidden backdrop-blur-md">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="bg-muted/20 border-b border-border/60 text-[10px] uppercase font-bold tracking-wider text-muted-foreground select-none">
+                  <th className="p-4">Supplier Vendor</th>
+                  <th className="p-4">Contact email</th>
+                  <th className="p-4">phone Number</th>
+                  <th className="p-4">Category</th>
+                  <th className="p-4">TIN / EIN Tax ID</th>
+                  <th className="p-4">Terms</th>
+                  {isFinance && <th className="p-4 text-right">Actions</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {vendors.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="p-8 text-center text-muted-foreground">
+                      No vendor suppliers registered.
+                    </td>
+                  </tr>
+                ) : (
+                  vendors.map((v) => (
+                    <tr key={v._id} className="border-b border-border/40 hover:bg-muted/10 transition-colors">
+                      <td className="p-4 font-bold text-foreground">
+                        <div className="flex flex-col">
+                          <span>{v.name}</span>
+                          {v.notes && <span className="text-[9px] text-muted-foreground font-normal">{v.notes}</span>}
+                        </div>
+                      </td>
+                      <td className="p-4 text-muted-foreground">{v.email || 'None'}</td>
+                      <td className="p-4 text-muted-foreground">{v.phone || 'None'}</td>
+                      <td className="p-4">
+                        <span className="px-2 py-0.5 bg-muted/40 border border-border text-[9px] uppercase font-bold tracking-wider rounded-md">
+                          {v.category}
+                        </span>
+                      </td>
+                      <td className="p-4 font-medium text-foreground">{v.taxId || 'None'}</td>
+                      <td className="p-4 uppercase tracking-wider text-[9px] font-extrabold text-primary">{v.paymentTerms.replace('_', ' ')}</td>
+                      {isFinance && (
+                        <td className="p-4 text-right">
+                          <button
+                            onClick={() => handleOpenVendor(v)}
+                            className="px-2.5 py-1 border border-border/80 hover:bg-accent/40 text-foreground font-bold rounded text-[8px] uppercase tracking-wider cursor-pointer"
+                          >
+                            Edit
+                          </button>
+                        </td>
+                      )}
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </motion.div>
+        )}
+
+        {activeSubTab === 'purchase_orders' && (
+          <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} className="border border-border/80 rounded-xl overflow-hidden backdrop-blur-md">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="bg-muted/20 border-b border-border/60 text-[10px] uppercase font-bold tracking-wider text-muted-foreground select-none">
+                  <th className="p-4">PO Number</th>
+                  <th className="p-4">Supplier Vendor</th>
+                  <th className="p-4">Order Date</th>
+                  <th className="p-4">total procurement</th>
+                  <th className="p-4">Status</th>
+                  {isFinance && <th className="p-4 text-right">Actions</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {purchaseOrders.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="p-8 text-center text-muted-foreground">
+                      No Purchase Orders generated.
+                    </td>
+                  </tr>
+                ) : (
+                  purchaseOrders.map((po) => {
+                    const statusStyles: Record<string, string> = {
+                      pending_approval: 'bg-amber-500/10 text-amber-400 border-amber-500/30 animate-pulse',
+                      approved: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30',
+                      rejected: 'bg-rose-500/10 text-rose-400 border-rose-500/30',
+                      completed: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30',
+                    };
+
+                    return (
+                      <tr key={po._id} className="border-b border-border/40 hover:bg-muted/10 transition-colors">
+                        <td className="p-4 font-bold text-foreground">{po.poNumber}</td>
+                        <td className="p-4 font-semibold">
+                          <div className="flex flex-col">
+                            <span>{po.vendorId?.name}</span>
+                            {po.projectId && (
+                              <span className="text-[9px] text-muted-foreground font-semibold uppercase tracking-wider flex items-center gap-1 mt-0.5">
+                                Project: {po.projectId?.name}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="p-4 text-muted-foreground">
+                          <div className="flex items-center gap-1.5">
+                            <Calendar className="h-3.5 w-3.5 opacity-60" />
+                            {new Date(po.orderDate).toLocaleDateString()}
+                          </div>
+                        </td>
+                        <td className="p-4 font-bold text-foreground">
+                          ${po.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        </td>
+                        <td className="p-4">
+                          <span className={`px-2 py-0.5 text-[9px] uppercase font-extrabold tracking-wider border rounded-full ${statusStyles[po.status] || statusStyles.pending_approval}`}>
+                            {po.status.replace('_', ' ')}
+                          </span>
+                        </td>
+                        {isFinance && (
+                          <td className="p-4 text-right">
+                            {po.status === 'pending_approval' ? (
+                              <button
+                                onClick={() => handleOpenPOReview(po)}
+                                className="px-3 py-1 bg-primary hover:bg-primary/95 text-primary-foreground font-semibold rounded text-[10px] uppercase tracking-wider cursor-pointer"
+                              >
+                                Review PO
+                              </button>
+                            ) : (
+                              <span className="text-[10px] text-muted-foreground font-semibold italic select-none">PO resolved</span>
+                            )}
+                          </td>
+                        )}
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Client Billing configuration modal */}
+      <AnimatePresence>
+        {billingModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-card border border-border rounded-xl p-6 w-full max-w-md shadow-2xl space-y-4"
+            >
+              <div className="flex justify-between items-center pb-2 border-b border-border/60">
+                <h3 className="text-sm font-bold uppercase tracking-wider">Configure client billing terms</h3>
+                <button onClick={() => setBillingModalOpen(false)} className="p-1 hover:bg-accent/40 rounded text-muted-foreground">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveBillingSubmit} className="space-y-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Select Customer *</label>
+                  <select
+                    disabled={selectedClientBilling !== null}
+                    value={clientIdVal}
+                    onChange={(e) => setClientIdVal(e.target.value)}
+                    className="w-full h-9 px-3 border border-border bg-background/40 text-xs rounded-md focus:outline-none"
+                  >
+                    <option value="">Select Customer Client...</option>
+                    {clientsList.map((c) => (
+                      <option key={c._id} value={c._id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Billing email *</label>
+                  <Input
+                    required
+                    type="email"
+                    value={billEmail}
+                    onChange={(e) => setBillEmail(e.target.value)}
+                    placeholder="billing@customer.com"
+                    className="h-9 text-xs"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Currency</label>
+                    <select
+                      value={prefCurrency}
+                      onChange={(e) => setPrefCurrency(e.target.value)}
+                      className="w-full h-9 px-3 border border-border bg-background/40 text-xs rounded-md focus:outline-none"
+                    >
+                      <option value="USD">USD ($)</option>
+                      <option value="EUR">EUR (€)</option>
+                      <option value="GBP">GBP (£)</option>
+                      <option value="INR">INR (₹)</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Terms</label>
+                    <select
+                      value={payTerms}
+                      onChange={(e) => setPayTerms(e.target.value)}
+                      className="w-full h-9 px-3 border border-border bg-background/40 text-xs rounded-md focus:outline-none"
+                    >
+                      <option value="due_on_receipt">Due on receipt</option>
+                      <option value="net_15">Net 15</option>
+                      <option value="net_30">Net 30</option>
+                      <option value="net_60">Net 60</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">VAT / tax registration ID</label>
+                  <Input
+                    value={taxRegVal}
+                    onChange={(e) => setTaxRegVal(e.target.value)}
+                    placeholder="VAT-9827382"
+                    className="h-9 text-xs"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Credit cap limit ($ USD)</label>
+                  <Input
+                    type="number"
+                    value={creditLimit}
+                    onChange={(e) => setCreditLimit(e.target.value)}
+                    className="h-9 text-xs"
+                  />
+                </div>
+
+                <div className="flex gap-2 justify-end pt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setBillingModalOpen(false)}
+                    className="h-9 text-xs cursor-pointer"
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" size="sm" className="h-9 text-xs cursor-pointer">
+                    Adjust Configuration
+                  </Button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Vendor Profile modal */}
+      <AnimatePresence>
+        {vendorModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-card border border-border rounded-xl p-6 w-full max-w-md shadow-2xl space-y-4"
+            >
+              <div className="flex justify-between items-center pb-2 border-b border-border/60">
+                <h3 className="text-sm font-bold uppercase tracking-wider">
+                  {selectedVendor ? 'Adjust Vendor Profile' : 'Register vendor supplier'}
+                </h3>
+                <button onClick={() => setVendorModalOpen(false)} className="p-1 hover:bg-accent/40 rounded text-muted-foreground">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveVendorSubmit} className="space-y-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Vendor Name *</label>
+                  <Input
+                    required
+                    value={vName}
+                    onChange={(e) => setVName(e.target.value)}
+                    placeholder="e.g. Amazon Web Services AWS"
+                    className="h-9 text-xs"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">contact email</label>
+                    <Input
+                      type="email"
+                      value={vEmail}
+                      onChange={(e) => setVEmail(e.target.value)}
+                      placeholder="billing@supplier.com"
+                      className="h-9 text-xs"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Phone number</label>
+                    <Input
+                      value={vPhone}
+                      onChange={(e) => setVPhone(e.target.value)}
+                      placeholder="+1 (555) 123-4567"
+                      className="h-9 text-xs"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Category</label>
+                    <select
+                      value={vCat}
+                      onChange={(e) => setVCat(e.target.value)}
+                      className="w-full h-9 px-3 border border-border bg-background/40 text-xs rounded-md focus:outline-none"
+                    >
+                      <option value="software">Software/SaaS</option>
+                      <option value="hardware">Hardware infrastructure</option>
+                      <option value="consulting">Auditing/Consulting</option>
+                      <option value="office_supplies">Office supplies</option>
+                      <option value="marketing">Marketing campaigns</option>
+                      <option value="rent">Rent/Lease</option>
+                      <option value="other">Other Operations</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Terms</label>
+                    <select
+                      value={vPayTerms}
+                      onChange={(e) => setVPayTerms(e.target.value)}
+                      className="w-full h-9 px-3 border border-border bg-background/40 text-xs rounded-md focus:outline-none"
+                    >
+                      <option value="due_on_receipt">Due on receipt</option>
+                      <option value="net_15">Net 15</option>
+                      <option value="net_30">Net 30</option>
+                      <option value="net_60">Net 60</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">EIN / TIN tax registration number</label>
+                  <Input
+                    value={vTaxId}
+                    onChange={(e) => setVTaxId(e.target.value)}
+                    placeholder="US-12345678"
+                    className="h-9 text-xs"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Notes</label>
+                  <Input
+                    value={vNotes}
+                    onChange={(e) => setVNotes(e.target.value)}
+                    placeholder="Brief description"
+                    className="h-9 text-xs"
+                  />
+                </div>
+
+                <div className="flex gap-2 justify-end pt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setVendorModalOpen(false)}
+                    className="h-9 text-xs cursor-pointer"
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" size="sm" className="h-9 text-xs cursor-pointer">
+                    Adjust Directory
+                  </Button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* PO Creation modal */}
+      <AnimatePresence>
+        {poModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-card border border-border rounded-xl p-6 w-full max-w-xl shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto"
+            >
+              <div className="flex justify-between items-center pb-2 border-b border-border/60">
+                <h3 className="text-sm font-bold uppercase tracking-wider">Generate Purchase Order</h3>
+                <button onClick={() => setPOModalOpen(false)} className="p-1 hover:bg-accent/40 rounded text-muted-foreground">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <form onSubmit={handlePOSubmit} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Supplier Vendor *</label>
+                    <select
+                      required
+                      value={poVendorId}
+                      onChange={(e) => setPOVendorId(e.target.value)}
+                      className="w-full h-9 px-3 border border-border bg-background/40 text-xs rounded-md focus:outline-none"
+                    >
+                      <option value="">Select Vendor...</option>
+                      {vendors.map((v) => (
+                        <option key={v._id} value={v._id}>
+                          {v.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Linked Project (Optional)</label>
+                    <select
+                      value={poProjectId}
+                      onChange={(e) => setPOProjectId(e.target.value)}
+                      className="w-full h-9 px-3 border border-border bg-background/40 text-xs rounded-md focus:outline-none"
+                    >
+                      <option value="">No Project Linked...</option>
+                      {projects.map((p) => (
+                        <option key={p._id} value={p._id}>
+                          {p.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Line Items PO builder */}
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Procurement line items</label>
+                    <button
+                      type="button"
+                      onClick={handleAddPOItem}
+                      className="px-2 py-0.5 border border-primary/45 hover:bg-primary/10 text-primary text-[9px] uppercase font-bold rounded-lg cursor-pointer"
+                    >
+                      + Add Item
+                    </button>
+                  </div>
+
+                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                    {poItems.map((item, idx) => (
+                      <div key={idx} className="flex gap-2 items-center">
+                        <Input
+                          required
+                          value={item.description}
+                          onChange={(e) => handleUpdatePOItem(idx, 'description', e.target.value)}
+                          placeholder="e.g. AWS server cloud configurations"
+                          className="h-8 text-xs flex-1"
+                        />
+                        <Input
+                          type="number"
+                          required
+                          min={1}
+                          value={item.quantity}
+                          onChange={(e) => handleUpdatePOItem(idx, 'quantity', Number(e.target.value))}
+                          className="h-8 text-xs w-16 text-center"
+                        />
+                        <Input
+                          type="number"
+                          required
+                          min={0.01}
+                          step="0.01"
+                          value={item.unitPrice}
+                          onChange={(e) => handleUpdatePOItem(idx, 'unitPrice', Number(e.target.value))}
+                          className="h-8 text-xs w-24"
+                        />
+                        <button
+                          type="button"
+                          disabled={poItems.length === 1}
+                          onClick={() => handleRemovePOItem(idx)}
+                          className="p-1 hover:bg-rose-500/20 text-rose-400 rounded disabled:opacity-30 cursor-pointer"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Estimated Taxes total</label>
+                    <Input
+                      type="number"
+                      value={poTax}
+                      onChange={(e) => setPOTax(e.target.value)}
+                      placeholder="0"
+                      className="h-9 text-xs"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Procurement description notes</label>
+                    <Input
+                      value={poNotes}
+                      onChange={(e) => setPONotes(e.target.value)}
+                      placeholder="Special instructions"
+                      className="h-9 text-xs"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-2 justify-end pt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPOModalOpen(false)}
+                    className="h-9 text-xs cursor-pointer"
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" size="sm" className="h-9 text-xs cursor-pointer">
+                    Transmit PO
+                  </Button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* PO review modal */}
+      <AnimatePresence>
+        {activeReviewPO && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-card border border-border rounded-xl p-6 w-full max-w-md shadow-2xl space-y-4"
+            >
+              <div className="flex justify-between items-center pb-2 border-b border-border/60">
+                <h3 className="text-sm font-bold uppercase tracking-wider">Review Purchase Order</h3>
+                <button onClick={() => setActiveReviewPO(null)} className="p-1 hover:bg-accent/40 rounded text-muted-foreground">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <div className="bg-muted/15 p-4 rounded-xl border border-border/60 text-xs space-y-2 select-none">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">PO Number:</span>
+                  <span className="font-bold">{activeReviewPO.poNumber}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Supplier Vendor:</span>
+                  <span className="font-bold">{activeReviewPO.vendorId?.name}</span>
+                </div>
+                <div className="flex justify-between pt-1 border-t border-border/40 text-sm font-extrabold text-foreground">
+                  <span>PO Amount:</span>
+                  <span>${activeReviewPO.totalAmount.toLocaleString()}</span>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Approver Notes / Comments</label>
+                <textarea
+                  value={reviewPOComments}
+                  onChange={(e) => setReviewPOComments(e.target.value)}
+                  placeholder="Include validation detail or purchase clearance..."
+                  className="w-full h-16 p-2 bg-background/40 border border-border text-xs rounded-md focus:outline-none"
+                />
+              </div>
+
+              <div className="flex gap-2 justify-end pt-2">
+                <button
+                  onClick={() => handleResolvePOReview('rejected')}
+                  className="px-4 py-2 border border-rose-500/40 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-bold rounded-lg text-xs uppercase tracking-wider transition-all cursor-pointer"
+                >
+                  Reject PO
+                </button>
+                <button
+                  onClick={() => handleResolvePOReview('approved')}
+                  className="px-4 py-2 bg-primary hover:bg-primary/95 text-primary-foreground font-bold rounded-lg text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer"
+                >
+                  <ShieldCheck className="h-4 w-4" />
+                  Approve PO
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
