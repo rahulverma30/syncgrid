@@ -9,3 +9,5 @@ export { Lead } from './Lead';
 export { CrmSettings } from './CrmSettings';
 export { Client } from './Client';
 export { ClientActivity } from './ClientActivity';
+export { Project } from './Project';
+export { ProjectActivity } from './ProjectActivity';
