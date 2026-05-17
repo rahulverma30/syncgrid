@@ -1,41 +1,133 @@
 'use client';
 
-import { PageHeader, Card, CardContent } from '@/components/ui';
-import { Users, Sparkles } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { useHRStore } from '@/store/hrStore';
+import { PageHeader, Button } from '@/components/ui';
+import {
+  Sparkles,
+  Users,
+  LayoutDashboard,
+  Calendar,
+  Network,
+  Award,
+  Settings,
+  Database,
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+// Component tab imports
+import { HrDashboard } from '@/components/hr/HrDashboard';
+import { HrDirectory } from '@/components/hr/HrDirectory';
+import { HrOrgChart } from '@/components/hr/HrOrgChart';
+import { HrLeaves } from '@/components/hr/HrLeaves';
+import { HrPerformance } from '@/components/hr/HrPerformance';
+import { HrSettings } from '@/components/hr/HrSettings';
 
 export default function HRPage() {
+  const {
+    fetchEmployees,
+    fetchDepartments,
+    fetchAttendance,
+    fetchLeaves,
+    fetchAnnouncements,
+    runHrSeeder,
+    loading,
+  } = useHRStore();
+
+  const [activeTab, setActiveTab] = useState('dashboard');
+
+  useEffect(() => {
+    // Initial fetch of all HR data
+    Promise.all([
+      fetchEmployees(),
+      fetchDepartments(),
+      fetchAttendance(),
+      fetchLeaves(),
+      fetchAnnouncements(),
+    ]);
+  }, [fetchEmployees, fetchDepartments, fetchAttendance, fetchLeaves, fetchAnnouncements]);
+
+  const handleRunSeeder = async () => {
+    await runHrSeeder();
+  };
+
+  const tabs = [
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'directory', label: 'Employee Directory', icon: Users },
+    { id: 'orgchart', label: 'Org Chart', icon: Network },
+    { id: 'leaves', label: 'Time Off & Attendance', icon: Calendar },
+    { id: 'performance', label: 'Performance', icon: Award },
+    { id: 'settings', label: 'Policy Settings', icon: Settings },
+  ];
+
   return (
-    <div className="space-y-6">
-      <PageHeader
-        eyebrow="Business Module"
-        title="Human Resources (HR)"
-        description="Oversee employee directory, track payroll, manage leaves, and structure talent onboarding."
-      />
-      <motion.div
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-      >
-        <Card className="border-dashed border-border/80 bg-card/50 backdrop-blur-md">
-          <CardContent className="flex flex-col items-center justify-center py-20 text-center space-y-4">
-            <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center text-primary shadow-[0_0_20px_rgba(var(--primary-rgb),0.1)]">
-              <Users className="h-8 w-8" />
-            </div>
-            <div className="space-y-2">
-              <h3 className="text-xl font-bold tracking-tight">HR Hub In Development</h3>
-              <p className="text-muted-foreground max-w-sm text-sm">
-                Streamlining organization charts, employee directory population, leave management
-                requests, and automated payslip generators in upcoming updates.
-              </p>
-            </div>
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs text-primary font-medium">
-              <Sparkles className="h-3 w-3 text-primary animate-pulse" />
-              HR Portal Coming Soon
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
+    <div className="space-y-6 relative min-h-screen pb-12">
+      {loading.seeder && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background/80 backdrop-blur-md">
+          <div className="animate-spin rounded-full border-4 border-primary/20 border-r-primary h-12 w-12 mb-4" />
+          <p className="text-sm font-bold text-foreground">Seeding premium demo dataset...</p>
+        </div>
+      )}
+
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <PageHeader
+          eyebrow="Workforce Operations"
+          title="Enterprise HR & Talent Suite"
+          description="Manage employees, track attendance clocks, process leaves, evaluate cycles, and structure company hierarchy."
+        />
+        <div className="flex items-center gap-3">
+          <Button
+            onClick={handleRunSeeder}
+            variant="outline"
+            className="border-dashed border-primary/30 hover:border-primary text-primary hover:bg-primary/5 gap-2"
+          >
+            <Database className="h-4 w-4" />
+            Seed HR Demo Data
+          </Button>
+        </div>
+      </div>
+
+      {/* Tab Switcher Navigation */}
+      <div className="border-b border-border bg-card/20 backdrop-blur-md sticky top-0 z-10 py-2 flex gap-2 overflow-x-auto scrollbar-none">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 whitespace-nowrap focus:outline-none focus:ring-1 focus:ring-primary ${
+                isActive
+                  ? 'bg-primary/10 text-primary border-b-2 border-primary shadow-[0_4px_12px_rgba(var(--primary-rgb),0.05)]'
+                  : 'text-muted-foreground hover:bg-card hover:text-foreground'
+              }`}
+            >
+              <Icon className={`h-4 w-4 ${isActive ? 'animate-pulse' : ''}`} />
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Tab Viewports */}
+      <div className="mt-6">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ duration: 0.25 }}
+          >
+            {activeTab === 'dashboard' && <HrDashboard />}
+            {activeTab === 'directory' && <HrDirectory />}
+            {activeTab === 'orgchart' && <HrOrgChart />}
+            {activeTab === 'leaves' && <HrLeaves />}
+            {activeTab === 'performance' && <HrPerformance />}
+            {activeTab === 'settings' && <HrSettings />}
+          </motion.div>
+        </AnimatePresence>
+      </div>
     </div>
   );
 }

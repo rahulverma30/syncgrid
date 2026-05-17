@@ -20,3 +20,15 @@ export { TaskTimeLog } from './TaskTimeLog';
 export { TaskWatcher } from './TaskWatcher';
 export { TaskMention } from './TaskMention';
 export { TaskAutomationRule } from './TaskAutomationRule';
+
+// --- MODULE 9: HR & WORKFORCE MODELS ---
+export { Department } from './Department';
+export { Team } from './Team';
+export { Employee } from './Employee';
+export { AttendanceLog } from './AttendanceLog';
+export { LeaveRequest } from './LeaveRequest';
+export { LeavePolicy } from './LeavePolicy';
+export { Holiday } from './Holiday';
+export { EmployeePerformanceReview } from './EmployeePerformanceReview';
+export { EmployeeAnnouncement } from './EmployeeAnnouncement';
+export { EmployeeActivity } from './EmployeeActivity';
