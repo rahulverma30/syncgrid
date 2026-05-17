@@ -126,6 +126,27 @@ export const authOptions: NextAuthOptions = {
         token.status = (user as any).status;
       }
 
+      // Dynamic database validation & disabled-user check on session refresh
+      // Only do this periodically (e.g., every 5 minutes) to optimize DB traffic
+      const now = Date.now();
+      const lastChecked = (token as any).lastChecked || 0;
+      const CHECK_INTERVAL = 1000 * 60 * 5; // 5 minutes
+
+      if (token.id && now - lastChecked > CHECK_INTERVAL) {
+        try {
+          await connectToDatabase();
+          const dbUser = await User.findById(token.id).select('status');
+          if (dbUser) {
+            token.status = dbUser.status;
+          } else {
+            token.status = 'disabled'; // User deleted/not found
+          }
+          (token as any).lastChecked = now;
+        } catch (error) {
+          console.error('Error verifying user status in JWT callback:', error);
+        }
+      }
+
       return token;
     },
     async session({ session, token }) {

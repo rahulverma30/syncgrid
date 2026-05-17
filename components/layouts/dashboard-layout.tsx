@@ -7,6 +7,8 @@ import { Breadcrumb } from '@/components/ui';
 import { useSidebarStore } from '@/store';
 import { cn } from '@/lib/cn';
 import { PageContainer } from './page-container';
+import { useSession } from 'next-auth/react';
+import { buildBreadcrumbs } from '@/lib/auth/navigation';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -15,24 +17,11 @@ interface DashboardLayoutProps {
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname();
   const { isCollapsed } = useSidebarStore();
+  const { data: session } = useSession();
 
   const breadcrumbs = useMemo(() => {
-    const segments = pathname.split('/').filter(Boolean);
-
-    return segments.map((segment, index) => {
-      const href = `/${segments.slice(0, index + 1).join('/')}`;
-      const label = segment
-        .split('-')
-        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-        .join(' ');
-
-      return {
-        label,
-        href,
-        active: index === segments.length - 1,
-      };
-    });
-  }, [pathname]);
+    return buildBreadcrumbs(pathname, session?.user);
+  }, [pathname, session?.user]);
 
   return (
     <div className="min-h-screen bg-background text-foreground">

@@ -24,7 +24,7 @@ interface Contact {
 const columnHelper = createColumnHelper<Contact>();
 
 export function ExampleContactsTable({ data }: { data: Contact[] }) {
-  const columns = useMemo(
+  const columns: any[] = useMemo(
     () => [
       columnHelper.accessor('firstName', {
         header: 'First Name',

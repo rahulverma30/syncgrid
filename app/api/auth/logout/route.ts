@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { signOut } from 'next-auth/react';
 
 /**
  * POST /api/auth/logout

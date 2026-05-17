@@ -1,5 +1,6 @@
 import { Key } from 'react';
 import { hasPermission, hasRole } from './permission-checks';
+import { SIDEBAR_GROUPS } from '@/constants/navigation';
 
 /**
  * Navigation Guard Utilities
@@ -83,13 +84,66 @@ export function filterNavigationByUser(
 }
 
 /**
- * Build breadcrumb navigation based on permissions
+ * Build dynamic, permission-aware breadcrumbs based on the router path
  */
 export function buildBreadcrumbs(
-  items: Array<{ label: string; href: string }>,
+  pathname: string,
   sessionUser: any
-): Array<{ label: string; href: string }> {
-  return items.filter(() => true);
+): Array<{ label: string; href?: string; active?: boolean }> {
+  if (!pathname) return [];
+  const segments = pathname.split('/').filter(Boolean);
+  const breadcrumbs: Array<{ label: string; href?: string; active?: boolean }> = [];
+
+  // Always append Dashboard as root if we are on dashboard paths
+  if (segments[0] === 'dashboard') {
+    breadcrumbs.push({
+      label: 'Dashboard',
+      href: '/dashboard',
+      active: segments.length === 1,
+    });
+  }
+
+  const allNavItems = (SIDEBAR_GROUPS as any[]).flatMap((g: any) => g.items);
+  let currentPath = '';
+
+  segments.forEach((segment, index) => {
+    // Skip first segment if it is 'dashboard' as we already added it
+    if (segment === 'dashboard' && index === 0) return;
+
+    currentPath += `/${segment}`;
+    const fullHref = `/dashboard${currentPath}`;
+
+    // Find the navigation item configuration if one matches the path or submenu
+    const navItem = (allNavItems as any[]).find(
+      (item: any) =>
+        item.href === fullHref || item.submenu?.some((sub: any) => sub.href === fullHref)
+    );
+
+    // If there is an item with specific permissions, guard it
+    if (navItem && !canSeeNavItem(navItem as any, sessionUser)) {
+      return; // Filter out from breadcrumb trail if user doesn't have permission!
+    }
+
+    // Format label beautifully
+    let label = segment
+      .split('-')
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ');
+
+    if (label.toLowerCase() === 'crm') label = 'CRM';
+    if (label.toLowerCase() === 'hr') label = 'HR';
+    if (/^[0-9a-fA-F]{24}$/.test(segment)) {
+      label = 'Details';
+    }
+
+    breadcrumbs.push({
+      label,
+      href: fullHref,
+      active: index === segments.length - 1,
+    });
+  });
+
+  return breadcrumbs;
 }
 
 /**

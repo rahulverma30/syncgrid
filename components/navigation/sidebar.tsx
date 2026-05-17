@@ -78,7 +78,7 @@ export function Sidebar() {
                 className="mt-2 space-y-1 overflow-hidden"
               >
                 {group.items.map((item) => {
-                  const isActive = isItemActive(item.href);
+                  const isActive = isItemActive(item.href || '');
                   const Icon = item.icon as unknown as ComponentType<SVGProps<SVGSVGElement>>;
                   const labelVisible = !isCollapsed || mobile;
                   const itemClassName = cn(
@@ -112,7 +112,7 @@ export function Sidebar() {
                           {content}
                         </button>
                       ) : (
-                        <Link href={item.href} className={itemClassName} title={item.label}>
+                        <Link href={item.href || ''} className={itemClassName} title={item.label}>
                           {content}
                         </Link>
                       )}
@@ -124,7 +124,7 @@ export function Sidebar() {
                           exit={{ height: 0 }}
                           className="ml-4 mt-1 space-y-1 overflow-hidden border-l border-border pl-2"
                         >
-                          {item.submenu.map((subitem) => (
+                          {item.submenu.map((subitem: any) => (
                             <Link key={subitem.href} href={subitem.href}>
                               <div
                                 className={cn(

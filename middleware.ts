@@ -6,8 +6,8 @@ import { AUTH_PUBLIC_ROUTES } from '@/constants/rbac';
 /**
  * RBAC Route Protection Middleware
  *
- * Protects routes and enforces authentication/authorization
- * Uses NextAuth JWT tokens for secure validation
+ * Protects routes and enforces authentication/authorization at the gateway layer.
+ * Uses NextAuth JWT tokens for secure validation.
  */
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -17,14 +17,14 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // For protected routes, validate JWT token
+  // Protect dashboard and secure API endpoints
   if (pathname.startsWith('/dashboard') || pathname.startsWith('/api/protected')) {
     const token = await getToken({
       req: request,
       secret: getAuthSecret(),
     });
 
-    // Redirect to login if no valid token
+    // Redirect to login if no valid token exists
     if (!token) {
       if (pathname.startsWith('/api/')) {
         return NextResponse.json(
@@ -42,7 +42,7 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
 
-    // Check if user status is active
+    // Check if user status is disabled
     if ((token as any).status === 'disabled') {
       if (pathname.startsWith('/api/')) {
         return NextResponse.json(
@@ -58,7 +58,7 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL('/login?error=account-disabled', request.url));
     }
 
-    // Token is valid, allow request to proceed
+    // Token is valid and account is active, allow the request to proceed
     return NextResponse.next();
   }
 

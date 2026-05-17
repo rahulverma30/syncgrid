@@ -47,7 +47,23 @@ const RoleSchema = new Schema(
   }
 );
 
-RoleSchema.index({ slug: 1, companyId: 1 }, { unique: true });
+// System roles are unique globally by slug (where companyId is null)
+RoleSchema.index(
+  { slug: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { companyId: null },
+  }
+);
+
+// Company roles are unique per company
+RoleSchema.index(
+  { slug: 1, companyId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { companyId: { $type: 'objectId' } },
+  }
+);
 
 export const Role = ((mongoose.models.Role as Model<any>) ||
   mongoose.model('Role', RoleSchema)) as Model<any>;

@@ -4,6 +4,7 @@ import { ReactNode } from 'react';
 import { useSession } from 'next-auth/react';
 import { redirect } from 'next/navigation';
 import { LoadingSpinner } from '@/components/ui';
+import { hasPermission } from '@/lib/auth/permission-checks';
 
 /**
  * Props for protected page
@@ -60,12 +61,13 @@ export function ProtectedPage({ children, requiredRole, requiredPermission }: Pr
 
   // Check permission if required
   if (requiredPermission) {
-    const hasPermission = session.user.permissions.some((perm) => {
-      const [resource, action] = perm.split(':');
-      return resource === requiredPermission.resource && action === requiredPermission.action;
-    });
+    const hasAccess = hasPermission(
+      session.user.permissions || [],
+      requiredPermission.resource,
+      requiredPermission.action
+    );
 
-    if (!hasPermission) {
+    if (!hasAccess) {
       redirect('/unauthorized');
     }
   }

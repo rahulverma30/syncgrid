@@ -37,7 +37,14 @@ export const useCommandPaletteStore = create<CommandPaletteState>()(
     togglePalette: () => set((state) => ({ isOpen: !state.isOpen, searchQuery: '' })),
     setSearchQuery: (query) => set({ searchQuery: query, selectedIndex: 0 }),
     setSelectedIndex: (index) => set({ selectedIndex: index }),
-    registerActions: (actions) => set({ actions }),
+    registerActions: (newActions) =>
+      set((state) => {
+        const actionMap = new Map(state.actions.map((a) => [a.id, a]));
+        newActions.forEach((action) => {
+          actionMap.set(action.id, action);
+        });
+        return { actions: Array.from(actionMap.values()) };
+      }),
     executeAction: (id) => {
       const action = get().actions.find((a) => a.id === id);
       if (action) {

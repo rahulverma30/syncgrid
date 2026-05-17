@@ -21,7 +21,7 @@ export function ExampleContactForm() {
     resolver: zodResolver(contactSchema),
   });
 
-  const onSubmit = async (data) => {
+  const onSubmit = async (data: any) => {
     try {
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
