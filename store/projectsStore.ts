@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { toast } from 'sonner';
+import { socketGateway } from '@/lib/socketGateway';
 
 export interface SavedProjectFilterPreset {
   name: string;
@@ -122,6 +123,7 @@ export interface ProjectAccount {
 interface ProjectsState {
   // Data
   projects: ProjectAccount[];
+  allocations: any[];
   isLoading: boolean;
   error: string | null;
 
@@ -153,6 +155,7 @@ interface ProjectsState {
 
   // Actions
   fetchProjects: () => Promise<void>;
+  fetchAllocations: () => Promise<void>;
   setSelectedProject: (project: ProjectAccount | null) => void;
   setActiveTab: (tab: string) => void;
   setActiveSection: (section: 'analytics' | 'ledger') => void;
@@ -217,6 +220,7 @@ export const useProjectsStore = create<ProjectsState>((set, get) => {
 
   return {
     projects: [],
+    allocations: [],
     isLoading: false,
     error: null,
 
@@ -260,6 +264,16 @@ export const useProjectsStore = create<ProjectsState>((set, get) => {
 
         if (data.success) {
           set({ projects: data.data, isLoading: false });
+          // Background aggregate sync
+          get().fetchAllocations();
+
+          // Connect simulated socket gateway with companyId presence channel
+          if (data.data && data.data.length > 0) {
+            const compId = data.data[0].companyId;
+            if (compId) {
+              socketGateway.connect(compId);
+            }
+          }
         } else {
           set({ error: data.message, isLoading: false });
           toast.error(data.message || 'Failed to fetch projects.');
@@ -267,6 +281,18 @@ export const useProjectsStore = create<ProjectsState>((set, get) => {
       } catch (e: any) {
         set({ error: e.message, isLoading: false });
         toast.error('Network error fetching projects.');
+      }
+    },
+
+    fetchAllocations: async () => {
+      try {
+        const res = await fetch('/api/protected/projects/allocations');
+        const data = await res.json();
+        if (data.success) {
+          set({ allocations: data.data });
+        }
+      } catch (e) {
+        console.error('Error fetching allocations:', e);
       }
     },
 

@@ -34,12 +34,49 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useProjectsStore, ProjectAccount } from '@/store/projectsStore';
 import { toast } from 'sonner';
+import { ENTERPRISE_WORKFLOWS } from '@/config/enterpriseConfig';
+import { detectCircularDependency } from '@/utils/graphEngine';
 
 export const ProjectDetailDrawer: React.FC = () => {
   const { selectedProject, setSelectedProject, activeTab, setActiveTab, fetchProjects, projects } =
     useProjectsStore();
 
   const drawerRef = useRef<HTMLDivElement>(null);
+
+  // Global hotkeys & accessibility enhancements
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSelectedProject(null);
+      }
+
+      // Shift + S to cycle tabs
+      if (e.shiftKey && e.key === 'S') {
+        e.preventDefault();
+        const tabs = [
+          'overview',
+          'team',
+          'milestones',
+          'sprints',
+          'risks',
+          'timeline',
+          'documents',
+        ];
+        const currentIdx = tabs.indexOf(activeTab);
+        const nextIdx = (currentIdx + 1) % tabs.length;
+        setActiveTab(tabs[nextIdx]);
+
+        // Dynamic accessible announcement
+        const announcer = document.getElementById('syncgrid-sr-announcer');
+        if (announcer) {
+          announcer.textContent = `Swapped active panel tab to ${tabs[nextIdx]}.`;
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeTab, setActiveTab, setSelectedProject]);
 
   const getUserTotalAllocation = (userName: string) => {
     let total = 0;
@@ -207,6 +244,40 @@ export const ProjectDetailDrawer: React.FC = () => {
     e.preventDefault();
     if (!newMilestoneTitle) return;
     setIsSubmitting(true);
+
+    // Dynamic Cycle Prevention Validation check
+    const draftId = 'draft-temp-milestone';
+    const draftMilestone = {
+      _id: draftId,
+      title: newMilestoneTitle,
+      status: 'planning',
+      dependsOn: [] as string[],
+    };
+
+    const tempMilestones = [
+      ...(selectedProject.milestones || []).map((m) => ({
+        _id: m._id,
+        title: m.title,
+        status: m.status,
+        dependsOn: m.dependsOn || [],
+      })),
+      draftMilestone,
+    ];
+
+    let hasCycle = false;
+    for (const candidateId of newMilestoneDependsOn) {
+      if (detectCircularDependency(tempMilestones, draftId, candidateId)) {
+        hasCycle = true;
+        break;
+      }
+    }
+
+    if (hasCycle) {
+      toast.error('Forbidden: Circular dependency loop detected in milestone connections.');
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       const res = await fetch(`/api/protected/projects/${selectedProject._id}/milestones`, {
         method: 'POST',
@@ -353,6 +424,7 @@ export const ProjectDetailDrawer: React.FC = () => {
       className="fixed inset-0 z-50 flex justify-end bg-background/40 backdrop-blur-xs select-none"
       onClick={handleBackdropClick}
     >
+      <div id="syncgrid-sr-announcer" aria-live="polite" className="sr-only" />
       {/* Drawer Container */}
       <motion.div
         ref={drawerRef}
@@ -414,16 +486,20 @@ export const ProjectDetailDrawer: React.FC = () => {
                   <select
                     value={selectedProject.status}
                     onChange={(e) => handleStatusChange(e.target.value)}
-                    className="w-full h-8.5 rounded-md border border-input bg-background/50 px-2 py-1 text-xs text-foreground focus:outline-none"
+                    className="w-full h-8.5 rounded-md border border-input bg-background/50 px-2 py-1 text-xs text-foreground focus:outline-none font-bold"
                   >
-                    <option value="planning">Planning</option>
-                    <option value="design">Design</option>
-                    <option value="development">Development</option>
-                    <option value="testing">Testing</option>
-                    <option value="deployment">Deployment</option>
-                    <option value="completed">Completed</option>
-                    <option value="on-hold">On Hold</option>
-                    <option value="cancelled">Cancelled</option>
+                    <option value={selectedProject.status}>
+                      {ENTERPRISE_WORKFLOWS[selectedProject.status]?.label ||
+                        selectedProject.status}{' '}
+                      (Current)
+                    </option>
+                    {(ENTERPRISE_WORKFLOWS[selectedProject.status]?.allowedTransitions || []).map(
+                      (statusId) => (
+                        <option key={statusId} value={statusId}>
+                          {ENTERPRISE_WORKFLOWS[statusId]?.label || statusId}
+                        </option>
+                      )
+                    )}
                   </select>
                 </div>
                 <div className="space-y-1">
@@ -1079,8 +1155,22 @@ export const ProjectDetailDrawer: React.FC = () => {
                       type="range"
                       min="1"
                       max="5"
+                      role="slider"
+                      aria-label="Risk Probability Slider"
+                      aria-valuemin={1}
+                      aria-valuemax={5}
+                      aria-valuenow={newRiskProbability}
                       value={newRiskProbability}
                       onChange={(e) => setNewRiskProbability(Number(e.target.value))}
+                      onKeyDown={(e) => {
+                        if (e.key === 'ArrowUp' || e.key === 'ArrowRight') {
+                          e.preventDefault();
+                          setNewRiskProbability((prev) => Math.min(5, prev + 1));
+                        } else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') {
+                          e.preventDefault();
+                          setNewRiskProbability((prev) => Math.max(1, prev - 1));
+                        }
+                      }}
                       className="w-full accent-primary cursor-pointer h-1"
                     />
                   </div>
@@ -1093,8 +1183,22 @@ export const ProjectDetailDrawer: React.FC = () => {
                       type="range"
                       min="1"
                       max="5"
+                      role="slider"
+                      aria-label="Risk Impact Slider"
+                      aria-valuemin={1}
+                      aria-valuemax={5}
+                      aria-valuenow={newRiskImpact}
                       value={newRiskImpact}
                       onChange={(e) => setNewRiskImpact(Number(e.target.value))}
+                      onKeyDown={(e) => {
+                        if (e.key === 'ArrowUp' || e.key === 'ArrowRight') {
+                          e.preventDefault();
+                          setNewRiskImpact((prev) => Math.min(5, prev + 1));
+                        } else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') {
+                          e.preventDefault();
+                          setNewRiskImpact((prev) => Math.max(1, prev - 1));
+                        }
+                      }}
                       className="w-full accent-primary cursor-pointer h-1"
                     />
                   </div>

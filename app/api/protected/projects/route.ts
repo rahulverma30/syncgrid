@@ -5,6 +5,7 @@ import { Project } from '@/models/Project';
 import { ProjectActivity } from '@/models/ProjectActivity';
 import { hasRole } from '@/lib/auth/permission-checks';
 import { ProjectIngestSchema } from '@/lib/validators/project';
+import { rankProjects } from '@/utils/searchRanker';
 
 export const GET = withApiAuth(async (request: Request, context: any, session: any) => {
   try {
@@ -59,7 +60,9 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
 
     const projects = await Project.find(query).sort({ createdAt: -1 });
 
-    return NextResponse.json({ success: true, data: projects });
+    const ranked = search ? rankProjects(projects, search) : projects;
+
+    return NextResponse.json({ success: true, data: ranked });
   } catch (error: any) {
     return NextResponse.json(
       { success: false, error: 'QUERY_ERROR', message: error.message },
