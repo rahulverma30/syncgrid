@@ -49,7 +49,7 @@ export function EmployeeDetailModal({ employeeId, isOpen, onClose }: EmployeeDet
   if (!employee) return null;
 
   const dbChecklist = employee.onboardingChecklist || {};
-  const checklist = {
+  const checklist: Record<string, boolean> = {
     'Signed Contract':
       checklistOverrides['Signed Contract'] !== undefined
         ? checklistOverrides['Signed Contract']
