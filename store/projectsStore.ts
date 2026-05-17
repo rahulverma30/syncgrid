@@ -65,6 +65,8 @@ export interface ProjectAccount {
     completedDate?: string;
     status: 'pending' | 'in-progress' | 'completed' | 'overdue';
     progressPercentage: number;
+    dependsOn?: string[];
+    parentMilestoneId?: string;
   }>;
   sprints: Array<{
     _id: string;
@@ -85,6 +87,9 @@ export interface ProjectAccount {
     mitigation: string;
     reportedBy: string;
     createdAt: string;
+    category?: string;
+    probability?: number;
+    impact?: number;
   }>;
   documents: Array<{
     _id: string;
@@ -184,6 +189,8 @@ interface ProjectsState {
   // Operations
   archiveProject: (id: string, archiveState: boolean) => Promise<void>;
   deleteProject: (id: string) => Promise<void>;
+  duplicateProject: (id: string, name: string, options: any) => Promise<boolean>;
+  executeBulkAction: (action: string, value: any, projectIds: string[]) => Promise<boolean>;
 }
 
 const DEFAULT_COLUMNS: Record<string, boolean> = {
@@ -382,6 +389,74 @@ export const useProjectsStore = create<ProjectsState>((set, get) => {
         }
       } catch {
         toast.error('Network error.');
+      }
+    },
+
+    duplicateProject: async (id, name, options) => {
+      try {
+        const res = await fetch(`/api/protected/projects/${id}/duplicate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, ...options }),
+        });
+        const d = await res.json();
+        if (d.success) {
+          toast.success('Project cloned successfully.');
+          get().fetchProjects();
+          return true;
+        } else {
+          toast.error(d.message || 'Duplication failed.');
+          return false;
+        }
+      } catch {
+        toast.error('Network error duplicating project.');
+        return false;
+      }
+    },
+
+    executeBulkAction: async (action, value, projectIds) => {
+      // Optimistic update for UI feel
+      const originalProjects = get().projects;
+      if (
+        action === 'status' ||
+        action === 'priority' ||
+        action === 'archive' ||
+        action === 'manager'
+      ) {
+        const updated = originalProjects.map((p) => {
+          if (projectIds.includes(p._id)) {
+            const clone = { ...p };
+            if (action === 'status') clone.status = value;
+            if (action === 'priority') clone.priority = value;
+            if (action === 'archive') clone.isArchived = true;
+            if (action === 'manager') clone.projectManager = value;
+            return clone;
+          }
+          return p;
+        });
+        set({ projects: updated });
+      }
+
+      try {
+        const res = await fetch('/api/protected/projects/bulk', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ projectIds, action, value }),
+        });
+        const d = await res.json();
+        if (d.success) {
+          toast.success(d.message || 'Bulk operation completed.');
+          get().fetchProjects();
+          return true;
+        } else {
+          set({ projects: originalProjects }); // revert on failure
+          toast.error(d.message || 'Bulk operation failed.');
+          return false;
+        }
+      } catch {
+        set({ projects: originalProjects }); // revert
+        toast.error('Network error applying bulk actions.');
+        return false;
       }
     },
   };

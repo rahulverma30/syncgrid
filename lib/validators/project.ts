@@ -46,6 +46,8 @@ export const MilestoneIngestSchema = z.object({
   dueDate: z.string().optional(),
   status: z.enum(['pending', 'in-progress', 'completed', 'overdue']).default('pending'),
   progressPercentage: z.number().min(0).max(100).default(0),
+  dependsOn: z.array(z.string()).default([]),
+  parentMilestoneId: z.string().optional(),
 });
 
 export const SprintIngestSchema = z.object({
@@ -70,6 +72,11 @@ export const RiskIngestSchema = z.object({
   description: z.string().default(''),
   severity: z.enum(['low', 'medium', 'high', 'critical']).default('medium'),
   status: z.enum(['open', 'mitigated', 'resolved', 'escalated']).default('open'),
+  category: z
+    .enum(['technical', 'staffing', 'financial', 'timeline', 'dependency', 'operational'])
+    .default('technical'),
+  probability: z.number().min(1).max(5).default(3),
+  impact: z.number().min(1).max(5).default(3),
   mitigation: z.string().default(''),
 });
 
@@ -80,4 +87,10 @@ export const ProjectDocumentIngestSchema = z.object({
     .default('other'),
   url: z.string().min(1, 'Document URL is required.'),
   size: z.number().nonnegative().default(0),
+});
+
+export const BulkActionSchema = z.object({
+  projectIds: z.array(z.string()).min(1, 'At least one project must be selected.'),
+  action: z.enum(['status', 'priority', 'archive', 'unarchive', 'tag_add', 'manager']),
+  value: z.any(),
 });

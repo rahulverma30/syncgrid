@@ -36,10 +36,26 @@ import { useProjectsStore, ProjectAccount } from '@/store/projectsStore';
 import { toast } from 'sonner';
 
 export const ProjectDetailDrawer: React.FC = () => {
-  const { selectedProject, setSelectedProject, activeTab, setActiveTab, fetchProjects } =
+  const { selectedProject, setSelectedProject, activeTab, setActiveTab, fetchProjects, projects } =
     useProjectsStore();
 
   const drawerRef = useRef<HTMLDivElement>(null);
+
+  const getUserTotalAllocation = (userName: string) => {
+    let total = 0;
+    projects.forEach((p) => {
+      p.teamMembers?.forEach((m) => {
+        if (
+          m.userName &&
+          userName &&
+          m.userName.trim().toLowerCase() === userName.trim().toLowerCase()
+        ) {
+          total += m.allocation || 0;
+        }
+      });
+    });
+    return total;
+  };
 
   // Sub-resource states
   const [newTeamUser, setNewTeamUser] = useState('');
@@ -51,6 +67,8 @@ export const ProjectDetailDrawer: React.FC = () => {
   const [newMilestoneTitle, setNewMilestoneTitle] = useState('');
   const [newMilestoneDesc, setNewMilestoneDesc] = useState('');
   const [newMilestoneDate, setNewMilestoneDate] = useState('');
+  const [newMilestoneDependsOn, setNewMilestoneDependsOn] = useState<string[]>([]);
+  const [newMilestoneParent, setNewMilestoneParent] = useState<string>('');
 
   const [newSprintName, setNewSprintName] = useState('');
   const [newSprintGoal, setNewSprintGoal] = useState('');
@@ -63,6 +81,11 @@ export const ProjectDetailDrawer: React.FC = () => {
     'medium'
   );
   const [newRiskMitigation, setNewRiskMitigation] = useState('');
+  const [newRiskCategory, setNewRiskCategory] = useState<
+    'technical' | 'staffing' | 'financial' | 'timeline' | 'dependency' | 'operational'
+  >('technical');
+  const [newRiskProbability, setNewRiskProbability] = useState<number>(3);
+  const [newRiskImpact, setNewRiskImpact] = useState<number>(3);
 
   const [newDocName, setNewDocName] = useState('');
   const [newDocCat, setNewDocCat] = useState<
@@ -192,6 +215,8 @@ export const ProjectDetailDrawer: React.FC = () => {
           title: newMilestoneTitle,
           description: newMilestoneDesc,
           dueDate: newMilestoneDate || undefined,
+          dependsOn: newMilestoneDependsOn,
+          parentMilestoneId: newMilestoneParent || undefined,
         }),
       });
       const d = await res.json();
@@ -201,6 +226,8 @@ export const ProjectDetailDrawer: React.FC = () => {
         setNewMilestoneTitle('');
         setNewMilestoneDesc('');
         setNewMilestoneDate('');
+        setNewMilestoneDependsOn([]);
+        setNewMilestoneParent('');
         fetchProjects();
       }
     } catch {
@@ -258,6 +285,9 @@ export const ProjectDetailDrawer: React.FC = () => {
           description: newRiskDesc,
           severity: newRiskSeverity,
           mitigation: newRiskMitigation,
+          category: newRiskCategory,
+          probability: newRiskProbability,
+          impact: newRiskImpact,
         }),
       });
       const d = await res.json();
@@ -267,6 +297,8 @@ export const ProjectDetailDrawer: React.FC = () => {
         setNewRiskTitle('');
         setNewRiskDesc('');
         setNewRiskMitigation('');
+        setNewRiskProbability(3);
+        setNewRiskImpact(3);
         fetchProjects();
       }
     } catch {
@@ -537,27 +569,53 @@ export const ProjectDetailDrawer: React.FC = () => {
                     No team members assigned.
                   </div>
                 )}
-                {selectedProject.teamMembers?.map((member) => (
-                  <div
-                    key={member._id}
-                    className="flex items-center justify-between p-3 rounded-lg border border-border/40 bg-card/25"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-[10px] uppercase">
-                        {member.userName.charAt(0)}
+                {selectedProject.teamMembers?.map((member) => {
+                  const totalAlloc = getUserTotalAllocation(member.userName);
+                  const isOver = totalAlloc > 100;
+                  return (
+                    <div
+                      key={member._id}
+                      className={`flex items-center justify-between p-3 rounded-lg border transition-all ${
+                        isOver
+                          ? 'border-rose-500/30 bg-rose-500/5 shadow-xs ring-1 ring-rose-500/10 animate-pulse'
+                          : 'border-border/40 bg-card/25 hover:bg-card/50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div
+                          className={`h-7 w-7 rounded-full flex items-center justify-center font-bold text-[10px] uppercase ${
+                            isOver ? 'bg-rose-500/10 text-rose-500' : 'bg-primary/10 text-primary'
+                          }`}
+                        >
+                          {member.userName.charAt(0)}
+                        </div>
+                        <div className="space-y-0.5 text-left">
+                          <div className="flex items-center gap-1.5">
+                            <h5 className="font-bold text-foreground">{member.userName}</h5>
+                            {isOver && (
+                              <span className="text-[8px] font-black bg-rose-500 text-white rounded px-1 uppercase tracking-wider">
+                                Overloaded
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-semibold">
+                            {member.role}
+                          </p>
+                        </div>
                       </div>
-                      <div className="space-y-0.5">
-                        <h5 className="font-bold text-foreground">{member.userName}</h5>
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">
-                          {member.role}
-                        </p>
+                      <div className="flex flex-col items-end gap-1 select-none">
+                        <span className="text-[10px] font-mono font-bold px-2 py-0.5 bg-primary/10 text-primary border border-primary/20 rounded">
+                          {member.allocation}% Alloc
+                        </span>
+                        <span
+                          className={`text-[8px] font-semibold ${isOver ? 'text-rose-500 font-extrabold' : 'text-muted-foreground'}`}
+                        >
+                          Cross-Project: {totalAlloc}%
+                        </span>
                       </div>
                     </div>
-                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 bg-primary/10 text-primary border border-primary/20 rounded">
-                      {member.allocation}% Alloc
-                    </span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
@@ -593,6 +651,73 @@ export const ProjectDetailDrawer: React.FC = () => {
                   onChange={(e) => setNewMilestoneDesc(e.target.value)}
                   className="w-full h-12 p-2 rounded border border-input bg-background focus:outline-none focus:ring-1 focus:ring-ring text-xs leading-relaxed"
                 />
+
+                {/* Milestone dependency and parent mapping */}
+                <div className="grid grid-cols-2 gap-2 text-left select-none">
+                  <div className="space-y-0.5">
+                    <label className="text-[8px] font-black text-muted-foreground uppercase tracking-wide">
+                      Depends On (Blocker)
+                    </label>
+                    <select
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val) {
+                          if (!newMilestoneDependsOn.includes(val)) {
+                            setNewMilestoneDependsOn([...newMilestoneDependsOn, val]);
+                          }
+                          e.target.value = '';
+                        }
+                      }}
+                      className="w-full h-8 rounded border border-input bg-background px-2 text-xs focus:outline-none font-bold"
+                    >
+                      <option value="">Select Blocker...</option>
+                      {selectedProject.milestones?.map((m) => (
+                        <option key={m._id} value={m._id}>
+                          {m.title}
+                        </option>
+                      ))}
+                    </select>
+                    {newMilestoneDependsOn.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {newMilestoneDependsOn.map((id) => {
+                          const m = selectedProject.milestones?.find((x) => x._id === id);
+                          return (
+                            <span
+                              key={id}
+                              onClick={() =>
+                                setNewMilestoneDependsOn(
+                                  newMilestoneDependsOn.filter((x) => x !== id)
+                                )
+                              }
+                              className="text-[8px] font-black bg-amber-500/15 text-amber-700 border border-amber-500/20 px-1 py-0.5 rounded cursor-pointer hover:bg-rose-500 hover:text-white transition-colors"
+                            >
+                              {m?.title || id} ×
+                            </span>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-0.5">
+                    <label className="text-[8px] font-black text-muted-foreground uppercase tracking-wide">
+                      Parent Milestone
+                    </label>
+                    <select
+                      value={newMilestoneParent}
+                      onChange={(e) => setNewMilestoneParent(e.target.value)}
+                      className="w-full h-8 rounded border border-input bg-background px-2 text-xs focus:outline-none font-bold"
+                    >
+                      <option value="">None (Top Level)</option>
+                      {selectedProject.milestones?.map((m) => (
+                        <option key={m._id} value={m._id}>
+                          {m.title}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
                 <Button
                   type="submit"
                   variant="default"
@@ -614,31 +739,87 @@ export const ProjectDetailDrawer: React.FC = () => {
                     No milestones declared.
                   </div>
                 )}
-                {selectedProject.milestones?.map((milestone) => (
-                  <div
-                    key={milestone._id}
-                    className="p-3 rounded-lg border border-border/40 bg-card/25 space-y-2"
-                  >
-                    <div className="flex items-center justify-between">
-                      <h5 className="font-bold text-foreground">{milestone.title}</h5>
-                      <span className="text-[9px] font-mono rounded bg-blue-500/10 text-blue-500 border border-blue-500/20 px-2 py-0.5 uppercase font-bold tracking-wide">
-                        {milestone.status}
-                      </span>
+                {selectedProject.milestones?.map((milestone) => {
+                  const parentMilestone = selectedProject.milestones?.find(
+                    (m) => m._id === milestone.parentMilestoneId
+                  );
+                  const isBlocked = (milestone.dependsOn || []).some((depId: string) => {
+                    const dep = selectedProject.milestones?.find((x) => x._id === depId);
+                    return dep && dep.status !== 'completed';
+                  });
+
+                  return (
+                    <div
+                      key={milestone._id}
+                      className={`p-3 rounded-lg border transition-all ${
+                        isBlocked
+                          ? 'border-amber-500/30 bg-amber-500/5 shadow-xs ring-1 ring-amber-500/10'
+                          : 'border-border/40 bg-card/25 hover:bg-card/50'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5 text-left">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <h5 className="font-bold text-foreground">{milestone.title}</h5>
+                            {isBlocked && (
+                              <span className="text-[8px] font-black bg-amber-500 text-white rounded px-1.5 uppercase tracking-wider animate-pulse">
+                                Blocked
+                              </span>
+                            )}
+                            {parentMilestone && (
+                              <span className="text-[8px] font-bold bg-primary/10 text-primary border border-primary/20 rounded px-1.5 uppercase tracking-wide">
+                                Sub: {parentMilestone.title}
+                              </span>
+                            )}
+                          </div>
+                          {milestone.description && (
+                            <p className="text-[10px] text-muted-foreground">
+                              {milestone.description}
+                            </p>
+                          )}
+                        </div>
+                        <span className="text-[9px] font-mono rounded bg-blue-500/10 text-blue-500 border border-blue-500/20 px-2 py-0.5 uppercase font-bold tracking-wide select-none">
+                          {milestone.status}
+                        </span>
+                      </div>
+
+                      {/* Dependencies view */}
+                      {(milestone.dependsOn || []).length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mt-2 border-t border-border/20 pt-1.5 select-none">
+                          <span className="text-[8px] font-bold text-muted-foreground uppercase">
+                            Requires:
+                          </span>
+                          {(milestone.dependsOn || []).map((depId: string) => {
+                            const dep = selectedProject.milestones?.find((x) => x._id === depId);
+                            const depMet = dep && dep.status === 'completed';
+                            return (
+                              <span
+                                key={depId}
+                                className={`text-[8px] font-mono font-bold px-1.5 py-0.5 border rounded uppercase ${
+                                  depMet
+                                    ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+                                    : 'bg-amber-500/10 text-amber-600 border-amber-500/20 font-black'
+                                }`}
+                              >
+                                {dep?.title || 'Unknown'} {depMet ? '✓' : '⚠'}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      <div className="flex items-center justify-between text-[9px] text-muted-foreground font-mono font-semibold pt-1.5 border-t border-border/10 mt-1.5 select-none">
+                        <span>
+                          Target:{' '}
+                          {milestone.dueDate
+                            ? new Date(milestone.dueDate).toLocaleDateString()
+                            : 'TBD'}
+                        </span>
+                        <span>Progress: {milestone.progressPercentage}%</span>
+                      </div>
                     </div>
-                    {milestone.description && (
-                      <p className="text-[10px] text-muted-foreground">{milestone.description}</p>
-                    )}
-                    <div className="flex items-center justify-between text-[9px] text-muted-foreground font-mono font-semibold">
-                      <span>
-                        Target:{' '}
-                        {milestone.dueDate
-                          ? new Date(milestone.dueDate).toLocaleDateString()
-                          : 'TBD'}
-                      </span>
-                      <span>Progress: {milestone.progressPercentage}%</span>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
@@ -854,6 +1035,71 @@ export const ProjectDetailDrawer: React.FC = () => {
                     <option value="critical">CRITICAL SEVERITY</option>
                   </select>
                 </div>
+
+                <div className="grid grid-cols-2 gap-2 text-left">
+                  <div className="space-y-0.5">
+                    <label className="text-[8px] font-black text-muted-foreground uppercase tracking-wide">
+                      Risk Category
+                    </label>
+                    <select
+                      value={newRiskCategory}
+                      onChange={(e) => setNewRiskCategory(e.target.value as any)}
+                      className="w-full h-8 rounded border border-input bg-background px-2 text-xs focus:outline-none font-bold"
+                    >
+                      <option value="technical">Technical Architecture</option>
+                      <option value="staffing">Staffing / Resources</option>
+                      <option value="financial">Financial / Budgetary</option>
+                      <option value="timeline">Timeline / Deadlines</option>
+                      <option value="dependency">External Dependencies</option>
+                      <option value="operational">Operational Systems</option>
+                    </select>
+                  </div>
+                  <div className="space-y-0.5 flex flex-col justify-end">
+                    <div className="p-1 rounded bg-primary/10 border border-primary/20 text-center select-none">
+                      <span className="text-[7px] font-black uppercase text-muted-foreground block leading-none mb-0.5">
+                        Live Threat Score
+                      </span>
+                      <span className="text-xs font-black text-primary font-mono leading-none">
+                        {newRiskProbability * newRiskImpact}{' '}
+                        <span className="text-[8px] font-bold text-muted-foreground font-sans">
+                          ({newRiskProbability} × {newRiskImpact})
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3.5 select-none text-left">
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between text-[8px] font-bold text-muted-foreground uppercase">
+                      <span>Probability</span>
+                      <span className="font-mono text-primary">{newRiskProbability} / 5</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="1"
+                      max="5"
+                      value={newRiskProbability}
+                      onChange={(e) => setNewRiskProbability(Number(e.target.value))}
+                      className="w-full accent-primary cursor-pointer h-1"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between text-[8px] font-bold text-muted-foreground uppercase">
+                      <span>Impact</span>
+                      <span className="font-mono text-primary">{newRiskImpact} / 5</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="1"
+                      max="5"
+                      value={newRiskImpact}
+                      onChange={(e) => setNewRiskImpact(Number(e.target.value))}
+                      className="w-full accent-primary cursor-pointer h-1"
+                    />
+                  </div>
+                </div>
+
                 <textarea
                   placeholder="Detailed mitigation strategy..."
                   value={newRiskMitigation}
@@ -881,30 +1127,58 @@ export const ProjectDetailDrawer: React.FC = () => {
                     No threats registered.
                   </div>
                 )}
-                {selectedProject.risks?.map((risk) => (
-                  <div
-                    key={risk._id}
-                    className="p-3 rounded-lg border border-border/40 bg-card/25 space-y-2"
-                  >
-                    <div className="flex items-center justify-between">
-                      <h5 className="font-bold text-foreground">{risk.title}</h5>
-                      <span
-                        className={`text-[9px] font-mono rounded px-2 py-0.5 uppercase font-bold tracking-wide border ${
-                          risk.severity === 'critical' || risk.severity === 'high'
-                            ? 'bg-rose-500/10 text-rose-500 border-rose-500/20'
-                            : 'bg-amber-500/10 text-amber-500 border-amber-500/20'
-                        }`}
-                      >
-                        {risk.severity} Severity
-                      </span>
+                {selectedProject.risks?.map((risk) => {
+                  const prob = risk.probability || 3;
+                  const imp = risk.impact || 3;
+                  const score = prob * imp;
+
+                  // Color levels
+                  let badgeColor = 'bg-blue-500/10 text-blue-500 border-blue-500/20';
+                  if (score >= 15) {
+                    badgeColor =
+                      'bg-rose-500 text-white border-rose-500/20 animate-pulse font-black';
+                  } else if (score >= 10) {
+                    badgeColor = 'bg-rose-500/10 text-rose-500 border-rose-500/20 font-black';
+                  } else if (score >= 4) {
+                    badgeColor = 'bg-amber-500/10 text-amber-500 border-amber-500/20 font-black';
+                  }
+
+                  return (
+                    <div
+                      key={risk._id}
+                      className="p-3 rounded-lg border border-border/40 bg-card/25 space-y-2 text-left"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <h5 className="font-bold text-foreground">{risk.title}</h5>
+                            <span className="text-[8px] font-black uppercase bg-card/50 text-muted-foreground border border-border px-1.5 py-0.5 rounded leading-none">
+                              {risk.category || 'technical'}
+                            </span>
+                          </div>
+                          {risk.description && (
+                            <p className="text-[10px] text-muted-foreground leading-relaxed">
+                              {risk.description}
+                            </p>
+                          )}
+                        </div>
+                        <span
+                          className={`text-[9px] font-mono rounded px-2 py-0.5 uppercase font-bold tracking-wide border select-none ${badgeColor}`}
+                        >
+                          TS: {score} ({risk.severity})
+                        </span>
+                      </div>
+                      {risk.mitigation && (
+                        <div className="text-[10px] text-muted-foreground bg-popover/40 p-2 rounded border border-border/20 text-left">
+                          <span className="text-[8px] font-black text-primary uppercase block tracking-wider leading-none mb-1">
+                            Mitigation Strategy:
+                          </span>
+                          <p className="leading-relaxed">{risk.mitigation}</p>
+                        </div>
+                      )}
                     </div>
-                    {risk.mitigation && (
-                      <p className="text-[10px] text-muted-foreground bg-popover/40 p-2 rounded border border-border/20">
-                        Mitigation: {risk.mitigation}
-                      </p>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}

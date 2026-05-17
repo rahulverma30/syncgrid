@@ -12,6 +12,7 @@ import {
   RotateCcw,
   Trash2,
   MoreHorizontal,
+  Copy,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useProjectsStore, ProjectAccount } from '@/store/projectsStore';
@@ -64,6 +65,8 @@ export const ProjectTable: React.FC = () => {
     saveFilterPreset,
     loadFilterPreset,
     deleteFilterPreset,
+    executeBulkAction,
+    duplicateProject,
   } = useProjectsStore();
 
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
@@ -332,22 +335,121 @@ export const ProjectTable: React.FC = () => {
       <AnimatePresence>
         {selectedRows.length > 0 && (
           <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="flex items-center gap-3 p-2.5 rounded-lg bg-primary/5 border border-primary/20 overflow-hidden"
+            initial={{ height: 0, opacity: 0, y: -10 }}
+            animate={{ height: 'auto', opacity: 1, y: 0 }}
+            exit={{ height: 0, opacity: 0, y: -10 }}
+            className="flex items-center justify-between gap-3 p-3 rounded-lg bg-primary/10 border border-primary/20 overflow-hidden select-none flex-wrap"
           >
-            <span className="text-[10px] font-bold text-primary">
-              {selectedRows.length} selected
-            </span>
-            <Button
-              onClick={() => setSelectedRows([])}
-              variant="ghost"
-              size="sm"
-              className="h-7 text-[10px]"
-            >
-              Clear
-            </Button>
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-bold text-primary flex items-center gap-1.5">
+                <span className="h-5 w-5 rounded-full bg-primary/20 flex items-center justify-center font-black text-[10px]">
+                  {selectedRows.length}
+                </span>
+                selected projects
+              </span>
+              <Button
+                onClick={() => setSelectedRows([])}
+                variant="ghost"
+                size="sm"
+                className="h-7 text-[10px] uppercase font-black tracking-wider text-muted-foreground hover:text-foreground"
+              >
+                Clear
+              </Button>
+            </div>
+
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Status bulk update */}
+              <select
+                onChange={async (e) => {
+                  if (e.target.value) {
+                    await executeBulkAction('status', e.target.value, selectedRows);
+                    setSelectedRows([]);
+                    e.target.value = '';
+                  }
+                }}
+                className="h-7 rounded border border-primary/20 bg-background/80 px-2 text-[10px] text-foreground focus:outline-none cursor-pointer hover:border-primary/50 transition-colors font-bold"
+              >
+                <option value="">Bulk Status...</option>
+                <option value="planning">Planning</option>
+                <option value="design">Design</option>
+                <option value="development">Development</option>
+                <option value="testing">Testing</option>
+                <option value="deployment">Deployment</option>
+                <option value="completed">Completed</option>
+                <option value="on-hold">On Hold</option>
+              </select>
+
+              {/* Priority bulk update */}
+              <select
+                onChange={async (e) => {
+                  if (e.target.value) {
+                    await executeBulkAction('priority', e.target.value, selectedRows);
+                    setSelectedRows([]);
+                    e.target.value = '';
+                  }
+                }}
+                className="h-7 rounded border border-primary/20 bg-background/80 px-2 text-[10px] text-foreground focus:outline-none cursor-pointer hover:border-primary/50 transition-colors font-bold"
+              >
+                <option value="">Bulk Priority...</option>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="urgent">Urgent</option>
+              </select>
+
+              {/* Tag bulk update */}
+              <select
+                onChange={async (e) => {
+                  if (e.target.value) {
+                    await executeBulkAction('tag_add', e.target.value, selectedRows);
+                    setSelectedRows([]);
+                    e.target.value = '';
+                  }
+                }}
+                className="h-7 rounded border border-primary/20 bg-background/80 px-2 text-[10px] text-foreground focus:outline-none cursor-pointer hover:border-primary/50 transition-colors font-bold"
+              >
+                <option value="">Bulk Add Tag...</option>
+                <option value="Web">Web</option>
+                <option value="Mobile">Mobile</option>
+                <option value="SaaS">SaaS</option>
+                <option value="Design">Design</option>
+                <option value="Marketing">Marketing</option>
+                <option value="React">React</option>
+              </select>
+
+              {/* Manager bulk update */}
+              <select
+                onChange={async (e) => {
+                  if (e.target.value) {
+                    await executeBulkAction('manager', e.target.value, selectedRows);
+                    setSelectedRows([]);
+                    e.target.value = '';
+                  }
+                }}
+                className="h-7 rounded border border-primary/20 bg-background/80 px-2 text-[10px] text-foreground focus:outline-none cursor-pointer hover:border-primary/50 transition-colors font-bold"
+              >
+                <option value="">Bulk Reassign PM...</option>
+                <option value="John Doe">John Doe</option>
+                <option value="Sarah Connor">Sarah Connor</option>
+                <option value="Alex Mercer">Alex Mercer</option>
+                <option value="Unassigned">Unassigned</option>
+              </select>
+
+              {/* Archive bulk update */}
+              <Button
+                onClick={async () => {
+                  if (confirm(`Archive ${selectedRows.length} selected projects?`)) {
+                    await executeBulkAction('archive', true, selectedRows);
+                    setSelectedRows([]);
+                  }
+                }}
+                variant="ghost"
+                size="sm"
+                className="h-7 text-[10px] bg-amber-500/10 text-amber-500 border border-amber-500/20 hover:bg-amber-500 hover:text-white transition-colors uppercase font-black tracking-wider"
+              >
+                Archive Selected
+              </Button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -529,6 +631,27 @@ export const ProjectTable: React.FC = () => {
                                   <Archive className="h-3 w-3" /> Archive
                                 </>
                               )}
+                            </button>
+                            <button
+                              onClick={async () => {
+                                const newName = prompt(
+                                  'Enter a name for the duplicated project:',
+                                  `${project.name} (Copy)`
+                                );
+                                if (newName && newName.trim()) {
+                                  await duplicateProject(project._id, newName.trim(), {
+                                    duplicateMilestones: true,
+                                    duplicateSprints: true,
+                                    duplicateTeam: true,
+                                    duplicateDocuments: true,
+                                    duplicateRisks: true,
+                                  });
+                                }
+                                setRowMenuOpenId(null);
+                              }}
+                              className="w-full flex items-center gap-2 px-2 py-1.5 text-[10px] font-semibold text-foreground hover:bg-accent/30 rounded cursor-pointer"
+                            >
+                              <Copy className="h-3.5 w-3.5" /> Duplicate
                             </button>
                             <button
                               onClick={() => {

@@ -25,6 +25,64 @@ export const ProjectCreateModal: React.FC = () => {
   const [formTechnologies, setFormTechnologies] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeTemplate, setActiveTemplate] = useState<string>('blank');
+
+  const templates = [
+    {
+      id: 'blank',
+      name: 'Blank',
+      description: 'Start fresh',
+      tags: [],
+      budget: 50000,
+      hours: 240,
+      priority: 'medium' as const,
+      billing: 'fixed' as const,
+      tech: '',
+    },
+    {
+      id: 'website',
+      name: 'Website',
+      description: 'Landing pages, static CMS',
+      tags: ['Web', 'Design'],
+      budget: 45000,
+      hours: 180,
+      priority: 'medium' as const,
+      billing: 'fixed' as const,
+      tech: 'React, Next.js, TailwindCSS, Vercel',
+    },
+    {
+      id: 'saas',
+      name: 'SaaS MVP',
+      description: 'Auth, billing, multi-tenant app',
+      tags: ['SaaS', 'Web', 'Mobile'],
+      budget: 120000,
+      hours: 600,
+      priority: 'high' as const,
+      billing: 'hourly' as const,
+      tech: 'Next.js, Node.js, MongoDB, AWS, Stripe',
+    },
+    {
+      id: 'crm',
+      name: 'CRM',
+      description: 'Enterprise dashboards & scale',
+      tags: ['Enterprise', 'SaaS'],
+      budget: 250000,
+      hours: 1200,
+      priority: 'urgent' as const,
+      billing: 'retainer' as const,
+      tech: 'React, GraphQL, PostgreSQL, Redis, Kubernetes',
+    },
+  ];
+
+  const applyTemplate = (t: (typeof templates)[0]) => {
+    setActiveTemplate(t.id);
+    setFormBudget(t.budget);
+    setFormEstimatedHours(t.hours);
+    setFormPriority(t.priority);
+    setFormBillingType(t.billing);
+    setFormTechnologies(t.tech);
+    setSelectedTags(t.tags);
+  };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,6 +155,36 @@ export const ProjectCreateModal: React.FC = () => {
               <p className="text-[10px] text-muted-foreground">
                 Set up a new project with budget, timeline, and team allocation parameters.
               </p>
+            </div>
+
+            {/* Visual Templates Selector */}
+            <div className="space-y-1.5 border-b border-border/40 pb-3 select-none">
+              <label className="text-[9px] font-black uppercase text-muted-foreground tracking-wider">
+                Select Blueprint Template:
+              </label>
+              <div className="grid grid-cols-4 gap-2">
+                {templates.map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => applyTemplate(t)}
+                    className={`p-2.5 rounded-lg border text-left flex flex-col justify-between transition-all select-none cursor-pointer ${
+                      activeTemplate === t.id
+                        ? 'bg-primary/10 border-primary shadow-xs ring-1 ring-primary/20'
+                        : 'bg-card/25 border-border/60 hover:bg-card/65'
+                    }`}
+                  >
+                    <div className="space-y-0.5">
+                      <p className="text-[10px] font-black tracking-wide text-foreground leading-none">
+                        {t.name}
+                      </p>
+                      <p className="text-[8px] text-muted-foreground leading-tight line-clamp-2">
+                        {t.description}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
 
             <form onSubmit={handleCreate} className="space-y-4 text-xs">

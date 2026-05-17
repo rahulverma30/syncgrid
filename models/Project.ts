@@ -16,6 +16,7 @@ const ProjectMilestoneSchema = new Schema(
     },
     progressPercentage: { type: Number, default: 0, min: 0, max: 100 },
     dependsOn: [{ type: Schema.Types.ObjectId }], // milestone dependency references
+    parentMilestoneId: { type: Schema.Types.ObjectId },
   },
   { _id: true, timestamps: true }
 );
@@ -65,6 +66,13 @@ const ProjectRiskSchema = new Schema(
       enum: ['open', 'mitigated', 'resolved', 'escalated'],
       default: 'open',
     },
+    category: {
+      type: String,
+      enum: ['technical', 'staffing', 'financial', 'timeline', 'dependency', 'operational'],
+      default: 'technical',
+    },
+    probability: { type: Number, default: 3, min: 1, max: 5 },
+    impact: { type: Number, default: 3, min: 1, max: 5 },
     mitigation: { type: String, trim: true },
     reportedBy: { type: String, trim: true },
     createdAt: { type: Date, default: Date.now },
@@ -260,7 +268,7 @@ ProjectSchema.index({ companyId: 1, priority: 1 });
 ProjectSchema.index({ companyId: 1, riskLevel: 1 });
 ProjectSchema.index({ companyId: 1, clientId: 1 });
 
-// ─── Auto-generate project code pre-save ───────────────────────────────────────
+// ─── Auto-generate project code and calculate health score pre-save ───────────
 ProjectSchema.pre('save', function (this: any, next: any) {
   if (!this.code) {
     const prefix = (this.name as string)
@@ -270,6 +278,64 @@ ProjectSchema.pre('save', function (this: any, next: any) {
     const suffix = Math.floor(1000 + Math.random() * 9000);
     this.code = `${prefix}-${suffix}`;
   }
+
+  // ─── Dynamic Health & Risk Engine ───────────────────────────────────────────
+  let calculatedScore = 100;
+
+  // 1. Missed/Overdue Milestones
+  const now = new Date();
+  const overdueMilestones = (this.milestones || []).filter(
+    (m: any) => m.status !== 'completed' && m.dueDate && new Date(m.dueDate) < now
+  ).length;
+  calculatedScore -= overdueMilestones * 12;
+
+  // 2. Unresolved Risks (Weight based on severity & probability*impact)
+  const openRisks = this.risks || [];
+  openRisks.forEach((r: any) => {
+    if (r.status === 'open' || r.status === 'escalated') {
+      const riskFactor = (r.probability || 3) * (r.impact || 3); // 1-25 range
+      if (r.severity === 'critical' || riskFactor >= 16) calculatedScore -= 20;
+      else if (r.severity === 'high' || riskFactor >= 9) calculatedScore -= 12;
+      else if (r.severity === 'medium' || riskFactor >= 4) calculatedScore -= 7;
+      else calculatedScore -= 3;
+    }
+  });
+
+  // 3. Hours Overrun Variance
+  if (this.actualHours > this.estimatedHours && this.estimatedHours > 0) {
+    const overrunRatio = (this.actualHours - this.estimatedHours) / this.estimatedHours;
+    calculatedScore -= Math.min(20, Math.round(overrunRatio * 15));
+  }
+
+  // 4. Over-allocated Team Resources Penalty
+  const overAllocatedMembersCount = (this.teamMembers || []).filter(
+    (tm: any) => tm.allocation > 100
+  ).length;
+  calculatedScore -= overAllocatedMembersCount * 5;
+
+  // Bounds limit
+  this.healthScore = Math.max(10, Math.min(100, calculatedScore));
+
+  // Determine riskLevel based on health score and unresolved risks
+  const maxRiskSeverity = openRisks.reduce((max: string, r: any) => {
+    if (r.status === 'open' || r.status === 'escalated') {
+      const ranks: Record<string, number> = { low: 1, medium: 2, high: 3, critical: 4 };
+      const currentSeverity = r.severity || 'low';
+      if (ranks[currentSeverity] > ranks[max]) return currentSeverity;
+    }
+    return max;
+  }, 'low');
+
+  if (this.healthScore < 50 || maxRiskSeverity === 'critical') {
+    this.riskLevel = 'critical';
+  } else if (this.healthScore < 70 || maxRiskSeverity === 'high') {
+    this.riskLevel = 'high';
+  } else if (this.healthScore < 85 || maxRiskSeverity === 'medium') {
+    this.riskLevel = 'medium';
+  } else {
+    this.riskLevel = 'low';
+  }
+
   next();
 });
 
