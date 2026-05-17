@@ -1,26 +1,39 @@
 import { useEffect } from 'react';
 
+// Shared global locks tracking variables to safely support stacked nested modals
+let lockCount = 0;
+let originalOverflow = '';
+let originalPaddingRight = '';
+
 export function useLockBodyScroll(lock: boolean) {
   useEffect(() => {
     if (!lock) return;
 
-    // Get original body overflow
-    const originalStyle = window.getComputedStyle(document.body).overflow;
-    const originalPaddingRight = window.getComputedStyle(document.body).paddingRight;
+    if (lockCount === 0) {
+      // Capture and store initial styling values
+      originalOverflow = document.body.style.overflow || '';
+      originalPaddingRight = document.body.style.paddingRight || '';
 
-    // Prevent scrolling on mount
-    document.body.style.overflow = 'hidden';
+      // Stop scrolling on background document
+      document.body.style.overflow = 'hidden';
 
-    // Add padding to prevent layout shift if there's a scrollbar
-    const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
-    if (scrollBarWidth > 0) {
-      document.body.style.paddingRight = `${scrollBarWidth}px`;
+      // Avoid layout shifts by compensating for scrollbar widths
+      const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
+      if (scrollBarWidth > 0) {
+        document.body.style.paddingRight = `${scrollBarWidth}px`;
+      }
     }
 
-    // Re-enable scrolling when component unmounts or lock changes
+    // Increment global locks counter
+    lockCount += 1;
+
     return () => {
-      document.body.style.overflow = originalStyle;
-      document.body.style.paddingRight = originalPaddingRight;
+      // Decrement locks counter and restore styling when all active locks are cleared
+      lockCount = Math.max(0, lockCount - 1);
+      if (lockCount === 0) {
+        document.body.style.overflow = originalOverflow;
+        document.body.style.paddingRight = originalPaddingRight;
+      }
     };
   }, [lock]);
 }

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Button, Input, Badge } from '@/components/ui';
+import { Button, Input, Badge, CenteredModal } from '@/components/ui';
+import { useLockBodyScroll } from '@/hooks';
 import {
   Users,
   DollarSign,
@@ -45,6 +46,8 @@ const AVAILABLE_MANAGERS = [
 export const ClientDetailDrawer: React.FC = () => {
   const { selectedClient, setSelectedClient, activeTab, setActiveTab, fetchClients } =
     useClientsStore();
+
+  useLockBodyScroll(!!selectedClient);
 
   const drawerRef = useRef<HTMLDivElement>(null);
   const noteInputRef = useRef<HTMLTextAreaElement>(null);
@@ -1313,307 +1316,238 @@ export const ClientDetailDrawer: React.FC = () => {
       {/* RENDER INLINE DIALOGS (Merge Modal, Edit Note Modal, Note History Modal) */}
 
       {/* A. MERGE PREVIEW & CONFLICT RESOLUTION MODAL */}
-      <AnimatePresence>
-        {isMergeModalOpen && activeDuplicateToMerge && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-fade-in">
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-popover border border-border w-full max-w-xl rounded-xl shadow-2xl overflow-hidden text-left flex flex-col max-h-[85vh]"
+      <CenteredModal
+        isOpen={isMergeModalOpen && !!activeDuplicateToMerge}
+        onClose={() => setIsMergeModalOpen(false)}
+        title="Account Merge Conflict Resolution"
+        className="max-w-xl"
+        footer={
+          <div className="flex items-center justify-between w-full select-none">
+            <Button
+              variant="outline"
+              onClick={() => setIsMergeModalOpen(false)}
+              className="h-9 text-xs font-bold"
             >
-              {/* Header */}
-              <div className="p-5 border-b border-border bg-muted/10 flex items-center justify-between">
-                <div>
-                  <h3 className="font-black text-foreground text-sm flex items-center gap-2">
-                    <Layers className="h-4 w-4 text-amber-500" /> Account Merge Conflict Resolution
-                  </h3>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">
-                    Choose which data variables to override and retain as the primary corporate
-                    profile.
-                  </p>
-                </div>
-                <button
-                  onClick={() => setIsMergeModalOpen(false)}
-                  className="text-muted-foreground hover:text-foreground font-black text-lg"
-                >
-                  ×
-                </button>
-              </div>
-
-              {/* Side-by-Side Conflicts Workspace */}
-              <div className="p-5 overflow-y-auto space-y-4 text-xs">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-3.5 rounded-lg border border-primary/20 bg-primary/5 space-y-2">
-                    <span className="text-[8px] uppercase tracking-wider font-extrabold text-primary">
-                      Primary Client Account (Retained)
-                    </span>
-                    <h4 className="font-black text-foreground text-sm">{selectedClient.name}</h4>
-                    <p className="text-muted-foreground text-[10px]">
-                      Manager: {selectedClient.accountManager}
-                    </p>
-                    <p className="text-muted-foreground text-[10px]">
-                      ARR Yield: ${selectedClient.revenueContribution.toLocaleString()}
-                    </p>
-                    <p className="text-muted-foreground text-[10px]">
-                      Website: {selectedClient.website || 'No website'}
-                    </p>
-                  </div>
-
-                  <div className="p-3.5 rounded-lg border border-amber-500/20 bg-amber-500/5 space-y-2">
-                    <span className="text-[8px] uppercase tracking-wider font-extrabold text-amber-500">
-                      Duplicate Client Account (Absorbed)
-                    </span>
-                    <h4 className="font-black text-foreground text-sm">
-                      {activeDuplicateToMerge.name}
-                    </h4>
-                    <p className="text-muted-foreground text-[10px]">
-                      Fuzzy Match Reason: {activeDuplicateToMerge.matchReasons?.[0]}
-                    </p>
-                    <p className="text-muted-foreground text-[10px]">
-                      Confidence: {activeDuplicateToMerge.confidence}%
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-3 pt-3 border-t border-border/30">
-                  <span className="text-[10px] font-bold text-foreground block">
-                    Choose Fields Overrides:
-                  </span>
-
-                  {/* Overrides Selection Controls */}
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center p-2 rounded border border-border/60 bg-muted/5">
-                      <span>Account Manager</span>
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const current = { ...mergeOverrides };
-                            delete current.accountManager;
-                            setMergeOverrides(current);
-                          }}
-                          className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase transition-colors cursor-pointer ${
-                            mergeOverrides.accountManager === undefined
-                              ? 'bg-primary text-black'
-                              : 'bg-muted'
-                          }`}
-                        >
-                          Primary
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setMergeOverrides({
-                              ...mergeOverrides,
-                              accountManager:
-                                activeDuplicateToMerge.accountManager || 'Pepper Potts',
-                            })
-                          }
-                          className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase transition-colors cursor-pointer ${
-                            mergeOverrides.accountManager !== undefined
-                              ? 'bg-primary text-black'
-                              : 'bg-muted'
-                          }`}
-                        >
-                          Target
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-between items-center p-2 rounded border border-border/60 bg-muted/5">
-                      <span>Website Domain</span>
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const current = { ...mergeOverrides };
-                            delete current.website;
-                            setMergeOverrides(current);
-                          }}
-                          className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase transition-colors cursor-pointer ${
-                            mergeOverrides.website === undefined
-                              ? 'bg-primary text-black'
-                              : 'bg-muted'
-                          }`}
-                        >
-                          Primary
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setMergeOverrides({
-                              ...mergeOverrides,
-                              website: activeDuplicateToMerge.website || '',
-                            })
-                          }
-                          className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase transition-colors cursor-pointer ${
-                            mergeOverrides.website !== undefined
-                              ? 'bg-primary text-black'
-                              : 'bg-muted'
-                          }`}
-                        >
-                          Target
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Actions Footer */}
-              <div className="p-4 border-t border-border bg-muted/10 flex items-center justify-between">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsMergeModalOpen(false)}
-                  className="h-9 text-xs font-bold"
-                >
-                  Cancel
-                </Button>
-                <button
-                  onClick={executeClientMerge}
-                  className="h-9 px-4 rounded-md bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs uppercase tracking-wider flex items-center gap-1.5 cursor-pointer"
-                >
-                  Confirm Deep Merge & Purge Duplicate <ArrowRight className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            </motion.div>
+              Cancel
+            </Button>
+            <button
+              onClick={executeClientMerge}
+              className="h-9 px-4 rounded-md bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs uppercase tracking-wider flex items-center gap-1.5 cursor-pointer"
+            >
+              Confirm Deep Merge & Purge Duplicate <ArrowRight className="h-3.5 w-3.5" />
+            </button>
           </div>
-        )}
-      </AnimatePresence>
+        }
+      >
+        {/* Side-by-Side Conflicts Workspace */}
+        <div className="space-y-4 text-xs select-none">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="p-3.5 rounded-lg border border-primary/20 bg-primary/5 space-y-2">
+              <span className="text-[8px] uppercase tracking-wider font-extrabold text-primary">
+                Primary Client Account (Retained)
+              </span>
+              <h4 className="font-black text-foreground text-sm">{selectedClient?.name}</h4>
+              <p className="text-muted-foreground text-[10px]">
+                Manager: {selectedClient?.accountManager}
+              </p>
+              <p className="text-muted-foreground text-[10px]">
+                ARR Yield: ${selectedClient?.revenueContribution?.toLocaleString()}
+              </p>
+              <p className="text-muted-foreground text-[10px]">
+                Website: {selectedClient?.website || 'No website'}
+              </p>
+            </div>
+
+            {activeDuplicateToMerge && (
+              <div className="p-3.5 rounded-lg border border-amber-500/20 bg-amber-500/5 space-y-2">
+                <span className="text-[8px] uppercase tracking-wider font-extrabold text-amber-500">
+                  Duplicate Client Account (Absorbed)
+                </span>
+                <h4 className="font-black text-foreground text-sm">
+                  {activeDuplicateToMerge.name}
+                </h4>
+                <p className="text-muted-foreground text-[10px]">
+                  Fuzzy Match Reason: {activeDuplicateToMerge.matchReasons?.[0]}
+                </p>
+                <p className="text-muted-foreground text-[10px]">
+                  Confidence: {activeDuplicateToMerge.confidence}%
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-3 pt-3 border-t border-border/30">
+            <span className="text-[10px] font-bold text-foreground block">
+              Choose Fields Overrides:
+            </span>
+
+            {/* Overrides Selection Controls */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center p-2 rounded border border-border/60 bg-muted/5">
+                <span>Account Manager</span>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const current = { ...mergeOverrides };
+                      delete current.accountManager;
+                      setMergeOverrides(current);
+                    }}
+                    className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase transition-colors cursor-pointer ${
+                      mergeOverrides.accountManager === undefined
+                        ? 'bg-primary text-black'
+                        : 'bg-muted'
+                    }`}
+                  >
+                    Primary
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setMergeOverrides({
+                        ...mergeOverrides,
+                        accountManager: activeDuplicateToMerge?.accountManager || 'Pepper Potts',
+                      })
+                    }
+                    className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase transition-colors cursor-pointer ${
+                      mergeOverrides.accountManager !== undefined
+                        ? 'bg-primary text-black'
+                        : 'bg-muted'
+                    }`}
+                  >
+                    Target
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center p-2 rounded border border-border/60 bg-muted/5">
+                <span>Website Domain</span>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const current = { ...mergeOverrides };
+                      delete current.website;
+                      setMergeOverrides(current);
+                    }}
+                    className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase transition-colors cursor-pointer ${
+                      mergeOverrides.website === undefined ? 'bg-primary text-black' : 'bg-muted'
+                    }`}
+                  >
+                    Primary
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setMergeOverrides({
+                        ...mergeOverrides,
+                        website: activeDuplicateToMerge?.website || '',
+                      })
+                    }
+                    className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase transition-colors cursor-pointer ${
+                      mergeOverrides.website !== undefined ? 'bg-primary text-black' : 'bg-muted'
+                    }`}
+                  >
+                    Target
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </CenteredModal>
 
       {/* B. NOTE EDIT DIALOG MODAL */}
-      <AnimatePresence>
-        {isEditNoteOpen && activeNoteToEdit && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-fade-in">
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-popover border border-border w-full max-w-md rounded-xl shadow-2xl p-5 text-left space-y-4"
+      <CenteredModal
+        isOpen={isEditNoteOpen && !!activeNoteToEdit}
+        onClose={() => {
+          setIsEditNoteOpen(false);
+          setActiveNoteToEdit(null);
+        }}
+        title="Edit Relationship Note"
+        className="max-w-md"
+        footer={
+          <div className="flex justify-between w-full select-none">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setIsEditNoteOpen(false);
+                setActiveNoteToEdit(null);
+              }}
             >
-              <div className="flex justify-between items-center select-none">
-                <h3 className="font-bold text-foreground text-sm flex items-center gap-1.5">
-                  <Edit className="h-4 w-4 text-primary" /> Edit Relationship Note
-                </h3>
-                <button
-                  onClick={() => {
-                    setIsEditNoteOpen(false);
-                    setActiveNoteToEdit(null);
-                  }}
-                  className="text-muted-foreground hover:text-foreground font-black text-lg"
-                >
-                  ×
-                </button>
-              </div>
-
-              <textarea
-                value={noteEditContent}
-                onChange={(e) => setNoteEditContent(e.target.value)}
-                className="w-full h-24 p-2 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-ring text-xs leading-relaxed"
-              />
-
-              <div className="flex justify-between select-none">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setIsEditNoteOpen(false);
-                    setActiveNoteToEdit(null);
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button onClick={handleUpdateNote} size="sm" className="font-bold">
-                  Save Changes (Record History)
-                </Button>
-              </div>
-            </motion.div>
+              Cancel
+            </Button>
+            <Button onClick={handleUpdateNote} size="sm" className="font-bold">
+              Save Changes (Record History)
+            </Button>
           </div>
-        )}
-      </AnimatePresence>
+        }
+      >
+        <textarea
+          value={noteEditContent}
+          onChange={(e) => setNoteEditContent(e.target.value)}
+          className="w-full h-24 p-2 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-ring text-xs leading-relaxed"
+        />
+      </CenteredModal>
 
       {/* C. NOTE VERSION TIMELINE MODAL */}
-      <AnimatePresence>
-        {isNoteHistoryOpen && activeNoteForHistory && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-fade-in">
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-popover border border-border w-full max-w-md rounded-xl shadow-2xl flex flex-col overflow-hidden text-left max-h-[75vh]"
-            >
-              {/* Header */}
-              <div className="p-4 border-b border-border bg-muted/10 flex items-center justify-between">
-                <div>
-                  <h3 className="font-bold text-foreground text-sm flex items-center gap-2">
-                    <History className="h-4 w-4 text-primary" /> Note Version Audit history
-                  </h3>
-                  <p className="text-[10px] text-muted-foreground">
-                    Historical record logs of this comment before it was updated.
-                  </p>
+      <CenteredModal
+        isOpen={isNoteHistoryOpen && !!activeNoteForHistory}
+        onClose={() => {
+          setIsNoteHistoryOpen(false);
+          setActiveNoteForHistory(null);
+        }}
+        title="Note Version Audit History"
+        className="max-w-md"
+        footer={
+          <Button
+            size="sm"
+            onClick={() => {
+              setIsNoteHistoryOpen(false);
+              setActiveNoteForHistory(null);
+            }}
+          >
+            Close Audit Logs
+          </Button>
+        }
+      >
+        {/* Version History List */}
+        <div className="overflow-y-auto space-y-4 py-2">
+          <div className="relative border-l border-border/80 ml-2.5 space-y-5 text-left pl-4">
+            {activeNoteForHistory?.editHistory?.map((hist: any, index: number) => (
+              <div key={index} className="relative space-y-1 text-xs">
+                <span className="absolute -left-[21px] top-0.5 rounded-full bg-muted p-0.5 flex items-center justify-center text-muted-foreground border border-border">
+                  <CornerDownRight className="h-2.5 w-2.5" />
+                </span>
+                <div className="flex justify-between items-center select-none text-[10px] text-muted-foreground font-semibold">
+                  <span>Edited by {hist.editedBy}</span>
+                  <span>{new Date(hist.editedAt).toLocaleDateString()}</span>
                 </div>
-                <button
-                  onClick={() => {
-                    setIsNoteHistoryOpen(false);
-                    setActiveNoteForHistory(null);
-                  }}
-                  className="text-muted-foreground hover:text-foreground font-black text-lg"
-                >
-                  ×
-                </button>
+                <p className="p-2 border border-border/40 bg-card/20 rounded text-foreground text-[11px] leading-relaxed">
+                  {hist.content}
+                </p>
               </div>
+            ))}
 
-              {/* Version History List */}
-              <div className="p-5 overflow-y-auto space-y-4">
-                <div className="relative border-l border-border/80 ml-2.5 space-y-5 text-left pl-4">
-                  {activeNoteForHistory.editHistory?.map((hist: any, index: number) => (
-                    <div key={index} className="relative space-y-1 text-xs">
-                      <span className="absolute -left-[21px] top-0.5 rounded-full bg-muted p-0.5 flex items-center justify-center text-muted-foreground border border-border">
-                        <CornerDownRight className="h-2.5 w-2.5" />
-                      </span>
-                      <div className="flex justify-between items-center select-none text-[10px] text-muted-foreground font-semibold">
-                        <span>Edited by {hist.editedBy}</span>
-                        <span>{new Date(hist.editedAt).toLocaleDateString()}</span>
-                      </div>
-                      <p className="p-2 border border-border/40 bg-card/20 rounded text-foreground text-[11px] leading-relaxed">
-                        {hist.content}
-                      </p>
-                    </div>
-                  ))}
-
-                  {/* Current Active Version Indicator */}
-                  <div className="relative space-y-1 text-xs">
-                    <span className="absolute -left-[21px] top-0.5 rounded-full bg-emerald-500/10 p-0.5 flex items-center justify-center text-emerald-500 border border-emerald-500/20">
-                      ★
-                    </span>
-                    <div className="flex justify-between items-center select-none text-[10px] text-emerald-500 font-extrabold uppercase tracking-wide">
-                      <span>Current Active Note Version</span>
-                      <span>{new Date(activeNoteForHistory.createdAt).toLocaleDateString()}</span>
-                    </div>
-                    <p className="p-2 border border-emerald-500/20 bg-emerald-500/5 rounded text-foreground text-[11px] leading-relaxed">
-                      {activeNoteForHistory.content}
-                    </p>
-                  </div>
+            {/* Current Active Version Indicator */}
+            {activeNoteForHistory && (
+              <div className="relative space-y-1 text-xs">
+                <span className="absolute -left-[21px] top-0.5 rounded-full bg-emerald-500/10 p-0.5 flex items-center justify-center text-emerald-500 border border-emerald-500/20">
+                  ★
+                </span>
+                <div className="flex justify-between items-center select-none text-[10px] text-emerald-500 font-extrabold uppercase tracking-wide">
+                  <span>Current Active Note Version</span>
+                  <span>{new Date(activeNoteForHistory.createdAt).toLocaleDateString()}</span>
                 </div>
+                <p className="p-2 border border-emerald-500/20 bg-emerald-500/5 rounded text-foreground text-[11px] leading-relaxed">
+                  {activeNoteForHistory.content}
+                </p>
               </div>
-
-              {/* Footer */}
-              <div className="p-4 border-t border-border bg-muted/10 flex justify-end">
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    setIsNoteHistoryOpen(false);
-                    setActiveNoteForHistory(null);
-                  }}
-                >
-                  Close Audit logs
-                </Button>
-              </div>
-            </motion.div>
+            )}
           </div>
-        )}
-      </AnimatePresence>
+        </div>
+      </CenteredModal>
     </>
   );
 };

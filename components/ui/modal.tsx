@@ -5,10 +5,11 @@
 
 'use client';
 
-import { ReactNode, useEffect } from 'react';
+import { ReactNode } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useLockBodyScroll } from '@/hooks';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface ModalProps {
   isOpen: boolean;
@@ -33,45 +34,69 @@ export function Modal({
 }: ModalProps) {
   useLockBodyScroll(isOpen);
 
-  if (!isOpen) return null;
-
   const sizeClasses = {
-    sm: 'w-full max-w-sm',
-    md: 'w-full max-w-md',
-    lg: 'w-full max-w-lg',
-    xl: 'w-full max-w-xl',
+    sm: 'max-w-sm',
+    md: 'max-w-md',
+    lg: 'max-w-lg',
+    xl: 'max-w-xl',
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-fade-in"
-        onClick={onClose}
-      />
-      <div
-        className={cn(
-          'relative z-10 rounded-lg bg-card p-6 shadow-xl animate-bounce-in',
-          sizeClasses[size],
-          className
-        )}
-      >
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            {title && <h2 className="text-lg font-semibold">{title}</h2>}
-            {description && <p className="text-sm text-muted-foreground">{description}</p>}
-          </div>
-          <button
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-hidden">
+          {/* Backdrop Blur Overlay */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-background/80 backdrop-blur-sm"
             onClick={onClose}
-            className="text-muted-foreground hover:text-foreground transition-colors"
+          />
+
+          {/* Dialog Container Panel */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 15 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 15 }}
+            transition={{ type: 'spring', stiffness: 350, damping: 25 }}
+            role="dialog"
+            aria-modal="true"
+            className={cn(
+              'relative z-10 w-full rounded-xl border border-border bg-card p-6 shadow-xl flex flex-col max-h-[90vh] overflow-hidden text-left',
+              sizeClasses[size],
+              className
+            )}
           >
-            <X className="h-5 w-5" />
-          </button>
+            {/* Sticky Header Section */}
+            <div className="flex items-start justify-between gap-4 border-b border-border/40 pb-4 select-none flex-shrink-0">
+              <div className="space-y-0.5">
+                {title && <h2 className="text-base font-bold text-foreground">{title}</h2>}
+                {description && <p className="text-xs text-muted-foreground">{description}</p>}
+              </div>
+              <button
+                onClick={onClose}
+                className="rounded-full p-1 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                aria-label="Close modal"
+              >
+                <X className="h-4.5 w-4.5" />
+              </button>
+            </div>
+
+            {/* Scrollable Main Content Body */}
+            <div className="flex-1 overflow-y-auto pr-1 text-sm text-foreground my-4 leading-relaxed scrollbar-thin">
+              {children}
+            </div>
+
+            {/* Sticky Footer Action Bar */}
+            {footer && (
+              <div className="border-t border-border/40 pt-4 flex items-center justify-end gap-2.5 select-none flex-shrink-0">
+                {footer}
+              </div>
+            )}
+          </motion.div>
         </div>
-
-        <div className="mt-4">{children}</div>
-
-        {footer && <div className="mt-6 flex items-center justify-end gap-2">{footer}</div>}
-      </div>
-    </div>
+      )}
+    </AnimatePresence>
   );
 }

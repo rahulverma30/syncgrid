@@ -36,10 +36,13 @@ import { useProjectsStore, ProjectAccount } from '@/store/projectsStore';
 import { toast } from 'sonner';
 import { ENTERPRISE_WORKFLOWS } from '@/config/enterpriseConfig';
 import { detectCircularDependency } from '@/utils/graphEngine';
+import { useLockBodyScroll } from '@/hooks';
 
 export const ProjectDetailDrawer: React.FC = () => {
   const { selectedProject, setSelectedProject, activeTab, setActiveTab, fetchProjects, projects } =
     useProjectsStore();
+
+  useLockBodyScroll(!!selectedProject);
 
   const drawerRef = useRef<HTMLDivElement>(null);
 
