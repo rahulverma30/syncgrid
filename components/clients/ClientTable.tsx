@@ -44,6 +44,11 @@ export const ClientTable: React.FC = () => {
     archiveClient,
     deleteClient,
     bulkUpdateManager,
+    savedFilters,
+    activePresetName,
+    saveFilterPreset,
+    loadFilterPreset,
+    deleteFilterPreset,
   } = useClientsStore();
 
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
@@ -296,6 +301,58 @@ export const ClientTable: React.FC = () => {
             <Download className="h-3.5 w-3.5" /> Export CSV
           </Button>
         </div>
+      </div>
+
+      {/* Saved View Presets Quick Select Toolbar */}
+      <div className="flex items-center justify-between p-2 px-3 rounded-lg bg-card/35 border border-border/40 select-none text-xs gap-3 flex-wrap animate-fade-in">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-[9px] font-mono font-black uppercase text-muted-foreground/80 tracking-wide select-none">
+            Saved Views:
+          </span>
+          {savedFilters.length === 0 ? (
+            <span className="text-muted-foreground text-[10px] font-semibold italic">
+              No custom views saved.
+            </span>
+          ) : (
+            savedFilters.map((preset) => (
+              <div
+                key={preset.name}
+                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold border transition-all ${
+                  activePresetName === preset.name
+                    ? 'bg-primary/10 text-primary border-primary/30 shadow-xs'
+                    : 'bg-muted/10 text-muted-foreground border-border hover:bg-muted/20'
+                }`}
+              >
+                <button
+                  type="button"
+                  onClick={() => loadFilterPreset(preset.name)}
+                  className="cursor-pointer font-bold leading-none hover:text-foreground"
+                >
+                  {preset.name}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => deleteFilterPreset(preset.name)}
+                  className="cursor-pointer text-muted-foreground/60 hover:text-rose-500 font-extrabold text-[10px] ml-0.5 leading-none transition-colors"
+                  aria-label={`Delete filter preset ${preset.name}`}
+                >
+                  ×
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+
+        <button
+          type="button"
+          onClick={() => {
+            const name = prompt('Enter a name for this custom ledger filter view preset:');
+            if (name && name.trim()) saveFilterPreset(name.trim());
+          }}
+          className="text-[10px] font-extrabold uppercase text-primary hover:underline transition-colors tracking-wider flex items-center gap-1 cursor-pointer"
+        >
+          + Save current view as Preset
+        </button>
       </div>
 
       {/* Bulk Action Controls */}

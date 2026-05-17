@@ -3,6 +3,7 @@ import { withApiAuth } from '@/lib/auth/api';
 import { connectToDatabase } from '@/lib/db/mongodb';
 import { Client } from '@/models/Client';
 import { ClientActivity } from '@/models/ClientActivity';
+import { ContractIngestSchema } from '@/lib/validators/client';
 
 export const POST = withApiAuth(async (request: Request, context: any, session: any) => {
   try {
@@ -12,14 +13,20 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     const { id } = context.params;
     const body = await request.json();
 
-    const { title, value, startDate, endDate, status } = body;
-
-    if (!title) {
+    const parseResult = ContractIngestSchema.safeParse(body);
+    if (!parseResult.success) {
       return NextResponse.json(
-        { success: false, error: 'VALIDATION_ERROR', message: 'Contract Title is required.' },
+        {
+          success: false,
+          error: 'VALIDATION_ERROR',
+          message: parseResult.error.errors[0].message,
+          issues: parseResult.error.errors,
+        },
         { status: 400 }
       );
     }
+
+    const validated = parseResult.data;
 
     const client = await Client.findOne({ _id: id, companyId });
 
@@ -31,11 +38,11 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     }
 
     const newContract = {
-      title,
-      value: value || 0,
-      startDate: startDate ? new Date(startDate) : undefined,
-      endDate: endDate ? new Date(endDate) : undefined,
-      status: status || 'active',
+      title: validated.title,
+      value: validated.value,
+      startDate: validated.startDate ? new Date(validated.startDate) : undefined,
+      endDate: validated.endDate ? new Date(validated.endDate) : undefined,
+      status: validated.status,
     };
 
     client.contracts.push(newContract);
@@ -56,7 +63,7 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
       clientId: id,
       type: 'contract_added',
       title: 'Contract Agreement Signed',
-      description: `Contract "${title}" valued at $${(value || 0).toLocaleString()} approved by ${userName}.`,
+      description: `Contract "${validated.title}" valued at $${(validated.value || 0).toLocaleString()} approved by ${userName}.`,
       userName,
     });
     await activity.save();

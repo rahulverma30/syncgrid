@@ -25,6 +25,13 @@ const ClientNoteSchema = new Schema(
     isPinned: { type: Boolean, default: false },
     isPrivate: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now },
+    editHistory: [
+      {
+        content: { type: String, required: true },
+        editedBy: { type: String, required: true },
+        editedAt: { type: Date, default: Date.now },
+      },
+    ],
   },
   { _id: true }
 );

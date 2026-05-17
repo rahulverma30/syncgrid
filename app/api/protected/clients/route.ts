@@ -4,6 +4,7 @@ import { connectToDatabase } from '@/lib/db/mongodb';
 import { Client } from '@/models/Client';
 import { ClientActivity } from '@/models/ClientActivity';
 import { hasRole } from '@/lib/auth/permission-checks';
+import { ClientIngestSchema } from '@/lib/validators/client';
 
 export const GET = withApiAuth(async (request: Request, context: any, session: any) => {
   try {
@@ -76,56 +77,40 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     const userName = session.user.name;
     const body = await request.json();
 
-    const {
-      name,
-      clientType,
-      industry,
-      emails,
-      phones,
-      address,
-      timezone,
-      website,
-      socialLinks,
-      companySize,
-      revenueContribution,
-      accountManager,
-      onboardingStatus,
-      retentionStatus,
-      healthScore,
-      customFields,
-      tags,
-    } = body;
-
-    if (!name) {
+    const parseResult = ClientIngestSchema.safeParse(body);
+    if (!parseResult.success) {
       return NextResponse.json(
         {
           success: false,
           error: 'VALIDATION_ERROR',
-          message: 'Client Company Name is required.',
+          message: parseResult.error.errors[0].message,
+          issues: parseResult.error.errors,
         },
         { status: 400 }
       );
     }
 
+    const validated = parseResult.data;
+
     const newClient = new Client({
       companyId,
-      name,
-      clientType: clientType || 'Startup',
-      industry: industry || 'Tech Services',
-      emails: emails || [],
-      phones: phones || [],
-      address: address || '',
-      timezone: timezone || 'UTC',
-      website: website || '',
-      socialLinks: socialLinks || {},
-      companySize: companySize || '1-10',
-      revenueContribution: revenueContribution || 0,
-      accountManager: accountManager || userName,
-      onboardingStatus: onboardingStatus || 'pending',
-      retentionStatus: retentionStatus || 'retained',
-      healthScore: healthScore !== undefined ? healthScore : 80,
-      customFields: customFields || {},
-      tags: tags || [],
+      name: validated.name,
+      clientType: validated.clientType,
+      industry: validated.industry,
+      emails: validated.emails,
+      phones: validated.phones,
+      address: validated.address,
+      timezone: validated.timezone,
+      website: validated.website,
+      socialLinks: validated.socialLinks,
+      companySize: validated.companySize,
+      revenueContribution: validated.revenueContribution,
+      accountManager: validated.accountManager,
+      onboardingStatus: 'pending',
+      retentionStatus: 'retained',
+      healthScore: 80,
+      customFields: validated.customFields,
+      tags: validated.tags,
       isArchived: false,
       contacts: [],
       notes: [],
@@ -144,7 +129,7 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
       clientId: newClient._id,
       type: 'created',
       title: 'Client Account Onboarded',
-      description: `Client organization "${name}" recorded in core ERP ledger by ${userName}.`,
+      description: `Client organization "${validated.name}" recorded in core ERP ledger by ${userName}.`,
       userName,
     });
     await activity.save();

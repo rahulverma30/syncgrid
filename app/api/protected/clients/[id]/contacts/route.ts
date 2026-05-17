@@ -3,6 +3,7 @@ import { withApiAuth } from '@/lib/auth/api';
 import { connectToDatabase } from '@/lib/db/mongodb';
 import { Client } from '@/models/Client';
 import { ClientActivity } from '@/models/ClientActivity';
+import { ContactIngestSchema } from '@/lib/validators/client';
 
 export const POST = withApiAuth(async (request: Request, context: any, session: any) => {
   try {
@@ -12,14 +13,20 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     const { id } = context.params;
     const body = await request.json();
 
-    const { name, role, email, phone, isPrimary, communicationPref } = body;
-
-    if (!name) {
+    const parseResult = ContactIngestSchema.safeParse(body);
+    if (!parseResult.success) {
       return NextResponse.json(
-        { success: false, error: 'VALIDATION_ERROR', message: 'Contact Name is required.' },
+        {
+          success: false,
+          error: 'VALIDATION_ERROR',
+          message: parseResult.error.errors[0].message,
+          issues: parseResult.error.errors,
+        },
         { status: 400 }
       );
     }
+
+    const validated = parseResult.data;
 
     const client = await Client.findOne({ _id: id, companyId });
 
@@ -31,19 +38,19 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     }
 
     // If setting this contact as primary, unset other contacts
-    if (isPrimary) {
+    if (validated.isPrimary) {
       client.contacts.forEach((c: any) => {
         c.isPrimary = false;
       });
     }
 
     const newContact = {
-      name,
-      role: role || 'Point of Contact',
-      email: email || '',
-      phone: phone || '',
-      isPrimary: !!isPrimary,
-      communicationPref: communicationPref || 'email',
+      name: validated.name,
+      role: validated.role,
+      email: validated.email,
+      phone: validated.phone,
+      isPrimary: validated.isPrimary,
+      communicationPref: validated.communicationPref,
     };
 
     client.contacts.push(newContact);
@@ -54,7 +61,7 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
       clientId: id,
       type: 'contact_added',
       title: 'New Account Contact Added',
-      description: `Contact person "${name}" (${role}) registered by ${userName}.`,
+      description: `Contact person "${validated.name}" (${validated.role || 'No title'}) registered by ${userName}.`,
       userName,
     });
     await activity.save();

@@ -22,16 +22,106 @@ import {
   Heart,
   ShieldCheck,
   Building,
+  Edit,
+  Activity,
+  Layers,
+  ArrowRight,
+  CornerDownRight,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useClientsStore, ClientAccount } from '@/store/clientsStore';
 import { toast } from 'sonner';
+
+const AVAILABLE_MANAGERS = [
+  'Pepper Potts',
+  'Tony Stark',
+  'Samantha Vance',
+  'Lucius Fox',
+  'Bruce Wayne',
+  'Peter Parker',
+  'Happy Hogan',
+];
 
 export const ClientDetailDrawer: React.FC = () => {
   const { selectedClient, setSelectedClient, activeTab, setActiveTab, fetchClients } =
     useClientsStore();
 
   const drawerRef = useRef<HTMLDivElement>(null);
+  const noteInputRef = useRef<HTMLTextAreaElement>(null);
+
+  // States
+  const [contactName, setContactName] = useState('');
+  const [contactRole, setContactRole] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
+  const [contactPrimary, setContactPrimary] = useState(false);
+  const [contactPref, setContactPref] = useState<'email' | 'phone' | 'slack' | 'zoom'>('email');
+
+  const [noteInput, setNoteInput] = useState('');
+  const [notePinned, setNotePinned] = useState(false);
+  const [notePrivate, setNotePrivate] = useState(false);
+
+  const [contractTitle, setContractTitle] = useState('');
+  const [contractValue, setContractValue] = useState(5000);
+  const [contractStart, setContractStart] = useState('');
+  const [contractEnd, setContractEnd] = useState('');
+
+  const [meetingTitle, setMeetingTitle] = useState('');
+  const [meetingDate, setMeetingDate] = useState('');
+  const [meetingAttendees, setMeetingAttendees] = useState('');
+  const [meetingNotes, setMeetingNotes] = useState('');
+
+  const [commType, setCommType] = useState<'call' | 'email' | 'meeting' | 'other'>('email');
+  const [commSummary, setCommSummary] = useState('');
+
+  const [fileName, setFileName] = useState('');
+  const [fileCat, setFileCat] = useState<
+    'contract' | 'proposal' | 'NDA' | 'invoice' | 'onboarding' | 'legal'
+  >('proposal');
+  const [uploadPercentage, setUploadPercentage] = useState(-1);
+
+  // Duplicate Check State
+  const [duplicates, setDuplicates] = useState<any[]>([]);
+  const [isMergeModalOpen, setIsMergeModalOpen] = useState(false);
+  const [activeDuplicateToMerge, setActiveDuplicateToMerge] = useState<any | null>(null);
+
+  // Note Edit History State
+  const [isEditNoteOpen, setIsEditNoteOpen] = useState(false);
+  const [activeNoteToEdit, setActiveNoteToEdit] = useState<any | null>(null);
+  const [noteEditContent, setNoteEditContent] = useState('');
+  const [isNoteHistoryOpen, setIsNoteHistoryOpen] = useState(false);
+  const [activeNoteForHistory, setActiveNoteForHistory] = useState<any | null>(null);
+
+  // Note Mentions State
+  const [showMentions, setShowMentions] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState('');
+  const [mentionIndex, setMentionIndex] = useState(0);
+  const [cursorPos, setCursorPos] = useState(0);
+
+  // Merge Conflict Overrides state
+  const [mergeOverrides, setMergeOverrides] = useState<Record<string, any>>({});
+
+  useEffect(() => {
+    if (!selectedClient?._id) return;
+    let active = true;
+
+    const fetchDuplicates = async () => {
+      try {
+        const res = await fetch(`/api/protected/clients/${selectedClient._id}/duplicates`);
+        const d = await res.json();
+        if (d.success && active) {
+          setDuplicates(d.data || []);
+        }
+      } catch {
+        // safe fallback
+      }
+    };
+    fetchDuplicates();
+
+    return () => {
+      active = false;
+    };
+  }, [selectedClient?._id]);
 
   // Focus trap implementation for sliding drawer accessibility
   useEffect(() => {
@@ -63,7 +153,6 @@ export const ClientDetailDrawer: React.FC = () => {
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    // Focus first element on drawer open
     setTimeout(() => {
       if (drawerRef.current) {
         const firstFocus = drawerRef.current.querySelector('button') as HTMLElement;
@@ -73,37 +162,6 @@ export const ClientDetailDrawer: React.FC = () => {
 
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedClient, setSelectedClient]);
-
-  // Form Field States
-  const [contactName, setContactName] = useState('');
-  const [contactRole, setContactRole] = useState('');
-  const [contactEmail, setContactEmail] = useState('');
-  const [contactPhone, setContactPhone] = useState('');
-  const [contactPrimary, setContactPrimary] = useState(false);
-  const [contactPref, setContactPref] = useState<'email' | 'phone' | 'slack' | 'zoom'>('email');
-
-  const [noteInput, setNoteInput] = useState('');
-  const [notePinned, setNotePinned] = useState(false);
-  const [notePrivate, setNotePrivate] = useState(false);
-
-  const [contractTitle, setContractTitle] = useState('');
-  const [contractValue, setContractValue] = useState(5000);
-  const [contractStart, setContractStart] = useState('');
-  const [contractEnd, setContractEnd] = useState('');
-
-  const [meetingTitle, setMeetingTitle] = useState('');
-  const [meetingDate, setMeetingDate] = useState('');
-  const [meetingAttendees, setMeetingAttendees] = useState('');
-  const [meetingNotes, setMeetingNotes] = useState('');
-
-  const [commType, setCommType] = useState<'call' | 'email' | 'meeting' | 'other'>('email');
-  const [commSummary, setCommSummary] = useState('');
-
-  const [fileName, setFileName] = useState('');
-  const [fileCat, setFileCat] = useState<
-    'contract' | 'proposal' | 'NDA' | 'invoice' | 'onboarding' | 'legal'
-  >('proposal');
-  const [uploadPercentage, setUploadPercentage] = useState(-1);
 
   if (!selectedClient) return null;
 
@@ -157,7 +215,7 @@ export const ClientDetailDrawer: React.FC = () => {
         setContactPrimary(false);
         toast.success('New customer point of contact registered!');
       } else {
-        toast.error('Failed to append contact.');
+        toast.error(d.message || 'Failed to append contact.');
       }
     } catch (e) {
       toast.error('API connection error.');
@@ -187,10 +245,39 @@ export const ClientDetailDrawer: React.FC = () => {
         setNotePrivate(false);
         toast.success('Internal relationship note logged!');
       } else {
-        toast.error('Failed to append note.');
+        toast.error(d.message || 'Failed to append note.');
       }
     } catch (e) {
       toast.error('API connection error.');
+    }
+  };
+
+  const handleUpdateNote = async () => {
+    if (!noteEditContent.trim() || !activeNoteToEdit) return;
+
+    try {
+      const res = await fetch(`/api/protected/clients/${selectedClient._id}/notes`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          noteId: activeNoteToEdit._id,
+          content: noteEditContent,
+        }),
+      });
+
+      const d = await res.json();
+      if (d.success) {
+        setSelectedClient(d.data);
+        fetchClients();
+        setIsEditNoteOpen(false);
+        setActiveNoteToEdit(null);
+        setNoteEditContent('');
+        toast.success('Note content updated and version history logged.');
+      } else {
+        toast.error('Failed to update note.');
+      }
+    } catch {
+      toast.error('Sync failure during note edit.');
     }
   };
 
@@ -219,7 +306,7 @@ export const ClientDetailDrawer: React.FC = () => {
         setContractValue(5000);
         toast.success('Contract pricing agreement registered!');
       } else {
-        toast.error('Failed to log contract.');
+        toast.error(d.message || 'Failed to log contract.');
       }
     } catch (e) {
       toast.error('API connection error.');
@@ -293,12 +380,10 @@ export const ClientDetailDrawer: React.FC = () => {
 
     setUploadPercentage(0);
 
-    // Dynamic mock upload interval
     const interval = setInterval(() => {
       setUploadPercentage((prev) => {
         if (prev >= 100) {
           clearInterval(interval);
-          // Trigger actual API save call when progress finishes
           setTimeout(async () => {
             try {
               const res = await fetch(`/api/protected/clients/${selectedClient._id}/documents`, {
@@ -308,7 +393,7 @@ export const ClientDetailDrawer: React.FC = () => {
                   name: fileName,
                   category: fileCat,
                   url: `https://syncgrid-vault.s3.amazonaws.com/clients/${selectedClient._id}/${fileName}.pdf`,
-                  size: 2048576, // mock 2MB size
+                  size: 2048576,
                 }),
               });
               const d = await res.json();
@@ -333,11 +418,124 @@ export const ClientDetailDrawer: React.FC = () => {
     }, 150);
   };
 
+  // Transaction Merge execution
+  const executeClientMerge = async () => {
+    if (!activeDuplicateToMerge) return;
+
+    try {
+      const res = await fetch(`/api/protected/clients/${selectedClient._id}/merge`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          targetId: activeDuplicateToMerge.clientId,
+          overrideFields: mergeOverrides,
+        }),
+      });
+
+      const d = await res.json();
+      if (d.success) {
+        toast.success(`Merge workflow finalized! absorbed "${activeDuplicateToMerge.name}".`);
+        setSelectedClient(d.data);
+        fetchClients();
+        setIsMergeModalOpen(false);
+        setActiveDuplicateToMerge(null);
+        setMergeOverrides({});
+      } else {
+        toast.error(d.message || 'Merge action failed.');
+      }
+    } catch {
+      toast.error('Database transaction merge failed.');
+    }
+  };
+
+  // Note Mentions Helpers
+  const handleNoteChange = (val: string, cursor: number) => {
+    setNoteInput(val);
+    setCursorPos(cursor);
+
+    const textBeforeCursor = val.slice(0, cursor);
+    const atIndex = textBeforeCursor.lastIndexOf('@');
+
+    if (
+      atIndex !== -1 &&
+      (atIndex === 0 ||
+        textBeforeCursor[atIndex - 1] === ' ' ||
+        textBeforeCursor[atIndex - 1] === '\n')
+    ) {
+      const query = textBeforeCursor.slice(atIndex + 1);
+      if (!query.includes(' ')) {
+        setShowMentions(true);
+        setMentionQuery(query);
+        setMentionIndex(0);
+        return;
+      }
+    }
+    setShowMentions(false);
+  };
+
+  const handleNoteKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (!showMentions) return;
+
+    const filtered = AVAILABLE_MANAGERS.filter((m) =>
+      m.toLowerCase().includes(mentionQuery.toLowerCase())
+    );
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setMentionIndex((prev) => (prev + 1) % filtered.length);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setMentionIndex((prev) => (prev - 1 + filtered.length) % filtered.length);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (filtered[mentionIndex]) {
+        insertMention(filtered[mentionIndex]);
+      }
+    } else if (e.key === 'Escape') {
+      setShowMentions(false);
+    }
+  };
+
+  const insertMention = (name: string) => {
+    const textBeforeCursor = noteInput.slice(0, cursorPos);
+    const atIndex = textBeforeCursor.lastIndexOf('@');
+    if (atIndex === -1) return;
+
+    const prefix = noteInput.slice(0, atIndex);
+    const suffix = noteInput.slice(cursorPos);
+    const inserted = `${prefix}@${name} ${suffix}`;
+
+    setNoteInput(inserted);
+    setShowMentions(false);
+    setTimeout(() => {
+      noteInputRef.current?.focus();
+    }, 50);
+  };
+
+  // Mentions markup highlighting
+  const renderNoteContent = (content: string) => {
+    const words = content.split(/(\s+)/);
+    return words.map((word, idx) => {
+      if (word.startsWith('@') && word.length > 1) {
+        const cleaned = word.replace(/[^a-zA-Z\s@]/g, '');
+        return (
+          <span
+            key={idx}
+            className="text-primary font-black bg-primary/10 px-1 py-0.5 rounded text-[11px] border border-primary/20 leading-none select-none inline-block align-baseline"
+          >
+            {cleaned}
+          </span>
+        );
+      }
+      return word;
+    });
+  };
+
   return (
     <>
       {/* Backdrop Closer */}
       <div
-        className="fixed inset-0 z-40 bg-background/40 backdrop-blur-xs"
+        className="fixed inset-0 z-40 bg-background/50 backdrop-blur-xs transition-opacity duration-300"
         onClick={() => setSelectedClient(null)}
       />
 
@@ -349,14 +547,14 @@ export const ClientDetailDrawer: React.FC = () => {
         initial={{ x: '100%' }}
         animate={{ x: 0 }}
         exit={{ x: '100%' }}
-        transition={{ type: 'spring', damping: 25, stiffness: 220 }}
+        transition={{ type: 'spring', damping: 26, stiffness: 220 }}
         className="fixed top-0 right-0 h-full w-full max-w-lg z-50 border-l border-border bg-popover/95 backdrop-blur-md shadow-2xl flex flex-col overflow-hidden text-left"
       >
         {/* Header */}
         <div className="p-5 border-b border-border/40 flex items-center justify-between bg-muted/10 select-none">
           <div className="space-y-1">
-            <span className="text-[10px] font-mono font-black tracking-wide text-primary uppercase">
-              Client Account Profile
+            <span className="text-[10px] font-mono font-black tracking-wide text-primary uppercase flex items-center gap-1.5">
+              <Activity className="h-3 w-3" /> Client Account Profile
             </span>
             <h3 className="text-base font-black text-foreground">{selectedClient.name}</h3>
           </div>
@@ -370,6 +568,28 @@ export const ClientDetailDrawer: React.FC = () => {
             </button>
           </div>
         </div>
+
+        {/* Dynamic Duplicates Alert banner */}
+        {duplicates.length > 0 && (
+          <div className="mx-5 mt-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-500 flex items-center justify-between select-none animate-pulse">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-4 w-4" />
+              <span>
+                <strong>{duplicates.length} duplicate profile(s)</strong> detected matching website
+                domain or telephone!
+              </span>
+            </div>
+            <button
+              onClick={() => {
+                setActiveDuplicateToMerge(duplicates[0]);
+                setIsMergeModalOpen(true);
+              }}
+              className="px-2.5 py-1 bg-amber-500 text-black hover:bg-amber-400 font-extrabold text-[10px] uppercase rounded-md tracking-wider transition-colors cursor-pointer"
+            >
+              Merge workflows
+            </button>
+          </div>
+        )}
 
         {/* Sub-tabs selectors */}
         <div className="flex border-b border-border/40 px-3 py-1.5 flex-wrap gap-1 bg-card/20 select-none">
@@ -664,7 +884,6 @@ export const ClientDetailDrawer: React.FC = () => {
               animate={{ opacity: 1 }}
               className="space-y-5 text-xs"
             >
-              {/* Add pricing contract */}
               <form
                 onSubmit={handleAddContract}
                 className="p-4 border border-border/60 bg-muted/10 rounded-xl space-y-3"
@@ -728,7 +947,6 @@ export const ClientDetailDrawer: React.FC = () => {
                 </Button>
               </form>
 
-              {/* Active contracts lists */}
               <div className="space-y-2 border-t border-border/30 pt-4 text-left">
                 {selectedClient.contracts?.map((con, idx) => (
                   <div
@@ -760,7 +978,6 @@ export const ClientDetailDrawer: React.FC = () => {
               animate={{ opacity: 1 }}
               className="space-y-5 text-xs"
             >
-              {/* Log action traces */}
               <form
                 onSubmit={handleLogCommunication}
                 className="p-4 border border-border/60 bg-muted/10 rounded-xl space-y-3"
@@ -802,7 +1019,6 @@ export const ClientDetailDrawer: React.FC = () => {
                 </Button>
               </form>
 
-              {/* Trace ledger lists */}
               <div className="space-y-2 border-t border-border/30 pt-4">
                 {selectedClient.communicationLogs
                   ?.slice()
@@ -836,7 +1052,6 @@ export const ClientDetailDrawer: React.FC = () => {
               animate={{ opacity: 1 }}
               className="space-y-5 text-xs"
             >
-              {/* drag and drop simulator */}
               <form
                 onSubmit={handleSimulateUpload}
                 className="p-4 border border-border/60 bg-muted/10 rounded-xl space-y-3 text-left"
@@ -895,7 +1110,6 @@ export const ClientDetailDrawer: React.FC = () => {
                 )}
               </form>
 
-              {/* Files vault directories */}
               <div className="space-y-2 border-t border-border/30 pt-4">
                 {selectedClient.documents?.map((file, idx) => (
                   <div
@@ -936,13 +1150,41 @@ export const ClientDetailDrawer: React.FC = () => {
               className="space-y-5 text-xs"
             >
               {/* Add note interface */}
-              <div className="space-y-2">
+              <div className="space-y-2 relative">
                 <textarea
+                  ref={noteInputRef}
                   value={noteInput}
-                  onChange={(e) => setNoteInput(e.target.value)}
-                  placeholder="Log threaded account notes, onboarding minutes, or churn risk notes..."
+                  onChange={(e) => handleNoteChange(e.target.value, e.target.selectionStart)}
+                  onKeyDown={handleNoteKeyDown}
+                  placeholder="Log threaded account notes... use @ to mention managers"
                   className="w-full h-20 p-2.5 rounded-lg border border-border bg-background/50 focus:outline-none focus:ring-2 focus:ring-ring text-xs leading-relaxed"
                 />
+
+                {/* Mentions dropdown list */}
+                {showMentions && (
+                  <div className="absolute left-2 bottom-12 w-48 border border-border bg-popover rounded-md shadow-lg z-50 overflow-hidden flex flex-col text-left">
+                    <div className="px-2.5 py-1.5 text-[8.5px] font-mono text-muted-foreground border-b border-border bg-muted/20 select-none">
+                      Mention Manager
+                    </div>
+                    {AVAILABLE_MANAGERS.filter((m) =>
+                      m.toLowerCase().includes(mentionQuery.toLowerCase())
+                    ).map((m, idx) => (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => insertMention(m)}
+                        className={`w-full px-3 py-1.5 text-xs text-left cursor-pointer transition-colors ${
+                          idx === mentionIndex
+                            ? 'bg-primary/15 text-primary font-bold'
+                            : 'hover:bg-muted text-foreground'
+                        }`}
+                      >
+                        {m}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
                 <div className="flex items-center justify-between flex-wrap gap-2 select-none">
                   <div className="flex gap-3">
                     <label className="flex items-center gap-1 cursor-pointer">
@@ -961,7 +1203,7 @@ export const ClientDetailDrawer: React.FC = () => {
                         onChange={(e) => setNotePrivate(e.target.checked)}
                         className="rounded border-border focus:ring-ring"
                       />
-                      <EyeOff className="h-3.5 w-3.5" /> Private (Internal)
+                      <EyeOff className="h-3.5 w-3.5" /> Private
                     </label>
                   </div>
                   <Button onClick={handleAddNote} size="sm" className="h-8 text-xs gap-1">
@@ -985,6 +1227,7 @@ export const ClientDetailDrawer: React.FC = () => {
                           <Pin className="h-3 w-3 rotate-45" /> Pinned
                         </span>
                       )}
+
                       <div className="flex items-center gap-1.5 select-none">
                         <span className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center text-primary font-black text-[8px]">
                           {note.createdByName ? note.createdByName[0] : 'U'}
@@ -998,9 +1241,38 @@ export const ClientDetailDrawer: React.FC = () => {
                             Internal
                           </span>
                         )}
+
+                        <div className="flex-grow" />
+
+                        {/* Edit History Version CTA Actions */}
+                        <div className="flex gap-2.5">
+                          {note.editHistory && note.editHistory.length > 0 && (
+                            <button
+                              onClick={() => {
+                                setActiveNoteForHistory(note);
+                                setIsNoteHistoryOpen(true);
+                              }}
+                              className="text-primary hover:underline font-bold text-[9px] uppercase tracking-wider cursor-pointer"
+                            >
+                              ({note.editHistory.length} edits)
+                            </button>
+                          )}
+                          <button
+                            onClick={() => {
+                              setActiveNoteToEdit(note);
+                              setNoteEditContent(note.content);
+                              setIsEditNoteOpen(true);
+                            }}
+                            className="text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
+                            aria-label="Edit Note"
+                          >
+                            <Edit className="h-3 w-3" />
+                          </button>
+                        </div>
                       </div>
-                      <p className="text-muted-foreground leading-relaxed pl-1 whitespace-pre-line">
-                        {note.content}
+
+                      <p className="text-muted-foreground leading-relaxed pl-1 whitespace-pre-line text-xs">
+                        {renderNoteContent(note.content)}
                       </p>
                     </div>
                   ))}
@@ -1037,6 +1309,311 @@ export const ClientDetailDrawer: React.FC = () => {
           )}
         </div>
       </motion.div>
+
+      {/* RENDER INLINE DIALOGS (Merge Modal, Edit Note Modal, Note History Modal) */}
+
+      {/* A. MERGE PREVIEW & CONFLICT RESOLUTION MODAL */}
+      <AnimatePresence>
+        {isMergeModalOpen && activeDuplicateToMerge && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-fade-in">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-popover border border-border w-full max-w-xl rounded-xl shadow-2xl overflow-hidden text-left flex flex-col max-h-[85vh]"
+            >
+              {/* Header */}
+              <div className="p-5 border-b border-border bg-muted/10 flex items-center justify-between">
+                <div>
+                  <h3 className="font-black text-foreground text-sm flex items-center gap-2">
+                    <Layers className="h-4 w-4 text-amber-500" /> Account Merge Conflict Resolution
+                  </h3>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    Choose which data variables to override and retain as the primary corporate
+                    profile.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setIsMergeModalOpen(false)}
+                  className="text-muted-foreground hover:text-foreground font-black text-lg"
+                >
+                  ×
+                </button>
+              </div>
+
+              {/* Side-by-Side Conflicts Workspace */}
+              <div className="p-5 overflow-y-auto space-y-4 text-xs">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-3.5 rounded-lg border border-primary/20 bg-primary/5 space-y-2">
+                    <span className="text-[8px] uppercase tracking-wider font-extrabold text-primary">
+                      Primary Client Account (Retained)
+                    </span>
+                    <h4 className="font-black text-foreground text-sm">{selectedClient.name}</h4>
+                    <p className="text-muted-foreground text-[10px]">
+                      Manager: {selectedClient.accountManager}
+                    </p>
+                    <p className="text-muted-foreground text-[10px]">
+                      ARR Yield: ${selectedClient.revenueContribution.toLocaleString()}
+                    </p>
+                    <p className="text-muted-foreground text-[10px]">
+                      Website: {selectedClient.website || 'No website'}
+                    </p>
+                  </div>
+
+                  <div className="p-3.5 rounded-lg border border-amber-500/20 bg-amber-500/5 space-y-2">
+                    <span className="text-[8px] uppercase tracking-wider font-extrabold text-amber-500">
+                      Duplicate Client Account (Absorbed)
+                    </span>
+                    <h4 className="font-black text-foreground text-sm">
+                      {activeDuplicateToMerge.name}
+                    </h4>
+                    <p className="text-muted-foreground text-[10px]">
+                      Fuzzy Match Reason: {activeDuplicateToMerge.matchReasons?.[0]}
+                    </p>
+                    <p className="text-muted-foreground text-[10px]">
+                      Confidence: {activeDuplicateToMerge.confidence}%
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-3 pt-3 border-t border-border/30">
+                  <span className="text-[10px] font-bold text-foreground block">
+                    Choose Fields Overrides:
+                  </span>
+
+                  {/* Overrides Selection Controls */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center p-2 rounded border border-border/60 bg-muted/5">
+                      <span>Account Manager</span>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const current = { ...mergeOverrides };
+                            delete current.accountManager;
+                            setMergeOverrides(current);
+                          }}
+                          className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase transition-colors cursor-pointer ${
+                            mergeOverrides.accountManager === undefined
+                              ? 'bg-primary text-black'
+                              : 'bg-muted'
+                          }`}
+                        >
+                          Primary
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setMergeOverrides({
+                              ...mergeOverrides,
+                              accountManager:
+                                activeDuplicateToMerge.accountManager || 'Pepper Potts',
+                            })
+                          }
+                          className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase transition-colors cursor-pointer ${
+                            mergeOverrides.accountManager !== undefined
+                              ? 'bg-primary text-black'
+                              : 'bg-muted'
+                          }`}
+                        >
+                          Target
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between items-center p-2 rounded border border-border/60 bg-muted/5">
+                      <span>Website Domain</span>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const current = { ...mergeOverrides };
+                            delete current.website;
+                            setMergeOverrides(current);
+                          }}
+                          className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase transition-colors cursor-pointer ${
+                            mergeOverrides.website === undefined
+                              ? 'bg-primary text-black'
+                              : 'bg-muted'
+                          }`}
+                        >
+                          Primary
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setMergeOverrides({
+                              ...mergeOverrides,
+                              website: activeDuplicateToMerge.website || '',
+                            })
+                          }
+                          className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase transition-colors cursor-pointer ${
+                            mergeOverrides.website !== undefined
+                              ? 'bg-primary text-black'
+                              : 'bg-muted'
+                          }`}
+                        >
+                          Target
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions Footer */}
+              <div className="p-4 border-t border-border bg-muted/10 flex items-center justify-between">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsMergeModalOpen(false)}
+                  className="h-9 text-xs font-bold"
+                >
+                  Cancel
+                </Button>
+                <button
+                  onClick={executeClientMerge}
+                  className="h-9 px-4 rounded-md bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs uppercase tracking-wider flex items-center gap-1.5 cursor-pointer"
+                >
+                  Confirm Deep Merge & Purge Duplicate <ArrowRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* B. NOTE EDIT DIALOG MODAL */}
+      <AnimatePresence>
+        {isEditNoteOpen && activeNoteToEdit && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-fade-in">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-popover border border-border w-full max-w-md rounded-xl shadow-2xl p-5 text-left space-y-4"
+            >
+              <div className="flex justify-between items-center select-none">
+                <h3 className="font-bold text-foreground text-sm flex items-center gap-1.5">
+                  <Edit className="h-4 w-4 text-primary" /> Edit Relationship Note
+                </h3>
+                <button
+                  onClick={() => {
+                    setIsEditNoteOpen(false);
+                    setActiveNoteToEdit(null);
+                  }}
+                  className="text-muted-foreground hover:text-foreground font-black text-lg"
+                >
+                  ×
+                </button>
+              </div>
+
+              <textarea
+                value={noteEditContent}
+                onChange={(e) => setNoteEditContent(e.target.value)}
+                className="w-full h-24 p-2 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-ring text-xs leading-relaxed"
+              />
+
+              <div className="flex justify-between select-none">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setIsEditNoteOpen(false);
+                    setActiveNoteToEdit(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button onClick={handleUpdateNote} size="sm" className="font-bold">
+                  Save Changes (Record History)
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* C. NOTE VERSION TIMELINE MODAL */}
+      <AnimatePresence>
+        {isNoteHistoryOpen && activeNoteForHistory && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-fade-in">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-popover border border-border w-full max-w-md rounded-xl shadow-2xl flex flex-col overflow-hidden text-left max-h-[75vh]"
+            >
+              {/* Header */}
+              <div className="p-4 border-b border-border bg-muted/10 flex items-center justify-between">
+                <div>
+                  <h3 className="font-bold text-foreground text-sm flex items-center gap-2">
+                    <History className="h-4 w-4 text-primary" /> Note Version Audit history
+                  </h3>
+                  <p className="text-[10px] text-muted-foreground">
+                    Historical record logs of this comment before it was updated.
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setIsNoteHistoryOpen(false);
+                    setActiveNoteForHistory(null);
+                  }}
+                  className="text-muted-foreground hover:text-foreground font-black text-lg"
+                >
+                  ×
+                </button>
+              </div>
+
+              {/* Version History List */}
+              <div className="p-5 overflow-y-auto space-y-4">
+                <div className="relative border-l border-border/80 ml-2.5 space-y-5 text-left pl-4">
+                  {activeNoteForHistory.editHistory?.map((hist: any, index: number) => (
+                    <div key={index} className="relative space-y-1 text-xs">
+                      <span className="absolute -left-[21px] top-0.5 rounded-full bg-muted p-0.5 flex items-center justify-center text-muted-foreground border border-border">
+                        <CornerDownRight className="h-2.5 w-2.5" />
+                      </span>
+                      <div className="flex justify-between items-center select-none text-[10px] text-muted-foreground font-semibold">
+                        <span>Edited by {hist.editedBy}</span>
+                        <span>{new Date(hist.editedAt).toLocaleDateString()}</span>
+                      </div>
+                      <p className="p-2 border border-border/40 bg-card/20 rounded text-foreground text-[11px] leading-relaxed">
+                        {hist.content}
+                      </p>
+                    </div>
+                  ))}
+
+                  {/* Current Active Version Indicator */}
+                  <div className="relative space-y-1 text-xs">
+                    <span className="absolute -left-[21px] top-0.5 rounded-full bg-emerald-500/10 p-0.5 flex items-center justify-center text-emerald-500 border border-emerald-500/20">
+                      ★
+                    </span>
+                    <div className="flex justify-between items-center select-none text-[10px] text-emerald-500 font-extrabold uppercase tracking-wide">
+                      <span>Current Active Note Version</span>
+                      <span>{new Date(activeNoteForHistory.createdAt).toLocaleDateString()}</span>
+                    </div>
+                    <p className="p-2 border border-emerald-500/20 bg-emerald-500/5 rounded text-foreground text-[11px] leading-relaxed">
+                      {activeNoteForHistory.content}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="p-4 border-t border-border bg-muted/10 flex justify-end">
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    setIsNoteHistoryOpen(false);
+                    setActiveNoteForHistory(null);
+                  }}
+                >
+                  Close Audit logs
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </>
   );
 };
