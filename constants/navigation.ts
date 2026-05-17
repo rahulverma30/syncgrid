@@ -14,6 +14,7 @@ import {
   Bell,
   LogOut,
   ShieldCheck,
+  Sparkles,
 } from 'lucide-react';
 
 export const SIDEBAR_GROUPS = [
@@ -146,6 +147,23 @@ export const SIDEBAR_GROUPS = [
         disabled: false,
         roles: ['Super Admin', 'Admin'],
         permission: { resource: 'roles', action: 'read' },
+      },
+      {
+        id: 'design-system',
+        label: 'Design System',
+        icon: Sparkles,
+        href: '/dashboard/design-system',
+        badge: 'M3',
+        disabled: false,
+        roles: [
+          'Super Admin',
+          'Admin',
+          'Project Manager',
+          'Team Lead',
+          'Developer',
+          'HR',
+          'Finance',
+        ],
       },
     ],
   },

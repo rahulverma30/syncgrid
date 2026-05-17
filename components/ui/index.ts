@@ -24,3 +24,16 @@ export { Select, type SelectOption } from './select';
 export { Checkbox } from './checkbox';
 export { RadioGroup, type RadioOption } from './radio-group';
 export { PermissionGuard, RoleGuard, PermissionRequirement } from './permission-guard';
+
+// --- ENTERPRISE DESIGN SYSTEM EXPORTS ---
+export * from './typography';
+export * from './layout-containers';
+export * from './advanced-card';
+export * from './advanced-button';
+export * from './advanced-form';
+export * from './enterprise-table';
+export * from './modal-system';
+export * from './notification-center';
+export * from './skeletons-and-states';
+export * from './widgets';
+export * from './charts';
