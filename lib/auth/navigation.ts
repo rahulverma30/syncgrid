@@ -94,24 +94,22 @@ export function buildBreadcrumbs(
   const segments = pathname.split('/').filter(Boolean);
   const breadcrumbs: Array<{ label: string; href?: string; active?: boolean }> = [];
 
-  // Always append Dashboard as root if we are on dashboard paths
-  if (segments[0] === 'dashboard') {
-    breadcrumbs.push({
-      label: 'Dashboard',
-      href: '/dashboard',
-      active: segments.length === 1,
-    });
-  }
+  // Always append Dashboard as root for these routes
+  breadcrumbs.push({
+    label: 'Dashboard',
+    href: '/dashboard',
+    active: pathname === '/dashboard' || pathname === '/',
+  });
 
   const allNavItems = (SIDEBAR_GROUPS as any[]).flatMap((g: any) => g.items);
   let currentPath = '';
 
   segments.forEach((segment, index) => {
-    // Skip first segment if it is 'dashboard' as we already added it
+    // Skip segment if it is 'dashboard' as we already added it
     if (segment === 'dashboard' && index === 0) return;
 
     currentPath += `/${segment}`;
-    const fullHref = `/dashboard${currentPath}`;
+    const fullHref = currentPath;
 
     // Find the navigation item configuration if one matches the path or submenu
     const navItem = (allNavItems as any[]).find(

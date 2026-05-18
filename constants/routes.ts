@@ -18,33 +18,33 @@ export const ROUTES = {
   // Dashboard routes (future modules)
   DASHBOARD: {
     HOME: '/dashboard',
-    PROFILE: '/dashboard/profile',
-    SETTINGS: '/dashboard/settings',
+    PROFILE: '/profile',
+    SETTINGS: '/settings',
 
     // CRM Module (future)
-    CRM: '/dashboard/crm',
-    CRM_CONTACTS: '/dashboard/crm/contacts',
-    CRM_ACCOUNTS: '/dashboard/crm/accounts',
-    CRM_DEALS: '/dashboard/crm/deals',
+    CRM: '/crm',
+    CRM_CONTACTS: '/crm/contacts',
+    CRM_ACCOUNTS: '/crm/accounts',
+    CRM_DEALS: '/crm/deals',
 
     // Projects Module (future)
-    PROJECTS: '/dashboard/projects',
+    PROJECTS: '/projects',
 
     // Tasks Module (future)
-    TASKS: '/dashboard/tasks',
+    TASKS: '/tasks',
 
     // Finance Module (future)
-    FINANCE: '/dashboard/finance',
-    FINANCE_INVOICES: '/dashboard/finance/invoices',
-    FINANCE_EXPENSES: '/dashboard/finance/expenses',
+    FINANCE: '/finance',
+    FINANCE_INVOICES: '/finance/invoices',
+    FINANCE_EXPENSES: '/finance/expenses',
 
     // HR Module (future)
-    HR: '/dashboard/hr',
-    HR_EMPLOYEES: '/dashboard/hr/employees',
-    HR_PAYROLL: '/dashboard/hr/payroll',
+    HR: '/hr',
+    HR_EMPLOYEES: '/hr/employees',
+    HR_PAYROLL: '/hr/payroll',
 
     // Analytics Module (future)
-    ANALYTICS: '/dashboard/analytics',
+    ANALYTICS: '/analytics',
   },
 } as const;
 

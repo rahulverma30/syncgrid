@@ -9,9 +9,9 @@
 export const CONTACTS_FEATURE = {
   // Feature routes
   routes: {
-    list: '/dashboard/crm/contacts',
-    detail: (id: string) => `/dashboard/crm/contacts/${id}`,
-    new: '/dashboard/crm/contacts/new',
+    list: '/crm/contacts',
+    detail: (id: string) => `/crm/contacts/${id}`,
+    new: '/crm/contacts/new',
   },
 
   // Feature constants

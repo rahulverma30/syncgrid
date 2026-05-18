@@ -17,8 +17,35 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Protect dashboard and secure API endpoints
-  if (pathname.startsWith('/dashboard') || pathname.startsWith('/api/protected')) {
+  // Protect dashboard, secure modules, and secure API endpoints
+  const protectedPaths = [
+    '/dashboard',
+    '/crm',
+    '/clients',
+    '/projects',
+    '/tasks',
+    '/finance',
+    '/hr',
+    '/analytics',
+    '/collaboration',
+    '/notifications',
+    '/settings',
+    '/roles',
+    '/design-system',
+    '/automation',
+    '/calendar',
+    '/knowledge',
+    '/profile',
+    '/reports',
+    '/team',
+    '/api/protected',
+  ];
+
+  const isProtected = protectedPaths.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`)
+  );
+
+  if (isProtected) {
     const token = await getToken({
       req: request,
       secret: getAuthSecret(),
