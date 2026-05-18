@@ -68,7 +68,7 @@ export function WorkloadBalance() {
         {data.map((member) => (
           <div
             key={member.userId}
-            className={`border rounded-xl p-4.5 flex flex-col h-full bg-background transition ${
+            className={`border rounded-xl p-4 flex flex-col h-full bg-background transition ${
               member.isOverloaded
                 ? 'border-rose-500/30 shadow-md bg-rose-500/[0.01]'
                 : 'border-border/30'

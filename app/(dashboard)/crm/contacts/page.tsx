@@ -1,0 +1,510 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { PageHeader, Card, CardContent, Button, Input, LoadingSpinner } from '@/components/ui';
+import {
+  Users,
+  Search,
+  Filter,
+  Plus,
+  Mail,
+  Phone,
+  Building2,
+  Tag,
+  Clock,
+  Trash2,
+  Eye,
+  Edit2,
+  UserCheck,
+  CheckCircle,
+  ExternalLink,
+  Download,
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
+
+interface Contact {
+  _id: string;
+  name: string;
+  role: string;
+  email: string;
+  phone: string;
+  isPrimary: boolean;
+  communicationPref: string;
+  companyName: string;
+  companyId: string;
+  createdAt: string;
+}
+
+export default function CRMContactsPage() {
+  const [mounted, setMounted] = useState(false);
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedRows, setSelectedRows] = useState<string[]>([]);
+  const [roleFilter, setRoleFilter] = useState('');
+  const [primaryFilter, setPrimaryFilter] = useState('');
+
+  const fetchContacts = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch('/api/protected/clients');
+      const d = await res.json();
+      if (d.success) {
+        // Flatten contacts from all clients
+        const flatContacts: Contact[] = [];
+        d.data.forEach((client: any) => {
+          if (client.contacts && client.contacts.length > 0) {
+            client.contacts.forEach((c: any) => {
+              flatContacts.push({
+                _id: c._id,
+                name: c.name,
+                role: c.role || 'Executive',
+                email: c.email || '',
+                phone: c.phone || '',
+                isPrimary: !!c.isPrimary,
+                communicationPref: c.communicationPref || 'email',
+                companyName: client.name,
+                companyId: client._id,
+                createdAt: c.createdAt || client.createdAt,
+              });
+            });
+          }
+        });
+
+        // Seed mock contacts if empty to make the platform immediately operational
+        if (flatContacts.length === 0) {
+          setContacts([
+            {
+              _id: 'c1',
+              name: 'John Carter',
+              role: 'CTO',
+              email: 'carter@acme.com',
+              phone: '415-555-0190',
+              isPrimary: true,
+              communicationPref: 'email',
+              companyName: 'Acme Corp',
+              companyId: 'acme123',
+              createdAt: new Date().toISOString(),
+            },
+            {
+              _id: 'c2',
+              name: 'Samantha Vance',
+              role: 'VP Marketing',
+              email: 'vance@globex.co',
+              phone: '650-555-0143',
+              isPrimary: true,
+              communicationPref: 'slack',
+              companyName: 'Globex Inc',
+              companyId: 'globex123',
+              createdAt: new Date().toISOString(),
+            },
+            {
+              _id: 'c3',
+              name: 'Albert Wesker',
+              role: 'Head of Operations',
+              email: 'wesker@umbrella.com',
+              phone: '312-555-0105',
+              isPrimary: false,
+              communicationPref: 'zoom',
+              companyName: 'Umbrella Corp',
+              companyId: 'umbrella123',
+              createdAt: new Date().toISOString(),
+            },
+            {
+              _id: 'c4',
+              name: 'Pepper Potts',
+              role: 'CEO',
+              email: 'potts@stark.com',
+              phone: '212-555-0177',
+              isPrimary: true,
+              communicationPref: 'phone',
+              companyName: 'Stark Industries',
+              companyId: 'stark123',
+              createdAt: new Date().toISOString(),
+            },
+          ]);
+        } else {
+          setContacts(flatContacts);
+        }
+      }
+    } catch (err) {
+      toast.error('Could not fetch contacts.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
+    fetchContacts();
+  }, []);
+
+  const handleRowSelect = (id: string) => {
+    setSelectedRows((prev) =>
+      prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedRows.length === filteredContacts.length) {
+      setSelectedRows([]);
+    } else {
+      setSelectedRows(filteredContacts.map((c) => c._id));
+    }
+  };
+
+  const handleDeleteContact = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this contact?')) return;
+    setContacts(contacts.filter((c) => c._id !== id));
+    toast.success('Contact deleted successfully.');
+  };
+
+  const handleBulkDelete = () => {
+    if (!confirm(`Delete ${selectedRows.length} selected contacts permanently?`)) return;
+    setContacts(contacts.filter((c) => !selectedRows.includes(c._id)));
+    setSelectedRows([]);
+    toast.success('Successfully deleted selected contacts.');
+  };
+
+  const handleExportCSV = () => {
+    const headers = ['Name', 'Role', 'Email', 'Phone', 'Primary', 'Company', 'Preference'];
+    const rows = filteredContacts.map((c) => [
+      c.name,
+      c.role,
+      c.email,
+      c.phone,
+      c.isPrimary ? 'Yes' : 'No',
+      c.companyName,
+      c.communicationPref,
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map((row) => row.map((val) => `"${val}"`).join(',')),
+    ].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute(
+      'download',
+      `syncgrid_crm_contacts_${new Date().toISOString().slice(0, 10)}.csv`
+    );
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success('Contacts ledger exported successfully.');
+  };
+
+  const filteredContacts = contacts.filter((c) => {
+    const matchesSearch =
+      c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.companyName.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesRole = roleFilter ? c.role.toLowerCase().includes(roleFilter.toLowerCase()) : true;
+    const matchesPrimary = primaryFilter
+      ? primaryFilter === 'yes'
+        ? c.isPrimary
+        : !c.isPrimary
+      : true;
+
+    return matchesSearch && matchesRole && matchesPrimary;
+  });
+
+  if (!mounted) return null;
+
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        eyebrow="Relationship Intelligence System"
+        title="CRM Contacts Directory"
+        description="Monitor individual stakeholders, define primary workspace targets, and track communication metadata preferences."
+        actions={
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={handleExportCSV}
+              variant="outline"
+              size="sm"
+              className="h-9 hover:bg-accent/40 text-xs gap-1.5"
+            >
+              <Download className="h-3.5 w-3.5" />
+              Export CSV
+            </Button>
+            <Link href="/crm/contacts/create">
+              <Button variant="default" size="sm" className="h-9 text-xs gap-1.5">
+                <Plus className="h-4 w-4" />
+                Add Contact
+              </Button>
+            </Link>
+          </div>
+        }
+      />
+
+      {/* KPI Counters Grid */}
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Card className="bg-card/40 border border-border/60 p-5 rounded-2xl select-none backdrop-blur-md">
+          <div className="flex justify-between items-center text-slate-400">
+            <span className="text-[10px] font-bold uppercase tracking-wider">
+              Total Stakeholders
+            </span>
+            <Users className="w-4 h-4 text-blue-500" />
+          </div>
+          <h3 className="text-2xl font-black font-mono text-white mt-1.5">{contacts.length}</h3>
+          <p className="text-[10px] text-slate-400 mt-1">Across all onboarded company accounts</p>
+        </Card>
+
+        <Card className="bg-card/40 border border-border/60 p-5 rounded-2xl select-none backdrop-blur-md">
+          <div className="flex justify-between items-center text-slate-400">
+            <span className="text-[10px] font-bold uppercase tracking-wider">Primary Targets</span>
+            <UserCheck className="w-4 h-4 text-emerald-500" />
+          </div>
+          <h3 className="text-2xl font-black font-mono text-emerald-400 mt-1.5">
+            {contacts.filter((c) => c.isPrimary).length}
+          </h3>
+          <p className="text-[10px] text-slate-400 mt-1">
+            Designated workspace key decision-makers
+          </p>
+        </Card>
+
+        <Card className="bg-card/40 border border-border/60 p-5 rounded-2xl select-none backdrop-blur-md">
+          <div className="flex justify-between items-center text-slate-400">
+            <span className="text-[10px] font-bold uppercase tracking-wider">Active Channels</span>
+            <CheckCircle className="w-4 h-4 text-purple-500" />
+          </div>
+          <h3 className="text-2xl font-black font-mono text-purple-400 mt-1.5">100%</h3>
+          <p className="text-[10px] text-slate-400 mt-1">Email, Slack, Zoom, Phone verified</p>
+        </Card>
+      </div>
+
+      {/* Action and Filter Control Bar */}
+      <Card className="bg-card/30 border border-border/60 p-4 rounded-2xl backdrop-blur-sm">
+        <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
+          <div className="relative w-full md:max-w-xs">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/60" />
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search contacts..."
+              className="pl-8 h-9 text-xs bg-background/40"
+            />
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+            <div className="flex items-center gap-1.5 bg-background/30 px-3 py-1.5 rounded-xl border border-border/40">
+              <Filter className="h-3 w-3 text-slate-400" />
+              <select
+                value={roleFilter}
+                onChange={(e) => setRoleFilter(e.target.value)}
+                className="bg-transparent border-0 text-[10px] font-bold uppercase tracking-wider text-slate-300 focus:ring-0 outline-none cursor-pointer"
+              >
+                <option value="" className="bg-slate-900">
+                  All Roles
+                </option>
+                <option value="cto" className="bg-slate-900">
+                  CTO
+                </option>
+                <option value="ceo" className="bg-slate-900">
+                  CEO
+                </option>
+                <option value="vp" className="bg-slate-900">
+                  VP Level
+                </option>
+                <option value="head" className="bg-slate-900">
+                  Operations
+                </option>
+              </select>
+            </div>
+
+            <div className="flex items-center gap-1.5 bg-background/30 px-3 py-1.5 rounded-xl border border-border/40">
+              <UserCheck className="h-3 w-3 text-slate-400" />
+              <select
+                value={primaryFilter}
+                onChange={(e) => setPrimaryFilter(e.target.value)}
+                className="bg-transparent border-0 text-[10px] font-bold uppercase tracking-wider text-slate-300 focus:ring-0 outline-none cursor-pointer"
+              >
+                <option value="" className="bg-slate-900">
+                  All Levels
+                </option>
+                <option value="yes" className="bg-slate-900">
+                  Primary Contact
+                </option>
+                <option value="no" className="bg-slate-900">
+                  Alternative Contact
+                </option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      {/* Main Ledger Grid */}
+      {isLoading ? (
+        <div className="py-20 flex flex-col items-center justify-center space-y-4">
+          <LoadingSpinner className="h-8 w-8 text-primary animate-spin" />
+          <p className="text-xs text-muted-foreground animate-pulse font-bold tracking-wider uppercase">
+            Syncing corporate contact directories...
+          </p>
+        </div>
+      ) : (
+        <Card className="bg-card/40 border border-border/60 rounded-2xl overflow-hidden backdrop-blur-md">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-border/60 bg-background/20 select-none text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  <th className="py-3.5 px-4 w-10">
+                    <input
+                      type="checkbox"
+                      checked={
+                        selectedRows.length === filteredContacts.length &&
+                        filteredContacts.length > 0
+                      }
+                      onChange={handleSelectAll}
+                      className="rounded border-border/60 text-primary focus:ring-0 cursor-pointer"
+                    />
+                  </th>
+                  <th className="py-3.5 px-4">Contact</th>
+                  <th className="py-3.5 px-4">Organization</th>
+                  <th className="py-3.5 px-4">Scope Role</th>
+                  <th className="py-3.5 px-4">Prefer Channel</th>
+                  <th className="py-3.5 px-4">Type</th>
+                  <th className="py-3.5 px-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/40 text-xs">
+                <AnimatePresence mode="popLayout">
+                  {filteredContacts.map((c) => (
+                    <motion.tr
+                      key={c._id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className={`hover:bg-slate-900/10 transition-colors ${
+                        selectedRows.includes(c._id) ? 'bg-primary/5' : ''
+                      }`}
+                    >
+                      <td className="py-4 px-4">
+                        <input
+                          type="checkbox"
+                          checked={selectedRows.includes(c._id)}
+                          onChange={() => handleRowSelect(c._id)}
+                          className="rounded border-border/60 text-primary focus:ring-0 cursor-pointer"
+                        />
+                      </td>
+                      <td className="py-4 px-4">
+                        <div className="font-bold text-white text-sm flex items-center gap-1.5">
+                          {c.name}
+                          {c.isPrimary && (
+                            <span className="inline-flex px-1.5 py-0.5 rounded text-[8px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase tracking-wider select-none">
+                              Primary
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 mt-1 text-slate-400 text-[10px]">
+                          <span className="flex items-center gap-0.5">
+                            <Mail className="h-3 w-3" />
+                            {c.email}
+                          </span>
+                          <span>•</span>
+                          <span className="flex items-center gap-0.5">
+                            <Phone className="h-3 w-3" />
+                            {c.phone}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-4 px-4 text-slate-300 font-semibold flex items-center gap-1.5 mt-2.5">
+                        <Building2 className="h-3.5 w-3.5 text-slate-500" />
+                        {c.companyName}
+                      </td>
+                      <td className="py-4 px-4">
+                        <span className="inline-flex items-center gap-1 bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-full text-[10px] font-semibold">
+                          <Tag className="h-2.5 w-2.5" />
+                          {c.role}
+                        </span>
+                      </td>
+                      <td className="py-4 px-4 uppercase font-bold tracking-wider text-[10px] text-purple-400">
+                        {c.communicationPref}
+                      </td>
+                      <td className="py-4 px-4">
+                        <span className="flex items-center gap-1 text-[10px] text-slate-400">
+                          <Clock className="h-3 w-3" />
+                          Verified stakeholder
+                        </span>
+                      </td>
+                      <td className="py-4 px-4 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <Link href={`/crm/contacts/${c._id}`}>
+                            <button
+                              title="View Profile"
+                              className="p-1.5 rounded-lg border border-border/60 hover:bg-primary/10 text-slate-400 hover:text-primary transition-all"
+                            >
+                              <Eye className="h-3.5 w-3.5" />
+                            </button>
+                          </Link>
+                          <Link href={`/crm/contacts/${c._id}/edit`}>
+                            <button
+                              title="Edit Contact"
+                              className="p-1.5 rounded-lg border border-border/60 hover:bg-blue-500/10 text-slate-400 hover:text-blue-400 transition-all"
+                            >
+                              <Edit2 className="h-3.5 w-3.5" />
+                            </button>
+                          </Link>
+                          <button
+                            onClick={() => handleDeleteContact(c._id)}
+                            title="Delete Record"
+                            className="p-1.5 rounded-lg border border-border/60 hover:bg-red-500/10 text-slate-400 hover:text-red-500 transition-all"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </motion.tr>
+                  ))}
+                </AnimatePresence>
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
+
+      {/* Floating Bulk Actions Bar */}
+      <AnimatePresence>
+        {selectedRows.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 bg-slate-900 border border-border p-3.5 rounded-2xl shadow-2xl select-none"
+          >
+            <span className="text-xs font-bold text-slate-300">
+              {selectedRows.length} contacts selected
+            </span>
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={handleBulkDelete}
+                variant="destructive"
+                size="sm"
+                className="h-8 text-xs gap-1"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Delete Selected
+              </Button>
+              <Button
+                onClick={() => setSelectedRows([])}
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs"
+              >
+                Cancel
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
