@@ -7,3 +7,4 @@ export { useModalStore, type Modal } from './modal';
 export { useNotificationStore, type Notification } from './notification';
 export { useCommandPaletteStore, type CommandAction } from './command-palette';
 export { useAnalyticsStore } from './analyticsStore';
+export { useCommunicationStore } from './communicationStore';

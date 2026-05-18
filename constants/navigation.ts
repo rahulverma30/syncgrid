@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   Sparkles,
   Building,
+  MessageSquare,
 } from 'lucide-react';
 
 export const SIDEBAR_GROUPS = [
@@ -129,6 +130,23 @@ export const SIDEBAR_GROUPS = [
         badge: null,
         disabled: false,
         roles: ['Super Admin', 'Admin'],
+      },
+      {
+        id: 'collaboration',
+        label: 'Collaboration',
+        icon: MessageSquare,
+        href: '/dashboard/collaboration',
+        badge: 'M13',
+        disabled: false,
+        roles: [
+          'Super Admin',
+          'Admin',
+          'Project Manager',
+          'Team Lead',
+          'Developer',
+          'HR',
+          'Finance',
+        ],
       },
     ],
   },

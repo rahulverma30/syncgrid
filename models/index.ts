@@ -68,3 +68,20 @@ export { WorkflowLog } from './WorkflowLog';
 export { ApprovalChain } from './ApprovalChain';
 export { AutomationVariable } from './AutomationVariable';
 export { WorkflowQueue } from './WorkflowQueue';
+
+// --- MODULE 13: ENTERPRISE COMMUNICATION & COLLABORATION MODELS ---
+export { Workspace } from './Workspace';
+export { Channel } from './Channel';
+export { Conversation } from './Conversation';
+export { Message } from './Message';
+export { Thread } from './Thread';
+export { Reaction } from './Reaction';
+export { Mention } from './Mention';
+export { Attachment } from './Attachment';
+export { PinnedMessage } from './PinnedMessage';
+export { Announcement } from './Announcement';
+export { PresenceSession } from './PresenceSession';
+export { MessageRead } from './MessageRead';
+export { NotificationPreference } from './NotificationPreference';
+export { CollaborationActivity } from './CollaborationActivity';
+export { SharedNote } from './SharedNote';
