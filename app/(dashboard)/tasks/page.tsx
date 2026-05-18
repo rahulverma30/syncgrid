@@ -96,7 +96,7 @@ export default function TasksPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto px-4 py-6 font-sans">
+    <div className="space-y-6 font-sans">
       {/* Active Running Timer Banner Alert */}
       {runningTimer && (
         <div className="bg-gradient-to-r from-emerald-600 to-teal-600 border border-emerald-500 text-white px-4 py-3 rounded-xl flex items-center justify-between shadow-lg animate-pulse select-none">
