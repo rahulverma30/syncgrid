@@ -85,3 +85,11 @@ export { MessageRead } from './MessageRead';
 export { NotificationPreference } from './NotificationPreference';
 export { CollaborationActivity } from './CollaborationActivity';
 export { SharedNote } from './SharedNote';
+
+// --- MODULE 14: ENTERPRISE DOCUMENT MANAGEMENT & ORGANIZATIONAL WIKI MODELS ---
+export { WikiSpace } from './WikiSpace';
+export { KnowledgeCategory } from './KnowledgeCategory';
+export { Document } from './Document';
+export { DocumentVersion } from './DocumentVersion';
+export { ReadingProgress } from './ReadingProgress';
+export { KnowledgeActivity } from './KnowledgeActivity';
