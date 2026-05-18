@@ -106,7 +106,7 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     const overdueRatio = totalOutstanding > 0 ? (totalOverdue / totalOutstanding) * 100 : 0;
 
     // 4. Project Health & Sprint Completion Rates
-    const projectsList = await Project.find({ companyId });
+    const projectsList = await Project.find({ companyId }).lean();
     const totalProjects = projectsList.length;
     const completedProjects = projectsList.filter((p) => p.status === 'completed').length;
     const activeProjects = projectsList.filter((p) => p.status === 'in_progress').length;
@@ -143,7 +143,8 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     // 7. Recent Executive Intelligence Trends Insights
     const recentInsights = await ExecutiveInsight.find({ companyId })
       .sort({ detectedAt: -1 })
-      .limit(3);
+      .limit(3)
+      .lean();
 
     // Fallback Mock insights if empty to look premium
     let insights = recentInsights;
@@ -223,10 +224,12 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     const cashflowTrends = Object.values(monthlyCashflowMap);
 
     // 9. Dynamic Workload distribution metrics per department
-    const employeeList = await Employee.find({ companyId }).populate({
-      path: 'departmentId',
-      select: 'name',
-    });
+    const employeeList = await Employee.find({ companyId })
+      .populate({
+        path: 'departmentId',
+        select: 'name',
+      })
+      .lean();
     const departmentWorkload: Record<string, number> = {};
     employeeList.forEach((emp: any) => {
       const deptName = emp.departmentId?.name || 'General';

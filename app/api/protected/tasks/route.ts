@@ -66,7 +66,9 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
       const usersProjects = await Project.find({
         companyId,
         $or: [{ projectManager: userName }, { 'teamMembers.userName': userName }],
-      }).select('_id');
+      })
+        .select('_id')
+        .lean();
       const projectIds = usersProjects.map((p) => p._id);
 
       query.$or = [{ assignees: userId }, { watchers: userId }, { projectId: { $in: projectIds } }];
@@ -77,7 +79,8 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
       .populate({ path: 'projectId', select: 'name code' })
       .populate({ path: 'statusId', select: 'name key category color' })
       .populate({ path: 'assignees', select: 'name email image' })
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
     // Apply ranking if search term is provided
     const rankedTasks = search ? rankTasks(tasks, search, userId) : tasks;

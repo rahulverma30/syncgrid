@@ -4,6 +4,7 @@ import { connectToDatabase } from '@/lib/db/mongodb';
 import { Document, Employee } from '@/models';
 import { rankDocuments } from '@/lib/searchEngine';
 import { logger } from '@/lib/logger';
+import { analyticsCache } from '@/lib/cache/analyticsCache';
 
 export const GET = withApiAuth(async (request: Request, context: any, session: any) => {
   try {
@@ -15,6 +16,13 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
 
     if (!queryStr.trim()) {
       return NextResponse.json({ success: true, data: [] });
+    }
+
+    const cacheKeyObj = { queryStr, userId };
+    const cachedResults = await analyticsCache.get<any>(companyId, 'knowledge-search', cacheKeyObj);
+    if (cachedResults) {
+      logger.info('Cache HIT for knowledge base fuzzy search query:', { queryStr, companyId });
+      return NextResponse.json({ success: true, data: cachedResults });
     }
 
     // 1. Fetch user department to perform department-aware relevance boosting
@@ -45,6 +53,9 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
 
     // 3. Rank documents with advanced scoring engine
     const rankedResults = rankDocuments(documents, queryStr, userId, userDepartment);
+
+    // Cache the fuzzy-ranked document search results for 30 seconds
+    await analyticsCache.set(companyId, 'knowledge-search', cacheKeyObj, rankedResults, 30);
 
     return NextResponse.json({ success: true, data: rankedResults });
   } catch (error: any) {

@@ -69,7 +69,8 @@ export const authOptions: NextAuthOptions = {
               path: 'permissions',
               model: Permission,
             },
-          });
+          })
+          .lean();
 
         if (!user || user.status === 'disabled') {
           return null;
@@ -135,7 +136,7 @@ export const authOptions: NextAuthOptions = {
       if (token.id && now - lastChecked > CHECK_INTERVAL) {
         try {
           await connectToDatabase();
-          const dbUser = await User.findById(token.id).select('status');
+          const dbUser = await User.findById(token.id).select('status').lean();
           if (dbUser) {
             token.status = dbUser.status;
           } else {
