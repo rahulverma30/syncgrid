@@ -111,3 +111,15 @@ export { ExternalActivityLog } from './ExternalActivityLog';
 export { ClientNotificationPreference } from './ClientNotificationPreference';
 export { ClientPortalTheme } from './ClientPortalTheme';
 export { ClientPortalAuditLog } from './ClientPortalAuditLog';
+
+// --- MODULE 16: ENTERPRISE SaaS & MULTI-TENANCY MODELS ---
+export {
+  SaaSSubscriptionPlan,
+  SaaSOrganizationSubscription,
+  SaaSFeatureFlag,
+  SaaSAPIKey,
+  SaaSWebhook,
+  SaaSWebhookDelivery,
+  SaaSUsageMetric,
+  SaaSBackup,
+} from './SaaSModels';
