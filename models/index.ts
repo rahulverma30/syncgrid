@@ -54,3 +54,17 @@ export { ReportSchedule } from './ReportSchedule';
 export { WidgetConfiguration } from './WidgetConfiguration';
 export { ExecutiveInsight } from './ExecutiveInsight';
 export { MetricThreshold } from './MetricThreshold';
+
+// --- MODULE 12: ENTERPRISE AUTOMATION, WORKFLOW & BUSINESS PROCESS MODELS ---
+export { WorkflowDefinition } from './WorkflowDefinition';
+export { WorkflowExecution } from './WorkflowExecution';
+export { WorkflowTrigger } from './WorkflowTrigger';
+export { WorkflowAction } from './WorkflowAction';
+export { WorkflowCondition } from './WorkflowCondition';
+export { AutomationTemplate } from './AutomationTemplate';
+export { ScheduledJob } from './ScheduledJob';
+export { EventSubscription } from './EventSubscription';
+export { WorkflowLog } from './WorkflowLog';
+export { ApprovalChain } from './ApprovalChain';
+export { AutomationVariable } from './AutomationVariable';
+export { WorkflowQueue } from './WorkflowQueue';
