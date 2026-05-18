@@ -54,7 +54,9 @@ export function WikiTree({ spaceId }: WikiTreeProps) {
 
       <div className="flex flex-col gap-1 overflow-y-auto max-h-[calc(100vh-280px)] pr-1">
         {rootDocs.length === 0 ? (
-          <div className="text-center py-6 text-xs text-slate-500 italic">No pages created yet. Click "+" to start.</div>
+          <div className="text-center py-6 text-xs text-slate-500 italic">
+            No pages created yet. Click &quot;+&quot; to start.
+          </div>
         ) : (
           rootDocs.map((doc) => <WikiTreeNode key={doc._id} doc={doc} depth={0} />)
         )}
@@ -100,7 +102,11 @@ function WikiTreeNode({ doc, depth }: TreeNodeProps) {
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (confirm(`Are you sure you want to delete "${doc.title}"? This will recursively soft-delete all child sub-pages.`)) {
+    if (
+      confirm(
+        `Are you sure you want to delete "${doc.title}"? This will recursively soft-delete all child sub-pages.`
+      )
+    ) {
       await deleteDocument(doc._id);
     }
   };
@@ -111,10 +117,10 @@ function WikiTreeNode({ doc, depth }: TreeNodeProps) {
         onClick={handleSelect}
         style={{ paddingLeft: `${depth * 12 + 6}px` }}
         className={cn(
-          "group flex items-center justify-between py-1.5 px-2 rounded-md cursor-pointer transition-colors text-sm",
+          'group flex items-center justify-between py-1.5 px-2 rounded-md cursor-pointer transition-colors text-sm',
           isActive
-            ? "bg-emerald-500/10 border-l-2 border-emerald-500 text-emerald-400 font-medium"
-            : "hover:bg-slate-900/30 text-slate-300 hover:text-slate-100"
+            ? 'bg-emerald-500/10 border-l-2 border-emerald-500 text-emerald-400 font-medium'
+            : 'hover:bg-slate-900/30 text-slate-300 hover:text-slate-100'
         )}
       >
         <div className="flex items-center gap-1.5 min-w-0">
@@ -126,7 +132,11 @@ function WikiTreeNode({ doc, depth }: TreeNodeProps) {
             className="p-0.5 rounded hover:bg-slate-950/40 text-slate-500 hover:text-slate-300 transition-colors"
           >
             {children.length > 0 ? (
-              isOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />
+              isOpen ? (
+                <ChevronDown className="h-3 w-3" />
+              ) : (
+                <ChevronRight className="h-3 w-3" />
+              )
             ) : (
               <div className="w-4 h-4 flex items-center justify-center">
                 <span className="w-1 h-1 rounded-full bg-slate-600 group-hover:bg-slate-400" />
@@ -135,9 +145,13 @@ function WikiTreeNode({ doc, depth }: TreeNodeProps) {
           </button>
 
           {doc.isSop ? (
-            <BookOpen className="h-3.5 w-3.5 flex-shrink-0 text-amber-500" title="SOP Document" />
+            <span title="SOP Document">
+              <BookOpen className="h-3.5 w-3.5 flex-shrink-0 text-amber-500" />
+            </span>
           ) : doc.isTemplate ? (
-            <FolderOpen className="h-3.5 w-3.5 flex-shrink-0 text-cyan-500" title="Template Asset" />
+            <span title="Template Asset">
+              <FolderOpen className="h-3.5 w-3.5 flex-shrink-0 text-cyan-500" />
+            </span>
           ) : (
             <FileText className="h-3.5 w-3.5 flex-shrink-0 text-slate-400 group-hover:text-slate-200" />
           )}
