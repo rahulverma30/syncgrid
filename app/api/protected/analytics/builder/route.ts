@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
+import mongoose from 'mongoose';
 import { withApiAuth } from '@/lib/auth/api';
 import { connectToDatabase } from '@/lib/db/mongodb';
-import { Transaction, Invoice, TaskTimeLog, Task, Project } from '@/models';
-import { hasRole } from '@/lib/auth/permission-checks';
-import mongoose from 'mongoose';
+import { Transaction, TaskTimeLog, Task } from '@/models';
+import { analyticsCache } from '@/lib/cache/analyticsCache';
 
 export const POST = withApiAuth(async (request: Request, context: any, session: any) => {
   try {
@@ -18,6 +18,29 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
       aggregateType = 'sum',
       metrics = ['amount'],
     } = body;
+
+    // 1. Enterprise Cache Retrieval Lookup
+    const cacheQueryObj = { type, dateRange, groupBy, aggregateType, metrics };
+    const cachedBuilderData = await analyticsCache.get<any[]>(companyId, 'builder', cacheQueryObj);
+
+    if (cachedBuilderData) {
+      console.log(`[OBSERVABILITY] Cache HIT for custom visual report - Tenant: ${companyId}`);
+      return NextResponse.json({
+        success: true,
+        data: cachedBuilderData,
+        meta: {
+          type,
+          groupBy,
+          startDate: dateRange.start || null,
+          endDate: dateRange.end || null,
+          cached: true,
+        },
+      });
+    }
+
+    console.log(
+      `[OBSERVABILITY] Cache MISS for custom visual report. Compiling aggregation pipeline - Tenant: ${companyId}`
+    );
 
     const startDate = dateRange.start
       ? new Date(dateRange.start)
@@ -209,6 +232,9 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
       });
     }
 
+    // Store custom report query result in cache layer for 5 minutes
+    await analyticsCache.set(companyId, 'builder', cacheQueryObj, dataResults, 300);
+
     return NextResponse.json({
       success: true,
       data: dataResults,
@@ -217,6 +243,7 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
         groupBy,
         startDate,
         endDate,
+        cached: false,
       },
     });
   } catch (error: any) {

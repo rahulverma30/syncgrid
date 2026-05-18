@@ -13,16 +13,30 @@ import {
   TrendingUp,
   Percent,
   Clock,
-  Briefcase,
   AlertTriangle,
   RefreshCw,
   LayoutGrid,
-  CheckCircle,
-  HelpCircle,
-  Eye,
   ChevronUp,
   ChevronDown,
+  Activity,
+  Maximize2,
+  Minimize2,
 } from 'lucide-react';
+import {
+  IDashboardWidget,
+  IExecutiveInsight,
+  IKpiSummary,
+  ICashflowTrendPoint,
+  IWorkloadDistributionPoint,
+} from '@/types/analytics';
+
+interface IDashboardAggregatedData {
+  kpis: IKpiSummary;
+  insights: IExecutiveInsight[];
+  cashflowTrends: ICashflowTrendPoint[];
+  workloadDistribution: IWorkloadDistributionPoint[];
+  role: 'admin' | 'employee';
+}
 
 export function AnalyticsDashboard() {
   const {
@@ -35,8 +49,10 @@ export function AnalyticsDashboard() {
     setIsLoading,
   } = useAnalyticsStore();
 
-  const [dashboardData, setDashboardData] = useState<any>(null);
+  const [dashboardData, setDashboardData] = useState<IDashboardAggregatedData | null>(null);
   const [draggedWidgetId, setDraggedWidgetId] = useState<string | null>(null);
+  const [lastTelemetryPulse, setLastTelemetryPulse] = useState<string | null>(null);
+  const [pulseActive, setPulseActive] = useState<boolean>(false);
 
   // Fetch Dashboard Stats
   const fetchDashboardStats = useCallback(async () => {
@@ -49,18 +65,18 @@ export function AnalyticsDashboard() {
         if (json.data.layout?.widgets) {
           setDashboardLayout(json.data.layout.widgets);
         } else {
-          // Default order if none is saved
+          // Default multi-dimensional snap layouts
           setDashboardLayout([
-            { widgetId: 'kpi_financials', w: 12, h: 3 },
-            { widgetId: 'chart_cashflow', w: 8, h: 4 },
-            { widgetId: 'chart_workload', w: 4, h: 4 },
-            { widgetId: 'insight_cockpit', w: 12, h: 3 },
+            { widgetId: 'kpi_financials', x: 0, y: 0, w: 12, h: 3 },
+            { widgetId: 'chart_cashflow', x: 0, y: 3, w: 8, h: 4 },
+            { widgetId: 'chart_workload', x: 8, y: 3, w: 4, h: 4 },
+            { widgetId: 'insight_cockpit', x: 0, y: 7, w: 12, h: 3 },
           ]);
         }
       } else {
         toast.error('Could not aggregate metrics dashboard statistics.');
       }
-    } catch (err: any) {
+    } catch (err) {
       toast.error('Network failure connecting to analytics service.');
     } finally {
       setIsLoading(false);
@@ -79,6 +95,47 @@ export function AnalyticsDashboard() {
       active = false;
     };
   }, [filters, fetchDashboardStats]);
+
+  // Realtime SSE Gateway Channel Subscription
+  useEffect(() => {
+    const sse = new EventSource('/api/protected/analytics/realtime');
+
+    sse.addEventListener('telemetry', (event: MessageEvent) => {
+      try {
+        const realtimeTelemetry = JSON.parse(event.data) as IKpiSummary & { timestamp: string };
+
+        // Trigger live pulse animation next to metrics
+        setPulseActive(true);
+        setLastTelemetryPulse(realtimeTelemetry.timestamp);
+
+        // Optimistically merge live telemetry updates into local aggregates state
+        setDashboardData((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            kpis: {
+              ...prev.kpis,
+              revenueTotal: realtimeTelemetry.revenueTotal,
+              profitMargin: realtimeTelemetry.profitMargin,
+              netProfit: realtimeTelemetry.netProfit,
+              laborUtilization: realtimeTelemetry.laborUtilization,
+              overdueRatio: realtimeTelemetry.overdueRatio,
+              totalOverdue: realtimeTelemetry.totalOverdue,
+              budgetAlertsCount: realtimeTelemetry.budgetAlertsCount,
+            },
+          };
+        });
+
+        setTimeout(() => setPulseActive(false), 1500);
+      } catch (err) {
+        // Safe fail on parse errors
+      }
+    });
+
+    return () => {
+      sse.close();
+    };
+  }, []);
 
   // Seeding sandbox logs
   const handleSeedData = async () => {
@@ -100,7 +157,7 @@ export function AnalyticsDashboard() {
   };
 
   // Layout positions updates
-  const saveLayoutOrder = async (newLayout: any[]) => {
+  const saveLayoutOrder = async (newLayout: IDashboardWidget[]) => {
     try {
       const res = await fetch('/api/protected/analytics/widgets', {
         method: 'POST',
@@ -114,6 +171,26 @@ export function AnalyticsDashboard() {
     } catch (err) {
       toast.error('Failed to save layout overrides.');
     }
+  };
+
+  // snap-to-grid dimension calibrator toggles
+  const resizeWidget = (widgetId: string, action: 'expand' | 'shrink') => {
+    const updated = dashboardLayout.map((widget: IDashboardWidget) => {
+      if (widget.widgetId !== widgetId) return widget;
+
+      let nextW = widget.w;
+      if (action === 'expand') {
+        if (widget.w === 4) nextW = 8;
+        else if (widget.w === 8) nextW = 12;
+      } else {
+        if (widget.w === 12) nextW = 8;
+        else if (widget.w === 8) nextW = 4;
+      }
+      return { ...widget, w: nextW };
+    });
+
+    setDashboardLayout(updated);
+    saveLayoutOrder(updated);
   };
 
   // Move layout widgets (HTML5 native Drag and Drop or arrows)
@@ -228,7 +305,15 @@ export function AnalyticsDashboard() {
                   <div className={`p-1.5 rounded-lg bg-card/65 ${item.textColor}`}>{item.icon}</div>
                 </div>
                 <div className="z-10">
-                  <h3 className="text-2xl font-extrabold tracking-tight">{item.value}</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-2xl font-extrabold tracking-tight">{item.value}</h3>
+                    {pulseActive && (
+                      <span className="relative flex h-2.5 w-2.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                      </span>
+                    )}
+                  </div>
                   <p className="text-[10px] text-muted-foreground mt-1 font-semibold">{item.sub}</p>
                 </div>
               </motion.div>
@@ -280,7 +365,7 @@ export function AnalyticsDashboard() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {insights.map((ins: any) => (
+                {insights.map((ins: IExecutiveInsight) => (
                   <div
                     key={ins._id}
                     className={`rounded-lg border p-4 flex items-start gap-3.5 select-none transition-colors ${
@@ -334,8 +419,13 @@ export function AnalyticsDashboard() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-muted/40 backdrop-blur-md rounded-xl p-4 border border-border">
         <div className="space-y-0.5">
           <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-            <LayoutGrid className="h-4 w-4 text-primary" />
+            <LayoutGrid className="h-4 w-4 text-primary animate-pulse" />
             Executive Cockpit Control Panel
+            {lastTelemetryPulse && (
+              <span className="inline-flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-[10px] font-bold px-2 py-0.5 rounded-full ml-2">
+                <Activity className="h-3 w-3 animate-pulse" /> Live Realtime Telemetry Syncing
+              </span>
+            )}
           </h3>
           <p className="text-xs text-muted-foreground font-medium">
             Customize layouts configurations, seed sandboxed parameters, or execute pipeline
@@ -371,10 +461,10 @@ export function AnalyticsDashboard() {
         </div>
       </div>
 
-      {/* Main Grid Widgets Placement */}
-      <div className="flex flex-col gap-6">
+      {/* Main Grid Widgets Placement using CSS Grid Spans */}
+      <div className="grid grid-cols-12 gap-6">
         <AnimatePresence mode="popLayout">
-          {dashboardLayout.map((item) => (
+          {dashboardLayout.map((item: IDocumentPosition) => (
             <motion.div
               key={item.widgetId}
               layout
@@ -388,15 +478,39 @@ export function AnalyticsDashboard() {
               onDrop={() => handleDrop(item.widgetId)}
               className={cn(
                 'relative group rounded-xl',
+                item.w === 12 && 'col-span-12',
+                item.w === 8 && 'lg:col-span-8 md:col-span-12 col-span-12',
+                item.w === 4 && 'lg:col-span-4 md:col-span-12 col-span-12',
                 isLayoutEditable &&
                   'border-2 border-dashed border-primary/30 p-2 cursor-grab active:cursor-grabbing bg-primary/5'
               )}
             >
               {isLayoutEditable && (
-                <div className="absolute top-2 right-2 flex items-center gap-2 z-30 bg-background border border-border rounded-lg p-1.5 shadow-md">
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase px-2 py-0.5">
+                <div className="absolute top-2 right-2 flex items-center gap-2 z-30 bg-background border border-border rounded-lg p-1.5 shadow-md select-none">
+                  <span className="text-[9px] font-bold text-muted-foreground uppercase px-1">
                     Drag card to swap order
                   </span>
+
+                  {/* snap-to-grid width resizing buttons */}
+                  <div className="flex items-center gap-1 border-l border-border pl-1.5 mr-1">
+                    <button
+                      onClick={() => resizeWidget(item.widgetId, 'shrink')}
+                      disabled={item.w <= 4}
+                      className="p-1 hover:bg-muted rounded text-muted-foreground disabled:opacity-30"
+                      title="Shrink Grid Width"
+                    >
+                      <Minimize2 className="h-3 w-3" />
+                    </button>
+                    <button
+                      onClick={() => resizeWidget(item.widgetId, 'expand')}
+                      disabled={item.w >= 12}
+                      className="p-1 hover:bg-muted rounded text-muted-foreground disabled:opacity-30"
+                      title="Expand Grid Width"
+                    >
+                      <Maximize2 className="h-3 w-3" />
+                    </button>
+                  </div>
+
                   <div className="flex items-center gap-1 border-l border-border pl-1.5">
                     <button
                       onClick={() => moveWidget('up', item.widgetId)}
@@ -421,3 +535,6 @@ export function AnalyticsDashboard() {
     </div>
   );
 }
+
+// Temporary types for clean build
+type IDocumentPosition = IDashboardWidget;

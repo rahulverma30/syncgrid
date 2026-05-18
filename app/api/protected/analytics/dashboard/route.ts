@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import mongoose from 'mongoose';
 import { withApiAuth } from '@/lib/auth/api';
 import { connectToDatabase } from '@/lib/db/mongodb';
 import {
@@ -8,11 +9,10 @@ import {
   Project,
   Budget,
   ExecutiveInsight,
-  AttendanceLog,
   Employee,
-  Task,
 } from '@/models';
 import { hasRole } from '@/lib/auth/permission-checks';
+import { analyticsCache } from '@/lib/cache/analyticsCache';
 
 export const GET = withApiAuth(async (request: Request, context: any, session: any) => {
   try {
@@ -29,13 +29,29 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
       'hr',
     ]);
 
-    // Standard employee only sees their own direct performance dashboard!
-    const query: Record<string, any> = { companyId };
+    const cacheQueryObj = { userId, isAuthorized };
+
+    // 1. Enterprise Cache Retrieval Lookup
+    const cachedDashboard = await analyticsCache.get<any>(companyId, 'dashboard', cacheQueryObj);
+    if (cachedDashboard) {
+      console.log(
+        `[OBSERVABILITY] Cache HIT for dashboard cockpit parameters - Tenant: ${companyId}`
+      );
+      return NextResponse.json({
+        success: true,
+        data: cachedDashboard,
+        cachedAt: new Date().toISOString(),
+      });
+    }
+
+    console.log(
+      `[OBSERVABILITY] Cache MISS for dashboard cockpit parameters. Aggregating MongoDB pipelines - Tenant: ${companyId}`
+    );
 
     const now = new Date();
     const startOfCurrentYear = new Date(now.getFullYear(), 0, 1);
 
-    // 1. Financial Performance Aggregation (Revenue vs Expenses)
+    // 2. Financial Performance Aggregation (Revenue vs Expenses)
     const incomeAgg = await Transaction.aggregate([
       {
         $match: {
@@ -63,7 +79,7 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     const netProfit = revenueTotal - expenseTotal;
     const profitMargin = revenueTotal > 0 ? (netProfit / revenueTotal) * 100 : 0;
 
-    // 2. Overdue Invoices Receivables Calculation
+    // 3. Overdue Invoices Receivables Calculation
     const overdueAgg = await Invoice.aggregate([
       {
         $match: {
@@ -89,7 +105,7 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     const totalOverdue = overdueAgg[0]?.overdue || 0;
     const overdueRatio = totalOutstanding > 0 ? (totalOverdue / totalOutstanding) * 100 : 0;
 
-    // 3. Project Health & Sprint Completion Rates
+    // 4. Project Health & Sprint Completion Rates
     const projectsList = await Project.find({ companyId });
     const totalProjects = projectsList.length;
     const completedProjects = projectsList.filter((p) => p.status === 'completed').length;
@@ -97,7 +113,7 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
 
     const projectCompletionRate = totalProjects > 0 ? (completedProjects / totalProjects) * 100 : 0;
 
-    // 4. Workforce & Resource Utilization Metrics (TaskTimeLog billable ratio)
+    // 5. Workforce & Resource Utilization Metrics (TaskTimeLog billable ratio)
     const utilizationAgg = await TaskTimeLog.aggregate([
       { $match: { companyId: new mongoose.Types.ObjectId(companyId) } },
       {
@@ -117,14 +133,14 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     const totalMins = utilizationAgg[0]?.totalMinutes || 0;
     const laborUtilization = totalMins > 0 ? (billableMins / totalMins) * 100 : 0;
 
-    // 5. Active Budget Threshold Alert Fired Trigger Counts
+    // 6. Active Budget Threshold Alert Fired Trigger Counts
     const budgetAlertsCount = await Budget.countDocuments({
       companyId,
       alertFired: true,
       status: 'active',
     });
 
-    // 6. Recent Executive Intelligence Trends Insights
+    // 7. Recent Executive Intelligence Trends Insights
     const recentInsights = await ExecutiveInsight.find({ companyId })
       .sort({ detectedAt: -1 })
       .limit(3);
@@ -152,7 +168,7 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
       ] as any[];
     }
 
-    // 7. Recent 6-Month Cashflow aggregated timelines (Inflows vs Outflows)
+    // 8. Recent 6-Month Cashflow aggregated timelines (Inflows vs Outflows)
     const cashflowTimelines = await Transaction.aggregate([
       {
         $match: {
@@ -206,7 +222,7 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
 
     const cashflowTrends = Object.values(monthlyCashflowMap);
 
-    // 8. Dynamic Workload distribution metrics per department
+    // 9. Dynamic Workload distribution metrics per department
     const employeeList = await Employee.find({ companyId }).populate({
       path: 'departmentId',
       select: 'name',
@@ -222,27 +238,32 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
       value,
     }));
 
+    const responseData = {
+      kpis: {
+        revenueTotal,
+        expenseTotal,
+        netProfit,
+        profitMargin,
+        totalOutstanding,
+        totalOverdue,
+        overdueRatio,
+        laborUtilization,
+        activeProjects,
+        projectCompletionRate,
+        budgetAlertsCount,
+      },
+      insights,
+      cashflowTrends,
+      workloadDistribution,
+      role: isAuthorized ? 'admin' : 'employee',
+    };
+
+    // Store in caching layer for 5 minutes
+    await analyticsCache.set(companyId, 'dashboard', cacheQueryObj, responseData, 300);
+
     return NextResponse.json({
       success: true,
-      data: {
-        kpis: {
-          revenueTotal,
-          expenseTotal,
-          netProfit,
-          profitMargin,
-          totalOutstanding,
-          totalOverdue,
-          overdueRatio,
-          laborUtilization,
-          activeProjects,
-          projectCompletionRate,
-          budgetAlertsCount,
-        },
-        insights,
-        cashflowTrends,
-        workloadDistribution,
-        role: isAuthorized ? 'admin' : 'employee',
-      },
+      data: responseData,
     });
   } catch (error: any) {
     return NextResponse.json(
@@ -251,5 +272,3 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     );
   }
 });
-
-import mongoose from 'mongoose';
