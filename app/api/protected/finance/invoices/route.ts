@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { withApiAuth } from '@/lib/auth/api';
 import { connectToDatabase } from '@/lib/db/mongodb';
 import { Invoice, Client, Project, FinancialActivity, Budget } from '@/models';
-import { InvoiceCreateSchema } from '@/schemas/finance';
+import { InvoiceCreateSchema, InvoiceItemCreateSchema } from '@/schemas/finance';
 import { hasRole } from '@/lib/auth/permission-checks';
 
 export const GET = withApiAuth(async (request: Request, context: any, session: any) => {
@@ -38,7 +39,11 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
         const clientName = inv.clientId?.name?.toLowerCase() || '';
         const invNumber = inv.invoiceNumber?.toLowerCase() || '';
         const notes = inv.notes?.toLowerCase() || '';
-        return clientName.includes(lowerSearch) || invNumber.includes(lowerSearch) || notes.includes(lowerSearch);
+        return (
+          clientName.includes(lowerSearch) ||
+          invNumber.includes(lowerSearch) ||
+          notes.includes(lowerSearch)
+        );
       });
     }
 
@@ -105,22 +110,24 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     let taxTotal = 0;
     let discountTotal = 0;
 
-    const lineItems = validated.lineItems.map((item) => {
-      const amount = item.quantity * item.unitPrice;
-      const taxAmount = (amount * item.taxRate) / 100;
-      const total = amount + taxAmount - item.discountAmount;
+    const lineItems = (validated.lineItems as z.infer<typeof InvoiceItemCreateSchema>[]).map(
+      (item) => {
+        const amount = item.quantity * item.unitPrice;
+        const taxAmount = (amount * item.taxRate) / 100;
+        const total = amount + taxAmount - item.discountAmount;
 
-      subtotal += amount;
-      taxTotal += taxAmount;
-      discountTotal += item.discountAmount;
+        subtotal += amount;
+        taxTotal += taxAmount;
+        discountTotal += item.discountAmount;
 
-      return {
-        ...item,
-        amount,
-        taxAmount,
-        total,
-      };
-    });
+        return {
+          ...item,
+          amount,
+          taxAmount,
+          total,
+        };
+      }
+    );
 
     const totalAmount = subtotal + taxTotal - discountTotal;
     const outstandingAmount = totalAmount;
