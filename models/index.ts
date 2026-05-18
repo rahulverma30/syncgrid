@@ -93,3 +93,21 @@ export { Document } from './Document';
 export { DocumentVersion } from './DocumentVersion';
 export { ReadingProgress } from './ReadingProgress';
 export { KnowledgeActivity } from './KnowledgeActivity';
+
+// --- MODULE 15: CLIENT PORTAL & EXTERNAL COLLABORATION ---
+export { ClientPortalUser } from './ClientPortalUser';
+export { ClientPortalSession } from './ClientPortalSession';
+export { ClientPortalPermission } from './ClientPortalPermission';
+export { ClientProjectAccess } from './ClientProjectAccess';
+export { ClientApprovalRequest } from './ClientApprovalRequest';
+export { ClientFeedback } from './ClientFeedback';
+export { ClientComment } from './ClientComment';
+export { SharedDeliverable } from './SharedDeliverable';
+export { SharedInvoice } from './SharedInvoice';
+export { SharedDocument } from './SharedDocument';
+export { SupportTicket } from './SupportTicket';
+export { ClientAnnouncement } from './ClientAnnouncement';
+export { ExternalActivityLog } from './ExternalActivityLog';
+export { ClientNotificationPreference } from './ClientNotificationPreference';
+export { ClientPortalTheme } from './ClientPortalTheme';
+export { ClientPortalAuditLog } from './ClientPortalAuditLog';
