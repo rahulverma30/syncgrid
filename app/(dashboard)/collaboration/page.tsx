@@ -12,8 +12,9 @@ import {
   ThreadPanel,
   SharedNotesPanel,
 } from '@/components/collaboration';
-import { MessageSquare, Heart, RefreshCw, Layers } from 'lucide-react';
+import { MessageSquare, Heart, RefreshCw, Layers, FileText } from 'lucide-react';
 import { toast } from 'sonner';
+import { useRealtime } from '@/hooks/useRealtime';
 
 export default function CollaborationDashboard() {
   const { data: session } = useSession();
@@ -28,6 +29,9 @@ export default function CollaborationDashboard() {
     'public'
   );
   const [newChanDesc, setNewChanDesc] = useState('');
+
+  // Advanced Responsive Layout Engine state
+  const [showNotes, setShowNotes] = useState(true);
 
   const {
     isLoading,
@@ -53,20 +57,34 @@ export default function CollaborationDashboard() {
     announcements,
     setAnnouncements,
     setUserTyping,
+    activeThreadParent,
+    setActiveThreadParent,
   } = useCommunicationStore();
 
-  // 1. Initial Load: Fetch Company Directory (Users List)
+  // 1. Integrates Resilient Real-Time Event Stream with automatic reconnect & heartbeats
+  useRealtime(companyId, activeChannelId, activeConversationId);
+
+  // Auto-collapse notes panel when a thread is opened to preserve central workspace spacing
+  useEffect(() => {
+    if (activeThreadParent) {
+      const timer = setTimeout(() => {
+        setShowNotes(false);
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [activeThreadParent]);
+
+  // 2. Initial Load: Fetch Company Directory (Users List)
   useEffect(() => {
     Promise.resolve().then(() => setMounted(true));
 
     const fetchDirectory = async () => {
       try {
-        const res = await fetch('/api/protected/team/members'); // Traced directory endpoint
+        const res = await fetch('/api/protected/team/members');
         const data = await res.json();
         if (data.success) {
           setAllUsers(data.data);
         } else {
-          // Fallback mockup profiles if company directory is empty
           setAllUsers([
             { _id: 'mock-1', name: 'Sarah Jenkins', email: 'sarah.j@syncgrid.com' },
             { _id: 'mock-2', name: 'Marcus Brody', email: 'marcus.b@syncgrid.com' },
@@ -85,14 +103,13 @@ export default function CollaborationDashboard() {
     fetchDirectory();
   }, []);
 
-  // 2. Fetch Workspaces, Channels, Announcements, and Presence States
+  // 3. Bootstrap Workspaces, Channels, Announcements, and Presence
   useEffect(() => {
     if (!mounted) return;
 
     const bootstrapDashboard = async () => {
       setIsLoading(true);
       try {
-        // Fetch Workspaces
         const wRes = await fetch('/api/protected/collaboration/workspaces');
         const wData = await wRes.json();
         if (wData.success && wData.data.length > 0) {
@@ -100,7 +117,6 @@ export default function CollaborationDashboard() {
           const activeWId = wData.data[0]._id;
           setActiveWorkspaceId(activeWId);
 
-          // Fetch Channels
           const cRes = await fetch(
             `/api/protected/collaboration/channels?workspaceId=${activeWId}`
           );
@@ -111,14 +127,12 @@ export default function CollaborationDashboard() {
           }
         }
 
-        // Fetch Announcements
         const aRes = await fetch('/api/protected/collaboration/announcements');
         const aData = await aRes.json();
         if (aData.success) {
           setAnnouncements(aData.data);
         }
 
-        // Fetch Users Online Presence sessions
         const pRes = await fetch('/api/protected/collaboration/presence');
         const pData = await pRes.json();
         if (pData.success) {
@@ -143,7 +157,7 @@ export default function CollaborationDashboard() {
     setIsLoading,
   ]);
 
-  // 3. Fetch Messages Feed on activeChannelId / activeConversationId changes
+  // 4. Fetch Messages Feed on activeChannelId / activeConversationId changes
   useEffect(() => {
     if (!activeChannelId && !activeConversationId) return;
 
@@ -165,66 +179,6 @@ export default function CollaborationDashboard() {
 
     fetchFeed();
   }, [activeChannelId, activeConversationId, setMessages]);
-
-  // 4. SSE Subscription: Stream Real-Time Events
-  useEffect(() => {
-    if (!companyId) return;
-
-    // Use active SSE real-time gateway in app/api/protected/tasks/realtime
-    const eventSource = new EventSource('/api/protected/tasks/realtime');
-
-    eventSource.onmessage = (event) => {
-      try {
-        const parsed = JSON.parse(event.data);
-        if (parsed.companyId !== companyId) return; // Tenant-level isolation guard
-
-        const { event: sseEvent, payload } = parsed;
-
-        if (sseEvent === 'message_posted') {
-          // Check if message belongs to current channel/DM view
-          if (
-            (activeChannelId && payload.channelId === activeChannelId) ||
-            (activeConversationId && payload.conversationId === activeConversationId)
-          ) {
-            addMessage(payload);
-          }
-        } else if (sseEvent === 'message_updated') {
-          updateMessage(payload._id, payload);
-        } else if (sseEvent === 'message_deleted') {
-          deleteMessage(payload._id);
-        } else if (sseEvent === 'presence_updated') {
-          updatePresence(payload.userId, payload.status);
-        } else if (sseEvent === 'announcement_posted') {
-          setAnnouncements([payload, ...announcements]);
-        } else if (sseEvent === 'message_reaction_toggled') {
-          updateMessage(payload.messageId, { reactions: payload.reactions });
-        } else if (sseEvent === 'user_typing_update') {
-          setUserTyping(payload.userId, payload.isTyping);
-        }
-      } catch (err) {
-        console.error('Failed parsing SSE payload:', err);
-      }
-    };
-
-    eventSource.onerror = () => {
-      console.warn('SSE subscription dropped, Next.js reconnecting automatically...');
-    };
-
-    return () => {
-      eventSource.close();
-    };
-  }, [
-    companyId,
-    activeChannelId,
-    activeConversationId,
-    addMessage,
-    updateMessage,
-    deleteMessage,
-    updatePresence,
-    setAnnouncements,
-    announcements,
-    setUserTyping,
-  ]);
 
   // 5. Send message action
   const handleSendMessage = async (content: string, attachments?: any[]) => {
@@ -249,7 +203,7 @@ export default function CollaborationDashboard() {
         reactions: [],
       };
 
-      // Optimistic instant append to UI
+      // Optimistic instant append
       addMessage(tempMessage as any);
 
       const bodyPayload = {
@@ -268,7 +222,6 @@ export default function CollaborationDashboard() {
 
       const data = await res.json();
       if (data.success) {
-        // Swap optimistic message with official DB entity
         useCommunicationStore.setState((state) => ({
           messages: state.messages.map((m) => (m._id === tempId ? data.data : m)),
         }));
@@ -384,7 +337,26 @@ export default function CollaborationDashboard() {
         />
 
         {/* Center Stream Frame & Composer */}
-        <div className="flex-1 flex flex-col min-w-0 bg-slate-950/10 border-r border-border">
+        <div className="flex-1 flex flex-col min-w-0 bg-slate-950/10 border-r border-border relative">
+          {/* Quick Guidelines toggle overlay button inside top right bar */}
+          <div className="absolute right-4 top-3.5 z-10">
+            <button
+              onClick={() => {
+                setShowNotes(!showNotes);
+                if (!showNotes) setActiveThreadParent(null); // Collapse thread if opening notes to guarantee layout integrity
+              }}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-bold transition-all border ${
+                showNotes
+                  ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400'
+                  : 'bg-slate-950/30 border-border text-muted-foreground hover:text-foreground'
+              }`}
+              title="Toggle Workspace Guidelines Notes"
+            >
+              <FileText className="h-3.5 w-3.5" />
+              <span>Guidelines</span>
+            </button>
+          </div>
+
           <ChatArea allUsers={allUsers} />
           {(activeChannelId || activeConversationId) && (
             <MessageComposer onSendMessage={handleSendMessage} />
@@ -395,7 +367,7 @@ export default function CollaborationDashboard() {
         <ThreadPanel />
 
         {/* Collapsible Right Shared Notepad guidelines sidebar */}
-        <SharedNotesPanel />
+        {showNotes && <SharedNotesPanel />}
       </div>
 
       {/* Create Channel Modal Dialog box */}

@@ -1,81 +1,68 @@
-import { AuditLog, Activity } from '@/models';
-import { connectToDatabase } from '@/lib/db';
-import { headers } from 'next/headers';
-
-interface AuditLogOptions {
-  companyId?: string | any;
-  actorId?: string | any;
-  action: string;
-  resource: string;
-  resourceId?: string;
-  metadata?: Record<string, any>;
-  status?: 'success' | 'failure';
-}
-
-interface ActivityOptions {
-  companyId: string | any;
-  userId: string | any;
-  type: string;
-  title: string;
-  description?: string;
-  metadata?: Record<string, any>;
-}
-
 /**
- * Log an audit compliance event to the database
+ * Centralized Enterprise Observability & Logger
+ * Fully Winston/Pino ready. Supports JSON structured formatting,
+ * severity tiers, and tenant-tracing context metadata.
  */
-export async function logAuditEvent(options: AuditLogOptions) {
-  try {
-    await connectToDatabase();
 
-    let ipAddress = '';
-    let userAgent = '';
+export type LogLevel = 'info' | 'warn' | 'error' | 'debug';
 
-    // Retrieve headers dynamically if within request context (Next.js Edge/Server environment)
-    try {
-      const headersList = await headers();
-      ipAddress = headersList.get('x-forwarded-for') || headersList.get('x-real-ip') || '';
-      userAgent = headersList.get('user-agent') || '';
-    } catch {
-      // Gracefully swallow error if called outside of active request runtime context
+interface LogContext {
+  companyId?: string;
+  userId?: string;
+  traceId?: string;
+  [key: string]: any;
+}
+
+class EnterpriseLogger {
+  private isProduction = process.env.NODE_ENV === 'production';
+
+  private formatMessage(level: LogLevel, message: string, context?: LogContext) {
+    const timestamp = new Date().toISOString();
+    const payload = {
+      timestamp,
+      level: level.toUpperCase(),
+      message,
+      metadata: context || {},
+    };
+
+    if (this.isProduction) {
+      return JSON.stringify(payload);
+    } else {
+      const colorMap = {
+        info: '\x1b[36m', // Cyan
+        warn: '\x1b[33m', // Yellow
+        error: '\x1b[31m', // Red
+        debug: '\x1b[90m', // Gray
+      };
+      const reset = '\x1b[0m';
+      const color = colorMap[level] || reset;
+      const metaString = context ? ` | Metadata: ${JSON.stringify(context)}` : '';
+      return `${color}[${timestamp}] [${level.toUpperCase()}]${reset} ${message}${metaString}`;
     }
+  }
 
-    const log = await AuditLog.create({
-      companyId: options.companyId || null,
-      actorId: options.actorId || null,
-      action: options.action,
-      resource: options.resource,
-      resourceId: options.resourceId || null,
-      ipAddress,
-      userAgent,
-      metadata: options.metadata || {},
-      status: options.status || 'success',
-    });
+  public info(message: string, context?: LogContext) {
+    console.log(this.formatMessage('info', message, context));
+  }
 
-    return log;
-  } catch (error) {
-    console.error('❌ Failed to create audit log entry:', error);
+  public warn(message: string, context?: LogContext) {
+    console.warn(this.formatMessage('warn', message, context));
+  }
+
+  public error(message: string, error?: any, context?: LogContext) {
+    const mergedContext = {
+      ...context,
+      errorStack: error instanceof Error ? error.stack : undefined,
+      errorMessage: error instanceof Error ? error.message : String(error),
+    };
+    console.error(this.formatMessage('error', message, mergedContext));
+  }
+
+  public debug(message: string, context?: LogContext) {
+    if (!this.isProduction) {
+      console.log(this.formatMessage('debug', message, context));
+    }
   }
 }
 
-/**
- * Log an operational user activity to the database
- */
-export async function logActivity(options: ActivityOptions) {
-  try {
-    await connectToDatabase();
-
-    const activity = await Activity.create({
-      companyId: options.companyId,
-      userId: options.userId,
-      type: options.type,
-      title: options.title,
-      description: options.description || '',
-      metadata: options.metadata || {},
-    });
-
-    return activity;
-  } catch (error) {
-    console.error('❌ Failed to log user activity:', error);
-  }
-}
+export const logger = new EnterpriseLogger();

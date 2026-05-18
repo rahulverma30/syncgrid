@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { withApiAuth } from '@/lib/auth/api';
 import { connectToDatabase } from '@/lib/db/mongodb';
-import { PresenceSession } from '@/models';
+import { PresenceEngine } from '@/lib/presence';
 import { broadcastEvent } from '@/lib/realtime';
 
 export const GET = withApiAuth(async (request: Request, context: any, session: any) => {
@@ -9,20 +9,10 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     await connectToDatabase();
     const companyId = session.user.companyId;
 
-    // Fetch presence sessions updated in the last 15 minutes to guarantee accuracy
-    const activeTimeThreshold = new Date(Date.now() - 1000 * 60 * 15);
-    const sessions = await PresenceSession.find({
-      companyId,
-      lastActiveAt: { $gte: activeTimeThreshold },
-    }).lean();
+    // Use fast in-memory / cache-aware Presence Engine
+    const presenceMap = await PresenceEngine.getActivePresence(companyId);
 
-    // Group presence state mapping (userId -> status)
-    const map = sessions.reduce((acc: Record<string, string>, current: any) => {
-      acc[current.userId.toString()] = current.status;
-      return acc;
-    }, {});
-
-    return NextResponse.json({ success: true, data: map });
+    return NextResponse.json({ success: true, data: presenceMap });
   } catch (error: any) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }
@@ -40,15 +30,12 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
       return NextResponse.json({ success: false, message: 'Status is required' }, { status: 400 });
     }
 
-    // Upsert user presence session
-    const updated = await PresenceSession.findOneAndUpdate(
-      { companyId, userId },
-      {
-        status,
-        currentChannelId: currentChannelId || null,
-        lastActiveAt: new Date(),
-      },
-      { upsert: true, new: true }
+    // Set user presence using high-scale abstraction
+    const updatedSession = await PresenceEngine.setUserPresence(
+      companyId,
+      userId,
+      status,
+      currentChannelId
     );
 
     // Broadcast presence update event to all connected workspace clients
@@ -61,7 +48,7 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
       },
     });
 
-    return NextResponse.json({ success: true, data: updated });
+    return NextResponse.json({ success: true, data: updatedSession });
   } catch (error: any) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }

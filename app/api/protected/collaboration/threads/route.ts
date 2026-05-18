@@ -3,6 +3,8 @@ import { withApiAuth } from '@/lib/auth/api';
 import { connectToDatabase } from '@/lib/db/mongodb';
 import { Thread, Message } from '@/models';
 import { broadcastEvent } from '@/lib/realtime';
+import { ThreadConsistencyEngine } from '@/lib/threadReconciliation';
+import { logger } from '@/lib/logger';
 
 export const GET = withApiAuth(async (request: Request, context: any, session: any) => {
   try {
@@ -19,17 +21,17 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
       );
     }
 
-    let thread = await Thread.findOne({ companyId, parentMessageId })
+    const thread = await Thread.findOne({ companyId, parentMessageId })
       .populate('replies.senderId', '_id name email avatarUrl')
       .lean();
 
     if (!thread) {
-      // Return empty list if no thread has been created yet
       return NextResponse.json({ success: true, data: [] });
     }
 
     return NextResponse.json({ success: true, data: thread.replies });
   } catch (error: any) {
+    logger.error('Failed to load thread replies:', error, { companyId: session?.user?.companyId });
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }
 });
@@ -39,7 +41,6 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     await connectToDatabase();
     const companyId = session.user.companyId;
     const userId = session.user.id;
-    const userName = session.user.name;
     const body = await request.json();
 
     const { parentMessageId, content, attachments } = body;
@@ -71,12 +72,11 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     }
     await thread.save();
 
-    // 2. Increment parent message reply count
-    const parentMsg = await Message.findOne({ _id: parentMessageId, companyId });
-    if (parentMsg) {
-      parentMsg.replyCount = (parentMsg.replyCount || 0) + 1;
-      await parentMsg.save();
-    }
+    // 2. Perform atomic parent-child integrity reconciliation
+    const activeReplyCount = await ThreadConsistencyEngine.reconcileThreadReplyCount(
+      companyId,
+      parentMessageId
+    );
 
     // Populate reply sender details
     const populatedThread = await Thread.findById(thread._id)
@@ -85,6 +85,14 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
 
     const latestReply = populatedThread.replies[populatedThread.replies.length - 1];
 
+    logger.info(
+      `[Thread POST] Reply created on parent message ${parentMessageId}. Active count: ${activeReplyCount}`,
+      {
+        companyId,
+        userId,
+      }
+    );
+
     // Broadcast realtime update
     broadcastEvent({
       companyId,
@@ -92,12 +100,13 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
       payload: {
         parentMessageId,
         reply: latestReply,
-        replyCount: parentMsg?.replyCount || 1,
+        replyCount: activeReplyCount,
       },
     });
 
     return NextResponse.json({ success: true, data: latestReply });
   } catch (error: any) {
+    logger.error('Failed to create thread reply:', error, { companyId: session?.user?.companyId });
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }
 });

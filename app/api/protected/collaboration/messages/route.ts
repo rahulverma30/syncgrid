@@ -3,6 +3,7 @@ import { withApiAuth } from '@/lib/auth/api';
 import { connectToDatabase } from '@/lib/db/mongodb';
 import { Message, CollaborationActivity, Reaction } from '@/models';
 import { broadcastEvent } from '@/lib/realtime';
+import { logger } from '@/lib/logger';
 
 export const GET = withApiAuth(async (request: Request, context: any, session: any) => {
   try {
@@ -12,6 +13,10 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     const url = new URL(request.url);
     const channelId = url.searchParams.get('channelId');
     const conversationId = url.searchParams.get('conversationId');
+
+    // Cursor Pagination configuration params
+    const cursor = url.searchParams.get('cursor'); // ISO date string or timestamp
+    const limit = parseInt(url.searchParams.get('limit') || '50', 10);
 
     if (!channelId && !conversationId) {
       return NextResponse.json(
@@ -27,43 +32,79 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
       filter.conversationId = conversationId;
     }
 
-    // Retrieve last 100 messages to prevent heavy payload lists
+    // Cursor boundaries (load older messages backwards)
+    if (cursor) {
+      filter.createdAt = { $lt: new Date(cursor) };
+    }
+
+    logger.info(`[Messages GET] Fetching feed. Limit: ${limit}, Cursor: ${cursor}`, {
+      companyId,
+      channelId,
+      conversationId,
+    });
+
+    // Query sorted descending (latest first) to correctly paginate backwards
     const messages = await Message.find(filter)
       .populate('senderId', '_id name email avatarUrl')
-      .sort({ createdAt: 1 })
-      .limit(100)
+      .sort({ createdAt: -1 })
+      .limit(limit)
       .lean();
 
-    // Map each message to include its reactions list
-    const enrichedMessages = await Promise.all(
-      messages.map(async (msg) => {
-        const rawReactions = await Reaction.find({ messageId: msg._id })
-          .populate('userId', '_id name')
-          .lean();
+    // Reverse array to render chronologically (ascending) in frontend stream
+    messages.reverse();
 
-        // Group reactions by emoji character
-        const grouped = rawReactions.reduce((acc: any[], current: any) => {
-          const group = acc.find((g) => g.emoji === current.emoji);
-          if (group) {
-            group.users.push({ _id: current.userId._id, name: current.userId.name });
-          } else {
-            acc.push({
-              emoji: current.emoji,
-              users: [{ _id: current.userId._id, name: current.userId.name }],
-            });
-          }
-          return acc;
-        }, []);
+    // 1. ELIMINATE N+1 REACTION QUERIES: Batch fetch reactions in a single network trip
+    const messageIds = messages.map((m) => m._id);
+    const rawReactions = await Reaction.find({ messageId: { $in: messageIds } })
+      .populate('userId', '_id name')
+      .lean();
 
-        return {
-          ...msg,
-          reactions: grouped,
-        };
-      })
-    );
+    // 2. Map and Group reactions in-memory O(N)
+    const reactionsMap = rawReactions.reduce((acc: Record<string, any[]>, curr: any) => {
+      const msgIdStr = curr.messageId.toString();
+      if (!acc[msgIdStr]) {
+        acc[msgIdStr] = [];
+      }
+      acc[msgIdStr].push(curr);
+      return acc;
+    }, {});
 
-    return NextResponse.json({ success: true, data: enrichedMessages });
+    // Hydrate messages in-memory with zero N+1 database query cycles
+    const enrichedMessages = messages.map((msg) => {
+      const msgReactions = reactionsMap[msg._id.toString()] || [];
+      const grouped = msgReactions.reduce((acc: any[], current: any) => {
+        if (!current.userId) return acc;
+        const group = acc.find((g) => g.emoji === current.emoji);
+        if (group) {
+          group.users.push({ _id: current.userId._id, name: current.userId.name });
+        } else {
+          acc.push({
+            emoji: current.emoji,
+            users: [{ _id: current.userId._id, name: current.userId.name }],
+          });
+        }
+        return acc;
+      }, []);
+
+      return {
+        ...msg,
+        reactions: grouped,
+        // AI-ready semantic metadata slots (pre-calculated indices)
+        aiMetadata: {
+          sentiment: 'neutral',
+          embeddingStatus: 'pending',
+          summarizationIndex: 0,
+        },
+      };
+    });
+
+    return NextResponse.json({
+      success: true,
+      data: enrichedMessages,
+      nextCursor: messages.length > 0 ? messages[0].createdAt : null, // Earliest timestamp in batch
+    });
   } catch (error: any) {
+    logger.error('Failed messages retrieval:', error, { companyId: session?.user?.companyId });
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }
 });
@@ -101,6 +142,11 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     const responseData = {
       ...populated,
       reactions: [],
+      aiMetadata: {
+        sentiment: 'neutral',
+        embeddingStatus: 'pending',
+        summarizationIndex: 0,
+      },
     };
 
     // Centralized Audit Log
@@ -113,6 +159,8 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     });
     await auditLog.save();
 
+    logger.info(`[Message Post] Created message: ${created._id}`, { companyId, userId });
+
     // Realtime Broadcast Event via SSE (lib/realtime.ts)
     broadcastEvent({
       companyId,
@@ -120,7 +168,7 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
       payload: responseData,
     });
 
-    // Also push a global notification if user has @mentions or if it's a DM
+    // Push global notification if it's a DM
     if (conversationId) {
       broadcastEvent({
         companyId,
@@ -135,6 +183,9 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
 
     return NextResponse.json({ success: true, data: responseData });
   } catch (error: any) {
+    logger.error('Failed to post collaboration message:', error, {
+      companyId: session?.user?.companyId,
+    });
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }
 });
