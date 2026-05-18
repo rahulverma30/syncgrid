@@ -3,7 +3,7 @@ import { connectToDatabase } from '@/lib/db/mongodb';
 import { ClientPortalUser } from '@/models/ClientPortalUser';
 import { ClientPortalAuditLog } from '@/models/ClientPortalAuditLog';
 import { verifyPassword, isAccountLocked } from '@/lib/security/password';
-import { setPortalSessionCookie } from '@/lib/auth/portal';
+import { setPortalSessionCookie, encryptSession } from '@/lib/auth/portal';
 import { z } from 'zod';
 
 const loginSchema = z.object({
@@ -76,7 +76,22 @@ export async function POST(request: Request) {
       );
     }
 
-    // On success, reset failures and set login time
+    if (user.mfaEnabled) {
+      // MFA is enabled - generate secure 5-minute temporary token for verification step
+      const tempTokenPayload = {
+        tempUserId: user._id.toString(),
+        expiresAt: Date.now() + 5 * 60 * 1000,
+      };
+      const tempToken = encryptSession(tempTokenPayload);
+
+      return NextResponse.json({
+        success: true,
+        mfaRequired: true,
+        tempToken,
+      });
+    }
+
+    // On success without MFA, reset failures and set login time
     await ClientPortalUser.updateOne(
       { _id: user._id },
       {

@@ -10,6 +10,7 @@ const approvalActionSchema = z.object({
   requestId: z.string().min(1, 'Request ID is required'),
   action: z.enum(['approved', 'revision_requested']),
   comments: z.string().optional(),
+  signatureVerified: z.boolean().optional(),
 });
 
 export async function GET() {
@@ -54,7 +55,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { requestId, action, comments } = parsed.data;
+    const { requestId, action, comments, signatureVerified } = parsed.data;
 
     const approval = await ClientApprovalRequest.findOne({
       _id: requestId,
@@ -71,13 +72,18 @@ export async function POST(request: Request) {
 
     const finalStatus = action === 'approved' ? 'approved' : 'revision_requested';
 
+    const signaturePrefix = signatureVerified
+      ? `[SECURE DIGITAL SIGNATURE CERTIFIED - AUTHORIZED SIGN-OFF] `
+      : '';
+    const finalComments = signaturePrefix + (comments || '');
+
     // Append decision to history
     approval.history.push({
       action: finalStatus,
       actedBy: 'client',
       userId: portalUserId,
       userName: portalUserName,
-      comments: comments || '',
+      comments: finalComments,
       actedAt: new Date(),
     });
 

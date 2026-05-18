@@ -110,6 +110,7 @@ export async function getPortalSession(): Promise<any | null> {
         name: portalUser.name,
         email: portalUser.email,
         portalRole: portalUser.portalRole,
+        mfaEnabled: portalUser.mfaEnabled ?? false,
         clientId: portalUser.clientId._id.toString(),
         clientName: portalUser.clientId.name,
         companyId: portalUser.companyId._id.toString(),

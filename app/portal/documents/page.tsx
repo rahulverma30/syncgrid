@@ -52,13 +52,27 @@ export default function PortalDocumentsPage() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const handleDownload = (doc: any) => {
+  const handleDownload = async (doc: any) => {
     if (!doc.isDownloadable) {
       toast.error('Download permission is restricted for this document.');
       return;
     }
-    toast.success(`Downloading: ${doc.name}`);
-    window.open(doc.url, '_blank');
+    try {
+      const res = await fetch('/api/portal/documents/sign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sharedDocId: doc.id }),
+      });
+      const body = await res.json();
+      if (res.ok && body.success) {
+        toast.success(`Secure token authorized! Initiating audited download: ${doc.name}`);
+        window.open(body.data.downloadUrl, '_blank');
+      } else {
+        toast.error(body.message || 'Signature authorization rejected.');
+      }
+    } catch (err) {
+      toast.error('Network failure while requesting download signature.');
+    }
   };
 
   const filteredDocs = documents.filter(

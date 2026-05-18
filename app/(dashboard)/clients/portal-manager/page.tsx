@@ -72,17 +72,25 @@ export default function InternalPortalManagerPage() {
       if (projBody.success) {
         setProjects(projBody.data);
 
-        // Simulating the granular access rule state configurations
-        const rules = projBody.data.map((p: any) => ({
-          projectId: p._id,
-          projectName: p.name,
-          isAccessAllowed: true,
-          showMilestones: true,
-          showTasks: false,
-          showBudgets: false,
-          showTimeLogs: false,
-        }));
-        setAccessRules(rules);
+        // Fetch actual persisted visibility rules for this client
+        const rulesRes = await fetch(`/api/portal/rules?clientId=${selectedClient._id}`);
+        const rulesBody = await rulesRes.json();
+        const dbRules = rulesBody.success ? rulesBody.data : [];
+
+        // Merge actual DB records or fall back to default values
+        const mergedRules = projBody.data.map((p: any) => {
+          const existing = dbRules.find((r: any) => r.projectId === p._id);
+          return {
+            projectId: p._id,
+            projectName: p.name,
+            isAccessAllowed: existing ? existing.isAccessAllowed : true,
+            showMilestones: existing ? existing.showMilestones : true,
+            showTasks: existing ? existing.showTasks : false,
+            showBudgets: existing ? existing.showBudgets : false,
+            showTimeLogs: existing ? existing.showTimeLogs : false,
+          };
+        });
+        setAccessRules(mergedRules);
       }
     } catch (err) {
       toast.error('Failed to fetch client project visibility lists.');
@@ -105,12 +113,31 @@ export default function InternalPortalManagerPage() {
   };
 
   const handleSaveVisibilityRules = async () => {
+    if (!selectedClient) return;
     setIsSaving(true);
-    // Simulate updating ClientProjectAccess schema configs on DB
-    setTimeout(() => {
+    try {
+      const res = await fetch('/api/portal/rules', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clientId: selectedClient._id,
+          rules: accessRules,
+        }),
+      });
+
+      const body = await res.json();
+      if (res.ok && body.success) {
+        toast.success('Client Project Visibility Policies saved successfully!');
+        // Refresh list to sync states
+        loadClientProjects();
+      } else {
+        toast.error(body.message || 'Failed to save visibility policies.');
+      }
+    } catch (error: any) {
+      toast.error('Network failure while saving rules.');
+    } finally {
       setIsSaving(false);
-      toast.success('Client Project Visibility Policies saved successfully!');
-    }, 800);
+    }
   };
 
   const handleInviteUser = async (e: React.FormEvent) => {
