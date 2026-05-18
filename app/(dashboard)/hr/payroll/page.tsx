@@ -2,7 +2,15 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { PageHeader, Card, CardContent, Button, Input, LoadingSpinner } from '@/components/ui';
+import {
+  PageHeader,
+  Card,
+  CardContent,
+  Button,
+  Input,
+  LoadingSpinner,
+  ConfirmationModal,
+} from '@/components/ui';
 import {
   DollarSign,
   Search,
@@ -40,6 +48,11 @@ export default function HRPayrollPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState('');
+
+  // Delete confirm modal states
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [runToDeleteId, setRunToDeleteId] = useState<string | null>(null);
+  const [isBulkDeleteConfirmOpen, setIsBulkDeleteConfirmOpen] = useState(false);
 
   const fetchPayrollRuns = async () => {
     setIsLoading(true);
@@ -108,16 +121,12 @@ export default function HRPayrollPage() {
   };
 
   const handleDeleteRun = (id: string) => {
-    if (!confirm('Are you sure you want to permanently delete this payroll run?')) return;
-    setPayrollRuns(payrollRuns.filter((p) => p._id !== id));
-    toast.success('Payroll run record deleted.');
+    setRunToDeleteId(id);
+    setIsDeleteConfirmOpen(true);
   };
 
   const handleBulkDelete = () => {
-    if (!confirm(`Delete ${selectedRows.length} selected payroll runs permanently?`)) return;
-    setPayrollRuns(payrollRuns.filter((p) => !selectedRows.includes(p._id)));
-    setSelectedRows([]);
-    toast.success('Selected payroll records deleted.');
+    setIsBulkDeleteConfirmOpen(true);
   };
 
   const handleExportCSV = () => {
@@ -423,6 +432,41 @@ export default function HRPayrollPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Single Run Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => setIsDeleteConfirmOpen(false)}
+        onConfirm={() => {
+          if (runToDeleteId) {
+            setPayrollRuns(payrollRuns.filter((p) => p._id !== runToDeleteId));
+            toast.success('Payroll run record deleted.');
+          }
+          setIsDeleteConfirmOpen(false);
+        }}
+        title="Delete Payroll Record"
+        message="Are you absolutely sure you want to permanently delete this payroll period log? This action is permanent."
+        confirmLabel="Delete Record"
+        cancelLabel="Cancel"
+        type="danger"
+      />
+
+      {/* Bulk Runs Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isBulkDeleteConfirmOpen}
+        onClose={() => setIsBulkDeleteConfirmOpen(false)}
+        onConfirm={() => {
+          setPayrollRuns(payrollRuns.filter((p) => !selectedRows.includes(p._id)));
+          setSelectedRows([]);
+          setIsBulkDeleteConfirmOpen(false);
+          toast.success('Selected payroll records deleted.');
+        }}
+        title="Delete Selected Periods"
+        message={`Are you sure you want to permanently delete all ${selectedRows.length} selected payroll run periods?`}
+        confirmLabel="Delete Selected"
+        cancelLabel="Cancel"
+        type="danger"
+      />
     </div>
   );
 }

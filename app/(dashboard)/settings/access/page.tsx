@@ -2,7 +2,15 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { PageHeader, Card, CardContent, Button, Input, LoadingSpinner } from '@/components/ui';
+import {
+  PageHeader,
+  Card,
+  CardContent,
+  Button,
+  Input,
+  LoadingSpinner,
+  ConfirmationModal,
+} from '@/components/ui';
 import { Shield, ArrowLeft, Key, Trash2, Plus, Clock, Lock, Globe } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -22,6 +30,10 @@ export default function SettingsAccessPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [newKeyName, setNewKeyName] = useState('');
   const [newKeyScope, setNewKeyScope] = useState('read-only');
+
+  // Revoke confirm modal states
+  const [isRevokeConfirmOpen, setIsRevokeConfirmOpen] = useState(false);
+  const [keyToRevokeId, setKeyToRevokeId] = useState<string | null>(null);
 
   const fetchKeys = async () => {
     setIsLoading(true);
@@ -80,9 +92,8 @@ export default function SettingsAccessPage() {
   };
 
   const handleRevoke = (id: string) => {
-    if (!confirm('Are you sure you want to permanently revoke this access token?')) return;
-    setKeys(keys.filter((k) => k._id !== id));
-    toast.error('Access token permanently revoked.');
+    setKeyToRevokeId(id);
+    setIsRevokeConfirmOpen(true);
   };
 
   if (!mounted) return null;
@@ -229,6 +240,23 @@ export default function SettingsAccessPage() {
           </Card>
         </div>
       </div>
+      {/* Revoke API Key Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isRevokeConfirmOpen}
+        onClose={() => setIsRevokeConfirmOpen(false)}
+        onConfirm={() => {
+          if (keyToRevokeId) {
+            setKeys(keys.filter((k) => k._id !== keyToRevokeId));
+            toast.error('Access token permanently revoked.');
+          }
+          setIsRevokeConfirmOpen(false);
+        }}
+        title="Revoke Access Token"
+        message="Are you absolutely sure you want to permanently revoke this API access token? All services and webhooks utilizing this credentials pair will instantly fail authentication requests."
+        confirmLabel="Revoke Key"
+        cancelLabel="Cancel"
+        type="danger"
+      />
     </div>
   );
 }

@@ -403,7 +403,6 @@ export const useProjectsStore = create<ProjectsState>((set, get) => {
     },
 
     deleteProject: async (id) => {
-      if (!confirm('Permanently delete this project? This action cannot be undone.')) return;
       try {
         const res = await fetch(`/api/protected/projects/${id}`, { method: 'DELETE' });
         const d = await res.json();

@@ -2,7 +2,15 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { PageHeader, Card, CardContent, Button, Input, LoadingSpinner } from '@/components/ui';
+import {
+  PageHeader,
+  Card,
+  CardContent,
+  Button,
+  Input,
+  LoadingSpinner,
+  ConfirmationModal,
+} from '@/components/ui';
 import {
   Users,
   Search,
@@ -41,6 +49,11 @@ export default function HREmployeesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [deptFilter, setDeptFilter] = useState('');
+
+  // Delete confirm modal states
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [employeeToDeleteId, setEmployeeToDeleteId] = useState<string | null>(null);
+  const [isBulkDeleteConfirmOpen, setIsBulkDeleteConfirmOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState('');
 
   const fetchEmployees = async () => {
@@ -113,16 +126,12 @@ export default function HREmployeesPage() {
   };
 
   const handleDeleteEmployee = (id: string) => {
-    if (!confirm('Are you sure you want to permanently delete this employee record?')) return;
-    setEmployees(employees.filter((e) => e._id !== id));
-    toast.success('Employee record permanently deleted.');
+    setEmployeeToDeleteId(id);
+    setIsDeleteConfirmOpen(true);
   };
 
   const handleBulkDelete = () => {
-    if (!confirm(`Delete ${selectedRows.length} selected employee records permanently?`)) return;
-    setEmployees(employees.filter((e) => !selectedRows.includes(e._id)));
-    setSelectedRows([]);
-    toast.success('Selected employee records deleted.');
+    setIsBulkDeleteConfirmOpen(true);
   };
 
   const handleExportCSV = () => {
@@ -458,6 +467,41 @@ export default function HREmployeesPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Single Employee Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => setIsDeleteConfirmOpen(false)}
+        onConfirm={() => {
+          if (employeeToDeleteId) {
+            setEmployees(employees.filter((e) => e._id !== employeeToDeleteId));
+            toast.success('Employee record permanently deleted.');
+          }
+          setIsDeleteConfirmOpen(false);
+        }}
+        title="Delete Employee Record"
+        message="Are you absolutely sure you want to permanently delete this employee profile? This will remove them from directory payroll calculations."
+        confirmLabel="Delete Profile"
+        cancelLabel="Cancel"
+        type="danger"
+      />
+
+      {/* Bulk Employees Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isBulkDeleteConfirmOpen}
+        onClose={() => setIsBulkDeleteConfirmOpen(false)}
+        onConfirm={() => {
+          setEmployees(employees.filter((e) => !selectedRows.includes(e._id)));
+          setSelectedRows([]);
+          setIsBulkDeleteConfirmOpen(false);
+          toast.success('Selected employee records deleted.');
+        }}
+        title="Delete Selected Profiles"
+        message={`Are you sure you want to permanently delete all ${selectedRows.length} selected employee records?`}
+        confirmLabel="Delete Selected"
+        cancelLabel="Cancel"
+        type="danger"
+      />
     </div>
   );
 }

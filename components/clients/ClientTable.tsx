@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Input, Badge } from '@/components/ui';
+import { Button, Input, Badge, CenteredModal, ConfirmationModal } from '@/components/ui';
 import {
   Search,
   Download,
@@ -54,6 +54,13 @@ export const ClientTable: React.FC = () => {
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [bulkManager, setBulkManager] = useState('');
   const [visibilityMenuOpen, setVisibilityMenuOpen] = useState(false);
+
+  // Custom Modal States
+  const [isPresetModalOpen, setIsPresetModalOpen] = useState(false);
+  const [presetName, setPresetName] = useState('');
+
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [clientToDelete, setClientToDelete] = useState<ClientAccount | null>(null);
 
   // 1. Client-Side Sorting
   const sortedClients = [...clients].sort((a: any, b: any) => {
@@ -346,8 +353,8 @@ export const ClientTable: React.FC = () => {
         <button
           type="button"
           onClick={() => {
-            const name = prompt('Enter a name for this custom ledger filter view preset:');
-            if (name && name.trim()) saveFilterPreset(name.trim());
+            setPresetName('');
+            setIsPresetModalOpen(true);
           }}
           className="text-[10px] font-extrabold uppercase text-primary hover:underline transition-colors tracking-wider flex items-center gap-1 cursor-pointer"
         >
@@ -582,7 +589,10 @@ export const ClientTable: React.FC = () => {
                           <Archive className="h-3.5 w-3.5" />
                         </Button>
                         <Button
-                          onClick={() => deleteClient(acc._id)}
+                          onClick={() => {
+                            setClientToDelete(acc);
+                            setIsDeleteConfirmOpen(true);
+                          }}
                           variant="ghost"
                           size="sm"
                           className="h-7 w-7 p-0 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10"
@@ -702,7 +712,10 @@ export const ClientTable: React.FC = () => {
                     <Archive className="h-3 w-3" /> Archive
                   </Button>
                   <Button
-                    onClick={() => deleteClient(acc._id)}
+                    onClick={() => {
+                      setClientToDelete(acc);
+                      setIsDeleteConfirmOpen(true);
+                    }}
                     variant="outline"
                     size="sm"
                     className="h-7 text-xs text-rose-500 border-rose-500/20 hover:bg-rose-500/10 flex items-center gap-1 font-bold"
@@ -785,6 +798,63 @@ export const ClientTable: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Save Ledger View Preset Modal */}
+      <CenteredModal
+        isOpen={isPresetModalOpen}
+        onClose={() => setIsPresetModalOpen(false)}
+        title="Save Custom View Preset"
+      >
+        <div className="space-y-4 pt-2">
+          <div className="space-y-2 text-left">
+            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              Preset View Name
+            </label>
+            <input
+              value={presetName}
+              onChange={(e) => setPresetName(e.target.value)}
+              className="flex h-10 w-full rounded-md border border-input bg-background/30 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              placeholder="e.g., Startup VIP Accounts"
+              autoFocus
+            />
+          </div>
+          <div className="flex justify-end gap-2 border-t border-border/40 pt-4">
+            <Button variant="outline" size="sm" onClick={() => setIsPresetModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => {
+                if (presetName.trim()) {
+                  saveFilterPreset(presetName.trim());
+                  setIsPresetModalOpen(false);
+                }
+              }}
+              disabled={!presetName.trim()}
+            >
+              Save Preset
+            </Button>
+          </div>
+        </div>
+      </CenteredModal>
+
+      {/* Delete Client Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => setIsDeleteConfirmOpen(false)}
+        onConfirm={async () => {
+          if (clientToDelete) {
+            await deleteClient(clientToDelete._id);
+            setIsDeleteConfirmOpen(false);
+          }
+        }}
+        title="Delete Customer Account"
+        message={`Are you absolutely sure you want to delete the corporate profile for "${clientToDelete?.name || ''}"? This action is tracked and cannot be undone.`}
+        confirmLabel="Delete Account"
+        cancelLabel="Cancel"
+        type="danger"
+      />
     </motion.div>
   );
 };

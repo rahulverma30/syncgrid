@@ -15,6 +15,8 @@ import {
 } from '@/components/ui';
 import { Network, Plus, User, Users, ChevronDown, ChevronRight, FolderOpen } from 'lucide-react';
 
+import { toast } from 'sonner';
+
 export function HrOrgChart() {
   const { departmentsTree, departmentsList, employees, createDepartment, loading } = useHRStore();
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -29,7 +31,7 @@ export function HrOrgChart() {
   const handleCreateDept = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name || !form.code) {
-      alert('Name and Code are required!');
+      toast.error('Name and Code are required!');
       return;
     }
 

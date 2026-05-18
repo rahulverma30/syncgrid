@@ -12,6 +12,7 @@ import {
   BookOpen,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { Button, CenteredModal, ConfirmationModal } from '@/components/ui';
 
 interface WikiTreeProps {
   spaceId: string;
@@ -19,23 +20,15 @@ interface WikiTreeProps {
 
 export function WikiTree({ spaceId }: WikiTreeProps) {
   const { documents, createDocument, activeDocument, setActiveDocument } = useKnowledgeStore();
+  const [isRootModalOpen, setIsRootModalOpen] = useState(false);
+  const [rootTitle, setRootTitle] = useState('');
 
   // Root elements have no parentDocumentId
   const rootDocs = documents.filter((d) => d.spaceId === spaceId && !d.parentDocumentId);
 
-  const handleCreateRoot = async () => {
-    const title = prompt('Enter page title:');
-    if (!title) return;
-    const newDoc = await createDocument({
-      spaceId,
-      title,
-      content: '<h3>Write something...</h3>',
-      icon: 'page',
-      visibility: 'internal',
-    });
-    if (newDoc) {
-      setActiveDocument(newDoc);
-    }
+  const handleCreateRoot = () => {
+    setRootTitle('');
+    setIsRootModalOpen(true);
   };
 
   return (
@@ -68,6 +61,53 @@ export function WikiTree({ spaceId }: WikiTreeProps) {
           rootDocs.map((doc) => <WikiTreeNode key={doc._id} doc={doc} depth={0} />)
         )}
       </div>
+
+      {/* Create New Root Page Modal */}
+      <CenteredModal
+        isOpen={isRootModalOpen}
+        onClose={() => setIsRootModalOpen(false)}
+        title="Create New Page"
+      >
+        <div className="space-y-4 pt-2">
+          <div className="space-y-2 text-left">
+            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              Page Title
+            </label>
+            <input
+              value={rootTitle}
+              onChange={(e) => setRootTitle(e.target.value)}
+              className="flex h-10 w-full rounded-md border border-input bg-background/30 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              placeholder="e.g., Marketing Strategy"
+              autoFocus
+            />
+          </div>
+          <div className="flex justify-end gap-2 border-t border-border/40 pt-4">
+            <Button variant="outline" size="sm" onClick={() => setIsRootModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={async () => {
+                if (rootTitle.trim()) {
+                  const newDoc = await createDocument({
+                    spaceId,
+                    title: rootTitle.trim(),
+                    content: '<h3>Write something...</h3>',
+                    icon: 'page',
+                    visibility: 'internal',
+                  });
+                  if (newDoc) setActiveDocument(newDoc);
+                  setIsRootModalOpen(false);
+                }
+              }}
+              disabled={!rootTitle.trim()}
+            >
+              Create Page
+            </Button>
+          </div>
+        </div>
+      </CenteredModal>
     </div>
   );
 }
@@ -82,6 +122,11 @@ function WikiTreeNode({ doc, depth }: TreeNodeProps) {
     useKnowledgeStore();
   const [isOpen, setIsOpen] = useState(true);
 
+  // Local Modal States
+  const [isChildModalOpen, setIsChildModalOpen] = useState(false);
+  const [childTitle, setChildTitle] = useState('');
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+
   const children = documents.filter((d) => d.parentDocumentId === doc._id);
   const isActive = activeDocument?._id === doc._id;
 
@@ -89,33 +134,15 @@ function WikiTreeNode({ doc, depth }: TreeNodeProps) {
     setActiveDocument(doc);
   };
 
-  const handleAddChild = async (e: React.MouseEvent) => {
+  const handleAddChild = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const title = prompt(`Enter sub-page title for "${doc.title}":`);
-    if (!title) return;
-    const newDoc = await createDocument({
-      spaceId: doc.spaceId,
-      parentDocumentId: doc._id,
-      title,
-      content: '<h3>Start writing sub-page...</h3>',
-      icon: 'page',
-      visibility: 'internal',
-    });
-    if (newDoc) {
-      setIsOpen(true);
-      setActiveDocument(newDoc);
-    }
+    setChildTitle('');
+    setIsChildModalOpen(true);
   };
 
-  const handleDelete = async (e: React.MouseEvent) => {
+  const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (
-      confirm(
-        `Are you sure you want to delete "${doc.title}"? This will recursively soft-delete all child sub-pages.`
-      )
-    ) {
-      await deleteDocument(doc._id);
-    }
+    setIsDeleteConfirmOpen(true);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -230,6 +257,72 @@ function WikiTreeNode({ doc, depth }: TreeNodeProps) {
           ))}
         </div>
       )}
+
+      {/* Create New Child Page Modal */}
+      <CenteredModal
+        isOpen={isChildModalOpen}
+        onClose={() => setIsChildModalOpen(false)}
+        title={`Create Sub-page under "${doc.title}"`}
+      >
+        <div className="space-y-4 pt-2">
+          <div className="space-y-2 text-left">
+            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              Sub-page Title
+            </label>
+            <input
+              value={childTitle}
+              onChange={(e) => setChildTitle(e.target.value)}
+              className="flex h-10 w-full rounded-md border border-input bg-background/30 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              placeholder="e.g., Sub-module Blueprint"
+              autoFocus
+            />
+          </div>
+          <div className="flex justify-end gap-2 border-t border-border/40 pt-4">
+            <Button variant="outline" size="sm" onClick={() => setIsChildModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={async () => {
+                if (childTitle.trim()) {
+                  const newDoc = await createDocument({
+                    spaceId: doc.spaceId,
+                    parentDocumentId: doc._id,
+                    title: childTitle.trim(),
+                    content: '<h3>Start writing sub-page...</h3>',
+                    icon: 'page',
+                    visibility: 'internal',
+                  });
+                  if (newDoc) {
+                    setIsOpen(true);
+                    setActiveDocument(newDoc);
+                  }
+                  setIsChildModalOpen(false);
+                }
+              }}
+              disabled={!childTitle.trim()}
+            >
+              Create Sub-page
+            </Button>
+          </div>
+        </div>
+      </CenteredModal>
+
+      {/* Recursively Delete Page Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => setIsDeleteConfirmOpen(false)}
+        onConfirm={async () => {
+          await deleteDocument(doc._id);
+          setIsDeleteConfirmOpen(false);
+        }}
+        title="Delete Page Recursively"
+        message={`Are you absolutely sure you want to delete "${doc.title}"? This will recursively soft-delete all child sub-pages.`}
+        confirmLabel="Delete Page"
+        cancelLabel="Cancel"
+        type="danger"
+      />
     </div>
   );
 }

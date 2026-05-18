@@ -2,7 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { useHRStore } from '@/store/hrStore';
-import { Drawer, Card, CardContent, Button, Badge, Input, Select } from '@/components/ui';
+import {
+  Drawer,
+  Card,
+  CardContent,
+  Button,
+  Badge,
+  Input,
+  Select,
+  ConfirmationModal,
+} from '@/components/ui';
 import {
   X,
   User,
@@ -43,6 +52,9 @@ export function EmployeeDetailModal({ employeeId, isOpen, onClose }: EmployeeDet
   // Local overrides state to update checkboxes instantly
   const [checklistOverrides, setChecklistOverrides] = useState<Record<string, boolean>>({});
   const [prevEmployeeId, setPrevEmployeeId] = useState<string | null>(null);
+
+  // Terminate Modal State
+  const [isOffboardConfirmOpen, setIsOffboardConfirmOpen] = useState(false);
 
   // Reset overrides if the employeeId prop changes
   if (employeeId !== prevEmployeeId) {
@@ -135,15 +147,8 @@ export function EmployeeDetailModal({ employeeId, isOpen, onClose }: EmployeeDet
     }
   };
 
-  const handleOffboard = async () => {
-    if (
-      confirm(`Are you absolutely sure you want to offboard and terminate ${employee.fullName}?`)
-    ) {
-      const success = await deleteEmployee(employee._id);
-      if (success) {
-        onClose();
-      }
-    }
+  const handleOffboard = () => {
+    setIsOffboardConfirmOpen(true);
   };
 
   const subTabs = [
@@ -970,6 +975,24 @@ export function EmployeeDetailModal({ employeeId, isOpen, onClose }: EmployeeDet
           )}
         </div>
       </div>
+
+      {/* Offboard/Terminate Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isOffboardConfirmOpen}
+        onClose={() => setIsOffboardConfirmOpen(false)}
+        onConfirm={async () => {
+          const success = await deleteEmployee(employee._id);
+          setIsOffboardConfirmOpen(false);
+          if (success) {
+            onClose();
+          }
+        }}
+        title="Terminate Employee Profile"
+        message={`Are you absolutely sure you want to offboard and terminate ${employee.fullName}? This will revoke system credentials, archive salary records, and initialize standard compliance offboarding workflows.`}
+        confirmLabel="Terminate Employee"
+        cancelLabel="Cancel"
+        type="danger"
+      />
     </Drawer>
   );
 }

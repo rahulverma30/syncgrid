@@ -11,6 +11,7 @@ import {
   LoadingSpinner,
   Tabs,
   Badge,
+  ConfirmationModal,
 } from '@/components/ui';
 import {
   Users,
@@ -175,6 +176,11 @@ export default function CRMPage() {
   );
   const [uploadProgress, setUploadProgress] = useState(-1);
 
+  // Delete confirm modal states
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [leadToDeleteId, setLeadToDeleteId] = useState<string | null>(null);
+  const [isBulkDeleteConfirmOpen, setIsBulkDeleteConfirmOpen] = useState(false);
+
   const fetchLeadsAndSettings = async () => {
     setIsLoading(true);
     try {
@@ -327,6 +333,7 @@ export default function CRMPage() {
       setMounted(true);
       fetchLeadsAndSettings();
     }, 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleCreateLead = async (e: React.FormEvent) => {
@@ -514,39 +521,13 @@ export default function CRMPage() {
     }
   };
 
-  const handleDeleteLead = async (leadId: string) => {
-    if (!confirm('Are you sure you want to permanently delete this lead?')) return;
-
-    try {
-      const res = await fetch(`/api/protected/crm/leads/${leadId}`, { method: 'DELETE' });
-      const d = await res.json();
-      if (d.success) {
-        setLeads(leads.filter((l) => l._id !== leadId));
-        if (selectedLead?._id === leadId) setDrawerOpen(false);
-        toast.success('Lead permanently deleted successfully.');
-      } else {
-        toast.error(d.message || 'Unauthorized delete request.');
-      }
-    } catch (e) {
-      toast.error('Error deleting lead record.');
-    }
+  const handleDeleteLead = (leadId: string) => {
+    setLeadToDeleteId(leadId);
+    setIsDeleteConfirmOpen(true);
   };
 
-  const handleBulkDelete = async () => {
-    if (!confirm(`Delete ${selectedRows.length} selected leads permanently?`)) return;
-
-    let successCount = 0;
-    for (const leadId of selectedRows) {
-      try {
-        const res = await fetch(`/api/protected/crm/leads/${leadId}`, { method: 'DELETE' });
-        const d = await res.json();
-        if (d.success) successCount++;
-      } catch (e) {}
-    }
-
-    setLeads(leads.filter((l) => !selectedRows.includes(l._id)));
-    setSelectedRows([]);
-    toast.success(`Successfully deleted ${successCount} leads!`);
+  const handleBulkDelete = () => {
+    setIsBulkDeleteConfirmOpen(true);
   };
 
   const handleBulkReassign = async (stageId: string) => {
@@ -2023,6 +2004,64 @@ export default function CRMPage() {
           </>
         )}
       </AnimatePresence>
+
+      {/* Single Lead Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => setIsDeleteConfirmOpen(false)}
+        onConfirm={async () => {
+          if (leadToDeleteId) {
+            try {
+              const res = await fetch(`/api/protected/crm/leads/${leadToDeleteId}`, {
+                method: 'DELETE',
+              });
+              const d = await res.json();
+              if (d.success) {
+                setLeads(leads.filter((l) => l._id !== leadToDeleteId));
+                if (selectedLead?._id === leadToDeleteId) setDrawerOpen(false);
+                toast.success('Lead permanently deleted successfully.');
+              } else {
+                toast.error(d.message || 'Unauthorized delete request.');
+              }
+            } catch (e) {
+              toast.error('Error deleting lead record.');
+            } finally {
+              setIsDeleteConfirmOpen(false);
+            }
+          }
+        }}
+        title="Delete CRM Lead"
+        message="Are you absolutely sure you want to permanently delete this corporate lead profile? This action cannot be undone."
+        confirmLabel="Delete Lead"
+        cancelLabel="Cancel"
+        type="danger"
+      />
+
+      {/* Bulk Leads Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isBulkDeleteConfirmOpen}
+        onClose={() => setIsBulkDeleteConfirmOpen(false)}
+        onConfirm={async () => {
+          let successCount = 0;
+          for (const leadId of selectedRows) {
+            try {
+              const res = await fetch(`/api/protected/crm/leads/${leadId}`, { method: 'DELETE' });
+              const d = await res.json();
+              if (d.success) successCount++;
+            } catch (e) {}
+          }
+
+          setLeads(leads.filter((l) => !selectedRows.includes(l._id)));
+          setSelectedRows([]);
+          setIsBulkDeleteConfirmOpen(false);
+          toast.success(`Successfully deleted ${successCount} leads!`);
+        }}
+        title="Delete Selected Leads"
+        message={`Are you sure you want to permanently delete all ${selectedRows.length} selected lead records from the acquisition pipeline?`}
+        confirmLabel="Delete All Selected"
+        cancelLabel="Cancel"
+        type="danger"
+      />
     </div>
   );
 }

@@ -2,7 +2,15 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { PageHeader, Card, CardContent, Button, Input, LoadingSpinner } from '@/components/ui';
+import {
+  PageHeader,
+  Card,
+  CardContent,
+  Button,
+  Input,
+  LoadingSpinner,
+  ConfirmationModal,
+} from '@/components/ui';
 import {
   DollarSign,
   Search,
@@ -51,6 +59,11 @@ export default function FinanceInvoicesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState('');
+
+  // Delete confirm modal states
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [invoiceToDeleteId, setInvoiceToDeleteId] = useState<string | null>(null);
+  const [isBulkDeleteConfirmOpen, setIsBulkDeleteConfirmOpen] = useState(false);
 
   const fetchInvoices = async () => {
     setIsLoading(true);
@@ -146,16 +159,12 @@ export default function FinanceInvoicesPage() {
   };
 
   const handleDeleteInvoice = (id: string) => {
-    if (!confirm('Are you sure you want to permanently delete this invoice record?')) return;
-    setInvoices(invoices.filter((i) => i._id !== id));
-    toast.success('Invoice record permanently deleted.');
+    setInvoiceToDeleteId(id);
+    setIsDeleteConfirmOpen(true);
   };
 
   const handleBulkDelete = () => {
-    if (!confirm(`Delete ${selectedRows.length} selected invoices permanently?`)) return;
-    setInvoices(invoices.filter((i) => !selectedRows.includes(i._id)));
-    setSelectedRows([]);
-    toast.success('Selected invoice records deleted.');
+    setIsBulkDeleteConfirmOpen(true);
   };
 
   const handleExportCSV = () => {
@@ -473,6 +482,41 @@ export default function FinanceInvoicesPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Single Invoice Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => setIsDeleteConfirmOpen(false)}
+        onConfirm={() => {
+          if (invoiceToDeleteId) {
+            setInvoices(invoices.filter((i) => i._id !== invoiceToDeleteId));
+            toast.success('Invoice record permanently deleted.');
+          }
+          setIsDeleteConfirmOpen(false);
+        }}
+        title="Delete Invoice Record"
+        message="Are you absolutely sure you want to permanently delete this invoice record? This will remove its accounts receivable trace."
+        confirmLabel="Delete Invoice"
+        cancelLabel="Cancel"
+        type="danger"
+      />
+
+      {/* Bulk Invoices Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isBulkDeleteConfirmOpen}
+        onClose={() => setIsBulkDeleteConfirmOpen(false)}
+        onConfirm={() => {
+          setInvoices(invoices.filter((i) => !selectedRows.includes(i._id)));
+          setSelectedRows([]);
+          setIsBulkDeleteConfirmOpen(false);
+          toast.success('Selected invoice records deleted.');
+        }}
+        title="Delete Selected Invoices"
+        message={`Are you sure you want to permanently delete all ${selectedRows.length} selected invoices?`}
+        confirmLabel="Delete Selected"
+        cancelLabel="Cancel"
+        type="danger"
+      />
     </div>
   );
 }

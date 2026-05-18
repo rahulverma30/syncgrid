@@ -2,7 +2,15 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { PageHeader, Card, CardContent, Button, Input, LoadingSpinner } from '@/components/ui';
+import {
+  PageHeader,
+  Card,
+  CardContent,
+  Button,
+  Input,
+  LoadingSpinner,
+  ConfirmationModal,
+} from '@/components/ui';
 import {
   DollarSign,
   Search,
@@ -40,6 +48,11 @@ export default function FinanceExpensesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
+
+  // Delete confirm modal states
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [expenseToDeleteId, setExpenseToDeleteId] = useState<string | null>(null);
+  const [isBulkDeleteConfirmOpen, setIsBulkDeleteConfirmOpen] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
@@ -112,16 +125,12 @@ export default function FinanceExpensesPage() {
   };
 
   const handleDeleteExpense = (id: string) => {
-    if (!confirm('Are you sure you want to permanently delete this expense item?')) return;
-    setExpenses(expenses.filter((e) => e._id !== id));
-    toast.success('Expense item permanently deleted.');
+    setExpenseToDeleteId(id);
+    setIsDeleteConfirmOpen(true);
   };
 
   const handleBulkDelete = () => {
-    if (!confirm(`Delete ${selectedRows.length} selected expenses permanently?`)) return;
-    setExpenses(expenses.filter((e) => !selectedRows.includes(e._id)));
-    setSelectedRows([]);
-    toast.success('Successfully deleted selected expenses.');
+    setIsBulkDeleteConfirmOpen(true);
   };
 
   const handleApproveExpense = (id: string) => {
@@ -468,6 +477,41 @@ export default function FinanceExpensesPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Single Expense Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => setIsDeleteConfirmOpen(false)}
+        onConfirm={() => {
+          if (expenseToDeleteId) {
+            setExpenses(expenses.filter((e) => e._id !== expenseToDeleteId));
+            toast.success('Expense item permanently deleted.');
+          }
+          setIsDeleteConfirmOpen(false);
+        }}
+        title="Delete Expense Record"
+        message="Are you absolutely sure you want to permanently delete this corporate expense item record? This will adjust the ledger burn metrics."
+        confirmLabel="Delete Expense"
+        cancelLabel="Cancel"
+        type="danger"
+      />
+
+      {/* Bulk Expenses Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isBulkDeleteConfirmOpen}
+        onClose={() => setIsBulkDeleteConfirmOpen(false)}
+        onConfirm={() => {
+          setExpenses(expenses.filter((e) => !selectedRows.includes(e._id)));
+          setSelectedRows([]);
+          setIsBulkDeleteConfirmOpen(false);
+          toast.success('Successfully deleted selected expenses.');
+        }}
+        title="Delete Selected Expenses"
+        message={`Are you sure you want to permanently delete all ${selectedRows.length} selected expense records?`}
+        confirmLabel="Delete Selected"
+        cancelLabel="Cancel"
+        type="danger"
+      />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useRef } from 'react';
-import { Button } from '@/components/ui';
+import { Button, CenteredModal, ConfirmationModal } from '@/components/ui';
 import {
   ArrowUpDown,
   ChevronLeft,
@@ -72,6 +72,19 @@ export const ProjectTable: React.FC = () => {
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [visibilityMenuOpen, setVisibilityMenuOpen] = useState(false);
   const [rowMenuOpenId, setRowMenuOpenId] = useState<string | null>(null);
+
+  // Custom modal states
+  const [isPresetModalOpen, setIsPresetModalOpen] = useState(false);
+  const [presetName, setPresetName] = useState('');
+
+  const [isBulkArchiveConfirmOpen, setIsBulkArchiveConfirmOpen] = useState(false);
+
+  const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
+  const [duplicateName, setDuplicateName] = useState('');
+  const [projectToDuplicate, setProjectToDuplicate] = useState<ProjectAccount | null>(null);
+
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [projectToDelete, setProjectToDelete] = useState<ProjectAccount | null>(null);
 
   // ── Sorting ───────────────────────────────────────────────────────────────
   const sortedProjects = useMemo(() => {
@@ -322,8 +335,8 @@ export const ProjectTable: React.FC = () => {
         <button
           type="button"
           onClick={() => {
-            const name = prompt('Enter a name for this project view preset:');
-            if (name && name.trim()) saveFilterPreset(name.trim());
+            setPresetName('');
+            setIsPresetModalOpen(true);
           }}
           className="text-[10px] font-extrabold uppercase text-primary hover:underline transition-colors tracking-wider flex items-center gap-1 cursor-pointer"
         >
@@ -437,11 +450,8 @@ export const ProjectTable: React.FC = () => {
 
               {/* Archive bulk update */}
               <Button
-                onClick={async () => {
-                  if (confirm(`Archive ${selectedRows.length} selected projects?`)) {
-                    await executeBulkAction('archive', true, selectedRows);
-                    setSelectedRows([]);
-                  }
+                onClick={() => {
+                  setIsBulkArchiveConfirmOpen(true);
                 }}
                 variant="ghost"
                 size="sm"
@@ -633,20 +643,10 @@ export const ProjectTable: React.FC = () => {
                               )}
                             </button>
                             <button
-                              onClick={async () => {
-                                const newName = prompt(
-                                  'Enter a name for the duplicated project:',
-                                  `${project.name} (Copy)`
-                                );
-                                if (newName && newName.trim()) {
-                                  await duplicateProject(project._id, newName.trim(), {
-                                    duplicateMilestones: true,
-                                    duplicateSprints: true,
-                                    duplicateTeam: true,
-                                    duplicateDocuments: true,
-                                    duplicateRisks: true,
-                                  });
-                                }
+                              onClick={() => {
+                                setProjectToDuplicate(project);
+                                setDuplicateName(`${project.name} (Copy)`);
+                                setIsDuplicateModalOpen(true);
                                 setRowMenuOpenId(null);
                               }}
                               className="w-full flex items-center gap-2 px-2 py-1.5 text-[10px] font-semibold text-foreground hover:bg-accent/30 rounded cursor-pointer"
@@ -655,7 +655,8 @@ export const ProjectTable: React.FC = () => {
                             </button>
                             <button
                               onClick={() => {
-                                deleteProject(project._id);
+                                setProjectToDelete(project);
+                                setIsDeleteConfirmOpen(true);
                                 setRowMenuOpenId(null);
                               }}
                               className="w-full flex items-center gap-2 px-2 py-1.5 text-[10px] font-semibold text-rose-500 hover:bg-rose-500/10 rounded cursor-pointer"
@@ -778,6 +779,124 @@ export const ProjectTable: React.FC = () => {
           </Button>
         </div>
       </div>
+
+      {/* Save View Preset Modal */}
+      <CenteredModal
+        isOpen={isPresetModalOpen}
+        onClose={() => setIsPresetModalOpen(false)}
+        title="Save View Preset"
+      >
+        <div className="space-y-4 pt-2">
+          <div className="space-y-2 text-left">
+            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              Preset View Name
+            </label>
+            <input
+              value={presetName}
+              onChange={(e) => setPresetName(e.target.value)}
+              className="flex h-10 w-full rounded-md border border-input bg-background/30 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              placeholder="e.g., Active Frontend Sprint"
+              autoFocus
+            />
+          </div>
+          <div className="flex justify-end gap-2 border-t border-border/40 pt-4">
+            <Button variant="outline" size="sm" onClick={() => setIsPresetModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => {
+                if (presetName.trim()) {
+                  saveFilterPreset(presetName.trim());
+                  setIsPresetModalOpen(false);
+                }
+              }}
+              disabled={!presetName.trim()}
+            >
+              Save Preset
+            </Button>
+          </div>
+        </div>
+      </CenteredModal>
+
+      {/* Duplicate Project Modal */}
+      <CenteredModal
+        isOpen={isDuplicateModalOpen}
+        onClose={() => setIsDuplicateModalOpen(false)}
+        title="Duplicate Project"
+      >
+        <div className="space-y-4 pt-2">
+          <div className="space-y-2 text-left">
+            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              New Project Name
+            </label>
+            <input
+              value={duplicateName}
+              onChange={(e) => setDuplicateName(e.target.value)}
+              className="flex h-10 w-full rounded-md border border-input bg-background/30 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              autoFocus
+            />
+          </div>
+          <div className="flex justify-end gap-2 border-t border-border/40 pt-4">
+            <Button variant="outline" size="sm" onClick={() => setIsDuplicateModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={async () => {
+                if (projectToDuplicate && duplicateName.trim()) {
+                  await duplicateProject(projectToDuplicate._id, duplicateName.trim(), {
+                    duplicateMilestones: true,
+                    duplicateSprints: true,
+                    duplicateTeam: true,
+                    duplicateDocuments: true,
+                    duplicateRisks: true,
+                  });
+                  setIsDuplicateModalOpen(false);
+                }
+              }}
+              disabled={!duplicateName.trim()}
+            >
+              Duplicate
+            </Button>
+          </div>
+        </div>
+      </CenteredModal>
+
+      {/* Bulk Archive Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isBulkArchiveConfirmOpen}
+        onClose={() => setIsBulkArchiveConfirmOpen(false)}
+        onConfirm={async () => {
+          await executeBulkAction('archive', true, selectedRows);
+          setSelectedRows([]);
+          setIsBulkArchiveConfirmOpen(false);
+        }}
+        title="Archive Selected Projects"
+        message={`Are you absolutely sure you want to archive the ${selectedRows.length} selected projects?`}
+        confirmLabel="Archive"
+        cancelLabel="Cancel"
+        type="warning"
+      />
+
+      {/* Single Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => setIsDeleteConfirmOpen(false)}
+        onConfirm={async () => {
+          if (projectToDelete) {
+            await deleteProject(projectToDelete._id);
+            setIsDeleteConfirmOpen(false);
+          }
+        }}
+        title="Permanently Delete Project"
+        message={`Are you absolutely sure you want to delete "${projectToDelete?.name || ''}"? This action is tracked and cannot be undone.`}
+        confirmLabel="Delete Project"
+        cancelLabel="Cancel"
+        type="danger"
+      />
     </motion.div>
   );
 };

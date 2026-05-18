@@ -5,12 +5,18 @@ import { useKnowledgeStore } from '@/store';
 import { History, RefreshCcw, User, CheckCircle } from 'lucide-react';
 import { formatDistanceToNow } from '@/lib/date';
 import { toast } from 'sonner';
+import { ConfirmationModal } from '@/components/ui';
 
 export function HistoryVersionList() {
   const { activeDocument, triggerRollback } = useKnowledgeStore();
   const [versions, setVersions] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [rollingBackIdx, setRollingBackIdx] = useState<number | null>(null);
+
+  // Rollback Modal States
+  const [isRollbackConfirmOpen, setIsRollbackConfirmOpen] = useState(false);
+  const [selectedRollbackVersion, setSelectedRollbackVersion] = useState<number | null>(null);
+  const [selectedRollbackIdx, setSelectedRollbackIdx] = useState<number | null>(null);
 
   const fetchVersions = async () => {
     if (!activeDocument) return;
@@ -29,25 +35,17 @@ export function HistoryVersionList() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchVersions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeDocument?._id, activeDocument?.versionsCount]);
 
   if (!activeDocument) return null;
 
-  const handleRollback = async (versionNumber: number, idx: number) => {
-    if (
-      !confirm(
-        `Are you absolutely sure you want to rollback "${activeDocument.title}" to version ${versionNumber}? All current unsaved edits will be replaced.`
-      )
-    )
-      return;
-
-    setRollingBackIdx(idx);
-    const success = await triggerRollback(activeDocument._id, versionNumber);
-    setRollingBackIdx(null);
-    if (success) {
-      fetchVersions();
-    }
+  const handleRollback = (versionNumber: number, idx: number) => {
+    setSelectedRollbackVersion(versionNumber);
+    setSelectedRollbackIdx(idx);
+    setIsRollbackConfirmOpen(true);
   };
 
   return (
@@ -67,7 +65,9 @@ export function HistoryVersionList() {
             <span>Retrieving version logs...</span>
           </div>
         ) : versions.length === 0 ? (
-          <div className="text-center py-12 text-slate-500 italic text-xs">No revision history logs recorded.</div>
+          <div className="text-center py-12 text-slate-500 italic text-xs">
+            No revision history logs recorded.
+          </div>
         ) : (
           versions.map((ver: any, idx: number) => {
             const isLatest = idx === 0;
@@ -89,11 +89,15 @@ export function HistoryVersionList() {
                   </span>
                 </div>
 
-                <div className="text-xs text-slate-400 font-semibold italic mt-1 font-mono">"{ver.changeSummary}"</div>
+                <div className="text-xs text-slate-400 font-semibold italic mt-1 font-mono">
+                  &quot;{ver.changeSummary}&quot;
+                </div>
 
                 <div className="flex items-center justify-between border-t border-border/10 pt-2 mt-2">
                   <span className="text-[9px] text-slate-500 font-mono">
-                    {ver.createdAt ? formatDistanceToNow(new Date(ver.createdAt)) + ' ago' : 'checkpoint'}
+                    {ver.createdAt
+                      ? formatDistanceToNow(new Date(ver.createdAt)) + ' ago'
+                      : 'checkpoint'}
                   </span>
 
                   {isLatest ? (
@@ -120,6 +124,28 @@ export function HistoryVersionList() {
           })
         )}
       </div>
+
+      {/* Rollback Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isRollbackConfirmOpen}
+        onClose={() => setIsRollbackConfirmOpen(false)}
+        onConfirm={async () => {
+          if (selectedRollbackVersion !== null && selectedRollbackIdx !== null) {
+            setRollingBackIdx(selectedRollbackIdx);
+            const success = await triggerRollback(activeDocument._id, selectedRollbackVersion);
+            setRollingBackIdx(null);
+            if (success) {
+              fetchVersions();
+            }
+            setIsRollbackConfirmOpen(false);
+          }
+        }}
+        title="Rollback Document Version"
+        message={`Are you absolutely sure you want to rollback "${activeDocument.title}" to version ${selectedRollbackVersion}? All current unsaved edits will be replaced.`}
+        confirmLabel="Rollback Version"
+        cancelLabel="Cancel"
+        type="warning"
+      />
     </div>
   );
 }

@@ -22,6 +22,7 @@ import { useSession } from 'next-auth/react';
 import { cn } from '@/lib/cn';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
+import { ConfirmationModal } from '@/components/ui';
 
 interface ChatAreaProps {
   allUsers: any[];
@@ -54,6 +55,10 @@ export function ChatArea({ allUsers }: ChatAreaProps) {
   const [loadingOlder, setLoadingOlder] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [announcementMsg, setAnnouncementMsg] = useState('');
+
+  // Delete message confirmation modal states
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [messageToDeleteId, setMessageToDeleteId] = useState<string | null>(null);
 
   // Custom Native Row Virtualization State
   const [scrollTop, setScrollTop] = useState(0);
@@ -187,25 +192,9 @@ export function ChatArea({ allUsers }: ChatAreaProps) {
     }
   };
 
-  const handleDelete = async (msgId: string) => {
-    if (!confirm('Are you sure you want to delete this message? This action is tracked.')) return;
-
-    try {
-      updateMessage(msgId, {
-        content: 'This message has been deleted.',
-        deletedAt: new Date().toISOString(),
-      });
-
-      const res = await fetch(`/api/protected/collaboration/messages/${msgId}`, {
-        method: 'DELETE',
-      });
-      const data = await res.json();
-      if (data.success) {
-        toast.success('Message deleted successfully.');
-      }
-    } catch (err) {
-      console.error('Failed to delete message:', err);
-    }
+  const handleDelete = (msgId: string) => {
+    setMessageToDeleteId(msgId);
+    setIsDeleteConfirmOpen(true);
   };
 
   const handleToggleReaction = async (msgId: string, emoji: string) => {
@@ -514,6 +503,42 @@ export function ChatArea({ allUsers }: ChatAreaProps) {
           </span>
         </div>
       )}
+
+      {/* Delete Message Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => setIsDeleteConfirmOpen(false)}
+        onConfirm={async () => {
+          if (messageToDeleteId) {
+            try {
+              updateMessage(messageToDeleteId, {
+                content: 'This message has been deleted.',
+                deletedAt: new Date().toISOString(),
+              });
+
+              const res = await fetch(
+                `/api/protected/collaboration/messages/${messageToDeleteId}`,
+                {
+                  method: 'DELETE',
+                }
+              );
+              const data = await res.json();
+              if (data.success) {
+                toast.success('Message deleted successfully.');
+              }
+            } catch (err) {
+              console.error('Failed to delete message:', err);
+            } finally {
+              setIsDeleteConfirmOpen(false);
+            }
+          }
+        }}
+        title="Delete Message"
+        message="Are you absolutely sure you want to delete this message? This action is tracked and cannot be undone."
+        confirmLabel="Delete Message"
+        cancelLabel="Cancel"
+        type="danger"
+      />
     </div>
   );
 }

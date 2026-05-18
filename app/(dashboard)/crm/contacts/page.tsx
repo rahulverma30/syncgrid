@@ -2,7 +2,15 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { PageHeader, Card, CardContent, Button, Input, LoadingSpinner } from '@/components/ui';
+import {
+  PageHeader,
+  Card,
+  CardContent,
+  Button,
+  Input,
+  LoadingSpinner,
+  ConfirmationModal,
+} from '@/components/ui';
 import {
   Users,
   Search,
@@ -43,6 +51,11 @@ export default function CRMContactsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
+
+  // Delete confirm modal states
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [contactToDeleteId, setContactToDeleteId] = useState<string | null>(null);
+  const [isBulkDeleteConfirmOpen, setIsBulkDeleteConfirmOpen] = useState(false);
   const [roleFilter, setRoleFilter] = useState('');
   const [primaryFilter, setPrimaryFilter] = useState('');
 
@@ -156,17 +169,13 @@ export default function CRMContactsPage() {
     }
   };
 
-  const handleDeleteContact = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this contact?')) return;
-    setContacts(contacts.filter((c) => c._id !== id));
-    toast.success('Contact deleted successfully.');
+  const handleDeleteContact = (id: string) => {
+    setContactToDeleteId(id);
+    setIsDeleteConfirmOpen(true);
   };
 
   const handleBulkDelete = () => {
-    if (!confirm(`Delete ${selectedRows.length} selected contacts permanently?`)) return;
-    setContacts(contacts.filter((c) => !selectedRows.includes(c._id)));
-    setSelectedRows([]);
-    toast.success('Successfully deleted selected contacts.');
+    setIsBulkDeleteConfirmOpen(true);
   };
 
   const handleExportCSV = () => {
@@ -505,6 +514,41 @@ export default function CRMContactsPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Single Contact Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => setIsDeleteConfirmOpen(false)}
+        onConfirm={() => {
+          if (contactToDeleteId) {
+            setContacts(contacts.filter((c) => c._id !== contactToDeleteId));
+            toast.success('Contact deleted successfully.');
+          }
+          setIsDeleteConfirmOpen(false);
+        }}
+        title="Delete Contact Stakeholder"
+        message="Are you absolutely sure you want to permanently delete this corporate contact record? This will clear communication preferences and profile details."
+        confirmLabel="Delete Contact"
+        cancelLabel="Cancel"
+        type="danger"
+      />
+
+      {/* Bulk Contacts Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isBulkDeleteConfirmOpen}
+        onClose={() => setIsBulkDeleteConfirmOpen(false)}
+        onConfirm={() => {
+          setContacts(contacts.filter((c) => !selectedRows.includes(c._id)));
+          setSelectedRows([]);
+          setIsBulkDeleteConfirmOpen(false);
+          toast.success('Successfully deleted selected contacts.');
+        }}
+        title="Delete Selected Contacts"
+        message={`Are you sure you want to permanently delete all ${selectedRows.length} selected contacts?`}
+        confirmLabel="Delete Selected"
+        cancelLabel="Cancel"
+        type="danger"
+      />
     </div>
   );
 }

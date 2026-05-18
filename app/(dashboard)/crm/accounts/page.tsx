@@ -2,7 +2,15 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { PageHeader, Card, CardContent, Button, Input, LoadingSpinner } from '@/components/ui';
+import {
+  PageHeader,
+  Card,
+  CardContent,
+  Button,
+  Input,
+  LoadingSpinner,
+  ConfirmationModal,
+} from '@/components/ui';
 import {
   Building2,
   Search,
@@ -42,6 +50,11 @@ export default function CRMAccountsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
+
+  // Delete confirm modal states
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [accountToDeleteId, setAccountToDeleteId] = useState<string | null>(null);
+  const [isBulkDeleteConfirmOpen, setIsBulkDeleteConfirmOpen] = useState(false);
   const [industryFilter, setIndustryFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
@@ -80,35 +93,13 @@ export default function CRMAccountsPage() {
     }
   };
 
-  const handleDeleteAccount = async (id: string) => {
-    if (!confirm('Are you sure you want to permanently delete this corporate account?')) return;
-    try {
-      const res = await fetch(`/api/protected/clients/${id}`, { method: 'DELETE' });
-      const d = await res.json();
-      if (d.success) {
-        setAccounts(accounts.filter((a) => a._id !== id));
-        toast.success('Account permanently deleted.');
-      } else {
-        toast.error('Unauthorized deletion attempt.');
-      }
-    } catch (e) {
-      toast.error('Error deleting account record.');
-    }
+  const handleDeleteAccount = (id: string) => {
+    setAccountToDeleteId(id);
+    setIsDeleteConfirmOpen(true);
   };
 
-  const handleBulkDelete = async () => {
-    if (!confirm(`Delete ${selectedRows.length} selected accounts permanently?`)) return;
-    let deletedCount = 0;
-    for (const id of selectedRows) {
-      try {
-        const res = await fetch(`/api/protected/clients/${id}`, { method: 'DELETE' });
-        const d = await res.json();
-        if (d.success) deletedCount++;
-      } catch (e) {}
-    }
-    setAccounts(accounts.filter((a) => !selectedRows.includes(a._id)));
-    setSelectedRows([]);
-    toast.success(`Successfully deleted ${deletedCount} accounts.`);
+  const handleBulkDelete = () => {
+    setIsBulkDeleteConfirmOpen(true);
   };
 
   const handleExportCSV = () => {
@@ -483,6 +474,62 @@ export default function CRMAccountsPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Single Account Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => setIsDeleteConfirmOpen(false)}
+        onConfirm={async () => {
+          if (accountToDeleteId) {
+            try {
+              const res = await fetch(`/api/protected/clients/${accountToDeleteId}`, {
+                method: 'DELETE',
+              });
+              const d = await res.json();
+              if (d.success) {
+                setAccounts(accounts.filter((a) => a._id !== accountToDeleteId));
+                toast.success('Account permanently deleted.');
+              } else {
+                toast.error('Unauthorized deletion attempt.');
+              }
+            } catch (e) {
+              toast.error('Error deleting account record.');
+            } finally {
+              setIsDeleteConfirmOpen(false);
+            }
+          }
+        }}
+        title="Delete Corporate Account"
+        message="Are you absolutely sure you want to permanently delete this corporate client account? This will clear organization segments, manager assignments, and annual revenue metrics."
+        confirmLabel="Delete Account"
+        cancelLabel="Cancel"
+        type="danger"
+      />
+
+      {/* Bulk Accounts Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isBulkDeleteConfirmOpen}
+        onClose={() => setIsBulkDeleteConfirmOpen(false)}
+        onConfirm={async () => {
+          let deletedCount = 0;
+          for (const id of selectedRows) {
+            try {
+              const res = await fetch(`/api/protected/clients/${id}`, { method: 'DELETE' });
+              const d = await res.json();
+              if (d.success) deletedCount++;
+            } catch (e) {}
+          }
+          setAccounts(accounts.filter((a) => !selectedRows.includes(a._id)));
+          setSelectedRows([]);
+          setIsBulkDeleteConfirmOpen(false);
+          toast.success(`Successfully deleted ${deletedCount} accounts.`);
+        }}
+        title="Delete Selected Accounts"
+        message={`Are you sure you want to permanently delete all ${selectedRows.length} selected corporate accounts?`}
+        confirmLabel="Delete Selected"
+        cancelLabel="Cancel"
+        type="danger"
+      />
     </div>
   );
 }

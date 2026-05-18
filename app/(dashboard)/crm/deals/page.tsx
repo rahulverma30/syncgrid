@@ -2,7 +2,15 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { PageHeader, Card, CardContent, Button, Input, LoadingSpinner } from '@/components/ui';
+import {
+  PageHeader,
+  Card,
+  CardContent,
+  Button,
+  Input,
+  LoadingSpinner,
+  ConfirmationModal,
+} from '@/components/ui';
 import {
   TrendingUp,
   Search,
@@ -42,6 +50,11 @@ export default function CRMDealsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
+
+  // Delete confirm modal states
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [leadToDeleteId, setLeadToDeleteId] = useState<string | null>(null);
+  const [isBulkDeleteConfirmOpen, setIsBulkDeleteConfirmOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('');
 
@@ -80,35 +93,13 @@ export default function CRMDealsPage() {
     }
   };
 
-  const handleDeleteLead = async (id: string) => {
-    if (!confirm('Are you sure you want to permanently delete this sales opportunity?')) return;
-    try {
-      const res = await fetch(`/api/protected/crm/leads/${id}`, { method: 'DELETE' });
-      const d = await res.json();
-      if (d.success) {
-        setLeads(leads.filter((l) => l._id !== id));
-        toast.success('Sales opportunity deleted.');
-      } else {
-        toast.error('Unauthorized deletion attempt.');
-      }
-    } catch (e) {
-      toast.error('Error deleting record.');
-    }
+  const handleDeleteLead = (id: string) => {
+    setLeadToDeleteId(id);
+    setIsDeleteConfirmOpen(true);
   };
 
-  const handleBulkDelete = async () => {
-    if (!confirm(`Delete ${selectedRows.length} selected deals permanently?`)) return;
-    let deletedCount = 0;
-    for (const id of selectedRows) {
-      try {
-        const res = await fetch(`/api/protected/crm/leads/${id}`, { method: 'DELETE' });
-        const d = await res.json();
-        if (d.success) deletedCount++;
-      } catch (e) {}
-    }
-    setLeads(leads.filter((l) => !selectedRows.includes(l._id)));
-    setSelectedRows([]);
-    toast.success(`Successfully deleted ${deletedCount} opportunities.`);
+  const handleBulkDelete = () => {
+    setIsBulkDeleteConfirmOpen(true);
   };
 
   const handleExportCSV = () => {
@@ -475,6 +466,62 @@ export default function CRMDealsPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Single Deal Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => setIsDeleteConfirmOpen(false)}
+        onConfirm={async () => {
+          if (leadToDeleteId) {
+            try {
+              const res = await fetch(`/api/protected/crm/leads/${leadToDeleteId}`, {
+                method: 'DELETE',
+              });
+              const d = await res.json();
+              if (d.success) {
+                setLeads(leads.filter((l) => l._id !== leadToDeleteId));
+                toast.success('Sales opportunity deleted.');
+              } else {
+                toast.error('Unauthorized deletion attempt.');
+              }
+            } catch (e) {
+              toast.error('Error deleting record.');
+            } finally {
+              setIsDeleteConfirmOpen(false);
+            }
+          }
+        }}
+        title="Delete Opportunity Deal"
+        message="Are you absolutely sure you want to permanently delete this corporate sales opportunity deal? This action is irreversible."
+        confirmLabel="Delete Deal"
+        cancelLabel="Cancel"
+        type="danger"
+      />
+
+      {/* Bulk Deals Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isBulkDeleteConfirmOpen}
+        onClose={() => setIsBulkDeleteConfirmOpen(false)}
+        onConfirm={async () => {
+          let deletedCount = 0;
+          for (const id of selectedRows) {
+            try {
+              const res = await fetch(`/api/protected/crm/leads/${id}`, { method: 'DELETE' });
+              const d = await res.json();
+              if (d.success) deletedCount++;
+            } catch (e) {}
+          }
+          setLeads(leads.filter((l) => !selectedRows.includes(l._id)));
+          setSelectedRows([]);
+          setIsBulkDeleteConfirmOpen(false);
+          toast.success(`Successfully deleted ${deletedCount} opportunities.`);
+        }}
+        title="Delete Selected Opportunities"
+        message={`Are you sure you want to permanently delete all ${selectedRows.length} selected opportunity deals?`}
+        confirmLabel="Delete Selected"
+        cancelLabel="Cancel"
+        type="danger"
+      />
     </div>
   );
 }

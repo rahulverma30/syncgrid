@@ -2,7 +2,15 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { PageHeader, Card, CardContent, Button, Input, LoadingSpinner } from '@/components/ui';
+import {
+  PageHeader,
+  Card,
+  CardContent,
+  Button,
+  Input,
+  LoadingSpinner,
+  ConfirmationModal,
+} from '@/components/ui';
 import {
   Shield,
   Search,
@@ -35,6 +43,11 @@ export default function SettingsRolesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
+
+  // Delete confirm modal states
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [roleToDeleteId, setRoleToDeleteId] = useState<string | null>(null);
+  const [isBulkDeleteConfirmOpen, setIsBulkDeleteConfirmOpen] = useState(false);
 
   const fetchRoles = async () => {
     setIsLoading(true);
@@ -100,16 +113,12 @@ export default function SettingsRolesPage() {
   };
 
   const handleDeleteRole = (id: string) => {
-    if (!confirm('Are you sure you want to permanently delete this RBAC security role?')) return;
-    setRoles(roles.filter((r) => r._id !== id));
-    toast.success('Role permanently deleted.');
+    setRoleToDeleteId(id);
+    setIsDeleteConfirmOpen(true);
   };
 
   const handleBulkDelete = () => {
-    if (!confirm(`Delete ${selectedRows.length} selected roles permanently?`)) return;
-    setRoles(roles.filter((r) => !selectedRows.includes(r._id)));
-    setSelectedRows([]);
-    toast.success('Selected roles deleted.');
+    setIsBulkDeleteConfirmOpen(true);
   };
 
   const filteredRoles = roles.filter((r) => {
@@ -327,6 +336,41 @@ export default function SettingsRolesPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Single Role Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => setIsDeleteConfirmOpen(false)}
+        onConfirm={() => {
+          if (roleToDeleteId) {
+            setRoles(roles.filter((r) => r._id !== roleToDeleteId));
+            toast.success('Role permanently deleted.');
+          }
+          setIsDeleteConfirmOpen(false);
+        }}
+        title="Delete Role"
+        message="Are you absolutely sure you want to permanently delete this RBAC security role? Users with this role assigned may lose key access levels."
+        confirmLabel="Delete Role"
+        cancelLabel="Cancel"
+        type="danger"
+      />
+
+      {/* Bulk Roles Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isBulkDeleteConfirmOpen}
+        onClose={() => setIsBulkDeleteConfirmOpen(false)}
+        onConfirm={() => {
+          setRoles(roles.filter((r) => !selectedRows.includes(r._id)));
+          setSelectedRows([]);
+          setIsBulkDeleteConfirmOpen(false);
+          toast.success('Selected roles deleted.');
+        }}
+        title="Delete Selected Roles"
+        message={`Are you sure you want to permanently delete all ${selectedRows.length} selected security roles?`}
+        confirmLabel="Delete Selected"
+        cancelLabel="Cancel"
+        type="danger"
+      />
     </div>
   );
 }

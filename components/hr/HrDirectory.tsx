@@ -6,6 +6,8 @@ import { Button, Badge, Input, Modal } from '@/components/ui';
 import { Users, Search, Plus, Mail, Phone, ChevronRight } from 'lucide-react';
 import { EmployeeDetailModal } from './EmployeeDetailModal';
 
+import { toast } from 'sonner';
+
 export function HrDirectory() {
   const { employees, departmentsList, createEmployee, loading } = useHRStore();
 
@@ -50,7 +52,7 @@ export function HrDirectory() {
   const handleAddEmployee = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.fullName || !form.email) {
-      alert('Full Name and Email are required!');
+      toast.error('Full Name and Email are required!');
       return;
     }
 
