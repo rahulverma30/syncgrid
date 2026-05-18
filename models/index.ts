@@ -43,3 +43,14 @@ export { PurchaseOrder } from './PurchaseOrder';
 export { ClientBillingProfile } from './ClientBillingProfile';
 export { FinancialActivity } from './FinancialActivity';
 
+// --- MODULE 11: ENTERPRISE ANALYTICS & REPORTING MODELS ---
+export { SavedReport } from './SavedReport';
+export { DashboardLayout } from './DashboardLayout';
+export { KPIConfiguration } from './KPIConfiguration';
+export { AnalyticsSnapshot } from './AnalyticsSnapshot';
+export { ReportExport } from './ReportExport';
+export { ForecastModel } from './ForecastModel';
+export { ReportSchedule } from './ReportSchedule';
+export { WidgetConfiguration } from './WidgetConfiguration';
+export { ExecutiveInsight } from './ExecutiveInsight';
+export { MetricThreshold } from './MetricThreshold';
