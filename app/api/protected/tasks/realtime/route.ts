@@ -9,12 +9,13 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
   const url = new URL(request.url);
   const projectId = url.searchParams.get('projectId');
   const taskId = url.searchParams.get('taskId');
+  const documentId = url.searchParams.get('documentId');
 
   let cleanup: () => void;
 
   const stream = new ReadableStream({
     start(controller) {
-      cleanup = registerClient(companyId, userId, projectId, taskId, controller);
+      cleanup = registerClient(companyId, userId, projectId, taskId, documentId, controller);
     },
     cancel() {
       if (cleanup) cleanup();

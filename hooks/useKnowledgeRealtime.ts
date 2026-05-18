@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useKnowledgeStore } from '@/store';
 import { toast } from 'sonner';
+import { useSession } from 'next-auth/react';
 
 /**
  * Resilient Collaborative Real-Time SSE Transport Listener
@@ -8,6 +9,9 @@ import { toast } from 'sonner';
  * and compliance milestones broadcasts.
  */
 export function useKnowledgeRealtime(companyId: string | undefined) {
+  const { data: session } = useSession();
+  const currentUserId = session?.user?.id;
+
   const {
     fetchSpaces,
     fetchDocuments,
@@ -16,6 +20,7 @@ export function useKnowledgeRealtime(companyId: string | undefined) {
     setActiveDocument,
     activeSpaceId,
     documents,
+    updateCollaboratorPresence,
   } = useKnowledgeStore();
 
   const eventSourceRef = useRef<EventSource | null>(null);
@@ -38,7 +43,10 @@ export function useKnowledgeRealtime(companyId: string | undefined) {
     const establishConnection = () => {
       cleanupEventSource();
 
-      const es = new EventSource('/api/protected/tasks/realtime');
+      const url =
+        '/api/protected/tasks/realtime' +
+        (activeDocument?._id ? `?documentId=${activeDocument._id}` : '');
+      const es = new EventSource(url);
       eventSourceRef.current = es;
 
       es.onmessage = (event) => {
@@ -48,7 +56,11 @@ export function useKnowledgeRealtime(companyId: string | undefined) {
 
           const { event: sseEvent, payload } = parsed;
 
-          if (sseEvent === 'document_created') {
+          if (sseEvent === 'cursor_presence_updated') {
+            if (activeDocument?._id === payload.documentId && payload.userId !== currentUserId) {
+              updateCollaboratorPresence(payload);
+            }
+          } else if (sseEvent === 'document_created') {
             if (activeSpaceId && payload.spaceId === activeSpaceId) {
               fetchDocuments(activeSpaceId);
             }
@@ -96,5 +108,6 @@ export function useKnowledgeRealtime(companyId: string | undefined) {
     return () => {
       cleanupEventSource();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [companyId, activeSpaceId, activeDocument?._id]);
 }

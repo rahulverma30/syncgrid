@@ -56,7 +56,10 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     });
     await activity.save();
 
-    logger.info(`[Document Progress POST] User ${userId} acknowledged reading document "${document.title}".`, { companyId });
+    logger.info(
+      `[Document Progress POST] User ${userId} acknowledged reading document "${document.title}".`,
+      { companyId }
+    );
 
     // Broadcast updated progress metrics
     broadcastEvent({
@@ -67,7 +70,9 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
 
     return NextResponse.json({ success: true, data: progress });
   } catch (error: any) {
-    logger.error('Failed to update reading progress:', error, { companyId: session?.user?.companyId });
+    logger.error('Failed to update reading progress:', error, {
+      companyId: session?.user?.companyId,
+    });
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }
 });

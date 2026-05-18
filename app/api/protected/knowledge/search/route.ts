@@ -1,13 +1,15 @@
 import { NextResponse } from 'next/server';
 import { withApiAuth } from '@/lib/auth/api';
 import { connectToDatabase } from '@/lib/db/mongodb';
-import { Document } from '@/models';
+import { Document, Employee } from '@/models';
+import { rankDocuments } from '@/lib/searchEngine';
 import { logger } from '@/lib/logger';
 
 export const GET = withApiAuth(async (request: Request, context: any, session: any) => {
   try {
     await connectToDatabase();
     const companyId = session.user.companyId;
+    const userId = session.user.id;
     const { searchParams } = new URL(request.url);
     const queryStr = searchParams.get('q') || '';
 
@@ -15,49 +17,34 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
       return NextResponse.json({ success: true, data: [] });
     }
 
-    // Connect and retrieve all company docs to perform O(1) in-memory ranking
+    // 1. Fetch user department to perform department-aware relevance boosting
+    let userDepartment = '';
+    try {
+      const employee = await Employee.findOne({ userId, companyId })
+        .populate('departmentId')
+        .lean();
+      if (employee && employee.departmentId) {
+        userDepartment = (employee.departmentId as any).name || '';
+      }
+    } catch (err: any) {
+      logger.warn('Failed to retrieve employee department for search ranking:', {
+        error: err.message,
+      });
+    }
+
+    // 2. Connect and retrieve all company docs to rank
     const documents = await Document.find({
       companyId,
       deletedAt: null,
       status: 'published',
       isTemplate: false,
     })
-      .populate('spaceId', 'name icon')
+      .populate('spaceId', 'name icon department')
+      .populate('categoryId', 'name department')
       .lean();
 
-    const queryLower = queryStr.toLowerCase();
-    const rankedResults = documents
-      .map((doc: any) => {
-        let score = 0;
-        const titleLower = (doc.title || '').toLowerCase();
-        const contentLower = (doc.content || '').toLowerCase();
-
-        // 1. Title Exact match / Containment weights
-        if (titleLower === queryLower) {
-          score += 100;
-        } else if (titleLower.includes(queryLower)) {
-          score += 50;
-        }
-
-        // 2. Content matches count weights
-        const contentMatches = (contentLower.match(new RegExp(escapeRegex(queryLower), 'g')) || []).length;
-        score += contentMatches * 10;
-
-        // 3. Tag checks
-        const tagMatches = (doc.tags || []).filter((tag: string) => tag.toLowerCase().includes(queryLower)).length;
-        score += tagMatches * 15;
-
-        // 4. Recency Multiplier Boost: multiply score by 1.5 if document created within last 7 days
-        const ageInMs = Date.now() - new Date(doc.createdAt).getTime();
-        const ageInDays = ageInMs / (1000 * 60 * 60 * 24);
-        if (ageInDays <= 7) {
-          score = score * 1.5;
-        }
-
-        return { ...doc, searchScore: score };
-      })
-      .filter((doc) => doc.searchScore > 0)
-      .sort((a, b) => b.searchScore - a.searchScore);
+    // 3. Rank documents with advanced scoring engine
+    const rankedResults = rankDocuments(documents, queryStr, userId, userDepartment);
 
     return NextResponse.json({ success: true, data: rankedResults });
   } catch (error: any) {
@@ -65,7 +52,3 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }
 });
-
-function escapeRegex(string: string) {
-  return string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-}

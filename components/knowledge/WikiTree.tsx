@@ -18,8 +18,7 @@ interface WikiTreeProps {
 }
 
 export function WikiTree({ spaceId }: WikiTreeProps) {
-  const { documents, createDocument, deleteDocument, activeDocument, setActiveDocument } =
-    useKnowledgeStore();
+  const { documents, createDocument, activeDocument, setActiveDocument } = useKnowledgeStore();
 
   // Root elements have no parentDocumentId
   const rootDocs = documents.filter((d) => d.spaceId === spaceId && !d.parentDocumentId);
@@ -40,21 +39,29 @@ export function WikiTree({ spaceId }: WikiTreeProps) {
   };
 
   return (
-    <div className="flex flex-col gap-2 p-2">
+    <div
+      className="flex flex-col gap-2 p-2 h-full"
+      role="tree"
+      aria-label="Wiki Workspace Pages Tree"
+    >
       <div className="flex items-center justify-between border-b border-border/40 pb-2 px-2">
         <span className="text-xs font-semibold tracking-wider text-slate-400 uppercase">Pages</span>
         <button
           onClick={handleCreateRoot}
-          className="flex h-5 w-5 items-center justify-center rounded border border-border bg-slate-950/40 hover:bg-emerald-500/10 hover:border-emerald-500/40 text-slate-400 hover:text-emerald-400 transition-colors"
+          className="flex h-5 w-5 items-center justify-center rounded border border-border bg-slate-950/40 hover:bg-emerald-500/10 hover:border-emerald-500/40 text-slate-400 hover:text-emerald-400 transition-colors focus:outline-none focus:ring-1 focus:ring-emerald-500"
           title="Add new root page"
+          aria-label="Add new root page"
         >
           <Plus className="h-3 w-3" />
         </button>
       </div>
 
-      <div className="flex flex-col gap-1 overflow-y-auto max-h-[calc(100vh-280px)] pr-1">
+      <div
+        className="flex flex-col gap-1 overflow-y-auto max-h-[calc(100vh-280px)] pr-1"
+        role="presentation"
+      >
         {rootDocs.length === 0 ? (
-          <div className="text-center py-6 text-xs text-slate-500 italic">
+          <div className="text-center py-6 text-xs text-slate-500 italic" role="status">
             No pages created yet. Click &quot;+&quot; to start.
           </div>
         ) : (
@@ -111,13 +118,46 @@ function WikiTreeNode({ doc, depth }: TreeNodeProps) {
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    const items = Array.from(document.querySelectorAll('[role="treeitem"]')) as HTMLElement[];
+    const index = items.indexOf(e.currentTarget as HTMLElement);
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      const next = items[index + 1];
+      if (next) next.focus();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      const prev = items[index - 1];
+      if (prev) prev.focus();
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      if (children.length > 0 && !isOpen) {
+        setIsOpen(true);
+      }
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      if (isOpen) {
+        setIsOpen(false);
+      }
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleSelect();
+    }
+  };
+
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col" role="presentation">
       <div
+        role="treeitem"
+        aria-selected={isActive}
+        aria-expanded={children.length > 0 ? isOpen : undefined}
+        tabIndex={0}
+        onKeyDown={handleKeyDown}
         onClick={handleSelect}
         style={{ paddingLeft: `${depth * 12 + 6}px` }}
         className={cn(
-          'group flex items-center justify-between py-1.5 px-2 rounded-md cursor-pointer transition-colors text-sm',
+          'group flex items-center justify-between py-1.5 px-2 rounded-md cursor-pointer transition-colors text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500/50',
           isActive
             ? 'bg-emerald-500/10 border-l-2 border-emerald-500 text-emerald-400 font-medium'
             : 'hover:bg-slate-900/30 text-slate-300 hover:text-slate-100'
@@ -129,7 +169,9 @@ function WikiTreeNode({ doc, depth }: TreeNodeProps) {
               e.stopPropagation();
               setIsOpen(!isOpen);
             }}
+            tabIndex={-1}
             className="p-0.5 rounded hover:bg-slate-950/40 text-slate-500 hover:text-slate-300 transition-colors"
+            aria-label={isOpen ? 'Collapse section' : 'Expand section'}
           >
             {children.length > 0 ? (
               isOpen ? (
@@ -162,15 +204,19 @@ function WikiTreeNode({ doc, depth }: TreeNodeProps) {
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
             onClick={handleAddChild}
+            tabIndex={-1}
             className="p-1 rounded hover:bg-slate-950/60 hover:text-emerald-400 text-slate-500"
             title="Create nested sub-page"
+            aria-label="Create nested sub-page"
           >
             <Plus className="h-3.5 w-3.5" />
           </button>
           <button
             onClick={handleDelete}
+            tabIndex={-1}
             className="p-1 rounded hover:bg-slate-950/60 hover:text-rose-400 text-slate-500"
             title="Soft delete page recursively"
+            aria-label="Soft delete page recursively"
           >
             <Trash2 className="h-3.5 w-3.5" />
           </button>
@@ -178,7 +224,7 @@ function WikiTreeNode({ doc, depth }: TreeNodeProps) {
       </div>
 
       {isOpen && children.length > 0 && (
-        <div className="flex flex-col mt-0.5 pl-1 border-l border-border/10 ml-3">
+        <div className="flex flex-col mt-0.5 pl-1 border-l border-border/10 ml-3" role="group">
           {children.map((child) => (
             <WikiTreeNode key={child._id} doc={child} depth={depth + 1} />
           ))}

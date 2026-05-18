@@ -8,7 +8,8 @@ export interface RealtimeEvent {
   companyId: string;
   projectId?: string;
   taskId?: string;
-  event: string; // 'task_updated' | 'timer_synced' | 'comment_posted' | 'blocker_linked'
+  documentId?: string;
+  event: string; // 'task_updated' | 'timer_synced' | 'comment_posted' | 'blocker_linked' | 'cursor_presence_updated'
   payload: any;
 }
 
@@ -17,6 +18,7 @@ interface ClientConnection {
   companyId: string;
   projectId?: string;
   taskId?: string;
+  documentId?: string;
   controller: ReadableStreamDefaultController;
 }
 
@@ -31,6 +33,7 @@ export function registerClient(
   userId: string,
   projectId: string | null,
   taskId: string | null,
+  documentId: string | null,
   controller: ReadableStreamDefaultController
 ) {
   const connection: ClientConnection = {
@@ -38,6 +41,7 @@ export function registerClient(
     userId,
     projectId: projectId || undefined,
     taskId: taskId || undefined,
+    documentId: documentId || undefined,
     controller,
   };
 
@@ -59,7 +63,9 @@ export function broadcastEvent(event: RealtimeEvent) {
   const formattedMsg = `event: ${event.event}\ndata: ${dataString}\n\n`;
 
   // Trace Observability Log
-  console.log(`[SSE Broadcast] [${event.companyId}] Event: ${event.event}`);
+  console.log(
+    `[SSE Broadcast] [${event.companyId}] Event: ${event.event}${event.documentId ? ` Room: ${event.documentId}` : ''}`
+  );
 
   clientsRegistry.forEach((client) => {
     // 1. Tenant Security isolation
@@ -68,6 +74,7 @@ export function broadcastEvent(event: RealtimeEvent) {
     // 2. Room match validations (optional sub-scoping)
     if (event.projectId && client.projectId && client.projectId !== event.projectId) return;
     if (event.taskId && client.taskId && client.taskId !== event.taskId) return;
+    if (event.documentId && client.documentId && client.documentId !== event.documentId) return;
 
     try {
       client.controller.enqueue(new TextEncoder().encode(formattedMsg));

@@ -36,7 +36,10 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
 
     const { content } = body;
     if (!content) {
-      return NextResponse.json({ success: false, message: 'Comment content is required' }, { status: 400 });
+      return NextResponse.json(
+        { success: false, message: 'Comment content is required' },
+        { status: 400 }
+      );
     }
 
     const document = await Document.findOne({ _id: documentId, companyId, deletedAt: null });

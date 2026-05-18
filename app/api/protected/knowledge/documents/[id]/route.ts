@@ -28,7 +28,10 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     const isOwner = document.ownerId._id.toString() === userId;
 
     if (document.visibility === 'private' && !isOwner && !isAdmin) {
-      return NextResponse.json({ success: false, message: 'Access denied to private document' }, { status: 403 });
+      return NextResponse.json(
+        { success: false, message: 'Access denied to private document' },
+        { status: 403 }
+      );
     }
 
     return NextResponse.json({ success: true, data: document });
@@ -62,6 +65,8 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
       isSop,
       tags,
       changeSummary,
+      parentDocumentId,
+      categoryId,
     } = body;
 
     // RBAC controls
@@ -70,7 +75,10 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
     const isOwner = document.ownerId.toString() === userId;
 
     if (document.visibility === 'private' && !isOwner && !isAdmin) {
-      return NextResponse.json({ success: false, message: 'Unauthorized modification' }, { status: 403 });
+      return NextResponse.json(
+        { success: false, message: 'Unauthorized modification' },
+        { status: 403 }
+      );
     }
 
     // Determine if content changed to compile a new revision history snapshot
@@ -78,7 +86,11 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
 
     if (title) {
       document.title = title;
-      document.slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'untitled';
+      document.slug =
+        title
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/(^-|-$)/g, '') || 'untitled';
     }
     if (icon !== undefined) document.icon = icon;
     if (coverImage !== undefined) document.coverImage = coverImage;
@@ -88,6 +100,40 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
     if (isTemplate !== undefined) document.isTemplate = isTemplate;
     if (isSop !== undefined) document.isSop = isSop;
     if (tags !== undefined) document.tags = tags;
+
+    if (parentDocumentId !== undefined) {
+      if (parentDocumentId === documentId) {
+        return NextResponse.json(
+          { success: false, message: 'A page cannot be its own parent.' },
+          { status: 400 }
+        );
+      }
+      if (parentDocumentId) {
+        let currentParentId = parentDocumentId;
+        const seenIds = new Set<string>([documentId]);
+        while (currentParentId) {
+          if (seenIds.has(currentParentId)) {
+            return NextResponse.json(
+              { success: false, message: 'Circular parent page reference detected.' },
+              { status: 400 }
+            );
+          }
+          seenIds.add(currentParentId);
+          const parentDoc = await Document.findById(currentParentId)
+            .select('parentDocumentId')
+            .lean();
+          if (!parentDoc) break;
+          currentParentId = parentDoc.parentDocumentId ? parentDoc.parentDocumentId.toString() : '';
+        }
+        document.parentDocumentId = parentDocumentId;
+      } else {
+        document.parentDocumentId = null;
+      }
+    }
+
+    if (categoryId !== undefined) {
+      document.categoryId = categoryId || null;
+    }
 
     if (contentChanged) {
       document.versionsCount = (document.versionsCount || 1) + 1;
@@ -115,7 +161,9 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
       documentId: document._id,
       spaceId: document.spaceId,
       action: 'edited',
-      details: `Updated document: "${document.title}"`,
+      details: changeSummary
+        ? `Updated document "${document.title}": ${changeSummary}`
+        : `Updated document: "${document.title}"`,
     });
     await activity.save();
 
@@ -159,7 +207,10 @@ export const DELETE = withApiAuth(async (request: Request, context: any, session
     const isOwner = document.ownerId.toString() === userId;
 
     if (!isOwner && !isAdmin) {
-      return NextResponse.json({ success: false, message: 'Delete access denied' }, { status: 403 });
+      return NextResponse.json(
+        { success: false, message: 'Delete access denied' },
+        { status: 403 }
+      );
     }
 
     const deleteTime = new Date();
@@ -191,7 +242,10 @@ export const DELETE = withApiAuth(async (request: Request, context: any, session
     });
     await activity.save();
 
-    logger.info(`[Document DELETE] Document "${document.title}" soft deleted recursively.`, { companyId, userId });
+    logger.info(`[Document DELETE] Document "${document.title}" soft deleted recursively.`, {
+      companyId,
+      userId,
+    });
 
     // Broadcast SSE update
     broadcastEvent({
@@ -200,7 +254,10 @@ export const DELETE = withApiAuth(async (request: Request, context: any, session
       payload: { documentId },
     });
 
-    return NextResponse.json({ success: true, message: 'Document successfully soft-deleted along with children sub-pages' });
+    return NextResponse.json({
+      success: true,
+      message: 'Document successfully soft-deleted along with children sub-pages',
+    });
   } catch (error: any) {
     logger.error('Failed to soft delete document:', error, { companyId: session?.user?.companyId });
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });

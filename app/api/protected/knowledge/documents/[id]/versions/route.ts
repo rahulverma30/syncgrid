@@ -39,7 +39,10 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
 
     const { versionNumber } = body;
     if (!versionNumber) {
-      return NextResponse.json({ success: false, message: 'Version number to restore is required' }, { status: 400 });
+      return NextResponse.json(
+        { success: false, message: 'Version number to restore is required' },
+        { status: 400 }
+      );
     }
 
     const document = await Document.findOne({ _id: documentId, companyId, deletedAt: null });
@@ -49,7 +52,10 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
 
     const version = await DocumentVersion.findOne({ documentId, versionNumber });
     if (!version) {
-      return NextResponse.json({ success: false, message: 'Specified version log not found' }, { status: 404 });
+      return NextResponse.json(
+        { success: false, message: 'Specified version log not found' },
+        { status: 404 }
+      );
     }
 
     // Rollback current document parameters
@@ -80,7 +86,10 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     });
     await activity.save();
 
-    logger.info(`[Document Rollback] Document "${document.title}" restored to V${versionNumber}.`, { companyId, userId });
+    logger.info(`[Document Rollback] Document "${document.title}" restored to V${versionNumber}.`, {
+      companyId,
+      userId,
+    });
 
     const updatedDocument = await Document.findById(document._id)
       .populate('ownerId', 'name email')

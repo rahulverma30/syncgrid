@@ -15,6 +15,12 @@ interface KnowledgeState {
   isSopFilter: boolean;
   isTemplateFilter: boolean;
 
+  // Real-time Collaborators Presence
+  collaborators: Record<string, any>;
+  updateCollaboratorPresence: (presence: any) => void;
+  removeCollaboratorPresence: (userId: string) => void;
+  clearCollaborators: () => void;
+
   // Actions
   fetchSpaces: () => Promise<void>;
   createSpace: (spaceData: any) => Promise<boolean>;
@@ -52,6 +58,7 @@ export const useKnowledgeStore = create<KnowledgeState>((set, get) => ({
   analytics: null,
   isSopFilter: false,
   isTemplateFilter: false,
+  collaborators: {},
 
   fetchSpaces: async () => {
     set({ loading: true });
@@ -347,8 +354,28 @@ export const useKnowledgeStore = create<KnowledgeState>((set, get) => ({
   },
 
   // Sync state helpers
-  setActiveSpaceId: (spaceId) => set({ activeSpaceId: spaceId, activeDocument: null }),
-  setActiveDocument: (doc) => set({ activeDocument: doc }),
+  setActiveSpaceId: (spaceId) =>
+    set({ activeSpaceId: spaceId, activeDocument: null, collaborators: {} }),
+  setActiveDocument: (doc) => set({ activeDocument: doc, collaborators: {} }),
   setIsSopFilter: (val) => set({ isSopFilter: val }),
   setIsTemplateFilter: (val) => set({ isTemplateFilter: val }),
+  updateCollaboratorPresence: (presence) =>
+    set((state) => {
+      const now = Date.now();
+      const updated: Record<string, any> = { ...state.collaborators, [presence.userId]: presence };
+      // Filter out stale users (inactive for more than 15 seconds)
+      Object.keys(updated).forEach((key) => {
+        if (now - updated[key].lastActiveAt > 15000) {
+          delete updated[key];
+        }
+      });
+      return { collaborators: updated };
+    }),
+  removeCollaboratorPresence: (userId) =>
+    set((state) => {
+      const updated: Record<string, any> = { ...state.collaborators };
+      delete updated[userId];
+      return { collaborators: updated };
+    }),
+  clearCollaborators: () => set({ collaborators: {} }),
 }));
