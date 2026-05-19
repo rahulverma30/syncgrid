@@ -21,7 +21,7 @@ export function PageWrapper({ children, className, id }: LayoutProps) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -12 }}
       transition={{ duration: 0.35, ease: 'easeOut' }}
-      className={cn('w-full min-h-screen py-4 px-4 sm:px-6 lg:px-8 space-y-6', className)}
+      className={cn('w-full min-h-screen space-y-6', className)}
     >
       {children}
     </motion.div>
