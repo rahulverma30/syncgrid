@@ -46,10 +46,12 @@ export async function middleware(request: NextRequest) {
   );
 
   if (isProtected) {
+    const tStart = performance.now();
     const token = await getToken({
       req: request,
       secret: getAuthSecret(),
     });
+    const tTokenEnd = performance.now();
 
     // Redirect to login if no valid token exists
     if (!token) {
@@ -84,6 +86,12 @@ export async function middleware(request: NextRequest) {
 
       return NextResponse.redirect(new URL('/login?error=account-disabled', request.url));
     }
+
+    const tEnd = performance.now();
+    console.log(`[AUTH PERFORMANCE PROFILE - MIDDLEWARE]
+  Route:                ${pathname}
+  Token extraction:     ${(tTokenEnd - tStart).toFixed(2)}ms
+  Total Middleware:     ${(tEnd - tStart).toFixed(2)}ms`);
 
     // Token is valid and account is active, allow the request to proceed
     return NextResponse.next();

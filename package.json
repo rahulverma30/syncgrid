@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.0",
+    "@node-rs/bcrypt": "^1.10.7",
     "@tanstack/react-table": "^8.17.0",
     "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.0",
