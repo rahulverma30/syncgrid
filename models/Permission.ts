@@ -30,9 +30,31 @@ const PermissionSchema = new Schema(
       type: String,
       trim: true,
     },
+    module: {
+      type: String,
+      required: true,
+      default: 'core',
+      trim: true,
+      lowercase: true,
+      index: true,
+    },
+    category: {
+      type: String,
+      required: true,
+      default: 'general',
+      trim: true,
+      lowercase: true,
+      index: true,
+    },
     isSystem: {
       type: Boolean,
       default: true,
+      index: true,
+    },
+    isSystemPermission: {
+      type: Boolean,
+      default: true,
+      index: true,
     },
   },
   {

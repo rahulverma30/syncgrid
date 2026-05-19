@@ -5,6 +5,9 @@ export { PasswordResetToken } from './PasswordResetToken';
 export { Permission } from './Permission';
 export { Role } from './Role';
 export { User } from './User';
+export { RoleAssignment } from './RoleAssignment';
+export { AuthorizationPolicy } from './AuthorizationPolicy';
+
 export { Lead } from './Lead';
 export { CrmSettings } from './CrmSettings';
 export { Client } from './Client';

@@ -1,11 +1,15 @@
 export const ROLE_NAMES = {
+  ORGANIZATION_OWNER: 'Organization Owner',
   SUPER_ADMIN: 'Super Admin',
   ADMIN: 'Admin',
   PROJECT_MANAGER: 'Project Manager',
-  TEAM_LEAD: 'Team Lead',
-  DEVELOPER: 'Developer',
   HR: 'HR',
   FINANCE: 'Finance',
+  TEAM_LEAD: 'Team Lead',
+  DEVELOPER: 'Developer',
+  SALES: 'Sales',
+  SUPPORT: 'Support',
+  CLIENT: 'Client',
 } as const;
 
 export const PERMISSION_ACTIONS = [
@@ -13,10 +17,13 @@ export const PERMISSION_ACTIONS = [
   'read',
   'update',
   'delete',
+  'assign',
   'export',
   'approve',
-  'assign',
   'manage',
+  'invite',
+  'comment',
+  'upload',
 ] as const;
 
 export const PERMISSION_RESOURCES = [
@@ -25,49 +32,102 @@ export const PERMISSION_RESOURCES = [
   'users',
   'roles',
   'permissions',
-  'auditLogs',
+  'auditlogs',
   'activity',
   'settings',
   'auth',
   'api',
+  'crm',
+  'projects',
+  'tasks',
+  'finance',
+  'payroll',
+  'hr',
+  'analytics',
+  'workspaces',
+  'departments',
+  'collaboration',
 ] as const;
 
+// Global RBAC priority level (lower means superior hierarchy)
+export const ROLE_HIERARCHY = {
+  [ROLE_NAMES.ORGANIZATION_OWNER]: 0,
+  [ROLE_NAMES.SUPER_ADMIN]: 1,
+  [ROLE_NAMES.ADMIN]: 2,
+  [ROLE_NAMES.PROJECT_MANAGER]: 5,
+  [ROLE_NAMES.HR]: 6,
+  [ROLE_NAMES.FINANCE]: 7,
+  [ROLE_NAMES.TEAM_LEAD]: 8,
+  [ROLE_NAMES.DEVELOPER]: 10,
+  [ROLE_NAMES.SALES]: 12,
+  [ROLE_NAMES.SUPPORT]: 14,
+  [ROLE_NAMES.CLIENT]: 20,
+} as const;
+
 export const DEFAULT_ROLE_PERMISSIONS = {
+  [ROLE_NAMES.ORGANIZATION_OWNER]: [{ resource: '*', actions: ['manage'] }],
   [ROLE_NAMES.SUPER_ADMIN]: [{ resource: '*', actions: ['manage'] }],
   [ROLE_NAMES.ADMIN]: [
     { resource: 'dashboard', actions: ['read'] },
     { resource: 'api', actions: ['read'] },
     { resource: 'company', actions: ['read', 'update'] },
-    { resource: 'users', actions: ['create', 'read', 'update', 'assign'] },
-    { resource: 'roles', actions: ['read', 'assign'] },
+    { resource: 'users', actions: ['create', 'read', 'update', 'assign', 'invite'] },
+    { resource: 'roles', actions: ['create', 'read', 'update', 'assign', 'manage'] },
     { resource: 'permissions', actions: ['read'] },
-    { resource: 'auditLogs', actions: ['read', 'export'] },
+    { resource: 'auditlogs', actions: ['read', 'export'] },
     { resource: 'settings', actions: ['read', 'update'] },
+    { resource: 'crm', actions: ['create', 'read', 'update', 'delete', 'manage'] },
+    { resource: 'projects', actions: ['create', 'read', 'update', 'delete', 'manage'] },
+    { resource: 'tasks', actions: ['create', 'read', 'update', 'delete', 'manage'] },
+    { resource: 'finance', actions: ['read', 'update'] },
+    { resource: 'hr', actions: ['read', 'update'] },
+    { resource: 'analytics', actions: ['read'] },
+    { resource: 'workspaces', actions: ['create', 'read', 'update', 'delete'] },
+    { resource: 'departments', actions: ['create', 'read', 'update', 'delete'] },
   ],
   [ROLE_NAMES.PROJECT_MANAGER]: [
     { resource: 'dashboard', actions: ['read'] },
     { resource: 'api', actions: ['read'] },
-    { resource: 'users', actions: ['read', 'assign'] },
-    { resource: 'activity', actions: ['read'] },
-  ],
-  [ROLE_NAMES.TEAM_LEAD]: [
-    { resource: 'dashboard', actions: ['read'] },
-    { resource: 'api', actions: ['read'] },
-    { resource: 'users', actions: ['read', 'assign'] },
-  ],
-  [ROLE_NAMES.DEVELOPER]: [
-    { resource: 'dashboard', actions: ['read'] },
-    { resource: 'api', actions: ['read'] },
+    { resource: 'projects', actions: ['create', 'read', 'update', 'assign'] },
+    { resource: 'tasks', actions: ['create', 'read', 'update', 'delete', 'assign', 'comment'] },
+    { resource: 'users', actions: ['read'] },
+    { resource: 'workspaces', actions: ['read'] },
   ],
   [ROLE_NAMES.HR]: [
     { resource: 'dashboard', actions: ['read'] },
     { resource: 'api', actions: ['read'] },
-    { resource: 'users', actions: ['create', 'read', 'update', 'export'] },
+    { resource: 'hr', actions: ['create', 'read', 'update', 'delete', 'manage', 'invite'] },
+    { resource: 'payroll', actions: ['read', 'update'] },
+    { resource: 'users', actions: ['read', 'update'] },
   ],
   [ROLE_NAMES.FINANCE]: [
     { resource: 'dashboard', actions: ['read'] },
-    { resource: 'api', actions: ['read'] },
-    { resource: 'auditLogs', actions: ['read'] },
+    { resource: 'finance', actions: ['create', 'read', 'update', 'delete', 'export', 'approve'] },
+    { resource: 'payroll', actions: ['read', 'update', 'export', 'approve'] },
+  ],
+  [ROLE_NAMES.TEAM_LEAD]: [
+    { resource: 'dashboard', actions: ['read'] },
+    { resource: 'projects', actions: ['read'] },
+    { resource: 'tasks', actions: ['create', 'read', 'update', 'assign', 'comment'] },
+    { resource: 'users', actions: ['read'] },
+  ],
+  [ROLE_NAMES.DEVELOPER]: [
+    { resource: 'dashboard', actions: ['read'] },
+    { resource: 'projects', actions: ['read'] },
+    { resource: 'tasks', actions: ['read', 'update', 'comment'] },
+  ],
+  [ROLE_NAMES.SALES]: [
+    { resource: 'dashboard', actions: ['read'] },
+    { resource: 'crm', actions: ['create', 'read', 'update', 'assign', 'comment'] },
+  ],
+  [ROLE_NAMES.SUPPORT]: [
+    { resource: 'dashboard', actions: ['read'] },
+    { resource: 'users', actions: ['read'] },
+    { resource: 'collaboration', actions: ['create', 'read', 'comment'] },
+  ],
+  [ROLE_NAMES.CLIENT]: [
+    { resource: 'dashboard', actions: ['read'] },
+    { resource: 'collaboration', actions: ['read', 'comment', 'upload'] },
   ],
 } as const;
 

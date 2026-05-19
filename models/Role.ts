@@ -37,9 +37,42 @@ const RoleSchema = new Schema(
       default: false,
       index: true,
     },
+    isSystemRole: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    hierarchyLevel: {
+      type: Number,
+      required: true,
+      default: 100, // lower numbers mean higher priority / hierarchical supremacy
+      index: true,
+    },
+    inheritedRoles: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Role',
+      },
+    ],
+    workspaceRestrictions: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Workspace',
+      },
+    ],
+    departmentRestrictions: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Department',
+      },
+    ],
     priority: {
       type: Number,
       default: 100,
+    },
+    metadata: {
+      type: Schema.Types.Mixed,
+      default: {},
     },
   },
   {
@@ -47,7 +80,7 @@ const RoleSchema = new Schema(
   }
 );
 
-// System roles are unique globally by slug (where companyId is null)
+// Compound index to guarantee uniqueness globally or per company
 RoleSchema.index(
   { slug: 1 },
   {
@@ -56,7 +89,6 @@ RoleSchema.index(
   }
 );
 
-// Company roles are unique per company
 RoleSchema.index(
   { slug: 1, companyId: 1 },
   {
