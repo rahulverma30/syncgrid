@@ -55,10 +55,11 @@ export function DropdownMenu({ trigger, items, align = 'right', className }: Dro
               }}
               disabled={item.disabled}
               className={cn(
-                'w-full flex items-center gap-2 px-4 py-2 text-sm text-left hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed',
+                'w-full flex items-center gap-2 px-4 py-2 text-sm text-left hover:bg-accent hover:text-accent-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed',
                 index === 0 && 'rounded-t-md',
                 index === items.length - 1 && 'rounded-b-md',
-                item.destructive && 'text-destructive hover:bg-destructive/10'
+                item.destructive &&
+                  'text-destructive hover:bg-destructive/10 hover:text-destructive'
               )}
             >
               {item.icon}
