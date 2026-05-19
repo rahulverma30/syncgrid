@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 
 export async function PUT(request: Request) {
   try {
@@ -18,7 +19,36 @@ export async function PUT(request: Request) {
     let tokenData;
     try {
       const decodedStr = Buffer.from(token, 'base64').toString('utf-8');
-      tokenData = JSON.parse(decodedStr);
+
+      const lastDot = decodedStr.lastIndexOf('.');
+      if (lastDot === -1) {
+        return NextResponse.json(
+          { success: false, message: 'Token authentication failed: signature missing' },
+          { status: 400 }
+        );
+      }
+
+      const payloadStr = decodedStr.substring(0, lastDot);
+      const signature = decodedStr.substring(lastDot + 1);
+
+      const secret = process.env.NEXTAUTH_SECRET || 'secret-key';
+      const expectedSignature = crypto
+        .createHmac('sha256', secret)
+        .update(payloadStr)
+        .digest('hex');
+
+      if (signature !== expectedSignature) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'TOKEN_TAMPERED',
+            message: 'Token authentication failed: cryptographic signature mismatch',
+          },
+          { status: 401 }
+        );
+      }
+
+      tokenData = JSON.parse(payloadStr);
     } catch (err) {
       return NextResponse.json(
         { success: false, message: 'Token authentication failed: parse error' },
@@ -42,13 +72,25 @@ export async function PUT(request: Request) {
       );
     }
 
+    // Secure path traversal guard check
+    const resolvedPath = path.resolve(process.cwd(), 'public', 'uploads', key);
+    const uploadsDir = path.resolve(process.cwd(), 'public', 'uploads');
+    if (!resolvedPath.startsWith(uploadsDir)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'PATH_TRAVERSAL_DETECTED',
+          message: 'Forbidden directory traversal path',
+        },
+        { status: 403 }
+      );
+    }
+
     // Convert request payload to buffer stream
     const arrayBuffer = await request.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Save to the public/uploads directory
-    const uploadFilePath = path.join(process.cwd(), 'public', 'uploads', key);
-    const directory = path.dirname(uploadFilePath);
+    const directory = path.dirname(resolvedPath);
 
     // Auto-create directory directories if they do not exist
     if (!fs.existsSync(directory)) {
@@ -56,7 +98,7 @@ export async function PUT(request: Request) {
     }
 
     // Write file securely to disk
-    fs.writeFileSync(uploadFilePath, buffer);
+    fs.writeFileSync(resolvedPath, buffer);
 
     return NextResponse.json({
       success: true,

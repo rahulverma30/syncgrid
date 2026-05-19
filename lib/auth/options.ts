@@ -8,6 +8,7 @@ import { loginSchema } from '@/schemas/auth';
 import { Permission, Role, User } from '@/models';
 import { compactPermissions } from './permission-checks';
 import { rateLimit } from '@/lib/security/rateLimiter';
+import { resolveUserAuthContext } from './engine';
 
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCK_MINUTES = 15;
@@ -239,11 +240,11 @@ export const authOptions: NextAuthOptions = {
         token.status = (user as any).status;
       }
 
-      // Dynamic database validation & disabled-user check on session refresh
-      // Only do this periodically (e.g., every 5 minutes) to optimize DB traffic
+      // Dynamic database validation & dynamic permission refresh on session refresh
+      // Only do this periodically (e.g., every 10 seconds) to optimize DB traffic
       const now = Date.now();
       const lastChecked = (token as any).lastChecked || 0;
-      const CHECK_INTERVAL = 1000 * 60 * 5; // 5 minutes
+      const CHECK_INTERVAL = 1000 * 10; // 10 seconds
 
       if (token.id && now - lastChecked > CHECK_INTERVAL) {
         try {
@@ -257,17 +258,22 @@ export const authOptions: NextAuthOptions = {
 
           if (dbUser) {
             token.status = dbUser.status;
+            if (dbUser.status !== 'disabled' && token.companyId) {
+              const authCtx = await resolveUserAuthContext(token.id, token.companyId as string);
+              token.roles = Array.from(authCtx.roles);
+              token.permissions = Array.from(authCtx.permissions);
+            }
           } else {
             token.status = 'disabled'; // User deleted/not found
           }
           (token as any).lastChecked = now;
 
-          console.log(`[AUTH PERFORMANCE PROFILE - JWT VERIFY]
+          console.log(`[AUTH PERFORMANCE PROFILE - JWT VERIFY & REFRESH]
   DB connection:        ${(tDbEnd - tDbStart).toFixed(2)}ms
-  User Status Query:    ${(tQueryEnd - tQueryStart).toFixed(2)}ms
+  User Query & Resolve: ${(tQueryEnd - tQueryStart).toFixed(2)}ms
   Total JWT verification: ${(performance.now() - tStart).toFixed(2)}ms`);
         } catch (error) {
-          console.error('Error verifying user status in JWT callback:', error);
+          console.error('Error verifying user status & permissions in JWT callback:', error);
         }
       }
 

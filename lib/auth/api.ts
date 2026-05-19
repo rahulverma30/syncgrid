@@ -53,10 +53,18 @@ export function withApiAuth(handler: Function) {
  * Higher-order function: Protect API route with permission check
  * Usage: export const POST = withApiPermission('users', 'create', async (req, ctx, session) => {...})
  */
-export function withApiPermission(resource: string, action: string, handler: Function) {
+export function withApiPermission(
+  resource: string,
+  action: string,
+  handler: Function,
+  options: {
+    getContext?: (request: Request, context: any) => Promise<any> | any;
+  } = {}
+) {
   return async function guardedHandler(request: Request, context: any) {
     try {
-      const session = await requirePermission(resource, action);
+      const dynamicContext = options.getContext ? await options.getContext(request, context) : {};
+      const session = await requirePermission(resource, action, dynamicContext);
       const companyId = session.user?.companyId;
       if (companyId) {
         return runInTenantContext(companyId, () => handler(request, context, session));

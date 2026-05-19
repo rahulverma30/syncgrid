@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { logger } from './logger';
@@ -41,9 +42,16 @@ export class CloudStorageEngine {
     const key = `company_${companyId}/user_${userId}/${timestamp}_${cleanFileName}`;
 
     const s3Config = this.getS3Config();
-    const verificationToken = Buffer.from(
-      JSON.stringify({ companyId, userId, key, expiresAt: Date.now() + 60 * 60 * 1000 })
-    ).toString('base64');
+
+    const payload = JSON.stringify({
+      companyId,
+      userId,
+      key,
+      expiresAt: Date.now() + 60 * 60 * 1000,
+    });
+    const secret = process.env.NEXTAUTH_SECRET || 'secret-key';
+    const signature = crypto.createHmac('sha256', secret).update(payload).digest('hex');
+    const verificationToken = Buffer.from(`${payload}.${signature}`).toString('base64');
 
     let uploadUrl = '';
     let fileUrl = '';
