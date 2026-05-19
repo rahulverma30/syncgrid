@@ -31,9 +31,11 @@ export const GET = withApiPermission(
       }
 
       let invoices = await Invoice.find(query)
+        .select('-lineItems -attachments -terms')
         .populate({ path: 'clientId', select: 'name email company' })
         .populate({ path: 'projectId', select: 'name status' })
-        .sort({ createdAt: -1 });
+        .sort({ createdAt: -1 })
+        .lean();
 
       if (search) {
         const lowerSearch = search.toLowerCase();

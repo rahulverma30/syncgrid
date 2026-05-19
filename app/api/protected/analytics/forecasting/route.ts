@@ -38,8 +38,10 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
 
     // Fetch the past 6 months of consolidated snapshots to construct baseline progression
     const snapshots = await AnalyticsSnapshot.find({ companyId })
+      .select('snapshotDate revenueTotal billableHours')
       .sort({ snapshotDate: 1 })
-      .limit(6);
+      .limit(6)
+      .lean();
 
     const baselineData: any[] = [];
     let seedRevenue = 32000;

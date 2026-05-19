@@ -40,7 +40,8 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     const requests = await LeaveRequest.find(query)
       .populate({ path: 'employeeId', select: 'fullName designation email leaveBalances' })
       .populate({ path: 'approvedBy', select: 'name email' })
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
     return NextResponse.json({
       success: true,

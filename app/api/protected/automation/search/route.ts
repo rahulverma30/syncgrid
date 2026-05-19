@@ -19,8 +19,14 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
 
     // Run parallel multi-tenant index lookups
     const [workflows, executions] = await Promise.all([
-      WorkflowDefinition.find({ companyId, name: regex, isArchived: false }).limit(5),
-      WorkflowExecution.find({ companyId, triggerEvent: regex }).limit(5),
+      WorkflowDefinition.find({ companyId, name: regex, isArchived: false })
+        .select('name category triggerConfig')
+        .limit(5)
+        .lean(),
+      WorkflowExecution.find({ companyId, triggerEvent: regex })
+        .select('triggerEvent status stepHistory')
+        .limit(5)
+        .lean(),
     ]);
 
     const results: any[] = [];

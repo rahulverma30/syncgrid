@@ -106,7 +106,7 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     const overdueRatio = totalOutstanding > 0 ? (totalOverdue / totalOutstanding) * 100 : 0;
 
     // 4. Project Health & Sprint Completion Rates
-    const projectsList = await Project.find({ companyId }).lean();
+    const projectsList = await Project.find({ companyId }).select('status').lean();
     const totalProjects = projectsList.length;
     const completedProjects = projectsList.filter((p) => p.status === 'completed').length;
     const activeProjects = projectsList.filter((p) => p.status === 'in_progress').length;
@@ -225,6 +225,7 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
 
     // 9. Dynamic Workload distribution metrics per department
     const employeeList = await Employee.find({ companyId })
+      .select('departmentId')
       .populate({
         path: 'departmentId',
         select: 'name',

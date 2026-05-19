@@ -14,11 +14,13 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     if (executionId) {
       // Fetch details of a single execution plus its associated log trace
       const [execution, logs] = await Promise.all([
-        WorkflowExecution.findOne({ _id: executionId, companyId }).populate({
-          path: 'workflowId',
-          select: 'name category',
-        }),
-        WorkflowLog.find({ executionId, companyId }).sort({ createdAt: 1 }),
+        WorkflowExecution.findOne({ _id: executionId, companyId })
+          .populate({
+            path: 'workflowId',
+            select: 'name category',
+          })
+          .lean(),
+        WorkflowLog.find({ executionId, companyId }).sort({ createdAt: 1 }).lean(),
       ]);
 
       if (!execution) {
@@ -38,7 +40,8 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
         select: 'name category',
       })
       .sort({ createdAt: -1 })
-      .limit(100);
+      .limit(100)
+      .lean();
 
     return NextResponse.json({ success: true, data: executions });
   } catch (error: any) {

@@ -13,7 +13,7 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
       _id: id,
       companyId,
       isArchived: false,
-    });
+    }).lean();
 
     if (!workflow) {
       return NextResponse.json(

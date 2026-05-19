@@ -12,7 +12,9 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     const userId = session.user.id;
 
     // Get current employee department
-    const employee = await Employee.findOne({ companyId, userId, isSoftDeleted: false });
+    const employee = await Employee.findOne({ companyId, userId, isSoftDeleted: false })
+      .select('departmentId')
+      .lean();
 
     // Retrieve announcements: either targeted to user's department, or null (company-wide)
     const query: Record<string, any> = {
@@ -27,7 +29,8 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     const announcements = await EmployeeAnnouncement.find(query)
       .populate({ path: 'postedBy', select: 'name email' })
       .populate({ path: 'departmentId', select: 'name code' })
-      .sort({ isPinned: -1, createdAt: -1 });
+      .sort({ isPinned: -1, createdAt: -1 })
+      .lean();
 
     return NextResponse.json({ success: true, data: announcements });
   } catch (error: any) {

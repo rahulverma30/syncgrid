@@ -12,12 +12,15 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     const documentId = context.params.id;
 
     // Security Gate check
-    const document = await Document.findOne({ _id: documentId, companyId, deletedAt: null });
+    const document = await Document.findOne({ _id: documentId, companyId, deletedAt: null })
+      .select('_id')
+      .lean();
     if (!document) {
       return NextResponse.json({ success: false, message: 'Document not found' }, { status: 404 });
     }
 
     const versions = await DocumentVersion.find({ documentId })
+      .select('-content')
       .populate('editorId', 'name email')
       .sort({ versionNumber: -1 })
       .lean();

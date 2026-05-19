@@ -13,7 +13,8 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     const budgets = await Budget.find({ companyId })
       .populate({ path: 'projectId', select: 'name status' })
       .populate({ path: 'departmentId', select: 'name' })
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
     return NextResponse.json({ success: true, data: budgets });
   } catch (error: any) {

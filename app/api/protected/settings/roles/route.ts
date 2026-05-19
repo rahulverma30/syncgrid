@@ -12,7 +12,9 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     const roles = await Role.find({
       $or: [{ companyId }, { companyId: null }],
       isActive: true,
-    }).sort({ level: 1 });
+    })
+      .sort({ level: 1 })
+      .lean();
 
     return NextResponse.json({ success: true, data: roles });
   } catch (error: any) {

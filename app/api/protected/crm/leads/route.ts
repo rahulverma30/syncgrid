@@ -49,7 +49,10 @@ export const GET = withApiPermission(
         ];
       }
 
-      const leads = await Lead.find(query).sort({ createdAt: -1 });
+      const leads = await Lead.find(query)
+        .select('-notes -reminders -attachments -timeline')
+        .sort({ createdAt: -1 })
+        .lean();
 
       return NextResponse.json({
         success: true,

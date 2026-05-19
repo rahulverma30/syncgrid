@@ -55,6 +55,7 @@ export const GET = withApiPermission(
 
       // Fetch documents, including user mapping fields
       const docs = await Document.find(query)
+        .select('-content')
         .populate('ownerId', 'name email')
         .populate('categoryId', 'name colorCode')
         .sort({ title: 1 })

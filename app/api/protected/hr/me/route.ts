@@ -79,7 +79,9 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
       companyId,
       isSoftDeleted: false,
       'teamMembers.userName': emp.fullName,
-    }).select('name code budget timeline teamMembers status');
+    })
+      .select('name code budget timeline teamMembers status')
+      .lean();
 
     obj.assignedProjects = projects.map((p: any) => {
       const member = p.teamMembers.find((m: any) => m.userName === emp.fullName);
@@ -99,7 +101,9 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
       companyId,
       isSoftDeleted: false,
       assigneeId: userId,
-    }).select('title code status priority stage dueDate estimatedHours');
+    })
+      .select('title code status priority stage dueDate estimatedHours')
+      .lean();
 
     obj.assignedTasks = tasks;
 
@@ -109,7 +113,8 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
       employeeId: emp._id,
     })
       .sort({ createdAt: -1 })
-      .limit(10);
+      .limit(10)
+      .lean();
     obj.activities = activities;
 
     return NextResponse.json({ success: true, data: obj });

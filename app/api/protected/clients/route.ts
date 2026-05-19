@@ -56,7 +56,10 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
       ];
     }
 
-    const clients = await Client.find(query).sort({ createdAt: -1 });
+    const clients = await Client.find(query)
+      .select('-contacts -notes -documents -contracts -meetings -communicationLogs -timeline')
+      .sort({ createdAt: -1 })
+      .lean();
 
     return NextResponse.json({
       success: true,
@@ -141,6 +144,58 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
   } catch (error: any) {
     return NextResponse.json(
       { success: false, error: 'CREATE_ERROR', message: error.message },
+      { status: 500 }
+    );
+  }
+});
+
+export const PUT = withApiAuth(async (request: Request, context: any, session: any) => {
+  try {
+    await connectToDatabase();
+    const companyId = session.user.companyId;
+    const userName = session.user.name;
+    const body = await request.json();
+
+    const { ids, accountManager } = body;
+
+    if (!ids || !Array.isArray(ids) || !accountManager) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'VALIDATION_ERROR',
+          message: 'Missing client IDs or Account Manager',
+        },
+        { status: 400 }
+      );
+    }
+
+    // 1. Perform bulk update in a single query
+    const result = await Client.updateMany(
+      { _id: { $in: ids }, companyId },
+      { $set: { accountManager } }
+    );
+
+    // 2. Perform bulk activity logging in a single query
+    if (ids.length > 0) {
+      const dbActivities = ids.map((id) => ({
+        companyId,
+        clientId: id,
+        type: 'update',
+        title: 'Field "accountManager" updated',
+        description: `Account Owner bulk reassigned to ${accountManager} by ${userName}.`,
+        userName,
+        createdAt: new Date(),
+      }));
+      await ClientActivity.insertMany(dbActivities);
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: `Successfully batch reassigned ${result.modifiedCount} accounts.`,
+    });
+  } catch (error: any) {
+    return NextResponse.json(
+      { success: false, error: 'BULK_UPDATE_ERROR', message: error.message },
       { status: 500 }
     );
   }

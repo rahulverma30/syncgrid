@@ -41,7 +41,10 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     const workflows = await WorkflowDefinition.find({
       companyId,
       isArchived: false,
-    }).sort({ updatedAt: -1 });
+    })
+      .select('-actionChain -conditions')
+      .sort({ updatedAt: -1 })
+      .lean();
 
     return NextResponse.json({ success: true, data: workflows });
   } catch (error: any) {

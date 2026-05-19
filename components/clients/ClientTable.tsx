@@ -18,6 +18,164 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { TagPill } from './ClientTagSelector';
 import { toast } from 'sonner';
 
+interface ClientRowProps {
+  acc: ClientAccount;
+  isSelected: boolean;
+  columnVisibility: Record<string, boolean>;
+  setSelectedClient: (client: ClientAccount | null) => void;
+  handleRowSelect: (id: string, checked: boolean) => void;
+  archiveClient: (id: string, archiveState: boolean) => Promise<void>;
+  setClientToDelete: (client: ClientAccount | null) => void;
+  setIsDeleteConfirmOpen: (open: boolean) => void;
+}
+
+const ClientRow: React.FC<ClientRowProps> = React.memo(
+  ({
+    acc,
+    isSelected,
+    columnVisibility,
+    setSelectedClient,
+    handleRowSelect,
+    archiveClient,
+    setClientToDelete,
+    setIsDeleteConfirmOpen,
+  }) => {
+    return (
+      <tr
+        onClick={() => setSelectedClient(acc)}
+        className={`hover:bg-muted/15 cursor-pointer transition-colors duration-200 ${
+          isSelected ? 'bg-primary/5 hover:bg-primary/10' : ''
+        }`}
+      >
+        <td className="py-3.5 px-4" onClick={(e) => e.stopPropagation()}>
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={(e) => handleRowSelect(acc._id, e.target.checked)}
+            className="rounded border-border focus:ring-ring"
+          />
+        </td>
+        {columnVisibility['Client Company'] && (
+          <td className="py-3.5 px-4 font-bold text-foreground hover:text-primary transition-colors">
+            {acc.name}
+          </td>
+        )}
+        {columnVisibility['Classification'] && (
+          <td className="py-3.5 px-4">
+            <span
+              className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[9px] font-black uppercase tracking-wider border select-none"
+              style={{
+                backgroundColor:
+                  acc.clientType === 'VIP'
+                    ? 'rgba(234, 179, 8, 0.1)'
+                    : acc.clientType === 'Enterprise'
+                      ? 'rgba(168, 85, 247, 0.1)'
+                      : 'rgba(59, 130, 246, 0.1)',
+                color:
+                  acc.clientType === 'VIP'
+                    ? '#eab308'
+                    : acc.clientType === 'Enterprise'
+                      ? '#a855f7'
+                      : '#3b82f6',
+                borderColor:
+                  acc.clientType === 'VIP'
+                    ? 'rgba(234, 179, 8, 0.2)'
+                    : acc.clientType === 'Enterprise'
+                      ? 'rgba(168, 85, 247, 0.2)'
+                      : 'rgba(59, 130, 246, 0.2)',
+              }}
+            >
+              {acc.clientType}
+            </span>
+          </td>
+        )}
+        {columnVisibility['Industry'] && (
+          <td className="py-3.5 px-4 uppercase text-[9px] font-bold text-muted-foreground font-mono">
+            {acc.industry}
+          </td>
+        )}
+        {columnVisibility['Account Owner'] && (
+          <td className="py-3.5 px-4 font-semibold text-foreground/80">{acc.accountManager}</td>
+        )}
+        {columnVisibility['Health Index'] && (
+          <td className="py-3.5 px-4 font-mono font-bold">
+            <span
+              className={
+                acc.healthScore >= 90
+                  ? 'text-emerald-500'
+                  : acc.healthScore >= 75
+                    ? 'text-amber-500'
+                    : 'text-rose-500'
+              }
+            >
+              {acc.healthScore}%
+            </span>
+          </td>
+        )}
+        {columnVisibility['ARR Yield'] && (
+          <td className="py-3.5 px-4 font-mono font-bold text-primary">
+            ${acc.revenueContribution.toLocaleString()}
+          </td>
+        )}
+        {columnVisibility['Tags'] && (
+          <td className="py-3.5 px-4">
+            <div className="flex flex-wrap gap-1">
+              {acc.tags?.slice(0, 2).map((t) => (
+                <TagPill key={t} tag={t} />
+              ))}
+              {acc.tags?.length > 2 && (
+                <span className="text-[9px] text-muted-foreground font-bold px-1 select-none">
+                  +{acc.tags.length - 2}
+                </span>
+              )}
+            </div>
+          </td>
+        )}
+        <td className="py-3.5 px-4 text-right" onClick={(e) => e.stopPropagation()}>
+          <div className="flex justify-end gap-1.5">
+            {acc.isArchived ? (
+              <Button
+                onClick={() => archiveClient(acc._id, false)}
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-emerald-500 hover:bg-emerald-500/10 hover:text-emerald-500 flex items-center gap-1 font-bold text-[10px]"
+                aria-label={`Restore Client ${acc.name}`}
+              >
+                <RotateCcw className="h-3 w-3" /> Restore
+              </Button>
+            ) : (
+              <>
+                <Button
+                  onClick={() => archiveClient(acc._id, true)}
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 w-7 p-0 text-muted-foreground hover:text-amber-500 hover:bg-amber-500/10"
+                  aria-label={`Archive Client ${acc.name}`}
+                >
+                  <Archive className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  onClick={() => {
+                    setClientToDelete(acc);
+                    setIsDeleteConfirmOpen(true);
+                  }}
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 w-7 p-0 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10"
+                  aria-label={`Delete Client ${acc.name}`}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </>
+            )}
+          </div>
+        </td>
+      </tr>
+    );
+  }
+);
+ClientRow.displayName = 'ClientRow';
+
 export const ClientTable: React.FC = () => {
   const {
     clients,
@@ -472,139 +630,17 @@ export const ClientTable: React.FC = () => {
           </thead>
           <tbody className="divide-y divide-border/40">
             {paginatedClients.map((acc) => (
-              <tr
+              <ClientRow
                 key={acc._id}
-                onClick={() => setSelectedClient(acc)}
-                className={`hover:bg-muted/15 cursor-pointer transition-colors duration-200 ${
-                  selectedRows.includes(acc._id) ? 'bg-primary/5 hover:bg-primary/10' : ''
-                }`}
-              >
-                <td className="py-3.5 px-4" onClick={(e) => e.stopPropagation()}>
-                  <input
-                    type="checkbox"
-                    checked={selectedRows.includes(acc._id)}
-                    onChange={(e) => handleRowSelect(acc._id, e.target.checked)}
-                    className="rounded border-border focus:ring-ring"
-                  />
-                </td>
-                {columnVisibility['Client Company'] && (
-                  <td className="py-3.5 px-4 font-bold text-foreground hover:text-primary transition-colors">
-                    {acc.name}
-                  </td>
-                )}
-                {columnVisibility['Classification'] && (
-                  <td className="py-3.5 px-4">
-                    <span
-                      className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[9px] font-black uppercase tracking-wider border select-none"
-                      style={{
-                        backgroundColor:
-                          acc.clientType === 'VIP'
-                            ? 'rgba(234, 179, 8, 0.1)'
-                            : acc.clientType === 'Enterprise'
-                              ? 'rgba(168, 85, 247, 0.1)'
-                              : 'rgba(59, 130, 246, 0.1)',
-                        color:
-                          acc.clientType === 'VIP'
-                            ? '#eab308'
-                            : acc.clientType === 'Enterprise'
-                              ? '#a855f7'
-                              : '#3b82f6',
-                        borderColor:
-                          acc.clientType === 'VIP'
-                            ? 'rgba(234, 179, 8, 0.2)'
-                            : acc.clientType === 'Enterprise'
-                              ? 'rgba(168, 85, 247, 0.2)'
-                              : 'rgba(59, 130, 246, 0.2)',
-                      }}
-                    >
-                      {acc.clientType}
-                    </span>
-                  </td>
-                )}
-                {columnVisibility['Industry'] && (
-                  <td className="py-3.5 px-4 uppercase text-[9px] font-bold text-muted-foreground font-mono">
-                    {acc.industry}
-                  </td>
-                )}
-                {columnVisibility['Account Owner'] && (
-                  <td className="py-3.5 px-4 font-semibold text-foreground/80">
-                    {acc.accountManager}
-                  </td>
-                )}
-                {columnVisibility['Health Index'] && (
-                  <td className="py-3.5 px-4 font-mono font-bold">
-                    <span
-                      className={
-                        acc.healthScore >= 90
-                          ? 'text-emerald-500'
-                          : acc.healthScore >= 75
-                            ? 'text-amber-500'
-                            : 'text-rose-500'
-                      }
-                    >
-                      {acc.healthScore}%
-                    </span>
-                  </td>
-                )}
-                {columnVisibility['ARR Yield'] && (
-                  <td className="py-3.5 px-4 font-mono font-bold text-primary">
-                    ${acc.revenueContribution.toLocaleString()}
-                  </td>
-                )}
-                {columnVisibility['Tags'] && (
-                  <td className="py-3.5 px-4">
-                    <div className="flex flex-wrap gap-1">
-                      {acc.tags?.slice(0, 2).map((t) => (
-                        <TagPill key={t} tag={t} />
-                      ))}
-                      {acc.tags?.length > 2 && (
-                        <span className="text-[9px] text-muted-foreground font-bold px-1 select-none">
-                          +{acc.tags.length - 2}
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                )}
-                <td className="py-3.5 px-4 text-right" onClick={(e) => e.stopPropagation()}>
-                  <div className="flex justify-end gap-1.5">
-                    {acc.isArchived ? (
-                      <Button
-                        onClick={() => archiveClient(acc._id, false)}
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 px-2 text-emerald-500 hover:bg-emerald-500/10 hover:text-emerald-500 flex items-center gap-1 font-bold text-[10px]"
-                        aria-label={`Restore Client ${acc.name}`}
-                      >
-                        <RotateCcw className="h-3 w-3" /> Restore
-                      </Button>
-                    ) : (
-                      <>
-                        <Button
-                          onClick={() => archiveClient(acc._id, true)}
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 w-7 p-0 text-muted-foreground hover:text-amber-500 hover:bg-amber-500/10"
-                          aria-label={`Archive Client ${acc.name}`}
-                        >
-                          <Archive className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button
-                          onClick={() => {
-                            setClientToDelete(acc);
-                            setIsDeleteConfirmOpen(true);
-                          }}
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 w-7 p-0 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10"
-                          aria-label={`Delete Client ${acc.name}`}
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                </td>
-              </tr>
+                acc={acc}
+                isSelected={selectedRows.includes(acc._id)}
+                columnVisibility={columnVisibility}
+                setSelectedClient={setSelectedClient}
+                handleRowSelect={handleRowSelect}
+                archiveClient={archiveClient}
+                setClientToDelete={setClientToDelete}
+                setIsDeleteConfirmOpen={setIsDeleteConfirmOpen}
+              />
             ))}
             {paginatedClients.length === 0 && (
               <tr>

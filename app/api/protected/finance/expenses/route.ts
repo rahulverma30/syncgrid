@@ -44,9 +44,11 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     }
 
     const expenses = await Expense.find(query)
+      .select('-approvalWorkflow.history -notes')
       .populate({ path: 'employeeId', select: 'firstName lastName email' })
       .populate({ path: 'projectId', select: 'name status' })
-      .sort({ expenseDate: -1 });
+      .sort({ expenseDate: -1 })
+      .lean();
 
     return NextResponse.json({ success: true, data: expenses });
   } catch (error: any) {

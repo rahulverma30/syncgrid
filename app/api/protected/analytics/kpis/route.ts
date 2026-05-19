@@ -10,7 +10,7 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     await connectToDatabase();
     const companyId = session.user.companyId;
 
-    let kpis = await KPIConfiguration.find({ companyId });
+    let kpis = await KPIConfiguration.find({ companyId }).lean();
 
     // Seed defaults dynamically if empty to remain executive premium immediately
     if (kpis.length === 0) {

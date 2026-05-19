@@ -10,7 +10,7 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     await connectToDatabase();
     const companyId = session.user.companyId;
 
-    const vendors = await Vendor.find({ companyId }).sort({ name: 1 });
+    const vendors = await Vendor.find({ companyId }).sort({ name: 1 }).lean();
 
     return NextResponse.json({ success: true, data: vendors });
   } catch (error: any) {

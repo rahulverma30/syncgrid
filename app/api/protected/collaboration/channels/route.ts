@@ -34,7 +34,7 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
       ];
     }
 
-    const list = await Channel.find(query).sort({ name: 1 });
+    const list = await Channel.find(query).sort({ name: 1 }).lean();
     return NextResponse.json({ success: true, data: list });
   } catch (error: any) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });

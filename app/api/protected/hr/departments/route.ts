@@ -13,7 +13,8 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     // Fetch all active departments in company
     const departments = await Department.find({ companyId, isSoftDeleted: false })
       .populate({ path: 'managerId', select: 'name email image' })
-      .sort({ name: 1 });
+      .sort({ name: 1 })
+      .lean();
 
     // Fetch headcount per department
     const headcountAggregation = await Employee.aggregate([
@@ -26,11 +27,10 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
       if (item._id) headcountMap[item._id.toString()] = item.count;
     });
 
-    const deptList = departments.map((d) => {
-      const obj = d.toObject();
-      obj.headcount = headcountMap[d._id.toString()] || 0;
-      return obj;
-    });
+    const deptList = departments.map((d: any) => ({
+      ...d,
+      headcount: headcountMap[d._id.toString()] || 0,
+    }));
 
     // Helper to build recursive tree structure
     const buildTree = (parentId: string | null = null): any[] => {

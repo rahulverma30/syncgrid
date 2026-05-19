@@ -47,14 +47,16 @@ export const GET = withApiPermission(
       const hasHrAccess = hasPermission(session.user.permissions || [], 'hr', 'manage');
 
       const employees = await Employee.find(query)
+        .select('-skills -certifications -emergencyContacts -assets -documents -payrollMetadata')
         .populate({ path: 'departmentId', select: 'name code managerId' })
         .populate({ path: 'teamId', select: 'name leaderId' })
         .populate({ path: 'userId', select: 'name email image' })
-        .sort({ createdAt: -1 });
+        .sort({ createdAt: -1 })
+        .lean();
 
       // Mask compensation details for regular workers
       const processedEmployees = employees.map((emp) => {
-        const obj = emp.toObject();
+        const obj = emp;
         if (!hasHrAccess) {
           // Strip sensitive compensation numbers
           obj.compensationMetadata = {

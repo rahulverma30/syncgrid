@@ -37,7 +37,8 @@ export const GET = withApiPermission(
       let userDepartment = '';
       try {
         const employee = await Employee.findOne({ userId, companyId })
-          .populate('departmentId')
+          .select('departmentId')
+          .populate('departmentId', 'name')
           .lean();
         if (employee && employee.departmentId) {
           userDepartment = (employee.departmentId as any).name || '';

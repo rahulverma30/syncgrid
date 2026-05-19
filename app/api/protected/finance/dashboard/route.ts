@@ -16,7 +16,9 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
       companyId,
       type: 'income',
       status: 'cleared',
-    });
+    })
+      .select('amount paymentDate type')
+      .lean();
     const totalRevenue = incomeTxns.reduce((acc, curr) => acc + curr.amount, 0);
 
     // Expense = cleared expense transactions + direct paid corporate expenses
@@ -24,7 +26,9 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
       companyId,
       type: { $in: ['expense', 'refund'] },
       status: 'cleared',
-    });
+    })
+      .select('amount paymentDate type')
+      .lean();
     const totalExpenses = expenseTxns.reduce((acc, curr) => acc + curr.amount, 0);
 
     // Outstanding Receivables
@@ -33,7 +37,9 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
       isSoftDeleted: false,
       isArchived: false,
       status: { $in: ['sent', 'partially_paid', 'overdue'] },
-    });
+    })
+      .select('outstandingAmount dueDate')
+      .lean();
     const totalOutstanding = outstandingInvoices.reduce(
       (acc, curr) => acc + curr.outstandingAmount,
       0
@@ -89,7 +95,9 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
       companyId,
       isSoftDeleted: false,
       paymentStatus: 'paid',
-    });
+    })
+      .select('amount category')
+      .lean();
 
     const categoryTotals: Record<string, number> = {};
     activeExpenses.forEach((exp) => {
@@ -105,7 +113,10 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     const activeBudgets = await Budget.find({
       companyId,
       status: 'active',
-    }).populate({ path: 'projectId', select: 'name' });
+    })
+      .select('name amount spentAmount remainingAmount alertFired projectId')
+      .populate({ path: 'projectId', select: 'name' })
+      .lean();
 
     const budgetStatus = activeBudgets.map((b: any) => ({
       id: b._id,
@@ -120,7 +131,7 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
 
     // 5. Project Margins Analyzer
     // Fetch all active projects
-    const projectsList = await Project.find({ companyId });
+    const projectsList = await Project.find({ companyId }).select('_id name').lean();
 
     const projectMargins = await Promise.all(
       projectsList.map(async (p: any) => {
@@ -129,7 +140,9 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
           companyId,
           projectId: p._id,
           isSoftDeleted: false,
-        });
+        })
+          .select('paidAmount')
+          .lean();
         const revenue = projectInvoices.reduce((sum, inv) => sum + inv.paidAmount, 0);
 
         // Project expenses = sum of expenses allocated to this project
@@ -138,7 +151,9 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
           projectId: p._id,
           isSoftDeleted: false,
           paymentStatus: 'paid',
-        });
+        })
+          .select('amount')
+          .lean();
         const cost = projectExpensesList.reduce((sum, exp) => sum + exp.amount, 0);
 
         const margin = revenue - cost;

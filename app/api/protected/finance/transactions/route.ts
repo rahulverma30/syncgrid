@@ -25,7 +25,8 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     const txns = await Transaction.find(query)
       .populate({ path: 'invoiceId', select: 'invoiceNumber status totalAmount' })
       .populate({ path: 'clientId', select: 'name company' })
-      .sort({ paymentDate: -1 });
+      .sort({ paymentDate: -1 })
+      .lean();
 
     return NextResponse.json({ success: true, data: txns });
   } catch (error: any) {

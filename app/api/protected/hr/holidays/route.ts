@@ -11,7 +11,8 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
 
     let list = await Holiday.find({ companyId })
       .populate({ path: 'departmentId', select: 'name code' })
-      .sort({ date: 1 });
+      .sort({ date: 1 })
+      .lean();
 
     // Auto-seed default holidays if empty
     if (list.length === 0) {
@@ -76,7 +77,8 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
       await Holiday.insertMany(defaultHolidays);
       list = await Holiday.find({ companyId })
         .populate({ path: 'departmentId', select: 'name code' })
-        .sort({ date: 1 });
+        .sort({ date: 1 })
+        .lean();
     }
 
     return NextResponse.json({ success: true, data: list });

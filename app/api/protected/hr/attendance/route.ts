@@ -11,7 +11,9 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     const userId = session.user.id;
 
     // Find Employee associated with this user
-    const employee = await Employee.findOne({ companyId, userId, isSoftDeleted: false });
+    const employee = await Employee.findOne({ companyId, userId, isSoftDeleted: false })
+      .select('_id')
+      .lean();
     if (!employee) {
       return NextResponse.json(
         {
@@ -54,7 +56,7 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
       companyId,
       employeeId: targetEmployeeId,
       date: { $gte: startOfDay, $lte: endOfDay },
-    });
+    }).lean();
 
     // Get past 7 days logs
     const weekAgo = new Date();
@@ -63,7 +65,9 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
       companyId,
       employeeId: targetEmployeeId,
       date: { $gte: weekAgo },
-    }).sort({ date: -1 });
+    })
+      .sort({ date: -1 })
+      .lean();
 
     return NextResponse.json({
       success: true,

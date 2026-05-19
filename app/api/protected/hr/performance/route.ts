@@ -12,7 +12,9 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     const userId = session.user.id;
     const roles = session.user.roles || [];
 
-    const employee = await Employee.findOne({ companyId, userId, isSoftDeleted: false });
+    const employee = await Employee.findOne({ companyId, userId, isSoftDeleted: false })
+      .select('_id')
+      .lean();
     if (!employee) {
       return NextResponse.json(
         {
@@ -53,7 +55,8 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     const reviews = await EmployeePerformanceReview.find(query)
       .populate({ path: 'employeeId', select: 'fullName designation' })
       .populate({ path: 'reviewerId', select: 'name email' })
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
     return NextResponse.json({ success: true, data: reviews });
   } catch (error: any) {

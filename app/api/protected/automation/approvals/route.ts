@@ -15,7 +15,9 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     const approvals = await ApprovalChain.find({
       companyId,
       status: 'pending',
-    }).sort({ createdAt: -1 });
+    })
+      .sort({ createdAt: -1 })
+      .lean();
 
     // Filter down to steps matching active approver
     const activeApprovals = approvals.filter((app) => {

@@ -16,7 +16,8 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
       .populate({ path: 'role', select: 'name' })
       .populate({ path: 'department', select: 'name' })
       .populate({ path: 'invitedBy', select: 'name email' })
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
     return NextResponse.json({ success: true, data: invitations });
   } catch (error: any) {

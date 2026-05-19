@@ -13,7 +13,8 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     const pos = await PurchaseOrder.find({ companyId, isSoftDeleted: false })
       .populate({ path: 'vendorId', select: 'name email phone category' })
       .populate({ path: 'projectId', select: 'name status' })
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
     return NextResponse.json({ success: true, data: pos });
   } catch (error: any) {

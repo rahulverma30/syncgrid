@@ -76,6 +76,7 @@ export const GET = withApiPermission(
 
       // Fetch and populate references
       const tasks = await Task.find(query)
+        .select('-checklistItems -attachments -dependencies')
         .populate({ path: 'projectId', select: 'name code' })
         .populate({ path: 'statusId', select: 'name key category color' })
         .populate({ path: 'assignees', select: 'name email image' })

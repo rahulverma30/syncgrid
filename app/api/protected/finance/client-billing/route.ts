@@ -11,7 +11,8 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
 
     const profiles = await ClientBillingProfile.find({ companyId })
       .populate({ path: 'clientId', select: 'name company' })
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
     return NextResponse.json({ success: true, data: profiles });
   } catch (error: any) {

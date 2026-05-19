@@ -8,7 +8,7 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     await connectToDatabase();
     const companyId = session.user.companyId;
 
-    const list = await Workspace.find({ companyId, isActive: true }).sort({ name: 1 });
+    const list = await Workspace.find({ companyId, isActive: true }).sort({ name: 1 }).lean();
     return NextResponse.json({ success: true, data: list });
   } catch (error: any) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });

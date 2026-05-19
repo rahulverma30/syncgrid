@@ -442,23 +442,19 @@ export const useClientsStore = create<ClientsState>((set, get) => {
 
     bulkUpdateManager: async (ids, manager) => {
       try {
-        let succeeded = 0;
-        for (const id of ids) {
-          const res = await fetch(`/api/protected/clients/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ accountManager: manager }),
-          });
-          const d = await res.json();
-          if (d.success) succeeded++;
-        }
-        if (succeeded > 0) {
+        const res = await fetch('/api/protected/clients', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids, accountManager: manager }),
+        });
+        const d = await res.json();
+        if (d.success) {
           toast.success(
-            `Successfully batch reassigned ${succeeded} corporate accounts to ${manager}.`
+            `Successfully batch reassigned ${ids.length} corporate accounts to ${manager}.`
           );
           get().fetchClients();
         } else {
-          toast.error('Batch reassignment failed.');
+          toast.error(d.message || 'Batch reassignment failed.');
         }
       } catch (e) {
         toast.error('Connection failure during batch reassignments.');
