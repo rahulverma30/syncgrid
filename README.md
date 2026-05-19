@@ -45,7 +45,6 @@
 - ✅ **Prettier formatting**
 - ✅ **ESLint configuration**
 - ✅ **Path aliases** for clean imports
-- ✅ **Example implementations**
 - ✅ **Comprehensive documentation**
 
 ## 🚀 Quick Start
@@ -101,7 +100,6 @@ syncgrid/
 │   ├── ui/                # 20+ UI components
 │   ├── navigation/        # Header, Sidebar
 │   ├── layouts/           # Layout wrappers
-│   ├── examples/          # Example implementations
 │   └── command-palette.tsx
 │
 ├── store/                 # Zustand stores (6)
@@ -124,7 +122,6 @@ syncgrid/
 - **[SETUP.md](./SETUP.md)** - Installation & setup instructions
 - **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Architecture overview
 - **Components Guide** - Component API reference (in components/ui/)
-- **Examples** - Check `components/examples/` for working code
 
 ## 🎯 Available Components
 
@@ -344,7 +341,6 @@ This is the foundation. Future modules:
 - **6 Zustand Stores** for state management
 - **5 Custom Hooks** for common patterns
 - **4 Layout Systems** for different contexts
-- **3 Examples** showing best practices
 - **100% TypeScript-ready** with path aliases
 - **Zero Build Warnings** ESLint configured
 
@@ -378,16 +374,14 @@ This is a foundation template. Extend it for your specific needs while maintaini
 For questions or issues:
 
 1. Check the documentation
-2. Review example implementations
-3. Examine the component source code
+2. Examine the component source code
 
 ## 🎉 Getting Started
 
 1. [Install dependencies](./SETUP.md)
 2. [Review documentation](./ARCHITECTURE.md)
 3. [Explore components](./components/ui/)
-4. [Check examples](./components/examples/)
-5. Start building your features!
+4. Start building your features!
 
 ---
 

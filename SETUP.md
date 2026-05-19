@@ -67,8 +67,7 @@ npm run format      # Format code with Prettier
 ├── 📂 components/             # React components
 │   ├── ui/                   # Reusable UI components
 │   ├── navigation/           # Navigation components
-│   ├── layouts/              # Layout wrappers
-│   └── examples/             # Example implementations
+│   └── layouts/              # Layout wrappers
 ├── 📂 store/                 # Zustand state stores
 ├── 📂 hooks/                 # Custom React hooks
 ├── 📂 providers/             # Context & providers
@@ -181,15 +180,11 @@ Visit [http://localhost:3000/dashboard](http://localhost:3000/dashboard) to see 
 
 Browse `components/ui/` to see available components and their patterns.
 
-### 3. Check the Examples
-
-Look at `components/examples/` for working examples of forms, tables, and hooks.
-
-### 4. Review the Structure
+### 3. Review the Structure
 
 Understand the folder structure for organizing your features.
 
-### 5. Start Building
+### 4. Start Building
 
 Create your first feature following the established patterns.
 
@@ -231,9 +226,8 @@ npm run dev -- -p 3001
 
 1. **Review Components**: Check `components/ui/` folder
 2. **Understand State**: Review stores in `store/` folder
-3. **Check Examples**: Look at example components
-4. **Start Feature Development**: Create your first feature
-5. **Connect API**: Update services in `services/` folder
+3. **Start Feature Development**: Create your first feature
+4. **Connect API**: Update services in `services/` folder
 
 ## Support & Resources
 
