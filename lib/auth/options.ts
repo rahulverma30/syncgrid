@@ -246,7 +246,10 @@ export const authOptions: NextAuthOptions = {
       const lastChecked = (token as any).lastChecked || 0;
       const CHECK_INTERVAL = 1000 * 10; // 10 seconds
 
-      if (token.id && now - lastChecked > CHECK_INTERVAL) {
+      if (user) {
+        // Set lastChecked on initial login to avoid immediate database refresh
+        (token as any).lastChecked = now;
+      } else if (token.id && now - lastChecked > CHECK_INTERVAL) {
         try {
           const tDbStart = performance.now();
           await connectToDatabase();

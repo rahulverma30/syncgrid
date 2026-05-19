@@ -39,31 +39,50 @@ export async function resolveUserAuthContext(
 
   await connectToDatabase();
 
-  const user = await User.findById(userId).populate({
-    path: 'roles',
-    model: Role,
-    populate: {
+  // 1. Fetch all system roles and company-scoped roles in a single database query with populated permissions
+  const allRoles = await Role.find({
+    $or: [{ companyId: null }, { companyId }],
+  })
+    .populate({
       path: 'permissions',
       model: Permission,
-    },
-  });
+    })
+    .lean();
 
+  const rolesMap = new Map<string, any>();
+  for (const role of allRoles) {
+    rolesMap.set(role._id.toString(), role);
+  }
+
+  // 2. Fetch user's direct role IDs
+  const user = await User.findById(userId).select('roles').lean();
   if (!user) {
     return { permissions: new Set(), roles: new Set(), maxHierarchy: 999 };
   }
 
+  // 3. Fetch user's assigned roles via RoleAssignment model (for granular workspace/dept scopes)
+  const assignments = await RoleAssignment.find({ userId, companyId }).select('roleId').lean();
+
   const effectivePermissions = new Set<string>();
   const effectiveRoles = new Set<string>();
   let maxHierarchy = 999; // lower numbers are superior
+  const processedRoleIds = new Set<string>();
 
-  // 1. Helper function to recursively resolve roles and inherited roles
-  async function processRole(role: any) {
+  // 4. In-memory recursive resolution (sub-1ms execution)
+  function processRole(roleIdOrObj: any) {
+    if (!roleIdOrObj) return;
+    const roleId = (roleIdOrObj._id || roleIdOrObj).toString();
+    if (processedRoleIds.has(roleId)) return;
+    processedRoleIds.add(roleId);
+
+    const role = rolesMap.get(roleId);
     if (!role) return;
-    const roleSlug = role.slug.toLowerCase();
-    if (effectiveRoles.has(roleSlug)) return;
 
-    effectiveRoles.add(roleSlug);
-    if (role.hierarchyLevel < maxHierarchy) {
+    const roleSlug = role.slug?.toLowerCase();
+    if (roleSlug) {
+      effectiveRoles.add(roleSlug);
+    }
+    if (role.hierarchyLevel !== undefined && role.hierarchyLevel < maxHierarchy) {
       maxHierarchy = role.hierarchyLevel;
     }
 
@@ -79,20 +98,10 @@ export async function resolveUserAuthContext(
       });
     }
 
-    // Process inherited roles recursively
-    if (role.inheritedRoles && role.inheritedRoles.length > 0) {
-      const populatedRole = await Role.findById(role._id).populate({
-        path: 'inheritedRoles',
-        model: Role,
-        populate: {
-          path: 'permissions',
-          model: Permission,
-        },
-      });
-      if (populatedRole && populatedRole.inheritedRoles) {
-        for (const inherited of populatedRole.inheritedRoles) {
-          await processRole(inherited);
-        }
+    // Process inherited roles recursively in memory
+    if (role.inheritedRoles && Array.isArray(role.inheritedRoles)) {
+      for (const inherited of role.inheritedRoles) {
+        processRole(inherited);
       }
     }
   }
@@ -100,23 +109,14 @@ export async function resolveUserAuthContext(
   // A. Process direct roles tied to User document
   if (user.roles && Array.isArray(user.roles)) {
     for (const r of user.roles) {
-      await processRole(r);
+      processRole(r);
     }
   }
 
   // B. Process role assignments via RoleAssignment model (for granular workspace/dept scopes)
-  const assignments = await RoleAssignment.find({ userId, companyId }).populate({
-    path: 'roleId',
-    model: Role,
-    populate: {
-      path: 'permissions',
-      model: Permission,
-    },
-  });
-
   for (const assign of assignments) {
     if (assign.roleId) {
-      await processRole(assign.roleId);
+      processRole(assign.roleId);
     }
   }
 
