@@ -33,7 +33,7 @@ export function PageWrapper({ children, className, id }: LayoutProps) {
  */
 export function ContentContainer({ children, className, id }: LayoutProps) {
   return (
-    <div id={id} className={cn('mx-auto w-full max-w-7xl transition-all duration-300', className)}>
+    <div id={id} className={cn('mx-auto w-full transition-all duration-300', className)}>
       {children}
     </div>
   );
