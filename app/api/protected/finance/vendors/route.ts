@@ -29,7 +29,10 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
 
     const isAuthorized = hasRole(roles, ['super-admin', 'admin', 'finance']);
     if (!isAuthorized) {
-      return NextResponse.json({ success: false, error: 'FORBIDDEN', message: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json(
+        { success: false, error: 'FORBIDDEN', message: 'Unauthorized' },
+        { status: 403 }
+      );
     }
 
     const body = await request.json();

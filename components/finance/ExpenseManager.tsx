@@ -1,6 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Plus, Check, X, ShieldCheck, FileText, Calendar, DollarSign, Upload, ClipboardCheck, ArrowUpRight } from 'lucide-react';
+import {
+  Search,
+  Plus,
+  Check,
+  X,
+  ShieldCheck,
+  FileText,
+  Calendar,
+  DollarSign,
+  Upload,
+  ClipboardCheck,
+  ArrowUpRight,
+} from 'lucide-react';
 import { Button, Input } from '@/components/ui';
 import { toast } from 'sonner';
 
@@ -49,7 +61,8 @@ export const ExpenseManager: React.FC<ExpenseManagerProps> = ({
   const filteredExpenses = expenses.filter((exp) => {
     const merch = exp.merchant?.toLowerCase() || '';
     const noteStr = exp.notes?.toLowerCase() || '';
-    const matchesSearch = merch.includes(search.toLowerCase()) || noteStr.includes(search.toLowerCase());
+    const matchesSearch =
+      merch.includes(search.toLowerCase()) || noteStr.includes(search.toLowerCase());
     const matchesCat = categoryFilter === 'all' || exp.category === categoryFilter;
     return matchesSearch && matchesCat;
   });
@@ -63,7 +76,9 @@ export const ExpenseManager: React.FC<ExpenseManagerProps> = ({
       rejected: 'bg-rose-500/10 text-rose-400 border-rose-500/30',
     };
     return (
-      <span className={`px-2 py-0.5 text-[9px] uppercase font-extrabold tracking-wider border rounded-full ${styles[status] || styles.none}`}>
+      <span
+        className={`px-2 py-0.5 text-[9px] uppercase font-extrabold tracking-wider border rounded-full ${styles[status] || styles.none}`}
+      >
         {status === 'none' ? 'direct bill' : status}
       </span>
     );
@@ -138,7 +153,11 @@ export const ExpenseManager: React.FC<ExpenseManagerProps> = ({
           </select>
         </div>
 
-        <Button onClick={() => setClaimDrawerOpen(true)} size="sm" className="h-9 text-xs gap-1.5 cursor-pointer">
+        <Button
+          onClick={() => setClaimDrawerOpen(true)}
+          size="sm"
+          className="h-9 text-xs gap-1.5 cursor-pointer"
+        >
           <Plus className="h-4 w-4" />
           File Expense
         </Button>
@@ -168,7 +187,10 @@ export const ExpenseManager: React.FC<ExpenseManagerProps> = ({
               </tr>
             ) : (
               filteredExpenses.map((exp) => (
-                <tr key={exp._id} className="border-b border-border/40 hover:bg-muted/10 transition-colors">
+                <tr
+                  key={exp._id}
+                  className="border-b border-border/40 hover:bg-muted/10 transition-colors"
+                >
                   <td className="p-4 font-bold text-foreground">{exp.expenseNumber}</td>
                   <td className="p-4 font-semibold">
                     <div className="flex flex-col">
@@ -187,7 +209,9 @@ export const ExpenseManager: React.FC<ExpenseManagerProps> = ({
                         {exp.employeeId?.firstName} {exp.employeeId?.lastName}
                       </span>
                     ) : (
-                      <span className="text-[9px] font-extrabold uppercase tracking-wider opacity-60">Corporate Direct</span>
+                      <span className="text-[9px] font-extrabold uppercase tracking-wider opacity-60">
+                        Corporate Direct
+                      </span>
                     )}
                   </td>
                   <td className="p-4">
@@ -202,7 +226,8 @@ export const ExpenseManager: React.FC<ExpenseManagerProps> = ({
                     </div>
                   </td>
                   <td className="p-4 font-bold text-foreground">
-                    {exp.currency} {exp.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    {exp.currency}{' '}
+                    {exp.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </td>
                   <td className="p-4">{getStatusBadge(exp.reimbursementStatus)}</td>
                   <td className="p-4 text-right">
@@ -238,15 +263,22 @@ export const ExpenseManager: React.FC<ExpenseManagerProps> = ({
               className="bg-card border border-border rounded-xl p-6 w-full max-w-md shadow-2xl space-y-4"
             >
               <div className="flex justify-between items-center pb-2 border-b border-border/60">
-                <h3 className="text-sm font-bold uppercase tracking-wider">File Business Expense Claim</h3>
-                <button onClick={() => setClaimDrawerOpen(false)} className="p-1 hover:bg-accent/40 rounded text-muted-foreground">
+                <h3 className="text-sm font-bold uppercase tracking-wider">
+                  File Business Expense Claim
+                </h3>
+                <button
+                  onClick={() => setClaimDrawerOpen(false)}
+                  className="p-1 hover:bg-accent/40 rounded text-muted-foreground"
+                >
                   <X className="h-4 w-4" />
                 </button>
               </div>
 
               <form onSubmit={handleFormSubmit} className="space-y-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Claim Category</label>
+                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+                    Claim Category
+                  </label>
                   <select
                     value={category}
                     onChange={(e) => setCategory(e.target.value as any)}
@@ -265,7 +297,9 @@ export const ExpenseManager: React.FC<ExpenseManagerProps> = ({
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Merchant / Vendor Name</label>
+                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+                    Merchant / Vendor Name
+                  </label>
                   <Input
                     required
                     value={merchant}
@@ -276,7 +310,9 @@ export const ExpenseManager: React.FC<ExpenseManagerProps> = ({
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Linked Project (Optional)</label>
+                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+                    Linked Project (Optional)
+                  </label>
                   <select
                     value={selectedProject}
                     onChange={(e) => setSelectedProject(e.target.value)}
@@ -292,7 +328,9 @@ export const ExpenseManager: React.FC<ExpenseManagerProps> = ({
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Total Payout Amount (USD)</label>
+                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+                    Total Payout Amount (USD)
+                  </label>
                   <Input
                     type="number"
                     required
@@ -306,7 +344,9 @@ export const ExpenseManager: React.FC<ExpenseManagerProps> = ({
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Short Description Notes</label>
+                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+                    Short Description Notes
+                  </label>
                   <Input
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
@@ -318,8 +358,12 @@ export const ExpenseManager: React.FC<ExpenseManagerProps> = ({
                 {/* Simulated file upload receipt */}
                 <div className="border border-dashed border-border/80 rounded-xl p-4 flex flex-col items-center justify-center space-y-2 bg-muted/5 select-none">
                   <Upload className="h-5 w-5 text-muted-foreground/60" />
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Simulate Receipt Attachment</span>
-                  <span className="text-[9px] text-muted-foreground/80 font-semibold italic">Receipt_AcmeDelta.pdf (124 KB) automatically attached</span>
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                    Simulate Receipt Attachment
+                  </span>
+                  <span className="text-[9px] text-muted-foreground/80 font-semibold italic">
+                    Receipt_AcmeDelta.pdf (124 KB) automatically attached
+                  </span>
                 </div>
 
                 <div className="flex gap-2 justify-end pt-2">
@@ -354,7 +398,10 @@ export const ExpenseManager: React.FC<ExpenseManagerProps> = ({
             >
               <div className="flex justify-between items-center pb-2 border-b border-border/60">
                 <h3 className="text-sm font-bold uppercase tracking-wider">Resolve Claim Review</h3>
-                <button onClick={() => setActiveReviewClaim(null)} className="p-1 hover:bg-accent/40 rounded text-muted-foreground">
+                <button
+                  onClick={() => setActiveReviewClaim(null)}
+                  className="p-1 hover:bg-accent/40 rounded text-muted-foreground"
+                >
                   <X className="h-4 w-4" />
                 </button>
               </div>
@@ -363,7 +410,8 @@ export const ExpenseManager: React.FC<ExpenseManagerProps> = ({
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Claimant:</span>
                   <span className="font-bold">
-                    {activeReviewClaim.employeeId?.firstName} {activeReviewClaim.employeeId?.lastName}
+                    {activeReviewClaim.employeeId?.firstName}{' '}
+                    {activeReviewClaim.employeeId?.lastName}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -372,7 +420,9 @@ export const ExpenseManager: React.FC<ExpenseManagerProps> = ({
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Category:</span>
-                  <span className="font-semibold uppercase tracking-wider text-primary">{activeReviewClaim.category}</span>
+                  <span className="font-semibold uppercase tracking-wider text-primary">
+                    {activeReviewClaim.category}
+                  </span>
                 </div>
                 <div className="flex justify-between pt-1 border-t border-border/40 text-sm font-extrabold text-foreground">
                   <span>Claim Amount:</span>
@@ -388,7 +438,9 @@ export const ExpenseManager: React.FC<ExpenseManagerProps> = ({
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Approver Notes / Comments</label>
+                <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+                  Approver Notes / Comments
+                </label>
                 <textarea
                   value={reviewComments}
                   onChange={(e) => setReviewComments(e.target.value)}

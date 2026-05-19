@@ -164,6 +164,7 @@ session?.user
 )[0].items;
 
 return (
+
 <nav>
 {visibleItems.map((item) => (
 <a key={item.href} href={item.href}>
@@ -261,6 +262,7 @@ const canCreateAndDelete = hasAllPermissions(session.user.permissions, [
 const userActions = getResourceActions(session.user.permissions, 'users');
 
 return (
+
 <div>
 {canViewOrEdit && <p>User can view or edit users</p>}
 {canCreateAndDelete && <p>User can create and delete users</p>}
@@ -291,6 +293,7 @@ return <p>You don't have permission to edit users</p>;
 }
 
 return (
+
 <form>
 <Input type="text" placeholder="Name" />
 <Input type="email" placeholder="Email" />
@@ -325,6 +328,7 @@ import { UserDashboard } from './user-dashboard';
 
 export function Dashboard() {
 return (
+
 <div>
 {/_ Show only if user has dashboard read permission _/}
 <PermissionRequirement

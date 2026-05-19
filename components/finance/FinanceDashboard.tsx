@@ -1,6 +1,14 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { DollarSign, ArrowUpRight, ArrowDownRight, ShieldAlert, FileText, CheckCircle, Clock } from 'lucide-react';
+import {
+  DollarSign,
+  ArrowUpRight,
+  ArrowDownRight,
+  ShieldAlert,
+  FileText,
+  CheckCircle,
+  Clock,
+} from 'lucide-react';
 
 interface FinanceDashboardProps {
   data: any;
@@ -9,7 +17,12 @@ interface FinanceDashboardProps {
   role: string;
 }
 
-export const FinanceDashboard: React.FC<FinanceDashboardProps> = ({ data, onSeed, isSeeding, role }) => {
+export const FinanceDashboard: React.FC<FinanceDashboardProps> = ({
+  data,
+  onSeed,
+  isSeeding,
+  role,
+}) => {
   if (!data) {
     return (
       <div className="h-96 flex flex-col items-center justify-center space-y-4 select-none">
@@ -62,7 +75,9 @@ export const FinanceDashboard: React.FC<FinanceDashboardProps> = ({ data, onSeed
   ];
 
   // Simple SVG math for chart rendering
-  const maxIncomeVal = Math.max(...cashflowTrends.map((t: any) => Math.max(t.income, t.expense, 1000)));
+  const maxIncomeVal = Math.max(
+    ...cashflowTrends.map((t: any) => Math.max(t.income, t.expense, 1000))
+  );
 
   return (
     <div className="space-y-6">
@@ -71,7 +86,8 @@ export const FinanceDashboard: React.FC<FinanceDashboardProps> = ({ data, onSeed
         <div className="flex items-center gap-3">
           <div className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
           <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">
-            Ledger status: <span className="text-foreground">Live real-time ledger synchronized</span>
+            Ledger status:{' '}
+            <span className="text-foreground">Live real-time ledger synchronized</span>
           </p>
         </div>
         <button
@@ -94,13 +110,19 @@ export const FinanceDashboard: React.FC<FinanceDashboardProps> = ({ data, onSeed
             className={`p-5 rounded-xl border bg-gradient-to-br ${card.color} backdrop-blur-sm shadow-md flex flex-col justify-between select-none`}
           >
             <div className="flex justify-between items-start">
-              <span className="text-[10px] uppercase tracking-widest font-bold opacity-75">{card.title}</span>
+              <span className="text-[10px] uppercase tracking-widest font-bold opacity-75">
+                {card.title}
+              </span>
               <card.icon className="h-4 w-4 opacity-80" />
             </div>
             <div className="my-4">
-              <h3 className="text-2xl font-extrabold tracking-tight text-foreground">{card.value}</h3>
+              <h3 className="text-2xl font-extrabold tracking-tight text-foreground">
+                {card.value}
+              </h3>
             </div>
-            <div className="text-[10px] font-bold tracking-wider uppercase opacity-80">{card.change}</div>
+            <div className="text-[10px] font-bold tracking-wider uppercase opacity-80">
+              {card.change}
+            </div>
           </motion.div>
         ))}
       </div>
@@ -114,14 +136,17 @@ export const FinanceDashboard: React.FC<FinanceDashboardProps> = ({ data, onSeed
         >
           <ShieldAlert className="h-5 w-5 text-rose-500 flex-shrink-0 mt-0.5" />
           <div className="space-y-1">
-            <h4 className="text-xs font-bold text-rose-400 uppercase tracking-wider">Critical Budget Overflow Threshold Breached</h4>
+            <h4 className="text-xs font-bold text-rose-400 uppercase tracking-wider">
+              Critical Budget Overflow Threshold Breached
+            </h4>
             <p className="text-xs text-muted-foreground">
               The following operational departments spend caps have exceeded alert bounds:
               {budgetStatus
                 .filter((b: any) => b.alertFired)
                 .map((b: any) => (
                   <span key={b.id} className="block mt-1 font-semibold text-foreground">
-                    • {b.name} ({b.projectName}): Spent {b.percentage.toFixed(1)}% of ${b.allocated.toLocaleString()} ceiling limit.
+                    • {b.name} ({b.projectName}): Spent {b.percentage.toFixed(1)}% of $
+                    {b.allocated.toLocaleString()} ceiling limit.
                   </span>
                 ))}
             </p>
@@ -135,8 +160,12 @@ export const FinanceDashboard: React.FC<FinanceDashboardProps> = ({ data, onSeed
         <div className="lg:col-span-2 p-5 bg-card/30 border border-border/80 rounded-xl flex flex-col select-none">
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h3 className="text-xs font-bold uppercase tracking-wider">Gross Operating Cashflow</h3>
-              <p className="text-[10px] text-muted-foreground">Monthly aggregate income vs expense streams (Last 6 Months)</p>
+              <h3 className="text-xs font-bold uppercase tracking-wider">
+                Gross Operating Cashflow
+              </h3>
+              <p className="text-[10px] text-muted-foreground">
+                Monthly aggregate income vs expense streams (Last 6 Months)
+              </p>
             </div>
             <div className="flex gap-4 text-[10px] font-bold uppercase tracking-wider">
               <div className="flex items-center gap-1.5">
@@ -176,7 +205,9 @@ export const FinanceDashboard: React.FC<FinanceDashboardProps> = ({ data, onSeed
                       </div>
                     </div>
                   </div>
-                  <span className="text-[10px] font-semibold text-muted-foreground mt-2 uppercase">{t.month}</span>
+                  <span className="text-[10px] font-semibold text-muted-foreground mt-2 uppercase">
+                    {t.month}
+                  </span>
                 </div>
               );
             })}
@@ -192,16 +223,23 @@ export const FinanceDashboard: React.FC<FinanceDashboardProps> = ({ data, onSeed
 
           <div className="flex-1 flex flex-col justify-center space-y-4 my-6">
             {expenseBreakdown.length === 0 ? (
-              <div className="text-center text-xs text-muted-foreground py-10">No outflows recorded</div>
+              <div className="text-center text-xs text-muted-foreground py-10">
+                No outflows recorded
+              </div>
             ) : (
               expenseBreakdown.map((item: any) => {
-                const totalExp = expenseBreakdown.reduce((sum: number, curr: any) => sum + curr.value, 0);
+                const totalExp = expenseBreakdown.reduce(
+                  (sum: number, curr: any) => sum + curr.value,
+                  0
+                );
                 const percent = totalExp > 0 ? (item.value / totalExp) * 100 : 0;
                 return (
                   <div key={item.name} className="space-y-1">
                     <div className="flex justify-between text-[10px] font-bold tracking-wider uppercase">
                       <span>{item.name}</span>
-                      <span className="text-muted-foreground">${item.value.toLocaleString()} ({percent.toFixed(0)}%)</span>
+                      <span className="text-muted-foreground">
+                        ${item.value.toLocaleString()} ({percent.toFixed(0)}%)
+                      </span>
                     </div>
                     <div className="h-1.5 w-full bg-border/40 rounded-full overflow-hidden">
                       <div

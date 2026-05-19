@@ -128,7 +128,7 @@ export default function SettingsAccessPage() {
           ) : (
             <Card className="bg-card/40 border border-border/60 rounded-3xl overflow-hidden backdrop-blur-md text-left">
               <div className="p-5 border-b border-border/40 select-none">
-                <h3 className="text-xs font-bold text-white uppercase tracking-wider">
+                <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">
                   Active Access Tokens ({keys.length})
                 </h3>
               </div>
@@ -139,14 +139,14 @@ export default function SettingsAccessPage() {
                     <div className="space-y-1.5 min-w-0">
                       <div className="flex items-center gap-2 select-none">
                         <Key className="h-4 w-4 text-primary shrink-0" />
-                        <h4 className="font-bold text-white truncate text-sm">{k.name}</h4>
+                        <h4 className="font-bold text-foreground truncate text-sm">{k.name}</h4>
                       </div>
-                      <div className="flex items-center gap-2.5 text-[10px] text-slate-400 font-semibold select-none flex-wrap">
-                        <span className="font-mono bg-background/50 border border-border/60 px-1.5 py-0.5 rounded text-white">
+                      <div className="flex items-center gap-2.5 text-[10px] text-muted-foreground font-semibold select-none flex-wrap">
+                        <span className="font-mono bg-background/50 border border-border/60 px-1.5 py-0.5 rounded text-foreground">
                           {k.prefix}
                         </span>
                         <span>
-                          Scope: <span className="text-blue-400 uppercase">{k.scope}</span>
+                          Scope: <span className="text-primary uppercase">{k.scope}</span>
                         </span>
                         <span className="flex items-center gap-0.5">
                           <Clock className="h-3 w-3" />
@@ -166,7 +166,7 @@ export default function SettingsAccessPage() {
                   </div>
                 ))}
                 {keys.length === 0 && (
-                  <div className="p-10 text-center text-slate-500 select-none">
+                  <div className="p-10 text-center text-muted-foreground/60 select-none">
                     No active B2B credentials detected.
                   </div>
                 )}
@@ -178,13 +178,13 @@ export default function SettingsAccessPage() {
         {/* Generate Key Form */}
         <div className="space-y-6 text-left select-none">
           <Card className="bg-card/40 border border-border/60 p-5 rounded-2xl backdrop-blur-md space-y-4">
-            <h3 className="text-xs font-bold text-white uppercase tracking-wider border-b border-border/40 pb-2">
+            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider border-b border-border/40 pb-2">
               Generate API Token
             </h3>
 
             <div className="space-y-3.5">
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">
                   Key Name Label
                 </label>
                 <Input
@@ -196,21 +196,21 @@ export default function SettingsAccessPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">
                   Target Scope Level
                 </label>
                 <select
                   value={newKeyScope}
                   onChange={(e) => setNewKeyScope(e.target.value)}
-                  className="w-full px-3 bg-background/30 border border-border/60 hover:border-primary/20 rounded-xl h-9 text-xs text-slate-300 focus:ring-0 outline-none cursor-pointer"
+                  className="w-full px-3 bg-background/30 border border-border/60 hover:border-primary/20 rounded-xl h-9 text-xs text-foreground/85 focus:ring-0 outline-none cursor-pointer"
                 >
-                  <option value="read-only" className="bg-slate-950">
+                  <option value="read-only" className="bg-background text-foreground">
                     Read Only Scope
                   </option>
-                  <option value="read-write" className="bg-slate-950">
+                  <option value="read-write" className="bg-background text-foreground">
                     Read & Write Scope
                   </option>
-                  <option value="admin" className="bg-slate-950">
+                  <option value="admin" className="bg-background text-foreground">
                     Full Admin Scope
                   </option>
                 </select>
@@ -233,7 +233,7 @@ export default function SettingsAccessPage() {
               <Lock className="h-4 w-4" />
               Secured Key Storage
             </div>
-            <p className="text-[10px] text-slate-400 leading-relaxed">
+            <p className="text-[10px] text-muted-foreground leading-relaxed">
               API key variables are hashed immediately using SHA-256 before storage. Ensure you copy
               the generated key string, as it will not be displayed again.
             </p>

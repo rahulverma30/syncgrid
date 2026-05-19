@@ -268,7 +268,7 @@ export function ConfirmationModal({
   return (
     <CenteredModal isOpen={isOpen} onClose={onClose} title={title} footer={footerActions}>
       <div className="flex gap-4 items-start select-none pt-2">
-        <div className="rounded-full p-2.5 bg-muted/40 flex-shrink-0 flex items-center justify-center">
+        <div className="rounded-full p-2.5 flex-shrink-0 flex items-center justify-center">
           {iconMap}
         </div>
         <div className="space-y-1 text-left flex-1">

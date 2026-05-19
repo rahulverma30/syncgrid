@@ -132,4 +132,5 @@ const ExpenseSchema = new Schema<IExpense>(
 ExpenseSchema.index({ companyId: 1, expenseNumber: 1 }, { unique: true });
 ExpenseSchema.index({ companyId: 1, isSoftDeleted: 1, reimbursementStatus: 1, paymentStatus: 1 });
 
-export const Expense = mongoose.models.Expense || mongoose.model<IExpense>('Expense', ExpenseSchema);
+export const Expense =
+  mongoose.models.Expense || mongoose.model<IExpense>('Expense', ExpenseSchema);

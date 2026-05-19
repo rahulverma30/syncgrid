@@ -138,7 +138,10 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
 
     const isAuthorized = hasRole(roles, ['super-admin', 'admin', 'finance']);
     if (!isAuthorized) {
-      return NextResponse.json({ success: false, error: 'FORBIDDEN', message: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json(
+        { success: false, error: 'FORBIDDEN', message: 'Unauthorized' },
+        { status: 403 }
+      );
     }
 
     const url = new URL(request.url);
@@ -146,12 +149,18 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
     const action = url.searchParams.get('action');
 
     if (!id || action !== 'reconcile') {
-      return NextResponse.json({ success: false, error: 'BAD_REQUEST', message: 'Parameters missing' }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: 'BAD_REQUEST', message: 'Parameters missing' },
+        { status: 400 }
+      );
     }
 
     const txn = await Transaction.findOne({ _id: id, companyId });
     if (!txn) {
-      return NextResponse.json({ success: false, error: 'NOT_FOUND', message: 'Transaction not found' }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: 'NOT_FOUND', message: 'Transaction not found' },
+        { status: 404 }
+      );
     }
 
     const body = await request.json();

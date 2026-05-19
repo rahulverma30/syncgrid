@@ -48,7 +48,13 @@ const VendorSchema = new Schema<IVendor>(
       required: true,
       default: 'net_30',
     },
-    status: { type: String, enum: ['active', 'inactive'], required: true, default: 'active', index: true },
+    status: {
+      type: String,
+      enum: ['active', 'inactive'],
+      required: true,
+      default: 'active',
+      index: true,
+    },
     notes: { type: String },
   },
   { timestamps: true }

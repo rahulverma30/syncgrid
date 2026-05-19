@@ -9,13 +9,7 @@ import { EditorCanvas } from '@/components/knowledge/EditorCanvas';
 import { CommentThreads } from '@/components/knowledge/CommentThreads';
 import { HistoryVersionList } from '@/components/knowledge/HistoryVersionList';
 import { ReadingAcknowledgePanel } from '@/components/knowledge/ReadingAcknowledgePanel';
-import {
-  ChevronLeft,
-  MessageSquare,
-  History,
-  ShieldCheck,
-  Folder,
-} from 'lucide-react';
+import { ChevronLeft, MessageSquare, History, ShieldCheck, Folder } from 'lucide-react';
 import Link from 'next/link';
 
 interface WikiSpacePageProps {
@@ -44,7 +38,9 @@ export default function WikiSpaceWorkspace({ params }: WikiSpacePageProps) {
     setActiveDocument,
   } = useKnowledgeStore();
 
-  const [activeRightDrawer, setActiveRightDrawer] = useState<'comments' | 'history' | 'progress' | null>(null);
+  const [activeRightDrawer, setActiveRightDrawer] = useState<
+    'comments' | 'history' | 'progress' | null
+  >(null);
 
   useEffect(() => {
     if (companyId) {
@@ -53,7 +49,7 @@ export default function WikiSpaceWorkspace({ params }: WikiSpacePageProps) {
       setActiveSpaceId(spaceId);
       fetchDocuments(spaceId);
     }
-  }, [companyId, spaceId]);
+  }, [companyId, spaceId, fetchSpaces, fetchCategories, setActiveSpaceId, fetchDocuments]);
 
   // Find target space info
   const currentSpace = spaces.find((s) => s._id === spaceId);
@@ -66,7 +62,7 @@ export default function WikiSpaceWorkspace({ params }: WikiSpacePageProps) {
         setActiveDocument(rootDocs[0]);
       }
     }
-  }, [documents.length, activeDocument?._id]);
+  }, [documents, activeDocument, setActiveDocument, spaceId]);
 
   const toggleRightDrawer = (drawerType: 'comments' | 'history' | 'progress') => {
     if (activeRightDrawer === drawerType) {
@@ -90,7 +86,9 @@ export default function WikiSpaceWorkspace({ params }: WikiSpacePageProps) {
           </Link>
           <div className="flex items-center gap-1.5 min-w-0">
             <Folder className="h-4 w-4 text-emerald-400" />
-            <h2 className="text-sm font-semibold truncate text-slate-200">{currentSpace?.name || 'Wiki Workspace'}</h2>
+            <h2 className="text-sm font-semibold truncate text-slate-200">
+              {currentSpace?.name || 'Wiki Workspace'}
+            </h2>
           </div>
         </div>
 

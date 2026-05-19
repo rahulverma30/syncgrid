@@ -1,6 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Plus, Calendar, AlertTriangle, ShieldCheck, DollarSign, X, Check } from 'lucide-react';
+import {
+  Search,
+  Plus,
+  Calendar,
+  AlertTriangle,
+  ShieldCheck,
+  DollarSign,
+  X,
+  Check,
+} from 'lucide-react';
 import { Button, Input } from '@/components/ui';
 import { toast } from 'sonner';
 
@@ -97,12 +106,20 @@ export const BudgetPlanner: React.FC<BudgetPlannerProps> = ({ budgets, onSaveBud
       {/* Filters & Actions header */}
       <div className="flex justify-between items-center select-none">
         <div>
-          <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Corporate Allocations & Spent Ledger</h3>
-          <p className="text-[10px] text-muted-foreground">Define department spent policies and delivery caps</p>
+          <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            Corporate Allocations & Spent Ledger
+          </h3>
+          <p className="text-[10px] text-muted-foreground">
+            Define department spent policies and delivery caps
+          </p>
         </div>
 
         {isFinance && (
-          <Button onClick={handleOpenCreate} size="sm" className="h-9 text-xs gap-1.5 cursor-pointer">
+          <Button
+            onClick={handleOpenCreate}
+            size="sm"
+            className="h-9 text-xs gap-1.5 cursor-pointer"
+          >
             <Plus className="h-4 w-4" />
             Set Budget Limit
           </Button>
@@ -126,7 +143,9 @@ export const BudgetPlanner: React.FC<BudgetPlannerProps> = ({ budgets, onSaveBud
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className={`p-5 rounded-xl border bg-card/30 backdrop-blur-md flex flex-col justify-between space-y-4 shadow-sm relative overflow-hidden select-none ${
-                  thresholdExceeded ? 'border-rose-500/40 ring-1 ring-rose-500/20' : 'border-border/80'
+                  thresholdExceeded
+                    ? 'border-rose-500/40 ring-1 ring-rose-500/20'
+                    : 'border-border/80'
                 }`}
               >
                 {/* Header title */}
@@ -135,7 +154,9 @@ export const BudgetPlanner: React.FC<BudgetPlannerProps> = ({ budgets, onSaveBud
                     <span className="text-[9px] uppercase font-extrabold tracking-widest text-primary">
                       {b.type} spend cap
                     </span>
-                    <h4 className="text-xs font-extrabold text-foreground truncate max-w-[200px]">{b.name}</h4>
+                    <h4 className="text-xs font-extrabold text-foreground truncate max-w-[200px]">
+                      {b.name}
+                    </h4>
                     {b.projectId && (
                       <span className="text-[9px] text-muted-foreground font-semibold uppercase tracking-wider block">
                         Project: {b.projectId?.name}
@@ -153,14 +174,18 @@ export const BudgetPlanner: React.FC<BudgetPlannerProps> = ({ budgets, onSaveBud
                 {/* Progress Linear metrics */}
                 <div className="space-y-2">
                   <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider">
-                    <span className="text-muted-foreground">Spent: ${b.spentAmount.toLocaleString()}</span>
+                    <span className="text-muted-foreground">
+                      Spent: ${b.spentAmount.toLocaleString()}
+                    </span>
                     <span>Cap: ${b.amount.toLocaleString()}</span>
                   </div>
                   <div className="h-2 w-full bg-border/40 rounded-full overflow-hidden relative">
                     <div
                       style={{ width: `${Math.min(100, spentPercent)}%` }}
                       className={`h-full rounded-full transition-all duration-300 ${
-                        thresholdExceeded ? 'bg-gradient-to-r from-rose-500 to-red-600' : 'bg-gradient-to-r from-emerald-500 to-teal-500'
+                        thresholdExceeded
+                          ? 'bg-gradient-to-r from-rose-500 to-red-600'
+                          : 'bg-gradient-to-r from-emerald-500 to-teal-500'
                       }`}
                     />
                   </div>
@@ -175,7 +200,8 @@ export const BudgetPlanner: React.FC<BudgetPlannerProps> = ({ budgets, onSaveBud
                   <div className="flex items-center gap-1">
                     <Calendar className="h-3 w-3 opacity-60" />
                     <span>
-                      {new Date(b.startDate).toLocaleDateString()} - {new Date(b.endDate).toLocaleDateString()}
+                      {new Date(b.startDate).toLocaleDateString()} -{' '}
+                      {new Date(b.endDate).toLocaleDateString()}
                     </span>
                   </div>
 
@@ -208,14 +234,19 @@ export const BudgetPlanner: React.FC<BudgetPlannerProps> = ({ budgets, onSaveBud
                 <h3 className="text-sm font-bold uppercase tracking-wider">
                   {selectedBudget ? 'Adjust spend cap limit' : 'Set allocation spent limit'}
                 </h3>
-                <button onClick={() => setBudgetModalOpen(false)} className="p-1 hover:bg-accent/40 rounded text-muted-foreground">
+                <button
+                  onClick={() => setBudgetModalOpen(false)}
+                  className="p-1 hover:bg-accent/40 rounded text-muted-foreground"
+                >
                   <X className="h-4 w-4" />
                 </button>
               </div>
 
               <form onSubmit={handleFormSubmit} className="space-y-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Budget Name *</label>
+                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+                    Budget Name *
+                  </label>
                   <Input
                     required
                     value={name}
@@ -226,7 +257,9 @@ export const BudgetPlanner: React.FC<BudgetPlannerProps> = ({ budgets, onSaveBud
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Budget Type</label>
+                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+                    Budget Type
+                  </label>
                   <select
                     value={type}
                     onChange={(e) => setType(e.target.value as any)}
@@ -240,7 +273,9 @@ export const BudgetPlanner: React.FC<BudgetPlannerProps> = ({ budgets, onSaveBud
 
                 {type === 'project' && (
                   <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Target Project *</label>
+                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+                      Target Project *
+                    </label>
                     <select
                       value={selectedProject}
                       onChange={(e) => setSelectedProject(e.target.value)}
@@ -257,7 +292,9 @@ export const BudgetPlanner: React.FC<BudgetPlannerProps> = ({ budgets, onSaveBud
                 )}
 
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Allocation Cap ($ USD) *</label>
+                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+                    Allocation Cap ($ USD) *
+                  </label>
                   <Input
                     type="number"
                     required
@@ -271,7 +308,9 @@ export const BudgetPlanner: React.FC<BudgetPlannerProps> = ({ budgets, onSaveBud
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Start Date *</label>
+                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+                      Start Date *
+                    </label>
                     <Input
                       type="date"
                       required
@@ -281,7 +320,9 @@ export const BudgetPlanner: React.FC<BudgetPlannerProps> = ({ budgets, onSaveBud
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">End Date *</label>
+                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+                      End Date *
+                    </label>
                     <Input
                       type="date"
                       required
@@ -293,7 +334,9 @@ export const BudgetPlanner: React.FC<BudgetPlannerProps> = ({ budgets, onSaveBud
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Spent Threshold Alarm limit (%)</label>
+                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+                    Spent Threshold Alarm limit (%)
+                  </label>
                   <Input
                     type="number"
                     min={10}
@@ -306,7 +349,9 @@ export const BudgetPlanner: React.FC<BudgetPlannerProps> = ({ budgets, onSaveBud
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Allocation Notes</label>
+                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+                    Allocation Notes
+                  </label>
                   <Input
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}

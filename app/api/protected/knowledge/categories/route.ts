@@ -25,14 +25,23 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
 
     const { name, colorCode } = body;
     if (!name) {
-      return NextResponse.json({ success: false, message: 'Category name required' }, { status: 400 });
+      return NextResponse.json(
+        { success: false, message: 'Category name required' },
+        { status: 400 }
+      );
     }
 
-    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const slug = name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
 
     const existing = await KnowledgeCategory.findOne({ companyId, slug });
     if (existing) {
-      return NextResponse.json({ success: false, message: 'Category already exists' }, { status: 400 });
+      return NextResponse.json(
+        { success: false, message: 'Category already exists' },
+        { status: 400 }
+      );
     }
 
     const category = new KnowledgeCategory({

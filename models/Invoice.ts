@@ -127,4 +127,5 @@ InvoiceSchema.index({ companyId: 1, invoiceNumber: 1 }, { unique: true });
 // Facilitate search performance optimizations
 InvoiceSchema.index({ companyId: 1, isSoftDeleted: 1, isArchived: 1, status: 1 });
 
-export const Invoice = mongoose.models.Invoice || mongoose.model<IInvoice>('Invoice', InvoiceSchema);
+export const Invoice =
+  mongoose.models.Invoice || mongoose.model<IInvoice>('Invoice', InvoiceSchema);

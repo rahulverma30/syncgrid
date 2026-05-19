@@ -165,16 +165,16 @@ export default function SettingsRolesPage() {
       {/* KPI stats */}
       <div className="grid gap-4 sm:grid-cols-3 select-none">
         <Card className="bg-card/40 border border-border/60 p-5 rounded-2xl backdrop-blur-md">
-          <div className="flex justify-between items-center text-slate-400">
+          <div className="flex justify-between items-center text-muted-foreground">
             <span className="text-[10px] font-bold uppercase tracking-wider">Active Roles</span>
-            <Shield className="w-4 h-4 text-blue-500" />
+            <Shield className="w-4 h-4 text-primary" />
           </div>
-          <h3 className="text-2xl font-black font-mono text-white mt-1.5">{roles.length}</h3>
-          <p className="text-[10px] text-slate-400 mt-1">Configured security layers</p>
+          <h3 className="text-2xl font-black font-mono text-foreground mt-1.5">{roles.length}</h3>
+          <p className="text-[10px] text-muted-foreground mt-1">Configured security layers</p>
         </Card>
 
         <Card className="bg-card/40 border border-border/60 p-5 rounded-2xl backdrop-blur-md">
-          <div className="flex justify-between items-center text-slate-400">
+          <div className="flex justify-between items-center text-muted-foreground">
             <span className="text-[10px] font-bold uppercase tracking-wider">
               Total Handled Rules
             </span>
@@ -183,18 +183,18 @@ export default function SettingsRolesPage() {
           <h3 className="text-2xl font-black font-mono text-emerald-400 mt-1.5">
             {roles.reduce((acc, curr) => acc + (curr.permissionsCount || 0), 0)}
           </h3>
-          <p className="text-[10px] text-slate-400 mt-1">Active permission rules</p>
+          <p className="text-[10px] text-muted-foreground mt-1">Active permission rules</p>
         </Card>
 
         <Card className="bg-card/40 border border-border/60 p-5 rounded-2xl backdrop-blur-md">
-          <div className="flex justify-between items-center text-slate-400">
+          <div className="flex justify-between items-center text-muted-foreground">
             <span className="text-[10px] font-bold uppercase tracking-wider">Assigned Members</span>
             <Users className="w-4 h-4 text-purple-500" />
           </div>
           <h3 className="text-2xl font-black font-mono text-purple-400 mt-1.5">
             {roles.reduce((acc, curr) => acc + (curr.assignedUsers || 0), 0)}
           </h3>
-          <p className="text-[10px] text-slate-400 mt-1">Members bound to RBAC layers</p>
+          <p className="text-[10px] text-muted-foreground mt-1">Members bound to RBAC layers</p>
         </Card>
       </div>
 
@@ -224,7 +224,7 @@ export default function SettingsRolesPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-border/60 bg-background/20 select-none text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                <tr className="border-b border-border/60 bg-background/20 select-none text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">
                   <th className="py-3.5 px-4 w-10">
                     <input
                       type="checkbox"
@@ -251,7 +251,7 @@ export default function SettingsRolesPage() {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className={`hover:bg-slate-900/10 transition-colors ${
+                      className={`hover:bg-accent/20 transition-colors ${
                         selectedRows.includes(r._id) ? 'bg-primary/5' : ''
                       }`}
                     >
@@ -263,15 +263,17 @@ export default function SettingsRolesPage() {
                           className="rounded border-border/60 text-primary focus:ring-0 cursor-pointer"
                         />
                       </td>
-                      <td className="py-4 px-4 font-bold text-white tracking-wider">{r.name}</td>
-                      <td className="py-4 px-4 font-mono font-bold text-blue-400">Lv {r.level}</td>
-                      <td className="py-4 px-4 font-semibold text-slate-300">
+                      <td className="py-4 px-4 font-bold text-foreground tracking-wider">
+                        {r.name}
+                      </td>
+                      <td className="py-4 px-4 font-mono font-bold text-primary">Lv {r.level}</td>
+                      <td className="py-4 px-4 font-semibold text-muted-foreground">
                         {r.assignedUsers} users bound
                       </td>
                       <td className="py-4 px-4 text-emerald-400 font-bold font-mono">
                         {r.permissionsCount} rules
                       </td>
-                      <td className="py-4 px-4 text-slate-400 max-w-sm truncate leading-relaxed">
+                      <td className="py-4 px-4 text-muted-foreground max-w-sm truncate leading-relaxed">
                         {r.description}
                       </td>
                       <td className="py-4 px-4 text-right">
@@ -279,7 +281,7 @@ export default function SettingsRolesPage() {
                           <Link href={`/settings/roles/${r._id}`}>
                             <button
                               title="View details"
-                              className="p-1.5 rounded-lg border border-border/60 hover:bg-primary/10 text-slate-400 hover:text-primary transition-all"
+                              className="p-1.5 rounded-lg border border-border/60 hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all"
                             >
                               <Eye className="h-3.5 w-3.5" />
                             </button>
@@ -287,7 +289,7 @@ export default function SettingsRolesPage() {
                           <button
                             onClick={() => handleDeleteRole(r._id)}
                             title="Delete role record"
-                            className="p-1.5 rounded-lg border border-border/60 hover:bg-red-500/10 text-slate-400 hover:text-red-500 transition-all"
+                            className="p-1.5 rounded-lg border border-border/60 hover:bg-red-500/10 text-muted-foreground hover:text-red-500 transition-all"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
@@ -309,9 +311,9 @@ export default function SettingsRolesPage() {
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
-            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 bg-slate-900 border border-border p-3.5 rounded-2xl shadow-2xl select-none"
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 bg-card border border-border p-3.5 rounded-2xl shadow-2xl select-none"
           >
-            <span className="text-xs font-bold text-slate-300">
+            <span className="text-xs font-bold text-muted-foreground">
               {selectedRows.length} roles selected
             </span>
             <div className="flex items-center gap-2">

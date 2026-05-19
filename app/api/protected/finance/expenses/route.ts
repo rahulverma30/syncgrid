@@ -96,7 +96,7 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
       expenseNumber,
       category: validated.category,
       merchant: validated.merchant,
-      employeeId: isEmployeeClaim ? employeeId : (body.employeeId || null),
+      employeeId: isEmployeeClaim ? employeeId : body.employeeId || null,
       projectId: validated.projectId,
       amount: validated.amount,
       currency: validated.currency || 'USD',
@@ -110,7 +110,9 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
         currentStep: isEmployeeClaim ? 'manager' : 'done',
         status: isEmployeeClaim ? 'pending' : 'approved',
         approverId: isEmployeeClaim ? undefined : userId,
-        comments: isEmployeeClaim ? undefined : 'Direct corporate logging by administrative specialist',
+        comments: isEmployeeClaim
+          ? undefined
+          : 'Direct corporate logging by administrative specialist',
         history: [],
       },
       paymentStatus: isEmployeeClaim ? 'unpaid' : 'paid',
@@ -199,12 +201,18 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
     const { id, status, comments } = await request.json();
 
     if (!id || !status) {
-      return NextResponse.json({ success: false, error: 'BAD_REQUEST', message: 'Missing parameters' }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: 'BAD_REQUEST', message: 'Missing parameters' },
+        { status: 400 }
+      );
     }
 
     const expense = await Expense.findOne({ _id: id, companyId, isSoftDeleted: false });
     if (!expense) {
-      return NextResponse.json({ success: false, error: 'NOT_FOUND', message: 'Expense claim not found' }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: 'NOT_FOUND', message: 'Expense claim not found' },
+        { status: 404 }
+      );
     }
 
     expense.reimbursementStatus = status === 'approved' ? 'approved' : 'rejected';

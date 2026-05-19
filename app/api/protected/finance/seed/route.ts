@@ -26,7 +26,10 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
 
     const isAuthorized = hasRole(roles, ['super-admin', 'admin', 'finance']);
     if (!isAuthorized) {
-      return NextResponse.json({ success: false, error: 'FORBIDDEN', message: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json(
+        { success: false, error: 'FORBIDDEN', message: 'Unauthorized' },
+        { status: 403 }
+      );
     }
 
     // 1. Wipe out previous finance collections for this tenant company only
@@ -249,7 +252,8 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
         outstandingAmount: 0,
         lineItems: [
           {
-            description: 'Phase 2: Authentication modules & Real-time socket broadcast engines integration',
+            description:
+              'Phase 2: Authentication modules & Real-time socket broadcast engines integration',
             quantity: 1,
             unitPrice: 18000,
             amount: 18000,
@@ -304,7 +308,8 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
         status: 'overdue',
         lineItems: [
           {
-            description: 'Retainer Support fee - corporate consulting & agile systems integration hours',
+            description:
+              'Retainer Support fee - corporate consulting & agile systems integration hours',
             quantity: 45,
             unitPrice: 200,
             amount: 9000,
@@ -574,7 +579,8 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
       {
         type: 'budget_threshold_crossed',
         title: 'Budget Alert Threshold Fired!',
-        description: 'DevOps server infrastructure budget spent ratio crossed 80% warning limit (Spent: $12,800 / $15,000).',
+        description:
+          'DevOps server infrastructure budget spent ratio crossed 80% warning limit (Spent: $12,800 / $15,000).',
         metadata: { spentRatio: 85.3 },
         severity: 'critical',
       },

@@ -11,7 +11,7 @@ export function ReadingAcknowledgePanel() {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const fetchProgress = async () => {
+  const fetchProgress = React.useCallback(async () => {
     if (!activeDocument) return;
     setLoading(true);
     try {
@@ -25,11 +25,12 @@ export function ReadingAcknowledgePanel() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeDocument]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchProgress();
-  }, [activeDocument?._id]);
+  }, [activeDocument?._id, fetchProgress]);
 
   if (!activeDocument) return null;
   if (!activeDocument.isSop) {
@@ -37,7 +38,10 @@ export function ReadingAcknowledgePanel() {
       <div className="flex flex-col items-center justify-center p-6 text-center bg-slate-950/20 border border-border/20 rounded-xl backdrop-blur-md h-full">
         <ShieldCheck className="h-8 w-8 text-slate-600 mb-2" />
         <span className="text-xs font-semibold text-slate-400">Informational Document</span>
-        <p className="text-[10px] text-slate-500 max-w-xs mt-1">This page is not flagged as a mandatory Standard Operating Procedure (SOP). Read tracking is disabled.</p>
+        <p className="text-[10px] text-slate-500 max-w-xs mt-1">
+          This page is not flagged as a mandatory Standard Operating Procedure (SOP). Read tracking
+          is disabled.
+        </p>
       </div>
     );
   }
@@ -74,7 +78,8 @@ export function ReadingAcknowledgePanel() {
               </div>
               <span className="text-sm font-semibold text-emerald-400">Sign-off Acknowledged!</span>
               <span className="text-[10px] text-slate-500 leading-relaxed font-mono">
-                Confirmed read on: {progress.completedAt ? formatDate(progress.completedAt) : 'completed'}
+                Confirmed read on:{' '}
+                {progress.completedAt ? formatDate(progress.completedAt) : 'completed'}
               </span>
             </div>
           ) : (
@@ -84,7 +89,8 @@ export function ReadingAcknowledgePanel() {
               </div>
               <span className="text-sm font-semibold text-amber-500">Awaiting Sign-off</span>
               <p className="text-[10px] text-slate-400 max-w-xs leading-relaxed">
-                This page outlines standard business compliance instructions. You are strictly required to read it thoroughly and acknowledge below.
+                This page outlines standard business compliance instructions. You are strictly
+                required to read it thoroughly and acknowledge below.
               </p>
             </div>
           )}

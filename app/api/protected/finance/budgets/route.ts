@@ -32,7 +32,10 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
 
     const isAuthorized = hasRole(roles, ['super-admin', 'admin', 'finance']);
     if (!isAuthorized) {
-      return NextResponse.json({ success: false, error: 'FORBIDDEN', message: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json(
+        { success: false, error: 'FORBIDDEN', message: 'Unauthorized' },
+        { status: 403 }
+      );
     }
 
     const body = await request.json();
@@ -83,7 +86,10 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
 
     const isAuthorized = hasRole(roles, ['super-admin', 'admin', 'finance']);
     if (!isAuthorized) {
-      return NextResponse.json({ success: false, error: 'FORBIDDEN', message: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json(
+        { success: false, error: 'FORBIDDEN', message: 'Unauthorized' },
+        { status: 403 }
+      );
     }
 
     const body = await request.json();
@@ -101,7 +107,10 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
 
     const budget = await Budget.findOne({ _id, companyId });
     if (!budget) {
-      return NextResponse.json({ success: false, error: 'NOT_FOUND', message: 'Budget settings not found' }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: 'NOT_FOUND', message: 'Budget settings not found' },
+        { status: 404 }
+      );
     }
 
     budget.name = validated.name;

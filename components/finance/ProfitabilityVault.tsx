@@ -1,6 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BarChart3, Users, DollarSign, ArrowUpRight, Scale, Activity, ShieldCheck, X } from 'lucide-react';
+import {
+  BarChart3,
+  Users,
+  DollarSign,
+  ArrowUpRight,
+  Scale,
+  Activity,
+  ShieldCheck,
+  X,
+} from 'lucide-react';
 import { Button, Input } from '@/components/ui';
 import { toast } from 'sonner';
 
@@ -45,7 +54,6 @@ export const ProfitabilityVault: React.FC<ProfitabilityVaultProps> = ({ dashboar
     };
   }, []);
 
-
   const handleOpenRateAdjust = (emp: any) => {
     setSelectedEmployee(emp);
     // Hardcoded demo hourly cost fallback or employee custom rating if present
@@ -80,7 +88,11 @@ export const ProfitabilityVault: React.FC<ProfitabilityVaultProps> = ({ dashboar
   };
 
   if (!dashboardData) {
-    return <div className="text-center text-xs text-muted-foreground py-10">No analytics loaded. Please seed the ledger first.</div>;
+    return (
+      <div className="text-center text-xs text-muted-foreground py-10">
+        No analytics loaded. Please seed the ledger first.
+      </div>
+    );
   }
 
   const { projectMargins = [] } = dashboardData;
@@ -90,8 +102,12 @@ export const ProfitabilityVault: React.FC<ProfitabilityVaultProps> = ({ dashboar
     <div className="space-y-6 select-none">
       <div className="flex justify-between items-center select-none">
         <div>
-          <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Operational Profitability Margins Vault</h3>
-          <p className="text-[10px] text-muted-foreground">Analyze project margins, active payouts, and labor costs</p>
+          <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            Operational Profitability Margins Vault
+          </h3>
+          <p className="text-[10px] text-muted-foreground">
+            Analyze project margins, active payouts, and labor costs
+          </p>
         </div>
 
         {isFinance && (
@@ -109,17 +125,24 @@ export const ProfitabilityVault: React.FC<ProfitabilityVaultProps> = ({ dashboar
         <div className="lg:col-span-2 p-5 bg-card/30 border border-border/80 rounded-xl flex flex-col select-none space-y-4">
           <div>
             <h4 className="text-xs font-bold uppercase tracking-wider">Project Margins Analyzer</h4>
-            <p className="text-[10px] text-muted-foreground">Gross margin ratios matching paid invoicing milestones against project spent costs</p>
+            <p className="text-[10px] text-muted-foreground">
+              Gross margin ratios matching paid invoicing milestones against project spent costs
+            </p>
           </div>
 
           <div className="space-y-4">
             {projectMargins.length === 0 ? (
-              <div className="text-center text-xs text-muted-foreground py-10">No project transaction history found.</div>
+              <div className="text-center text-xs text-muted-foreground py-10">
+                No project transaction history found.
+              </div>
             ) : (
               projectMargins.map((pm: any) => {
                 const isHealthy = pm.margin >= 0;
                 return (
-                  <div key={pm.id} className="p-4 border border-border/60 bg-muted/5 rounded-xl space-y-3">
+                  <div
+                    key={pm.id}
+                    className="p-4 border border-border/60 bg-muted/5 rounded-xl space-y-3"
+                  >
                     <div className="flex justify-between items-start">
                       <div>
                         <h5 className="text-xs font-extrabold text-foreground">{pm.name}</h5>
@@ -129,7 +152,9 @@ export const ProfitabilityVault: React.FC<ProfitabilityVaultProps> = ({ dashboar
                       </div>
                       <span
                         className={`px-2 py-0.5 rounded-full text-[9px] uppercase font-extrabold border ${
-                          isHealthy ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-rose-500/10 text-rose-400 border-rose-500/30'
+                          isHealthy
+                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                            : 'bg-rose-500/10 text-rose-400 border-rose-500/30'
                         }`}
                       >
                         {pm.percent.toFixed(1)}% Margin
@@ -162,24 +187,37 @@ export const ProfitabilityVault: React.FC<ProfitabilityVaultProps> = ({ dashboar
         {/* Labor cost rate mappings */}
         <div className="p-5 bg-card/30 border border-border/80 rounded-xl flex flex-col select-none space-y-4">
           <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider">Labor resource cost rating</h4>
-            <p className="text-[10px] text-muted-foreground">Assign developer hourly labor costs to calibrate project spend indices</p>
+            <h4 className="text-xs font-bold uppercase tracking-wider">
+              Labor resource cost rating
+            </h4>
+            <p className="text-[10px] text-muted-foreground">
+              Assign developer hourly labor costs to calibrate project spend indices
+            </p>
           </div>
 
           <div className="flex-1 space-y-3 overflow-y-auto max-h-96 pr-1">
             {employees.length === 0 ? (
-              <div className="text-center text-xs text-muted-foreground py-10">No employees listed.</div>
+              <div className="text-center text-xs text-muted-foreground py-10">
+                No employees listed.
+              </div>
             ) : (
               employees.map((emp) => (
-                <div key={emp._id} className="p-3 border border-border/60 bg-muted/5 rounded-lg flex justify-between items-center">
+                <div
+                  key={emp._id}
+                  className="p-3 border border-border/60 bg-muted/5 rounded-lg flex justify-between items-center"
+                >
                   <div>
                     <h5 className="text-[11px] font-extrabold text-foreground">
                       {emp.firstName} {emp.lastName}
                     </h5>
-                    <span className="text-[9px] text-muted-foreground uppercase font-semibold block">{emp.title}</span>
+                    <span className="text-[9px] text-muted-foreground uppercase font-semibold block">
+                      {emp.title}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-foreground">${emp.hourlyRate || 45}/hr</span>
+                    <span className="text-xs font-bold text-foreground">
+                      ${emp.hourlyRate || 45}/hr
+                    </span>
                     {isFinance && (
                       <button
                         onClick={() => handleOpenRateAdjust(emp)}
@@ -207,8 +245,13 @@ export const ProfitabilityVault: React.FC<ProfitabilityVaultProps> = ({ dashboar
               className="bg-card border border-border rounded-xl p-6 w-full max-w-sm shadow-2xl space-y-4"
             >
               <div className="flex justify-between items-center pb-2 border-b border-border/60">
-                <h3 className="text-sm font-bold uppercase tracking-wider">Adjust Labor Cost Rate</h3>
-                <button onClick={() => setCostRatesOpen(false)} className="p-1 hover:bg-accent/40 rounded text-muted-foreground">
+                <h3 className="text-sm font-bold uppercase tracking-wider">
+                  Adjust Labor Cost Rate
+                </h3>
+                <button
+                  onClick={() => setCostRatesOpen(false)}
+                  className="p-1 hover:bg-accent/40 rounded text-muted-foreground"
+                >
                   <X className="h-4 w-4" />
                 </button>
               </div>
@@ -228,7 +271,9 @@ export const ProfitabilityVault: React.FC<ProfitabilityVaultProps> = ({ dashboar
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Hourly Labor rate ($ USD) *</label>
+                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+                    Hourly Labor rate ($ USD) *
+                  </label>
                   <Input
                     type="number"
                     required

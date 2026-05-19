@@ -1,7 +1,13 @@
 import { NextResponse } from 'next/server';
 import { withApiAuth } from '@/lib/auth/api';
 import { connectToDatabase } from '@/lib/db/mongodb';
-import { WikiSpace, KnowledgeCategory, Document, DocumentVersion, KnowledgeActivity } from '@/models';
+import {
+  WikiSpace,
+  KnowledgeCategory,
+  Document,
+  DocumentVersion,
+  KnowledgeActivity,
+} from '@/models';
 import { logger } from '@/lib/logger';
 
 export const POST = withApiAuth(async (request: Request, context: any, session: any) => {
@@ -17,9 +23,24 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     }
 
     // 2. Create Knowledge Categories
-    const catPlaybook = new KnowledgeCategory({ companyId, name: 'Playbooks', slug: 'playbooks', colorCode: '#10B981' });
-    const catPolicy = new KnowledgeCategory({ companyId, name: 'Policies', slug: 'policies', colorCode: '#EF4444' });
-    const catSop = new KnowledgeCategory({ companyId, name: 'SOP Manuals', slug: 'sops', colorCode: '#3B82F6' });
+    const catPlaybook = new KnowledgeCategory({
+      companyId,
+      name: 'Playbooks',
+      slug: 'playbooks',
+      colorCode: '#10B981',
+    });
+    const catPolicy = new KnowledgeCategory({
+      companyId,
+      name: 'Policies',
+      slug: 'policies',
+      colorCode: '#EF4444',
+    });
+    const catSop = new KnowledgeCategory({
+      companyId,
+      name: 'SOP Manuals',
+      slug: 'sops',
+      colorCode: '#3B82F6',
+    });
 
     await catPlaybook.save();
     await catPolicy.save();
@@ -31,7 +52,8 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
       name: 'Agency Standard Operating Procedures (SOPs)',
       slug: 'agency-sops',
       icon: 'book-open',
-      description: 'Standard client delivery guidelines, design standards, and operational flow structures.',
+      description:
+        'Standard client delivery guidelines, design standards, and operational flow structures.',
       visibility: 'internal',
     });
 
@@ -49,7 +71,8 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
       name: 'Company Security & Policies',
       slug: 'company-policies',
       icon: 'shield-alert',
-      description: 'Workplace compliance regulations, info-sec directives, and standard company policies.',
+      description:
+        'Workplace compliance regulations, info-sec directives, and standard company policies.',
       visibility: 'internal',
     });
 
@@ -124,14 +147,53 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     await docGuide.save();
 
     // Create Initial Version checkmarks
-    await new DocumentVersion({ documentId: docSop._id, editorId: userId, title: docSop.title, content: docSop.content, changeSummary: 'System Initial Seed', versionNumber: 1 }).save();
-    await new DocumentVersion({ documentId: docPolicy._id, editorId: userId, title: docPolicy.title, content: docPolicy.content, changeSummary: 'System Initial Seed', versionNumber: 1 }).save();
-    await new DocumentVersion({ documentId: docGuide._id, editorId: userId, title: docGuide.title, content: docGuide.content, changeSummary: 'System Initial Seed', versionNumber: 1 }).save();
+    await new DocumentVersion({
+      documentId: docSop._id,
+      editorId: userId,
+      title: docSop.title,
+      content: docSop.content,
+      changeSummary: 'System Initial Seed',
+      versionNumber: 1,
+    }).save();
+    await new DocumentVersion({
+      documentId: docPolicy._id,
+      editorId: userId,
+      title: docPolicy.title,
+      content: docPolicy.content,
+      changeSummary: 'System Initial Seed',
+      versionNumber: 1,
+    }).save();
+    await new DocumentVersion({
+      documentId: docGuide._id,
+      editorId: userId,
+      title: docGuide.title,
+      content: docGuide.content,
+      changeSummary: 'System Initial Seed',
+      versionNumber: 1,
+    }).save();
 
     // Add activity records
-    await new KnowledgeActivity({ companyId, userId, spaceId: spaceSop._id, action: 'space_created', details: 'Seeded Workspace SOP space' }).save();
-    await new KnowledgeActivity({ companyId, userId, spaceId: spaceOnboarding._id, action: 'space_created', details: 'Seeded Workplace onboarding hub' }).save();
-    await new KnowledgeActivity({ companyId, userId, spaceId: spacePolicy._id, action: 'space_created', details: 'Seeded Corporate compliance hub' }).save();
+    await new KnowledgeActivity({
+      companyId,
+      userId,
+      spaceId: spaceSop._id,
+      action: 'space_created',
+      details: 'Seeded Workspace SOP space',
+    }).save();
+    await new KnowledgeActivity({
+      companyId,
+      userId,
+      spaceId: spaceOnboarding._id,
+      action: 'space_created',
+      details: 'Seeded Workplace onboarding hub',
+    }).save();
+    await new KnowledgeActivity({
+      companyId,
+      userId,
+      spaceId: spacePolicy._id,
+      action: 'space_created',
+      details: 'Seeded Corporate compliance hub',
+    }).save();
 
     logger.info('[Knowledge Seed] Successfully populated sandbox mock documents.', { companyId });
 

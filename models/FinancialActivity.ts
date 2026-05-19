@@ -46,7 +46,12 @@ const FinancialActivitySchema = new Schema<IFinancialActivity>(
     title: { type: String, required: true },
     description: { type: String, required: true },
     metadata: { type: Schema.Types.Map, of: Schema.Types.Mixed, default: {} },
-    severity: { type: String, enum: ['info', 'warning', 'critical'], required: true, default: 'info' },
+    severity: {
+      type: String,
+      enum: ['info', 'warning', 'critical'],
+      required: true,
+      default: 'info',
+    },
   },
   { timestamps: true }
 );

@@ -1,6 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Truck, ShoppingCart, Plus, Save, X, Calendar, ClipboardCheck, ArrowUpRight, ShieldCheck, CheckCircle } from 'lucide-react';
+import {
+  Users,
+  Truck,
+  ShoppingCart,
+  Plus,
+  Save,
+  X,
+  Calendar,
+  ClipboardCheck,
+  ArrowUpRight,
+  ShieldCheck,
+  CheckCircle,
+} from 'lucide-react';
 import { Button, Input } from '@/components/ui';
 import { toast } from 'sonner';
 
@@ -25,7 +37,9 @@ export const ClientVendorSettings: React.FC<ClientVendorSettingsProps> = ({
   onApprovePO,
   role,
 }) => {
-  const [activeSubTab, setActiveSubTab] = useState<'clients' | 'vendors' | 'purchase_orders'>('clients');
+  const [activeSubTab, setActiveSubTab] = useState<'clients' | 'vendors' | 'purchase_orders'>(
+    'clients'
+  );
 
   // Client billing modal
   const [billingModalOpen, setBillingModalOpen] = useState(false);
@@ -185,9 +199,7 @@ export const ClientVendorSettings: React.FC<ClientVendorSettingsProps> = ({
   };
 
   const handleUpdatePOItem = (index: number, key: string, val: any) => {
-    setPOItems(
-      poItems.map((item, idx) => (idx === index ? { ...item, [key]: val } : item))
-    );
+    setPOItems(poItems.map((item, idx) => (idx === index ? { ...item, [key]: val } : item)));
   };
 
   const handleRemovePOItem = (index: number) => {
@@ -244,7 +256,9 @@ export const ClientVendorSettings: React.FC<ClientVendorSettingsProps> = ({
           <button
             onClick={() => setActiveSubTab('clients')}
             className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer ${
-              activeSubTab === 'clients' ? 'bg-primary text-primary-foreground shadow' : 'hover:bg-accent/40 text-muted-foreground'
+              activeSubTab === 'clients'
+                ? 'bg-primary text-primary-foreground shadow'
+                : 'hover:bg-accent/40 text-muted-foreground'
             }`}
           >
             <Users className="h-4 w-4" />
@@ -253,7 +267,9 @@ export const ClientVendorSettings: React.FC<ClientVendorSettingsProps> = ({
           <button
             onClick={() => setActiveSubTab('vendors')}
             className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer ${
-              activeSubTab === 'vendors' ? 'bg-primary text-primary-foreground shadow' : 'hover:bg-accent/40 text-muted-foreground'
+              activeSubTab === 'vendors'
+                ? 'bg-primary text-primary-foreground shadow'
+                : 'hover:bg-accent/40 text-muted-foreground'
             }`}
           >
             <Truck className="h-4 w-4" />
@@ -262,7 +278,9 @@ export const ClientVendorSettings: React.FC<ClientVendorSettingsProps> = ({
           <button
             onClick={() => setActiveSubTab('purchase_orders')}
             className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer ${
-              activeSubTab === 'purchase_orders' ? 'bg-primary text-primary-foreground shadow' : 'hover:bg-accent/40 text-muted-foreground'
+              activeSubTab === 'purchase_orders'
+                ? 'bg-primary text-primary-foreground shadow'
+                : 'hover:bg-accent/40 text-muted-foreground'
             }`}
           >
             <ShoppingCart className="h-4 w-4" />
@@ -273,17 +291,29 @@ export const ClientVendorSettings: React.FC<ClientVendorSettingsProps> = ({
         {isFinance && (
           <div>
             {activeSubTab === 'clients' && (
-              <Button onClick={() => handleOpenBilling()} size="sm" className="h-8 text-[10px] gap-1 cursor-pointer">
+              <Button
+                onClick={() => handleOpenBilling()}
+                size="sm"
+                className="h-8 text-[10px] gap-1 cursor-pointer"
+              >
                 <Plus className="h-3.5 w-3.5" /> Configure billing
               </Button>
             )}
             {activeSubTab === 'vendors' && (
-              <Button onClick={() => handleOpenVendor()} size="sm" className="h-8 text-[10px] gap-1 cursor-pointer">
+              <Button
+                onClick={() => handleOpenVendor()}
+                size="sm"
+                className="h-8 text-[10px] gap-1 cursor-pointer"
+              >
                 <Plus className="h-3.5 w-3.5" /> register vendor
               </Button>
             )}
             {activeSubTab === 'purchase_orders' && (
-              <Button onClick={() => setPOModalOpen(true)} size="sm" className="h-8 text-[10px] gap-1 cursor-pointer">
+              <Button
+                onClick={() => setPOModalOpen(true)}
+                size="sm"
+                className="h-8 text-[10px] gap-1 cursor-pointer"
+              >
                 <Plus className="h-3.5 w-3.5" /> generate PO order
               </Button>
             )}
@@ -294,7 +324,12 @@ export const ClientVendorSettings: React.FC<ClientVendorSettingsProps> = ({
       {/* Dynamic Sub-tab content sheets */}
       <AnimatePresence mode="wait">
         {activeSubTab === 'clients' && (
-          <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} className="border border-border/80 rounded-xl overflow-hidden backdrop-blur-md">
+          <motion.div
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -5 }}
+            className="border border-border/80 rounded-xl overflow-hidden backdrop-blur-md"
+          >
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="bg-muted/20 border-b border-border/60 text-[10px] uppercase font-bold tracking-wider text-muted-foreground select-none">
@@ -316,18 +351,29 @@ export const ClientVendorSettings: React.FC<ClientVendorSettingsProps> = ({
                   </tr>
                 ) : (
                   clientBilling.map((cb) => (
-                    <tr key={cb._id} className="border-b border-border/40 hover:bg-muted/10 transition-colors">
+                    <tr
+                      key={cb._id}
+                      className="border-b border-border/40 hover:bg-muted/10 transition-colors"
+                    >
                       <td className="p-4 font-bold text-foreground">
                         <div className="flex flex-col">
                           <span>{cb.clientId?.name}</span>
-                          <span className="text-[9px] text-muted-foreground font-normal">{cb.clientId?.company}</span>
+                          <span className="text-[9px] text-muted-foreground font-normal">
+                            {cb.clientId?.company}
+                          </span>
                         </div>
                       </td>
                       <td className="p-4 text-muted-foreground">{cb.billingEmail}</td>
                       <td className="p-4 font-bold">{cb.preferredCurrency}</td>
-                      <td className="p-4 uppercase tracking-wider text-[9px] font-extrabold text-primary">{cb.paymentTerms.replace('_', ' ')}</td>
-                      <td className="p-4 font-medium text-foreground">{cb.taxRegistrationNumber || 'None'}</td>
-                      <td className="p-4 text-muted-foreground">${cb.creditLimit.toLocaleString()}</td>
+                      <td className="p-4 uppercase tracking-wider text-[9px] font-extrabold text-primary">
+                        {cb.paymentTerms.replace('_', ' ')}
+                      </td>
+                      <td className="p-4 font-medium text-foreground">
+                        {cb.taxRegistrationNumber || 'None'}
+                      </td>
+                      <td className="p-4 text-muted-foreground">
+                        ${cb.creditLimit.toLocaleString()}
+                      </td>
                       {isFinance && (
                         <td className="p-4 text-right">
                           <button
@@ -347,7 +393,12 @@ export const ClientVendorSettings: React.FC<ClientVendorSettingsProps> = ({
         )}
 
         {activeSubTab === 'vendors' && (
-          <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} className="border border-border/80 rounded-xl overflow-hidden backdrop-blur-md">
+          <motion.div
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -5 }}
+            className="border border-border/80 rounded-xl overflow-hidden backdrop-blur-md"
+          >
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="bg-muted/20 border-b border-border/60 text-[10px] uppercase font-bold tracking-wider text-muted-foreground select-none">
@@ -369,11 +420,18 @@ export const ClientVendorSettings: React.FC<ClientVendorSettingsProps> = ({
                   </tr>
                 ) : (
                   vendors.map((v) => (
-                    <tr key={v._id} className="border-b border-border/40 hover:bg-muted/10 transition-colors">
+                    <tr
+                      key={v._id}
+                      className="border-b border-border/40 hover:bg-muted/10 transition-colors"
+                    >
                       <td className="p-4 font-bold text-foreground">
                         <div className="flex flex-col">
                           <span>{v.name}</span>
-                          {v.notes && <span className="text-[9px] text-muted-foreground font-normal">{v.notes}</span>}
+                          {v.notes && (
+                            <span className="text-[9px] text-muted-foreground font-normal">
+                              {v.notes}
+                            </span>
+                          )}
                         </div>
                       </td>
                       <td className="p-4 text-muted-foreground">{v.email || 'None'}</td>
@@ -384,7 +442,9 @@ export const ClientVendorSettings: React.FC<ClientVendorSettingsProps> = ({
                         </span>
                       </td>
                       <td className="p-4 font-medium text-foreground">{v.taxId || 'None'}</td>
-                      <td className="p-4 uppercase tracking-wider text-[9px] font-extrabold text-primary">{v.paymentTerms.replace('_', ' ')}</td>
+                      <td className="p-4 uppercase tracking-wider text-[9px] font-extrabold text-primary">
+                        {v.paymentTerms.replace('_', ' ')}
+                      </td>
                       {isFinance && (
                         <td className="p-4 text-right">
                           <button
@@ -404,7 +464,12 @@ export const ClientVendorSettings: React.FC<ClientVendorSettingsProps> = ({
         )}
 
         {activeSubTab === 'purchase_orders' && (
-          <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} className="border border-border/80 rounded-xl overflow-hidden backdrop-blur-md">
+          <motion.div
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -5 }}
+            className="border border-border/80 rounded-xl overflow-hidden backdrop-blur-md"
+          >
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="bg-muted/20 border-b border-border/60 text-[10px] uppercase font-bold tracking-wider text-muted-foreground select-none">
@@ -426,14 +491,18 @@ export const ClientVendorSettings: React.FC<ClientVendorSettingsProps> = ({
                 ) : (
                   purchaseOrders.map((po) => {
                     const statusStyles: Record<string, string> = {
-                      pending_approval: 'bg-amber-500/10 text-amber-400 border-amber-500/30 animate-pulse',
+                      pending_approval:
+                        'bg-amber-500/10 text-amber-400 border-amber-500/30 animate-pulse',
                       approved: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30',
                       rejected: 'bg-rose-500/10 text-rose-400 border-rose-500/30',
                       completed: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30',
                     };
 
                     return (
-                      <tr key={po._id} className="border-b border-border/40 hover:bg-muted/10 transition-colors">
+                      <tr
+                        key={po._id}
+                        className="border-b border-border/40 hover:bg-muted/10 transition-colors"
+                      >
                         <td className="p-4 font-bold text-foreground">{po.poNumber}</td>
                         <td className="p-4 font-semibold">
                           <div className="flex flex-col">
@@ -455,7 +524,9 @@ export const ClientVendorSettings: React.FC<ClientVendorSettingsProps> = ({
                           ${po.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                         </td>
                         <td className="p-4">
-                          <span className={`px-2 py-0.5 text-[9px] uppercase font-extrabold tracking-wider border rounded-full ${statusStyles[po.status] || statusStyles.pending_approval}`}>
+                          <span
+                            className={`px-2 py-0.5 text-[9px] uppercase font-extrabold tracking-wider border rounded-full ${statusStyles[po.status] || statusStyles.pending_approval}`}
+                          >
                             {po.status.replace('_', ' ')}
                           </span>
                         </td>
@@ -469,7 +540,9 @@ export const ClientVendorSettings: React.FC<ClientVendorSettingsProps> = ({
                                 Review PO
                               </button>
                             ) : (
-                              <span className="text-[10px] text-muted-foreground font-semibold italic select-none">PO resolved</span>
+                              <span className="text-[10px] text-muted-foreground font-semibold italic select-none">
+                                PO resolved
+                              </span>
                             )}
                           </td>
                         )}
@@ -494,15 +567,22 @@ export const ClientVendorSettings: React.FC<ClientVendorSettingsProps> = ({
               className="bg-card border border-border rounded-xl p-6 w-full max-w-md shadow-2xl space-y-4"
             >
               <div className="flex justify-between items-center pb-2 border-b border-border/60">
-                <h3 className="text-sm font-bold uppercase tracking-wider">Configure client billing terms</h3>
-                <button onClick={() => setBillingModalOpen(false)} className="p-1 hover:bg-accent/40 rounded text-muted-foreground">
+                <h3 className="text-sm font-bold uppercase tracking-wider">
+                  Configure client billing terms
+                </h3>
+                <button
+                  onClick={() => setBillingModalOpen(false)}
+                  className="p-1 hover:bg-accent/40 rounded text-muted-foreground"
+                >
                   <X className="h-4 w-4" />
                 </button>
               </div>
 
               <form onSubmit={handleSaveBillingSubmit} className="space-y-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Select Customer *</label>
+                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+                    Select Customer *
+                  </label>
                   <select
                     disabled={selectedClientBilling !== null}
                     value={clientIdVal}
@@ -519,7 +599,9 @@ export const ClientVendorSettings: React.FC<ClientVendorSettingsProps> = ({
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Billing email *</label>
+                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+                    Billing email *
+                  </label>
                   <Input
                     required
                     type="email"
@@ -532,7 +614,9 @@ export const ClientVendorSettings: React.FC<ClientVendorSettingsProps> = ({
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Currency</label>
+                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+                      Currency
+                    </label>
                     <select
                       value={prefCurrency}
                       onChange={(e) => setPrefCurrency(e.target.value)}
@@ -545,7 +629,9 @@ export const ClientVendorSettings: React.FC<ClientVendorSettingsProps> = ({
                     </select>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Terms</label>
+                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+                      Terms
+                    </label>
                     <select
                       value={payTerms}
                       onChange={(e) => setPayTerms(e.target.value)}
@@ -560,7 +646,9 @@ export const ClientVendorSettings: React.FC<ClientVendorSettingsProps> = ({
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">VAT / tax registration ID</label>
+                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+                    VAT / tax registration ID
+                  </label>
                   <Input
                     value={taxRegVal}
                     onChange={(e) => setTaxRegVal(e.target.value)}
@@ -570,7 +658,9 @@ export const ClientVendorSettings: React.FC<ClientVendorSettingsProps> = ({
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Credit cap limit ($ USD)</label>
+                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+                    Credit cap limit ($ USD)
+                  </label>
                   <Input
                     type="number"
                     value={creditLimit}
@@ -613,14 +703,19 @@ export const ClientVendorSettings: React.FC<ClientVendorSettingsProps> = ({
                 <h3 className="text-sm font-bold uppercase tracking-wider">
                   {selectedVendor ? 'Adjust Vendor Profile' : 'Register vendor supplier'}
                 </h3>
-                <button onClick={() => setVendorModalOpen(false)} className="p-1 hover:bg-accent/40 rounded text-muted-foreground">
+                <button
+                  onClick={() => setVendorModalOpen(false)}
+                  className="p-1 hover:bg-accent/40 rounded text-muted-foreground"
+                >
                   <X className="h-4 w-4" />
                 </button>
               </div>
 
               <form onSubmit={handleSaveVendorSubmit} className="space-y-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Vendor Name *</label>
+                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+                    Vendor Name *
+                  </label>
                   <Input
                     required
                     value={vName}
@@ -632,7 +727,9 @@ export const ClientVendorSettings: React.FC<ClientVendorSettingsProps> = ({
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">contact email</label>
+                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+                      contact email
+                    </label>
                     <Input
                       type="email"
                       value={vEmail}
@@ -642,7 +739,9 @@ export const ClientVendorSettings: React.FC<ClientVendorSettingsProps> = ({
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Phone number</label>
+                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+                      Phone number
+                    </label>
                     <Input
                       value={vPhone}
                       onChange={(e) => setVPhone(e.target.value)}
@@ -654,7 +753,9 @@ export const ClientVendorSettings: React.FC<ClientVendorSettingsProps> = ({
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Category</label>
+                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+                      Category
+                    </label>
                     <select
                       value={vCat}
                       onChange={(e) => setVCat(e.target.value)}
@@ -670,7 +771,9 @@ export const ClientVendorSettings: React.FC<ClientVendorSettingsProps> = ({
                     </select>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Terms</label>
+                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+                      Terms
+                    </label>
                     <select
                       value={vPayTerms}
                       onChange={(e) => setVPayTerms(e.target.value)}
@@ -685,7 +788,9 @@ export const ClientVendorSettings: React.FC<ClientVendorSettingsProps> = ({
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">EIN / TIN tax registration number</label>
+                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+                    EIN / TIN tax registration number
+                  </label>
                   <Input
                     value={vTaxId}
                     onChange={(e) => setVTaxId(e.target.value)}
@@ -695,7 +800,9 @@ export const ClientVendorSettings: React.FC<ClientVendorSettingsProps> = ({
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Notes</label>
+                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+                    Notes
+                  </label>
                   <Input
                     value={vNotes}
                     onChange={(e) => setVNotes(e.target.value)}
@@ -735,8 +842,13 @@ export const ClientVendorSettings: React.FC<ClientVendorSettingsProps> = ({
               className="bg-card border border-border rounded-xl p-6 w-full max-w-xl shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto"
             >
               <div className="flex justify-between items-center pb-2 border-b border-border/60">
-                <h3 className="text-sm font-bold uppercase tracking-wider">Generate Purchase Order</h3>
-                <button onClick={() => setPOModalOpen(false)} className="p-1 hover:bg-accent/40 rounded text-muted-foreground">
+                <h3 className="text-sm font-bold uppercase tracking-wider">
+                  Generate Purchase Order
+                </h3>
+                <button
+                  onClick={() => setPOModalOpen(false)}
+                  className="p-1 hover:bg-accent/40 rounded text-muted-foreground"
+                >
                   <X className="h-4 w-4" />
                 </button>
               </div>
@@ -744,7 +856,9 @@ export const ClientVendorSettings: React.FC<ClientVendorSettingsProps> = ({
               <form onSubmit={handlePOSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Supplier Vendor *</label>
+                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+                      Supplier Vendor *
+                    </label>
                     <select
                       required
                       value={poVendorId}
@@ -760,7 +874,9 @@ export const ClientVendorSettings: React.FC<ClientVendorSettingsProps> = ({
                     </select>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Linked Project (Optional)</label>
+                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+                      Linked Project (Optional)
+                    </label>
                     <select
                       value={poProjectId}
                       onChange={(e) => setPOProjectId(e.target.value)}
@@ -779,7 +895,9 @@ export const ClientVendorSettings: React.FC<ClientVendorSettingsProps> = ({
                 {/* Line Items PO builder */}
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Procurement line items</label>
+                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+                      Procurement line items
+                    </label>
                     <button
                       type="button"
                       onClick={handleAddPOItem}
@@ -804,7 +922,9 @@ export const ClientVendorSettings: React.FC<ClientVendorSettingsProps> = ({
                           required
                           min={1}
                           value={item.quantity}
-                          onChange={(e) => handleUpdatePOItem(idx, 'quantity', Number(e.target.value))}
+                          onChange={(e) =>
+                            handleUpdatePOItem(idx, 'quantity', Number(e.target.value))
+                          }
                           className="h-8 text-xs w-16 text-center"
                         />
                         <Input
@@ -813,7 +933,9 @@ export const ClientVendorSettings: React.FC<ClientVendorSettingsProps> = ({
                           min={0.01}
                           step="0.01"
                           value={item.unitPrice}
-                          onChange={(e) => handleUpdatePOItem(idx, 'unitPrice', Number(e.target.value))}
+                          onChange={(e) =>
+                            handleUpdatePOItem(idx, 'unitPrice', Number(e.target.value))
+                          }
                           className="h-8 text-xs w-24"
                         />
                         <button
@@ -831,7 +953,9 @@ export const ClientVendorSettings: React.FC<ClientVendorSettingsProps> = ({
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Estimated Taxes total</label>
+                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+                      Estimated Taxes total
+                    </label>
                     <Input
                       type="number"
                       value={poTax}
@@ -841,7 +965,9 @@ export const ClientVendorSettings: React.FC<ClientVendorSettingsProps> = ({
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Procurement description notes</label>
+                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+                      Procurement description notes
+                    </label>
                     <Input
                       value={poNotes}
                       onChange={(e) => setPONotes(e.target.value)}
@@ -882,8 +1008,13 @@ export const ClientVendorSettings: React.FC<ClientVendorSettingsProps> = ({
               className="bg-card border border-border rounded-xl p-6 w-full max-w-md shadow-2xl space-y-4"
             >
               <div className="flex justify-between items-center pb-2 border-b border-border/60">
-                <h3 className="text-sm font-bold uppercase tracking-wider">Review Purchase Order</h3>
-                <button onClick={() => setActiveReviewPO(null)} className="p-1 hover:bg-accent/40 rounded text-muted-foreground">
+                <h3 className="text-sm font-bold uppercase tracking-wider">
+                  Review Purchase Order
+                </h3>
+                <button
+                  onClick={() => setActiveReviewPO(null)}
+                  className="p-1 hover:bg-accent/40 rounded text-muted-foreground"
+                >
                   <X className="h-4 w-4" />
                 </button>
               </div>
@@ -904,7 +1035,9 @@ export const ClientVendorSettings: React.FC<ClientVendorSettingsProps> = ({
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Approver Notes / Comments</label>
+                <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+                  Approver Notes / Comments
+                </label>
                 <textarea
                   value={reviewPOComments}
                   onChange={(e) => setReviewPOComments(e.target.value)}

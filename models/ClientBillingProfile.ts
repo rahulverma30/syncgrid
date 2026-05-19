@@ -27,7 +27,13 @@ export interface IClientBillingProfile extends Document {
 const ClientBillingProfileSchema = new Schema<IClientBillingProfile>(
   {
     companyId: { type: Schema.Types.ObjectId, ref: 'Company', required: true, index: true },
-    clientId: { type: Schema.Types.ObjectId, ref: 'Client', required: true, unique: true, index: true },
+    clientId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Client',
+      required: true,
+      unique: true,
+      index: true,
+    },
     billingEmail: { type: String },
     billingPhone: { type: String },
     preferredCurrency: { type: String, required: true, default: 'USD' },

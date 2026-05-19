@@ -18,7 +18,14 @@ export interface IPurchaseOrder extends Document {
   subtotal: number;
   taxAmount: number;
   totalAmount: number;
-  status: 'draft' | 'pending_approval' | 'approved' | 'rejected' | 'ordered' | 'received' | 'cancelled';
+  status:
+    | 'draft'
+    | 'pending_approval'
+    | 'approved'
+    | 'rejected'
+    | 'ordered'
+    | 'received'
+    | 'cancelled';
   approvalWorkflow: {
     status: 'pending' | 'approved' | 'rejected';
     approverId?: string;
@@ -52,7 +59,15 @@ const PurchaseOrderSchema = new Schema<IPurchaseOrder>(
     totalAmount: { type: Number, required: true, default: 0 },
     status: {
       type: String,
-      enum: ['draft', 'pending_approval', 'approved', 'rejected', 'ordered', 'received', 'cancelled'],
+      enum: [
+        'draft',
+        'pending_approval',
+        'approved',
+        'rejected',
+        'ordered',
+        'received',
+        'cancelled',
+      ],
       required: true,
       default: 'draft',
       index: true,
@@ -77,4 +92,5 @@ const PurchaseOrderSchema = new Schema<IPurchaseOrder>(
 PurchaseOrderSchema.index({ companyId: 1, poNumber: 1 }, { unique: true });
 
 export const PurchaseOrder =
-  mongoose.models.PurchaseOrder || mongoose.model<IPurchaseOrder>('PurchaseOrder', PurchaseOrderSchema);
+  mongoose.models.PurchaseOrder ||
+  mongoose.model<IPurchaseOrder>('PurchaseOrder', PurchaseOrderSchema);

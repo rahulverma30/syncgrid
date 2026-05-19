@@ -33,7 +33,10 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
 
     const isAuthorized = hasRole(roles, ['super-admin', 'admin', 'finance']);
     if (!isAuthorized) {
-      return NextResponse.json({ success: false, error: 'FORBIDDEN', message: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json(
+        { success: false, error: 'FORBIDDEN', message: 'Unauthorized' },
+        { status: 403 }
+      );
     }
 
     const body = await request.json();
@@ -50,7 +53,10 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     // Verify vendor
     const vendor = await Vendor.findOne({ _id: validated.vendorId, companyId });
     if (!vendor) {
-      return NextResponse.json({ success: false, error: 'NOT_FOUND', message: 'Vendor not found' }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: 'NOT_FOUND', message: 'Vendor not found' },
+        { status: 404 }
+      );
     }
 
     // Generate PO Number
@@ -108,14 +114,20 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
 
     const isAuthorized = hasRole(roles, ['super-admin', 'admin', 'finance']);
     if (!isAuthorized) {
-      return NextResponse.json({ success: false, error: 'FORBIDDEN', message: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json(
+        { success: false, error: 'FORBIDDEN', message: 'Unauthorized' },
+        { status: 403 }
+      );
     }
 
     const { id, status, comments } = await request.json();
 
     const po = await PurchaseOrder.findOne({ _id: id, companyId, isSoftDeleted: false });
     if (!po) {
-      return NextResponse.json({ success: false, error: 'NOT_FOUND', message: 'Purchase Order not found' }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: 'NOT_FOUND', message: 'Purchase Order not found' },
+        { status: 404 }
+      );
     }
 
     po.status = status === 'approved' ? 'approved' : 'rejected';

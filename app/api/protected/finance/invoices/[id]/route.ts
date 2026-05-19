@@ -91,7 +91,11 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
 
       if (isNaN(paidAmount) || paidAmount <= 0) {
         return NextResponse.json(
-          { success: false, error: 'BAD_REQUEST', message: 'Payment amount must be greater than zero' },
+          {
+            success: false,
+            error: 'BAD_REQUEST',
+            message: 'Payment amount must be greater than zero',
+          },
           { status: 400 }
         );
       }
@@ -155,7 +159,12 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
         type: 'payment_received',
         title: 'Payment Received',
         description: `Logged transaction ${transactionNumber}. Received ${invoice.currency} ${paidAmount.toFixed(2)} on Invoice ${invoice.invoiceNumber}.`,
-        metadata: { invoiceId: invoice._id, transactionId: txn._id, amount: paidAmount, invoiceNumber: invoice.invoiceNumber },
+        metadata: {
+          invoiceId: invoice._id,
+          transactionId: txn._id,
+          amount: paidAmount,
+          invoiceNumber: invoice.invoiceNumber,
+        },
         severity: 'info',
       });
       await audit.save();
@@ -246,7 +255,10 @@ export const DELETE = withApiAuth(async (request: Request, context: any, session
 
     const invoice = await Invoice.findOne({ _id: id, companyId, isSoftDeleted: false });
     if (!invoice) {
-      return NextResponse.json({ success: false, error: 'NOT_FOUND', message: 'Invoice not found' }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: 'NOT_FOUND', message: 'Invoice not found' },
+        { status: 404 }
+      );
     }
 
     invoice.isSoftDeleted = true;
@@ -288,17 +300,26 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     const action = url.searchParams.get('action');
 
     if (action !== 'duplicate') {
-      return NextResponse.json({ success: false, error: 'BAD_REQUEST', message: 'Action not supported' }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: 'BAD_REQUEST', message: 'Action not supported' },
+        { status: 400 }
+      );
     }
 
     const isAuthorized = hasRole(roles, ['super-admin', 'admin', 'finance']);
     if (!isAuthorized) {
-      return NextResponse.json({ success: false, error: 'FORBIDDEN', message: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json(
+        { success: false, error: 'FORBIDDEN', message: 'Unauthorized' },
+        { status: 403 }
+      );
     }
 
     const invoiceToClone = await Invoice.findOne({ _id: id, companyId, isSoftDeleted: false });
     if (!invoiceToClone) {
-      return NextResponse.json({ success: false, error: 'NOT_FOUND', message: 'Source invoice not found' }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: 'NOT_FOUND', message: 'Source invoice not found' },
+        { status: 404 }
+      );
     }
 
     const count = await Invoice.countDocuments({ companyId });

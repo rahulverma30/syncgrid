@@ -47,17 +47,24 @@ export function CommentThreads() {
           comments.map((comment: any, idx: number) => {
             const senderName = comment.senderId?.name || 'Collaborator';
             return (
-              <div key={idx} className="flex flex-col gap-1 bg-slate-900/30 border border-border/10 rounded-lg p-3">
+              <div
+                key={idx}
+                className="flex flex-col gap-1 bg-slate-900/30 border border-border/10 rounded-lg p-3"
+              >
                 <div className="flex items-center gap-2">
                   <div className="h-5 w-5 rounded-full bg-slate-950/60 border border-border flex items-center justify-center text-slate-400">
                     <User className="h-3 w-3" />
                   </div>
                   <span className="text-xs font-semibold text-slate-300">{senderName}</span>
                   <span className="text-[9px] text-slate-500 font-mono ml-auto">
-                    {comment.createdAt ? formatDistanceToNow(new Date(comment.createdAt)) + ' ago' : 'now'}
+                    {comment.createdAt
+                      ? formatDistanceToNow(new Date(comment.createdAt)) + ' ago'
+                      : 'now'}
                   </span>
                 </div>
-                <p className="text-xs text-slate-400 leading-relaxed pl-7 break-words whitespace-pre-line">{comment.content}</p>
+                <p className="text-xs text-slate-400 leading-relaxed pl-7 break-words whitespace-pre-line">
+                  {comment.content}
+                </p>
               </div>
             );
           })
@@ -65,7 +72,10 @@ export function CommentThreads() {
       </div>
 
       {/* Editor Comment Post Form Box */}
-      <form onSubmit={handlePostComment} className="border-t border-border/20 p-4 bg-slate-950/30 flex gap-2">
+      <form
+        onSubmit={handlePostComment}
+        className="border-t border-border/20 p-4 bg-slate-950/30 flex gap-2"
+      >
         <input
           type="text"
           placeholder="Ask a question or request review..."

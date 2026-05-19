@@ -1,6 +1,20 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Plus, CreditCard, Send, Copy, Archive, Trash2, Calendar, FileText, ChevronDown, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import {
+  Search,
+  Plus,
+  CreditCard,
+  Send,
+  Copy,
+  Archive,
+  Trash2,
+  Calendar,
+  FileText,
+  ChevronDown,
+  CheckCircle,
+  Clock,
+  AlertCircle,
+} from 'lucide-react';
 import { Button, Input } from '@/components/ui';
 
 interface InvoiceManagerProps {
@@ -39,7 +53,10 @@ export const InvoiceManager: React.FC<InvoiceManagerProps> = ({
     const clientName = inv.clientId?.name?.toLowerCase() || '';
     const clientComp = inv.clientId?.company?.toLowerCase() || '';
     const invNum = inv.invoiceNumber?.toLowerCase() || '';
-    const matchesSearch = clientName.includes(search.toLowerCase()) || clientComp.includes(search.toLowerCase()) || invNum.includes(search.toLowerCase());
+    const matchesSearch =
+      clientName.includes(search.toLowerCase()) ||
+      clientComp.includes(search.toLowerCase()) ||
+      invNum.includes(search.toLowerCase());
     const matchesStatus = statusFilter === 'all' || inv.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -54,7 +71,9 @@ export const InvoiceManager: React.FC<InvoiceManagerProps> = ({
       void: 'bg-border/30 text-muted-foreground border-border/40',
     };
     return (
-      <span className={`px-2 py-0.5 text-[9px] uppercase font-extrabold tracking-wider border rounded-full ${styles[status] || styles.draft}`}>
+      <span
+        className={`px-2 py-0.5 text-[9px] uppercase font-extrabold tracking-wider border rounded-full ${styles[status] || styles.draft}`}
+      >
         {status.replace('_', ' ')}
       </span>
     );
@@ -143,7 +162,10 @@ export const InvoiceManager: React.FC<InvoiceManagerProps> = ({
               </tr>
             ) : (
               filteredInvoices.map((inv) => (
-                <tr key={inv._id} className="border-b border-border/40 hover:bg-muted/10 transition-colors">
+                <tr
+                  key={inv._id}
+                  className="border-b border-border/40 hover:bg-muted/10 transition-colors"
+                >
                   <td className="p-4 font-bold text-foreground">
                     <span className="flex items-center gap-1.5">
                       <FileText className="h-3.5 w-3.5 text-muted-foreground/60" />
@@ -153,23 +175,32 @@ export const InvoiceManager: React.FC<InvoiceManagerProps> = ({
                   <td className="p-4 font-semibold">
                     <div className="flex flex-col">
                       <span>{inv.clientId?.name}</span>
-                      <span className="text-[10px] text-muted-foreground font-normal">{inv.clientId?.company}</span>
+                      <span className="text-[10px] text-muted-foreground font-normal">
+                        {inv.clientId?.company}
+                      </span>
                     </div>
                   </td>
                   <td className="p-4 text-muted-foreground">
                     <div className="flex items-center gap-1.5">
                       <Calendar className="h-3.5 w-3.5 opacity-60" />
-                      {new Date(inv.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                      {new Date(inv.dueDate).toLocaleDateString(undefined, {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                      })}
                     </div>
                   </td>
                   <td className="p-4 font-bold text-foreground">
-                    {inv.currency} {inv.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    {inv.currency}{' '}
+                    {inv.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </td>
                   <td className="p-4 font-medium text-emerald-400">
-                    {inv.currency} {inv.paidAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    {inv.currency}{' '}
+                    {inv.paidAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </td>
                   <td className="p-4 font-medium text-amber-500">
-                    {inv.currency} {inv.outstandingAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    {inv.currency}{' '}
+                    {inv.outstandingAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </td>
                   <td className="p-4">{getStatusBadge(inv.status)}</td>
                   {isFinance && (
@@ -235,8 +266,12 @@ export const InvoiceManager: React.FC<InvoiceManagerProps> = ({
               className="bg-card border border-border rounded-xl p-6 w-full max-w-md shadow-2xl space-y-4"
             >
               <div className="flex justify-between items-center pb-2 border-b border-border/60">
-                <h3 className="text-sm font-bold uppercase tracking-wider">Record Manual Payment</h3>
-                <span className="text-xs font-bold text-primary">{selectedInvoice.invoiceNumber}</span>
+                <h3 className="text-sm font-bold uppercase tracking-wider">
+                  Record Manual Payment
+                </h3>
+                <span className="text-xs font-bold text-primary">
+                  {selectedInvoice.invoiceNumber}
+                </span>
               </div>
 
               <form onSubmit={handleSubmitPayment} className="space-y-4">
@@ -255,7 +290,8 @@ export const InvoiceManager: React.FC<InvoiceManagerProps> = ({
                     className="h-9 text-xs"
                   />
                   <p className="text-[9px] text-muted-foreground font-semibold">
-                    Outstanding balance limit: {selectedInvoice.currency} {selectedInvoice.outstandingAmount.toLocaleString()}
+                    Outstanding balance limit: {selectedInvoice.currency}{' '}
+                    {selectedInvoice.outstandingAmount.toLocaleString()}
                   </p>
                 </div>
 

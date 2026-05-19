@@ -30,13 +30,19 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
 
     const isAuthorized = hasRole(roles, ['super-admin', 'admin', 'finance']);
     if (!isAuthorized) {
-      return NextResponse.json({ success: false, error: 'FORBIDDEN', message: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json(
+        { success: false, error: 'FORBIDDEN', message: 'Unauthorized' },
+        { status: 403 }
+      );
     }
 
     const payload = await request.json();
 
     if (!payload.clientId) {
-      return NextResponse.json({ success: false, error: 'BAD_REQUEST', message: 'clientId is required' }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: 'BAD_REQUEST', message: 'clientId is required' },
+        { status: 400 }
+      );
     }
 
     let profile = await ClientBillingProfile.findOne({ clientId: payload.clientId, companyId });

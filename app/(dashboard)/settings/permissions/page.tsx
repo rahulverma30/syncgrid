@@ -123,29 +123,31 @@ export default function SettingsPermissionsPage() {
           <div className="overflow-x-auto select-none">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="border-b border-border/60 bg-background/20 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                <tr className="border-b border-border/60 bg-background/20 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">
                   <th className="py-3.5 px-5">Permission Rule Name</th>
                   <th className="py-3.5 px-4">System Category</th>
                   <th className="py-3.5 px-4">Policy Scope Description</th>
                   <th className="py-3.5 px-5">Active Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border/40 text-slate-300">
+              <tbody className="divide-y divide-border/40 text-muted-foreground">
                 {filteredPerms.map((rule) => (
-                  <tr key={rule._id} className="hover:bg-slate-900/10 transition-colors">
+                  <tr key={rule._id} className="hover:bg-accent/20 transition-colors">
                     <td className="py-4 px-5">
-                      <span className="font-mono font-bold text-white text-sm bg-background/50 border border-border/60 px-2 py-0.5 rounded">
+                      <span className="font-mono font-bold text-foreground text-sm bg-background/50 border border-border/60 px-2 py-0.5 rounded">
                         {rule.name}
                       </span>
                     </td>
                     <td className="py-4 px-4">
-                      <span className="inline-flex bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider">
+                      <span className="inline-flex bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider">
                         {rule.category}
                       </span>
                     </td>
-                    <td className="py-4 px-4 text-slate-400 leading-relaxed max-w-md">
-                      <div className="font-semibold text-slate-200">{rule.scope}</div>
-                      <div className="text-[10px] text-slate-500 mt-0.5">{rule.description}</div>
+                    <td className="py-4 px-4 text-muted-foreground leading-relaxed max-w-md">
+                      <div className="font-semibold text-foreground/90">{rule.scope}</div>
+                      <div className="text-[10px] text-muted-foreground/80 mt-0.5">
+                        {rule.description}
+                      </div>
                     </td>
                     <td className="py-4 px-5">
                       <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400 font-bold uppercase">

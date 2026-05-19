@@ -29,7 +29,15 @@ const KnowledgeActivitySchema = new Schema(
     },
     action: {
       type: String,
-      enum: ['created', 'edited', 'version_restored', 'commented', 'shared', 'acknowledged', 'space_created'],
+      enum: [
+        'created',
+        'edited',
+        'version_restored',
+        'commented',
+        'shared',
+        'acknowledged',
+        'space_created',
+      ],
       required: true,
       index: true,
     },

@@ -350,8 +350,8 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <div className="min-h-[500px] flex flex-col items-center justify-center space-y-4">
-        <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
-        <p className="text-slate-400 italic text-sm">Compiling workspace parameters...</p>
+        <Loader2 className="w-10 h-10 text-primary animate-spin" />
+        <p className="text-muted-foreground italic text-sm">Compiling workspace parameters...</p>
       </div>
     );
   }
@@ -366,7 +366,7 @@ export default function SettingsPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
         {/* Navigation Sidebar Panel */}
-        <div className="flex flex-col space-y-1 bg-slate-900/40 p-2.5 rounded-2xl border border-slate-850/60 backdrop-blur-md">
+        <div className="flex flex-col space-y-1 bg-card/40 p-2.5 rounded-2xl border border-border/80 backdrop-blur-md">
           {menuItems.map((item) => {
             const Icon = item.icon;
             return (
@@ -375,8 +375,8 @@ export default function SettingsPage() {
                 onClick={() => setActiveTab(item.id as TabType)}
                 className={`flex items-center space-x-3 w-full px-4 py-3 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
                   activeTab === item.id
-                    ? 'bg-blue-600/10 text-blue-500 border border-blue-500/20'
-                    : 'text-slate-400 hover:bg-slate-850/30 hover:text-slate-200 border border-transparent'
+                    ? 'bg-primary/10 text-primary border border-primary/25 shadow-sm'
+                    : 'text-muted-foreground hover:bg-accent/40 hover:text-foreground border border-transparent'
                 }`}
               >
                 <Icon className="w-4 h-4" />
@@ -396,50 +396,51 @@ export default function SettingsPage() {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
             >
-              <Card className="bg-slate-900/20 border-slate-850/60 backdrop-blur-md p-6 rounded-2xl">
+              <Card className="bg-card/20 border border-border/60 backdrop-blur-md p-6 rounded-2xl">
                 <CardContent className="p-0 space-y-6">
                   {/* TAB 1: Profile & Subdomain */}
                   {activeTab === 'profile' && (
                     <div className="space-y-6">
                       <div className="space-y-1">
-                        <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                          <Building className="w-5 h-5 text-blue-500" />
+                        <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+                          <Building className="w-5 h-5 text-primary" />
                           <span>Organization Settings</span>
                         </h2>
-                        <p className="text-xs text-slate-400">
+                        <p className="text-xs text-muted-foreground">
                           Configure your corporate metadata and active workspace parameters.
                         </p>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">
                             Organization Name
                           </label>
                           <input
                             type="text"
                             value={orgName || 'Acme Corporate'}
                             onChange={(e) => setOrgName(e.target.value)}
-                            className="w-full bg-slate-950/80 border border-slate-800 px-4 py-2.5 rounded-xl text-xs text-white outline-none"
+                            className="w-full bg-background/80 border border-border/60 focus:border-primary/40 px-4 py-2.5 rounded-xl text-xs text-foreground outline-none transition-all"
                           />
                         </div>
 
                         <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">
                             Subdomain Slug
                           </label>
                           <input
                             type="text"
                             disabled
                             value={`${orgSlug || 'acme'}.syncgrid.com`}
-                            className="w-full bg-slate-950/40 border border-slate-850 px-4 py-2.5 rounded-xl text-xs text-slate-500 outline-none cursor-not-allowed"
+                            className="w-full bg-background/40 border border-border/40 px-4 py-2.5 rounded-xl text-xs text-muted-foreground outline-none cursor-not-allowed"
                           />
                         </div>
                       </div>
 
                       <Button
                         onClick={() => toast.success('Profile settings updated successfully!')}
-                        className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-5 py-2.5 text-xs font-semibold"
+                        variant="default"
+                        className="rounded-xl px-5 py-2.5 text-xs font-semibold"
                       >
                         Save Configurations
                       </Button>
@@ -450,27 +451,27 @@ export default function SettingsPage() {
                   {activeTab === 'billing' && (
                     <div className="space-y-6">
                       <div className="space-y-1">
-                        <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                          <CreditCard className="w-5 h-5 text-blue-500" />
+                        <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+                          <CreditCard className="w-5 h-5 text-primary" />
                           <span>Billing & Metered Quotas</span>
                         </h2>
-                        <p className="text-xs text-slate-400">
+                        <p className="text-xs text-muted-foreground">
                           Monitor active subscription plan capabilities and remaining quotas limits.
                         </p>
                       </div>
 
                       {/* Quota Progress meters */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-950/50 p-5 rounded-2xl border border-slate-850/50">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-background/50 p-5 rounded-2xl border border-border/60">
                         {/* Users Seats */}
                         <div className="space-y-2">
-                          <div className="flex justify-between items-center text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                          <div className="flex justify-between items-center text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
                             <span>User Seats Assigned</span>
-                            <span className="text-white">
+                            <span className="text-foreground">
                               {quotas?.users.current} / {quotas?.users.limit} seats (
                               {quotas?.users.pct}%)
                             </span>
                           </div>
-                          <div className="h-2 w-full rounded-full bg-slate-800 overflow-hidden">
+                          <div className="h-2 w-full rounded-full bg-accent/40 overflow-hidden">
                             <div
                               style={{ width: `${quotas?.users.pct}%` }}
                               className="h-full bg-blue-500 rounded-full"
@@ -480,14 +481,14 @@ export default function SettingsPage() {
 
                         {/* Storage */}
                         <div className="space-y-2">
-                          <div className="flex justify-between items-center text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                          <div className="flex justify-between items-center text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
                             <span>Workspace Storage</span>
-                            <span className="text-white">
+                            <span className="text-foreground">
                               {quotas?.storage.currentGb}GB / {quotas?.storage.limit}GB (
                               {quotas?.storage.pct}%)
                             </span>
                           </div>
-                          <div className="h-2 w-full rounded-full bg-slate-800 overflow-hidden">
+                          <div className="h-2 w-full rounded-full bg-accent/40 overflow-hidden">
                             <div
                               style={{ width: `${quotas?.storage.pct}%` }}
                               className="h-full bg-emerald-500 rounded-full"
@@ -497,14 +498,14 @@ export default function SettingsPage() {
 
                         {/* API Requests */}
                         <div className="space-y-2">
-                          <div className="flex justify-between items-center text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                          <div className="flex justify-between items-center text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
                             <span>API Requests Volume (Month)</span>
-                            <span className="text-white">
+                            <span className="text-foreground">
                               {quotas?.api.current.toLocaleString()} /{' '}
                               {quotas?.api.limit.toLocaleString()} ({quotas?.api.pct}%)
                             </span>
                           </div>
-                          <div className="h-2 w-full rounded-full bg-slate-800 overflow-hidden">
+                          <div className="h-2 w-full rounded-full bg-accent/40 overflow-hidden">
                             <div
                               style={{ width: `${quotas?.api.pct}%` }}
                               className="h-full bg-purple-500 rounded-full"
@@ -514,14 +515,14 @@ export default function SettingsPage() {
 
                         {/* Automation Runs */}
                         <div className="space-y-2">
-                          <div className="flex justify-between items-center text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                          <div className="flex justify-between items-center text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
                             <span>Automation Runs (Month)</span>
-                            <span className="text-white">
+                            <span className="text-foreground">
                               {quotas?.automations.current} / {quotas?.automations.limit} (
                               {quotas?.automations.pct}%)
                             </span>
                           </div>
-                          <div className="h-2 w-full rounded-full bg-slate-800 overflow-hidden">
+                          <div className="h-2 w-full rounded-full bg-accent/40 overflow-hidden">
                             <div
                               style={{ width: `${quotas?.automations.pct}%` }}
                               className="h-full bg-amber-500 rounded-full"
@@ -532,7 +533,7 @@ export default function SettingsPage() {
 
                       {/* Upgrade Plan Options */}
                       <div className="space-y-3">
-                        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">
                           Upgrade / Migrations Settings
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -541,15 +542,15 @@ export default function SettingsPage() {
                             return (
                               <div
                                 key={p}
-                                className={`bg-slate-950/80 p-4 rounded-xl border border-slate-850/50 flex flex-col justify-between ${
-                                  isActive ? 'ring-2 ring-blue-500/40 bg-blue-500/5' : ''
+                                className={`bg-background/80 p-4 rounded-xl border border-border/60 flex flex-col justify-between ${
+                                  isActive ? 'ring-2 ring-primary/40 bg-primary/5' : ''
                                 }`}
                               >
                                 <div>
-                                  <span className="text-xs font-bold text-white capitalize">
+                                  <span className="text-xs font-bold text-foreground capitalize">
                                     {p} plan
                                   </span>
-                                  <p className="text-[10px] text-slate-400 mt-1">
+                                  <p className="text-[10px] text-muted-foreground mt-1">
                                     {p === 'enterprise'
                                       ? 'Unlimited custom pipelines.'
                                       : p === 'pro'
@@ -562,8 +563,8 @@ export default function SettingsPage() {
                                   onClick={() => handleUpdatePlan(p as any)}
                                   className={`mt-4 w-full py-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
                                     isActive
-                                      ? 'bg-blue-600/10 text-blue-500 border border-blue-500/20 cursor-not-allowed'
-                                      : 'bg-slate-900 hover:bg-slate-850 text-slate-300'
+                                      ? 'bg-primary/10 text-primary border border-primary/20 cursor-not-allowed'
+                                      : 'bg-card hover:bg-accent/40 text-foreground/85 border border-border/60'
                                   }`}
                                 >
                                   {isActive ? 'Current Active Tier' : 'Upgrade Plan'}
@@ -576,13 +577,13 @@ export default function SettingsPage() {
 
                       {/* Invoice logs */}
                       <div className="space-y-3">
-                        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">
                           Simulated PDF Invoices Logs
                         </h3>
-                        <div className="bg-slate-950/30 border border-slate-850/60 rounded-xl overflow-hidden">
+                        <div className="bg-background/30 border border-border/60 rounded-xl overflow-hidden">
                           <table className="w-full text-left text-xs border-collapse">
                             <thead>
-                              <tr className="bg-slate-900/80 text-[10px] uppercase font-bold text-slate-400 border-b border-slate-850">
+                              <tr className="bg-card/85 text-[10px] uppercase font-bold text-muted-foreground border-b border-border/60">
                                 <th className="p-3">Invoice Code</th>
                                 <th className="p-3">Date</th>
                                 <th className="p-3">Seats</th>
@@ -595,14 +596,14 @@ export default function SettingsPage() {
                               {invoices.map((inv) => (
                                 <tr
                                   key={inv.id}
-                                  className="border-b border-slate-850/40 hover:bg-slate-900/10"
+                                  className="border-b border-border/40 hover:bg-accent/20"
                                 >
-                                  <td className="p-3 font-semibold text-white">{inv.id}</td>
-                                  <td className="p-3 text-slate-400">
+                                  <td className="p-3 font-semibold text-foreground">{inv.id}</td>
+                                  <td className="p-3 text-muted-foreground">
                                     {new Date(inv.createdAt).toLocaleDateString()}
                                   </td>
-                                  <td className="p-3 text-slate-400">{inv.seats} seats</td>
-                                  <td className="p-3 text-white font-medium">
+                                  <td className="p-3 text-muted-foreground">{inv.seats} seats</td>
+                                  <td className="p-3 text-foreground font-medium">
                                     ${inv.amount.toFixed(2)}
                                   </td>
                                   <td className="p-3">
@@ -617,7 +618,7 @@ export default function SettingsPage() {
                                           `Mock Invoice ${inv.id} downloaded successfully!`
                                         );
                                       }}
-                                      className="text-blue-500 hover:text-blue-400 p-1 cursor-pointer"
+                                      className="text-primary hover:text-primary/80 p-1 cursor-pointer"
                                     >
                                       <FileDown className="w-4 h-4" />
                                     </button>
@@ -635,11 +636,11 @@ export default function SettingsPage() {
                   {activeTab === 'branding' && (
                     <div className="space-y-6">
                       <div className="space-y-1">
-                        <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                          <Globe className="w-5 h-5 text-blue-500" />
+                        <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+                          <Globe className="w-5 h-5 text-primary" />
                           <span>Branding & White-Label Controls</span>
                         </h2>
-                        <p className="text-xs text-slate-400">
+                        <p className="text-xs text-muted-foreground">
                           Configure tenant custom domains overrides and branding accent highlights
                           variables.
                         </p>
@@ -648,7 +649,7 @@ export default function SettingsPage() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-4">
                           <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">
                               Custom Domain Override
                             </label>
                             <div className="flex gap-2">
@@ -660,16 +661,17 @@ export default function SettingsPage() {
                                   setDnsVerified(false);
                                 }}
                                 placeholder="e.g. portal.acme.com"
-                                className="w-full bg-slate-950/80 border border-slate-800 px-4 py-2 rounded-xl text-xs text-white outline-none"
+                                className="w-full bg-background/80 border border-border/60 px-4 py-2 rounded-xl text-xs text-foreground outline-none"
                               />
                               <Button
                                 onClick={handleVerifyDNS}
-                                className="bg-slate-900 border border-slate-800 hover:bg-slate-850 text-slate-300 text-xs px-4 rounded-xl"
+                                variant="outline"
+                                className="border border-border/60 hover:bg-accent/40 text-xs px-4 rounded-xl"
                               >
                                 Verify DNS
                               </Button>
                             </div>
-                            <span className="text-[9px] text-slate-500 block leading-normal">
+                            <span className="text-[9px] text-muted-foreground/70 block leading-normal">
                               *Set a CNAME DNS record targeting <code>cname.syncgrid.com</code> on
                               your registrar configuration to activate.
                             </span>
@@ -688,7 +690,7 @@ export default function SettingsPage() {
                           )}
 
                           <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">
                               Accent Theme Tint
                             </label>
                             <div className="flex gap-2">
@@ -698,7 +700,7 @@ export default function SettingsPage() {
                                   onClick={() => setAccentColor(c)}
                                   style={{ backgroundColor: c }}
                                   className={`w-6 h-6 rounded-full cursor-pointer transition-transform ${
-                                    accentColor === c ? 'ring-4 ring-blue-500/30 scale-110' : ''
+                                    accentColor === c ? 'ring-4 ring-primary/30 scale-110' : ''
                                   }`}
                                 />
                               ))}
@@ -707,24 +709,26 @@ export default function SettingsPage() {
                         </div>
 
                         {/* Live Branding Preview */}
-                        <div className="bg-slate-950/30 p-5 rounded-2xl border border-slate-850/60 flex flex-col justify-between">
-                          <span className="text-[10px] uppercase font-bold tracking-wider text-slate-500">
+                        <div className="bg-background/30 p-5 rounded-2xl border border-border/60 flex flex-col justify-between">
+                          <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground/80">
                             Accent Visual Indicator Preview
                           </span>
-                          <div className="bg-slate-900/60 border border-slate-850 p-4 rounded-xl mt-4 space-y-3">
+                          <div className="bg-card/65 border border-border/60 p-4 rounded-xl mt-4 space-y-3">
                             <div className="flex justify-between items-center">
                               <div className="flex items-center space-x-2">
                                 <div
                                   style={{ backgroundColor: accentColor }}
                                   className="w-3 h-3 rounded-full shrink-0"
                                 />
-                                <span className="text-xs font-bold text-white">Acme Portal</span>
+                                <span className="text-xs font-bold text-foreground">
+                                  Acme Portal
+                                </span>
                               </div>
-                              <span className="text-[9px] text-slate-500">Active</span>
+                              <span className="text-[9px] text-muted-foreground/80">Active</span>
                             </div>
                             <button
                               style={{ backgroundColor: accentColor }}
-                              className="w-full py-1.5 rounded-lg text-[10px] font-bold text-white transition-opacity hover:opacity-90"
+                              className="w-full py-1.5 rounded-lg text-[10px] font-bold text-white transition-opacity hover:opacity-90 cursor-pointer"
                             >
                               Action Highlight Trigger
                             </button>
@@ -738,11 +742,11 @@ export default function SettingsPage() {
                   {activeTab === 'keys' && (
                     <div className="space-y-6">
                       <div className="space-y-1">
-                        <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                          <Key className="w-5 h-5 text-blue-500" />
+                        <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+                          <Key className="w-5 h-5 text-primary" />
                           <span>API Keys & Secrets Rotations</span>
                         </h2>
-                        <p className="text-xs text-slate-400">
+                        <p className="text-xs text-muted-foreground">
                           Create cryptographically secure integration key credentials scoped to
                           custom modules.
                         </p>
@@ -751,15 +755,15 @@ export default function SettingsPage() {
                       {/* Key Creation Form */}
                       <form
                         onSubmit={handleCreateAPIKey}
-                        className="space-y-4 bg-slate-950/40 p-5 rounded-2xl border border-slate-850/50"
+                        className="space-y-4 bg-background/40 p-5 rounded-2xl border border-border/60"
                       >
-                        <span className="text-xs font-bold uppercase text-slate-400 block">
+                        <span className="text-xs font-bold uppercase text-muted-foreground/80 block">
                           Provision New Integration Key
                         </span>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">
                               Token Label Name
                             </label>
                             <input
@@ -767,12 +771,12 @@ export default function SettingsPage() {
                               value={keyName}
                               onChange={(e) => setKeyName(e.target.value)}
                               placeholder="e.g. Jenkins Automerger Key"
-                              className="w-full bg-slate-950/80 border border-slate-800 px-4 py-2.5 rounded-xl text-xs text-white outline-none"
+                              className="w-full bg-background/80 border border-border/60 px-4 py-2.5 rounded-xl text-xs text-foreground outline-none"
                             />
                           </div>
 
                           <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
+                            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80 block">
                               Permission Scope Groups
                             </label>
                             <div className="flex flex-wrap gap-2 mt-1">
@@ -791,8 +795,8 @@ export default function SettingsPage() {
                                     }}
                                     className={`px-3 py-1 rounded-full text-[10px] font-semibold transition-all border cursor-pointer ${
                                       active
-                                        ? 'bg-blue-600/10 text-blue-500 border-blue-500/20'
-                                        : 'bg-slate-900 text-slate-400 border-slate-850'
+                                        ? 'bg-primary/10 text-primary border-primary/20'
+                                        : 'bg-card text-muted-foreground border-border/60'
                                     }`}
                                   >
                                     {s}
@@ -805,7 +809,8 @@ export default function SettingsPage() {
 
                         <Button
                           type="submit"
-                          className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-5 py-2.5 text-xs font-semibold"
+                          variant="default"
+                          className="rounded-xl px-5 py-2.5 text-xs font-semibold"
                         >
                           Generate Cryptographic Key
                         </Button>
@@ -813,24 +818,24 @@ export default function SettingsPage() {
 
                       {/* Reveal Key Alert (displayed once) */}
                       {revealedKey && (
-                        <div className="bg-blue-500/10 border border-blue-500/20 text-blue-500 p-4 rounded-xl text-xs flex flex-col gap-3">
+                        <div className="bg-primary/10 border border-primary/20 text-primary p-4 rounded-xl text-xs flex flex-col gap-3">
                           <div className="flex items-start gap-2.5">
-                            <Info className="w-5 h-5 shrink-0 mt-0.5 text-blue-500" />
+                            <Info className="w-5 h-5 shrink-0 mt-0.5 text-primary" />
                             <div>
                               <span className="font-bold">Copy Your Private Integration Key</span>
-                              <p className="text-[10px] text-slate-300 mt-1">
+                              <p className="text-[10px] text-muted-foreground mt-1">
                                 For security compliance, this key will **NEVER** be displayed again.
                                 Store it securely in your secrets manager.
                               </p>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2 bg-slate-950 p-2.5 rounded-lg border border-slate-850/80 justify-between">
-                            <code className="text-slate-100 break-all select-all pr-4">
+                          <div className="flex items-center gap-2 bg-background p-2.5 rounded-lg border border-border/60 justify-between">
+                            <code className="text-foreground break-all select-all pr-4">
                               {revealedKey}
                             </code>
                             <button
                               onClick={() => handleCopy(revealedKey)}
-                              className="text-blue-500 hover:text-blue-400 p-1 cursor-pointer shrink-0"
+                              className="text-primary hover:text-primary/80 p-1 cursor-pointer shrink-0"
                             >
                               <Clipboard className="w-4.5 h-4.5" />
                             </button>
@@ -840,13 +845,13 @@ export default function SettingsPage() {
 
                       {/* Keys active list */}
                       <div className="space-y-3">
-                        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">
                           Active API Keys Registry
                         </h3>
-                        <div className="bg-slate-950/30 border border-slate-850/60 rounded-xl overflow-hidden">
+                        <div className="bg-background/30 border border-border/60 rounded-xl overflow-hidden">
                           <table className="w-full text-left text-xs border-collapse">
                             <thead>
-                              <tr className="bg-slate-900/80 text-[10px] uppercase font-bold text-slate-400 border-b border-slate-850">
+                              <tr className="bg-card/85 text-[10px] uppercase font-bold text-muted-foreground border-b border-border/60">
                                 <th className="p-3">Key Label</th>
                                 <th className="p-3">Display Mask</th>
                                 <th className="p-3">Scopes Granted</th>
@@ -857,7 +862,10 @@ export default function SettingsPage() {
                             <tbody>
                               {keys.length === 0 ? (
                                 <tr>
-                                  <td colSpan={5} className="p-8 text-center text-slate-500 italic">
+                                  <td
+                                    colSpan={5}
+                                    className="p-8 text-center text-muted-foreground italic"
+                                  >
                                     No active integration keys provisioned.
                                   </td>
                                 </tr>
@@ -865,11 +873,11 @@ export default function SettingsPage() {
                                 keys.map((k) => (
                                   <tr
                                     key={k._id}
-                                    className="border-b border-slate-850/40 hover:bg-slate-900/10"
+                                    className="border-b border-border/40 hover:bg-accent/20"
                                   >
-                                    <td className="p-3 font-semibold text-white">{k.name}</td>
+                                    <td className="p-3 font-semibold text-foreground">{k.name}</td>
                                     <td className="p-3">
-                                      <code className="text-slate-400 text-[11px] bg-slate-950 px-2 py-0.5 rounded">
+                                      <code className="text-muted-foreground text-[11px] bg-background px-2 py-0.5 rounded">
                                         {k.mask}
                                       </code>
                                     </td>
@@ -878,14 +886,14 @@ export default function SettingsPage() {
                                         {k.scopes.map((s: string) => (
                                           <span
                                             key={s}
-                                            className="px-1.5 py-0.5 rounded bg-slate-900 text-slate-400 text-[9px] font-semibold border border-slate-850"
+                                            className="px-1.5 py-0.5 rounded bg-card text-muted-foreground text-[9px] font-semibold border border-border/60"
                                           >
                                             {s}
                                           </span>
                                         ))}
                                       </div>
                                     </td>
-                                    <td className="p-3 text-slate-500">
+                                    <td className="p-3 text-muted-foreground/80">
                                       {new Date(k.createdAt).toLocaleDateString()}
                                     </td>
                                     <td className="p-3 text-right">
@@ -910,11 +918,11 @@ export default function SettingsPage() {
                   {activeTab === 'webhooks' && (
                     <div className="space-y-6">
                       <div className="space-y-1">
-                        <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                          <Webhook className="w-5 h-5 text-blue-500" />
+                        <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+                          <Webhook className="w-5 h-5 text-primary" />
                           <span>Webhooks Event Broker</span>
                         </h2>
-                        <p className="text-xs text-slate-400">
+                        <p className="text-xs text-muted-foreground">
                           Register listener receivers URLs to capture real-time subscription
                           lifecycle updates.
                         </p>
@@ -923,15 +931,15 @@ export default function SettingsPage() {
                       {/* Webhook Registration Form */}
                       <form
                         onSubmit={handleCreateWebhook}
-                        className="space-y-4 bg-slate-950/40 p-5 rounded-2xl border border-slate-850/50"
+                        className="space-y-4 bg-background/40 p-5 rounded-2xl border border-border/60"
                       >
-                        <span className="text-xs font-bold uppercase text-slate-400 block">
+                        <span className="text-xs font-bold uppercase text-muted-foreground/80 block">
                           Register New Endpoint Receiver
                         </span>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">
                               Target Endpoint URL
                             </label>
                             <input
@@ -939,12 +947,12 @@ export default function SettingsPage() {
                               value={webhookUrl}
                               onChange={(e) => setWebhookUrl(e.target.value)}
                               placeholder="https://api.your-system.com/webhooks"
-                              className="w-full bg-slate-950/80 border border-slate-800 px-4 py-2.5 rounded-xl text-xs text-white outline-none"
+                              className="w-full bg-background/80 border border-border/60 px-4 py-2.5 rounded-xl text-xs text-foreground outline-none"
                             />
                           </div>
 
                           <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
+                            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80 block">
                               Subscribe To Events
                             </label>
                             <div className="flex flex-wrap gap-2 mt-1">
@@ -963,8 +971,8 @@ export default function SettingsPage() {
                                     }}
                                     className={`px-3 py-1 rounded-full text-[10px] font-semibold transition-all border cursor-pointer ${
                                       active
-                                        ? 'bg-blue-600/10 text-blue-500 border-blue-500/20'
-                                        : 'bg-slate-900 text-slate-400 border-slate-850'
+                                        ? 'bg-primary/10 text-primary border border-primary/20'
+                                        : 'bg-card text-muted-foreground border-border/60'
                                     }`}
                                   >
                                     {e}
@@ -977,7 +985,8 @@ export default function SettingsPage() {
 
                         <Button
                           type="submit"
-                          className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-5 py-2.5 text-xs font-semibold"
+                          variant="default"
+                          className="rounded-xl px-5 py-2.5 text-xs font-semibold"
                         >
                           Register Webhook Endpoint
                         </Button>
@@ -985,13 +994,13 @@ export default function SettingsPage() {
 
                       {/* Active endpoints grid */}
                       <div className="space-y-3">
-                        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">
                           Webhook Subscriptions
                         </h3>
-                        <div className="bg-slate-950/30 border border-slate-850/60 rounded-xl overflow-hidden">
+                        <div className="bg-background/30 border border-border/60 rounded-xl overflow-hidden">
                           <table className="w-full text-left text-xs border-collapse">
                             <thead>
-                              <tr className="bg-slate-900/80 text-[10px] uppercase font-bold text-slate-400 border-b border-slate-850">
+                              <tr className="bg-card/85 text-[10px] uppercase font-bold text-muted-foreground border-b border-border/60">
                                 <th className="p-3">Endpoint Target</th>
                                 <th className="p-3">Signing Secret</th>
                                 <th className="p-3">Events</th>
@@ -1001,7 +1010,10 @@ export default function SettingsPage() {
                             <tbody>
                               {webhooks.length === 0 ? (
                                 <tr>
-                                  <td colSpan={4} className="p-8 text-center text-slate-500 italic">
+                                  <td
+                                    colSpan={4}
+                                    className="p-8 text-center text-muted-foreground italic"
+                                  >
                                     No active webhooks registered.
                                   </td>
                                 </tr>
@@ -1009,13 +1021,13 @@ export default function SettingsPage() {
                                 webhooks.map((w) => (
                                   <tr
                                     key={w._id}
-                                    className="border-b border-slate-850/40 hover:bg-slate-900/10"
+                                    className="border-b border-border/40 hover:bg-accent/20"
                                   >
-                                    <td className="p-3 font-semibold text-white break-all max-w-[200px]">
+                                    <td className="p-3 font-semibold text-foreground break-all max-w-[200px]">
                                       {w.url}
                                     </td>
                                     <td className="p-3">
-                                      <code className="text-slate-400 text-[11px] bg-slate-950 px-2 py-0.5 rounded">
+                                      <code className="text-muted-foreground text-[11px] bg-background px-2 py-0.5 rounded">
                                         {w.secret}
                                       </code>
                                     </td>
@@ -1024,7 +1036,7 @@ export default function SettingsPage() {
                                         {w.subscribedEvents.map((e: string) => (
                                           <span
                                             key={e}
-                                            className="px-1.5 py-0.5 rounded bg-slate-900 text-slate-400 text-[9px] font-semibold border border-slate-850"
+                                            className="px-1.5 py-0.5 rounded bg-card text-muted-foreground text-[9px] font-semibold border border-border/60"
                                           >
                                             {e}
                                           </span>
@@ -1034,7 +1046,7 @@ export default function SettingsPage() {
                                     <td className="p-3 text-right flex justify-end space-x-2">
                                       <button
                                         onClick={() => handleTestWebhook(w._id)}
-                                        className="text-blue-500 hover:text-blue-400 p-1 cursor-pointer"
+                                        className="text-primary hover:text-primary/80 p-1 cursor-pointer"
                                         title="Trigger Test Ping Event"
                                       >
                                         <Play className="w-4 h-4" />
@@ -1057,13 +1069,13 @@ export default function SettingsPage() {
 
                       {/* Delivery History logs */}
                       <div className="space-y-3">
-                        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">
                           Webhook Delivery Logs (Latest 10)
                         </h3>
-                        <div className="bg-slate-950/30 border border-slate-850/60 rounded-xl overflow-hidden">
+                        <div className="bg-background/30 border border-border/60 rounded-xl overflow-hidden">
                           <table className="w-full text-left text-xs border-collapse">
                             <thead>
-                              <tr className="bg-slate-900/80 text-[10px] uppercase font-bold text-slate-400 border-b border-slate-850">
+                              <tr className="bg-card/85 text-[10px] uppercase font-bold text-muted-foreground border-b border-border/60">
                                 <th className="p-3">Event Topic</th>
                                 <th className="p-3">Timestamp</th>
                                 <th className="p-3">Deliver Status</th>
@@ -1074,7 +1086,10 @@ export default function SettingsPage() {
                             <tbody>
                               {deliveries.length === 0 ? (
                                 <tr>
-                                  <td colSpan={5} className="p-8 text-center text-slate-500 italic">
+                                  <td
+                                    colSpan={5}
+                                    className="p-8 text-center text-muted-foreground italic"
+                                  >
                                     No webhook deliver operations logged yet.
                                   </td>
                                 </tr>
@@ -1084,10 +1099,12 @@ export default function SettingsPage() {
                                   return (
                                     <tr
                                       key={d._id}
-                                      className="border-b border-slate-850/40 hover:bg-slate-900/10"
+                                      className="border-b border-border/40 hover:bg-accent/20"
                                     >
-                                      <td className="p-3 font-semibold text-white">{d.event}</td>
-                                      <td className="p-3 text-slate-400">
+                                      <td className="p-3 font-semibold text-foreground">
+                                        {d.event}
+                                      </td>
+                                      <td className="p-3 text-muted-foreground">
                                         {new Date(d.createdAt).toLocaleTimeString()}
                                       </td>
                                       <td className="p-3">
@@ -1101,11 +1118,11 @@ export default function SettingsPage() {
                                           {d.status}
                                         </span>
                                       </td>
-                                      <td className="p-3 font-medium text-white">
+                                      <td className="p-3 font-medium text-foreground">
                                         {latestAttempt?.statusCode || '-'}
                                       </td>
                                       <td
-                                        className="p-3 text-right text-slate-500 break-all max-w-[200px] truncate"
+                                        className="p-3 text-right text-muted-foreground/80 break-all max-w-[200px] truncate"
                                         title={latestAttempt?.response}
                                       >
                                         {latestAttempt?.response || 'Awaiting dispatch'}
@@ -1125,11 +1142,11 @@ export default function SettingsPage() {
                   {activeTab === 'security' && (
                     <div className="space-y-6">
                       <div className="space-y-1">
-                        <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                          <Activity className="w-5 h-5 text-blue-500" />
+                        <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+                          <Activity className="w-5 h-5 text-primary" />
                           <span>Security & Governance</span>
                         </h2>
-                        <p className="text-xs text-slate-400">
+                        <p className="text-xs text-muted-foreground">
                           Configure multi-tenant throttling limits, anomalous locks, and view threat
                           vectors logs.
                         </p>
@@ -1137,10 +1154,10 @@ export default function SettingsPage() {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80 block">
                             API Request Throttling Rate
                           </label>
-                          <select className="w-full bg-slate-950/85 border border-slate-800 px-4 py-2.5 rounded-xl text-xs text-white outline-none cursor-pointer">
+                          <select className="w-full bg-background/85 border border-border/60 px-4 py-2.5 rounded-xl text-xs text-foreground outline-none cursor-pointer">
                             <option>100 requests / minute (Standard)</option>
                             <option>500 requests / minute (Pro Upgrade)</option>
                             <option>Unlimited (Enterprise Custom SLA)</option>
@@ -1148,10 +1165,10 @@ export default function SettingsPage() {
                         </div>
 
                         <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80 block">
                             Suspicious Login Attempts Limit
                           </label>
-                          <select className="w-full bg-slate-950/85 border border-slate-800 px-4 py-2.5 rounded-xl text-xs text-white outline-none cursor-pointer">
+                          <select className="w-full bg-background/85 border border-border/60 px-4 py-2.5 rounded-xl text-xs text-foreground outline-none cursor-pointer">
                             <option>5 failed attempts (Auto Locked for 15m)</option>
                             <option>3 failed attempts (MFA mandatory verification prompt)</option>
                           </select>
@@ -1159,13 +1176,13 @@ export default function SettingsPage() {
                       </div>
 
                       {/* Mock Threat Monitor Logs */}
-                      <div className="bg-slate-950/30 p-4 rounded-xl border border-slate-850/60 flex items-start gap-3">
+                      <div className="bg-background/30 p-4 rounded-xl border border-border/60 flex items-start gap-3">
                         <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
                         <div className="space-y-1">
-                          <h4 className="text-xs font-bold text-white">
+                          <h4 className="text-xs font-bold text-foreground">
                             Anomalous Activity Monitor
                           </h4>
-                          <p className="text-[11px] text-slate-400">
+                          <p className="text-[11px] text-muted-foreground">
                             Zero malicious activity vectors detected. Rate-limiting guards are armed
                             and actively shielding company boundaries.
                           </p>
@@ -1179,18 +1196,19 @@ export default function SettingsPage() {
                     <div className="space-y-6">
                       <div className="flex justify-between items-center">
                         <div className="space-y-1">
-                          <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                            <Users className="w-5 h-5 text-blue-500" />
+                          <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+                            <Users className="w-5 h-5 text-primary" />
                             <span>Team Member Management</span>
                           </h2>
-                          <p className="text-xs text-slate-400">
+                          <p className="text-xs text-muted-foreground">
                             Invite specialists to your workspace, adjust preset RBAC clearance
                             levels, and verify activation status.
                           </p>
                         </div>
                         <Button
                           onClick={() => setIsInviteModalOpen(true)}
-                          className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-4 py-2 text-xs font-semibold flex items-center gap-1.5"
+                          variant="default"
+                          className="rounded-xl px-4 py-2 text-xs font-semibold flex items-center gap-1.5"
                         >
                           <UserPlus className="w-4 h-4" />
                           Invite Member
@@ -1199,13 +1217,13 @@ export default function SettingsPage() {
 
                       {/* Invitations Table list */}
                       <div className="space-y-3">
-                        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">
                           Workspace Invitations & Access Logs
                         </h3>
-                        <div className="bg-slate-950/30 border border-slate-850/60 rounded-xl overflow-hidden">
+                        <div className="bg-background/30 border border-border/60 rounded-xl overflow-hidden">
                           <table className="w-full text-left text-xs border-collapse">
                             <thead>
-                              <tr className="bg-slate-900/80 text-[10px] uppercase font-bold text-slate-400 border-b border-slate-850">
+                              <tr className="bg-card/85 text-[10px] uppercase font-bold text-muted-foreground border-b border-border/60">
                                 <th className="p-3">Email Address</th>
                                 <th className="p-3">Assigned Role</th>
                                 <th className="p-3">Department</th>
@@ -1218,7 +1236,10 @@ export default function SettingsPage() {
                             <tbody>
                               {invitations.length === 0 ? (
                                 <tr>
-                                  <td colSpan={7} className="p-8 text-center text-slate-500 italic">
+                                  <td
+                                    colSpan={7}
+                                    className="p-8 text-center text-muted-foreground italic"
+                                  >
                                     No team invitations dispatched yet.
                                   </td>
                                 </tr>
@@ -1228,21 +1249,21 @@ export default function SettingsPage() {
                                   return (
                                     <tr
                                       key={invite._id}
-                                      className="border-b border-slate-850/40 hover:bg-slate-900/10"
+                                      className="border-b border-border/40 hover:bg-accent/20"
                                     >
-                                      <td className="p-3 font-semibold text-white break-all">
+                                      <td className="p-3 font-semibold text-foreground break-all">
                                         {invite.email}
                                       </td>
-                                      <td className="p-3 text-slate-300 font-medium">
+                                      <td className="p-3 text-foreground/85 font-medium">
                                         {invite.role?.name || 'Developer'}
                                       </td>
-                                      <td className="p-3 text-slate-400">
+                                      <td className="p-3 text-muted-foreground">
                                         {invite.department?.name || 'General'}
                                       </td>
-                                      <td className="p-3 text-slate-400">
+                                      <td className="p-3 text-muted-foreground">
                                         {invite.invitedBy?.name || 'Super Admin'}
                                       </td>
-                                      <td className="p-3 text-slate-400">
+                                      <td className="p-3 text-muted-foreground">
                                         {new Date(invite.expiresAt).toLocaleDateString()}
                                       </td>
                                       <td className="p-3">
@@ -1268,14 +1289,14 @@ export default function SettingsPage() {
                                             <>
                                               <button
                                                 onClick={() => handleResendInvite(invite._id)}
-                                                className="p-1 rounded-lg border border-slate-800 hover:bg-blue-600/10 text-slate-400 hover:text-blue-400 cursor-pointer transition-all"
+                                                className="p-1 rounded-lg border border-border/60 hover:bg-primary/10 text-muted-foreground hover:text-primary cursor-pointer transition-all"
                                                 title="Resend Invite & Renew Expiry"
                                               >
                                                 <RefreshCw className="w-3.5 h-3.5" />
                                               </button>
                                               <button
                                                 onClick={() => handleRevokeInvite(invite._id)}
-                                                className="p-1 rounded-lg border border-slate-800 hover:bg-red-600/10 text-slate-400 hover:text-red-500 cursor-pointer transition-all"
+                                                className="p-1 rounded-lg border border-border/60 hover:bg-destructive/10 text-muted-foreground hover:text-destructive cursor-pointer transition-all"
                                                 title="Revoke Invite Credentials"
                                               >
                                                 <X className="w-3.5 h-3.5" />
@@ -1285,7 +1306,7 @@ export default function SettingsPage() {
                                           {(invite.status === 'accepted' ||
                                             invite.status === 'revoked' ||
                                             isExpired) && (
-                                            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wide select-none pr-2">
+                                            <span className="text-[10px] text-muted-foreground/60 font-bold uppercase tracking-wide select-none pr-2">
                                               closed
                                             </span>
                                           )}
@@ -1307,18 +1328,18 @@ export default function SettingsPage() {
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.95 }}
-                            className="w-full max-w-lg bg-slate-900 border border-slate-800/80 p-6 rounded-2xl shadow-2xl relative text-left"
+                            className="w-full max-w-lg bg-card border border-border/80 p-6 rounded-2xl shadow-2xl relative text-left"
                           >
                             <button
                               onClick={() => setIsInviteModalOpen(false)}
-                              className="absolute top-4 right-4 text-slate-400 hover:text-white hover:bg-slate-800 p-1.5 rounded-lg transition-all"
+                              className="absolute top-4 right-4 text-muted-foreground hover:text-foreground hover:bg-accent/40 p-1.5 rounded-lg transition-all"
                             >
                               <X className="w-4 h-4" />
                             </button>
 
                             <div className="flex items-center gap-2 mb-4">
-                              <UserPlus className="w-5 h-5 text-blue-500" />
-                              <h3 className="text-base font-bold text-white">
+                              <UserPlus className="w-5 h-5 text-primary" />
+                              <h3 className="text-base font-bold text-foreground">
                                 Invite New Team Specialist
                               </h3>
                             </div>
@@ -1326,7 +1347,7 @@ export default function SettingsPage() {
                             <form onSubmit={handleCreateInvite} className="space-y-4">
                               {/* Email Input */}
                               <div className="space-y-1.5">
-                                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
+                                <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80 block">
                                   Work Email Address
                                 </label>
                                 <input
@@ -1335,21 +1356,21 @@ export default function SettingsPage() {
                                   value={inviteEmail}
                                   onChange={(e) => setInviteEmail(e.target.value)}
                                   placeholder="specialist@company.com"
-                                  className="w-full bg-slate-950/80 border border-slate-800 px-4 py-2.5 rounded-xl text-xs text-white outline-none focus:border-blue-500/50"
+                                  className="w-full bg-background/80 border border-border/60 px-4 py-2.5 rounded-xl text-xs text-foreground outline-none focus:border-primary/50"
                                 />
                               </div>
 
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {/* Role Selection */}
                                 <div className="space-y-1.5">
-                                  <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
+                                  <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80 block">
                                     RBAC Corporate Role
                                   </label>
                                   <select
                                     required
                                     value={inviteRole}
                                     onChange={(e) => setInviteRole(e.target.value)}
-                                    className="w-full bg-slate-950/80 border border-slate-800 px-4 py-2.5 rounded-xl text-xs text-white outline-none cursor-pointer focus:border-blue-500/50"
+                                    className="w-full bg-background/80 border border-border/60 px-4 py-2.5 rounded-xl text-xs text-foreground outline-none cursor-pointer focus:border-primary/50"
                                   >
                                     <option value="">Select Security Role</option>
                                     {rolesList.map((role) => (
@@ -1362,13 +1383,13 @@ export default function SettingsPage() {
 
                                 {/* Department Selection */}
                                 <div className="space-y-1.5">
-                                  <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
+                                  <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80 block">
                                     Assigned Department
                                   </label>
                                   <select
                                     value={inviteDept}
                                     onChange={(e) => setInviteDept(e.target.value)}
-                                    className="w-full bg-slate-950/80 border border-slate-800 px-4 py-2.5 rounded-xl text-xs text-white outline-none cursor-pointer focus:border-blue-500/50"
+                                    className="w-full bg-background/80 border border-border/60 px-4 py-2.5 rounded-xl text-xs text-foreground outline-none cursor-pointer focus:border-primary/50"
                                   >
                                     <option value="">Select Corporate Dept</option>
                                     {departmentsList.map((dept) => (
@@ -1381,11 +1402,11 @@ export default function SettingsPage() {
                               </div>
 
                               {/* Permission Presets Summary */}
-                              <div className="bg-slate-950/50 border border-slate-850 p-4 rounded-xl space-y-2">
-                                <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 block">
+                              <div className="bg-background/50 border border-border/60 p-4 rounded-xl space-y-2">
+                                <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/80 block">
                                   Scoped Permissions presets
                                 </span>
-                                <p className="text-[10px] text-slate-400 leading-relaxed">
+                                <p className="text-[10px] text-muted-foreground leading-relaxed">
                                   Invited members will receive full access controls mapped to their
                                   selected RBAC corporate role upon accepting their invitation.
                                 </p>
@@ -1403,7 +1424,8 @@ export default function SettingsPage() {
                                 <Button
                                   type="submit"
                                   isLoading={isSendingInvite}
-                                  className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-5 py-2 text-xs font-semibold"
+                                  variant="default"
+                                  className="rounded-xl px-5 py-2 text-xs font-semibold"
                                 >
                                   Send Invitation
                                 </Button>

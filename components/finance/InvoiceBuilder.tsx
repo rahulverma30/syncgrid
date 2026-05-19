@@ -68,7 +68,6 @@ export const InvoiceBuilder: React.FC<InvoiceBuilderProps> = ({ onClose, onSubmi
     };
   }, [lineItems]);
 
-
   const handleAddItem = () => {
     setLineItems([
       ...lineItems,
@@ -103,7 +102,9 @@ export const InvoiceBuilder: React.FC<InvoiceBuilderProps> = ({ onClose, onSubmi
       return;
     }
 
-    const invalid = lineItems.some((item) => !item.description.trim() || item.quantity <= 0 || item.unitPrice < 0);
+    const invalid = lineItems.some(
+      (item) => !item.description.trim() || item.quantity <= 0 || item.unitPrice < 0
+    );
     if (invalid) {
       toast.error('Line items descriptions and positive prices are required');
       return;
@@ -134,9 +135,14 @@ export const InvoiceBuilder: React.FC<InvoiceBuilderProps> = ({ onClose, onSubmi
       <div className="flex justify-between items-center pb-3 border-b border-border/60">
         <div>
           <h3 className="text-sm font-bold uppercase tracking-wider">Dynamic Invoice Builder</h3>
-          <p className="text-[10px] text-muted-foreground">Construct and calculate itemized invoice bills</p>
+          <p className="text-[10px] text-muted-foreground">
+            Construct and calculate itemized invoice bills
+          </p>
         </div>
-        <button onClick={onClose} className="p-1 hover:bg-accent/40 rounded text-muted-foreground hover:text-foreground cursor-pointer">
+        <button
+          onClick={onClose}
+          className="p-1 hover:bg-accent/40 rounded text-muted-foreground hover:text-foreground cursor-pointer"
+        >
           <X className="h-4 w-4" />
         </button>
       </div>
@@ -145,7 +151,9 @@ export const InvoiceBuilder: React.FC<InvoiceBuilderProps> = ({ onClose, onSubmi
         {/* Dropdowns header inputs */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="space-y-1">
-            <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Customer Client</label>
+            <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+              Customer Client
+            </label>
             <select
               required
               value={selectedClient}
@@ -162,7 +170,9 @@ export const InvoiceBuilder: React.FC<InvoiceBuilderProps> = ({ onClose, onSubmi
           </div>
 
           <div className="space-y-1">
-            <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Linked Project (Optional)</label>
+            <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+              Linked Project (Optional)
+            </label>
             <select
               value={selectedProject}
               onChange={(e) => setSelectedProject(e.target.value)}
@@ -178,7 +188,9 @@ export const InvoiceBuilder: React.FC<InvoiceBuilderProps> = ({ onClose, onSubmi
           </div>
 
           <div className="space-y-1">
-            <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Due Date</label>
+            <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+              Due Date
+            </label>
             <Input
               type="date"
               required
@@ -190,7 +202,9 @@ export const InvoiceBuilder: React.FC<InvoiceBuilderProps> = ({ onClose, onSubmi
 
           <div className="space-y-1 flex gap-2">
             <div className="flex-1">
-              <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Currency</label>
+              <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+                Currency
+              </label>
               <select
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value)}
@@ -203,7 +217,9 @@ export const InvoiceBuilder: React.FC<InvoiceBuilderProps> = ({ onClose, onSubmi
               </select>
             </div>
             <div className="w-20">
-              <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Ex Rate</label>
+              <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+                Ex Rate
+              </label>
               <Input
                 type="number"
                 step="0.001"
@@ -218,8 +234,16 @@ export const InvoiceBuilder: React.FC<InvoiceBuilderProps> = ({ onClose, onSubmi
         {/* Line Items builder */}
         <div className="space-y-3">
           <div className="flex justify-between items-center">
-            <h4 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Itemized Line Items</h4>
-            <Button type="button" onClick={handleAddItem} variant="outline" size="sm" className="h-8 text-[10px] gap-1 cursor-pointer">
+            <h4 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+              Itemized Line Items
+            </h4>
+            <Button
+              type="button"
+              onClick={handleAddItem}
+              variant="outline"
+              size="sm"
+              className="h-8 text-[10px] gap-1 cursor-pointer"
+            >
               <Plus className="h-3.5 w-3.5" />
               Add line
             </Button>
@@ -262,7 +286,9 @@ export const InvoiceBuilder: React.FC<InvoiceBuilderProps> = ({ onClose, onSubmi
                           required
                           min={1}
                           value={item.quantity}
-                          onChange={(e) => handleUpdateItem(idx, 'quantity', Number(e.target.value))}
+                          onChange={(e) =>
+                            handleUpdateItem(idx, 'quantity', Number(e.target.value))
+                          }
                           className="h-8 text-xs text-center"
                         />
                       </td>
@@ -273,7 +299,9 @@ export const InvoiceBuilder: React.FC<InvoiceBuilderProps> = ({ onClose, onSubmi
                           min={0}
                           step="0.01"
                           value={item.unitPrice}
-                          onChange={(e) => handleUpdateItem(idx, 'unitPrice', Number(e.target.value))}
+                          onChange={(e) =>
+                            handleUpdateItem(idx, 'unitPrice', Number(e.target.value))
+                          }
                           className="h-8 text-xs"
                         />
                       </td>
@@ -295,12 +323,18 @@ export const InvoiceBuilder: React.FC<InvoiceBuilderProps> = ({ onClose, onSubmi
                           min={0}
                           step="0.01"
                           value={item.discountAmount}
-                          onChange={(e) => handleUpdateItem(idx, 'discountAmount', Number(e.target.value))}
+                          onChange={(e) =>
+                            handleUpdateItem(idx, 'discountAmount', Number(e.target.value))
+                          }
                           className="h-8 text-xs"
                         />
                       </td>
                       <td className="p-2 text-right font-bold text-foreground">
-                        {currency} {lineTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        {currency}{' '}
+                        {lineTotal.toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
                       </td>
                       <td className="p-2 text-center">
                         <button
@@ -324,7 +358,9 @@ export const InvoiceBuilder: React.FC<InvoiceBuilderProps> = ({ onClose, onSubmi
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-4 border-t border-border/60">
           <div className="lg:col-span-2 space-y-4">
             <div className="space-y-1">
-              <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Invoice Notes (Client facing)</label>
+              <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+                Invoice Notes (Client facing)
+              </label>
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
@@ -333,7 +369,9 @@ export const InvoiceBuilder: React.FC<InvoiceBuilderProps> = ({ onClose, onSubmi
               />
             </div>
             <div className="space-y-1">
-              <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Standard terms & conditions</label>
+              <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+                Standard terms & conditions
+              </label>
               <Input
                 value={terms}
                 onChange={(e) => setTerms(e.target.value)}
@@ -343,28 +381,47 @@ export const InvoiceBuilder: React.FC<InvoiceBuilderProps> = ({ onClose, onSubmi
           </div>
 
           <div className="bg-muted/15 p-4 rounded-xl border border-border/65 flex flex-col justify-between space-y-3">
-            <h5 className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Totals summary</h5>
+            <h5 className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+              Totals summary
+            </h5>
             <div className="space-y-2 text-xs">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Subtotal:</span>
-                <span className="font-semibold">{currency} {totals.subtotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                <span className="font-semibold">
+                  {currency}{' '}
+                  {totals.subtotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Taxes Total:</span>
-                <span className="font-semibold text-sky-400">+{currency} {totals.taxTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                <span className="font-semibold text-sky-400">
+                  +{currency}{' '}
+                  {totals.taxTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Item Discounts:</span>
-                <span className="font-semibold text-rose-400">-{currency} {totals.discountTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                <span className="font-semibold text-rose-400">
+                  -{currency}{' '}
+                  {totals.discountTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                </span>
               </div>
               <div className="flex justify-between pt-2 border-t border-border/80 text-sm font-extrabold text-foreground">
                 <span>Grand Total:</span>
-                <span>{currency} {totals.grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                <span>
+                  {currency}{' '}
+                  {totals.grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                </span>
               </div>
             </div>
 
             <div className="flex gap-2 pt-2">
-              <Button type="button" variant="outline" onClick={onClose} className="flex-1 h-9 text-xs cursor-pointer">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                className="flex-1 h-9 text-xs cursor-pointer"
+              >
                 Cancel
               </Button>
               <Button type="submit" className="flex-1 h-9 text-xs gap-1.5 cursor-pointer">

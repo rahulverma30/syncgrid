@@ -34,7 +34,10 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
       isArchived: false,
       status: { $in: ['sent', 'partially_paid', 'overdue'] },
     });
-    const totalOutstanding = outstandingInvoices.reduce((acc, curr) => acc + curr.outstandingAmount, 0);
+    const totalOutstanding = outstandingInvoices.reduce(
+      (acc, curr) => acc + curr.outstandingAmount,
+      0
+    );
 
     // Overdue Receivables
     const overdueInvoices = outstandingInvoices.filter((inv) => new Date(inv.dueDate) < now);
@@ -59,7 +62,10 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
 
     // Add Income transaction totals
     incomeTxns.forEach((txn) => {
-      const monthKey = new Date(txn.paymentDate).toLocaleString('default', { month: 'short', year: 'numeric' });
+      const monthKey = new Date(txn.paymentDate).toLocaleString('default', {
+        month: 'short',
+        year: 'numeric',
+      });
       if (monthlyCashflow[monthKey]) {
         monthlyCashflow[monthKey].income += txn.amount;
       }
@@ -67,7 +73,10 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
 
     // Add Expense transaction totals
     expenseTxns.forEach((txn) => {
-      const monthKey = new Date(txn.paymentDate).toLocaleString('default', { month: 'short', year: 'numeric' });
+      const monthKey = new Date(txn.paymentDate).toLocaleString('default', {
+        month: 'short',
+        year: 'numeric',
+      });
       if (monthlyCashflow[monthKey]) {
         monthlyCashflow[monthKey].expense += txn.amount;
       }

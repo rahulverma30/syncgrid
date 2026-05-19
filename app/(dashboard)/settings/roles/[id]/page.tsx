@@ -144,20 +144,20 @@ export default function RoleDetailsPage() {
       </div>
 
       {/* Role Profile Header Widget */}
-      <Card className="bg-gradient-to-r from-slate-900/40 to-slate-950/40 border border-border/60 p-6 rounded-2xl backdrop-blur-md">
+      <Card className="bg-gradient-to-r from-card/40 to-background/40 border border-border/60 p-6 rounded-2xl backdrop-blur-md">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 text-left">
           <div className="flex items-center gap-4">
-            <div className="h-16 w-16 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400 border border-blue-500/20 text-2xl font-black font-mono shadow-inner select-none">
+            <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center text-primary border border-primary/20 text-2xl font-black font-mono shadow-inner select-none">
               {name.charAt(0)}
             </div>
             <div className="space-y-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-2xl font-black text-white">{name}</h1>
+                <h1 className="text-2xl font-black text-foreground">{name}</h1>
                 <span className="inline-flex px-2 py-0.5 rounded text-[8px] font-bold bg-primary/10 text-primary border border-primary/20 uppercase tracking-wider select-none">
                   Security Level {level}
                 </span>
               </div>
-              <p className="text-xs text-slate-300 font-medium leading-relaxed max-w-xl">
+              <p className="text-xs text-muted-foreground font-medium leading-relaxed max-w-xl">
                 {description}
               </p>
             </div>
@@ -165,11 +165,11 @@ export default function RoleDetailsPage() {
 
           <div className="flex flex-wrap items-center gap-6 text-xs font-semibold select-none">
             <div className="text-right">
-              <span className="text-[9px] font-bold text-slate-500 uppercase block leading-none">
+              <span className="text-[9px] font-bold text-muted-foreground/80 uppercase block leading-none">
                 Bound Members
               </span>
-              <span className="text-white text-lg font-black block mt-0.5 flex items-center gap-1.5 justify-end">
-                <Users className="h-4.5 w-4.5 text-slate-400" />
+              <span className="text-foreground text-lg font-black block mt-0.5 flex items-center gap-1.5 justify-end">
+                <Users className="h-4.5 w-4.5 text-muted-foreground" />
                 {assignedUsers}
               </span>
             </div>
@@ -180,7 +180,7 @@ export default function RoleDetailsPage() {
       {/* Permissions matrix */}
       <Card className="bg-card/40 border border-border/60 rounded-3xl overflow-hidden backdrop-blur-md text-left">
         <div className="p-5 border-b border-border/40 select-none">
-          <h2 className="text-sm font-bold text-white uppercase tracking-wider">
+          <h2 className="text-sm font-bold text-foreground uppercase tracking-wider">
             Granular Permission Rules Matrix
           </h2>
         </div>
@@ -188,17 +188,17 @@ export default function RoleDetailsPage() {
         <div className="overflow-x-auto select-none">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="border-b border-border/60 bg-background/20 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              <tr className="border-b border-border/60 bg-background/20 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">
                 <th className="py-3.5 px-5">System Module</th>
                 <th className="py-3.5 px-4 text-center w-24">Read Access</th>
                 <th className="py-3.5 px-4 text-center w-24">Write / Edit</th>
                 <th className="py-3.5 px-5 text-center w-24">Perm Delete</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border/40 text-slate-300">
+            <tbody className="divide-y divide-border/40 text-muted-foreground">
               {permissions.map((rule, idx) => (
-                <tr key={idx} className="hover:bg-slate-900/10 transition-colors">
-                  <td className="py-4 px-5 font-semibold text-white">{rule.module}</td>
+                <tr key={idx} className="hover:bg-accent/20 transition-colors">
+                  <td className="py-4 px-5 font-semibold text-foreground">{rule.module}</td>
                   <td className="py-4 px-4 text-center">
                     <input
                       type="checkbox"
@@ -237,7 +237,7 @@ export default function RoleDetailsPage() {
           <h4 className="text-xs font-bold text-yellow-400 uppercase tracking-wider">
             Scope Restrictions Safeguard
           </h4>
-          <p className="text-[10px] text-slate-400 leading-relaxed">
+          <p className="text-[10px] text-muted-foreground leading-relaxed">
             Adjusting permission columns directly impacts all bound tenant user sessions. Make sure
             you confirm these shifts before saving.
           </p>

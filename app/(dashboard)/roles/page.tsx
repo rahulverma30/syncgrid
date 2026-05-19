@@ -447,7 +447,7 @@ export default function RolesAndAuthorizationPage() {
                           <div className="flex items-center gap-2">
                             <span className="font-bold text-sm text-foreground">{role.name}</span>
                             {role.isSystem && (
-                              <span className="text-[9px] font-bold uppercase bg-slate-900 border border-slate-800 text-muted-foreground px-1.5 py-0.5 rounded">
+                              <span className="text-[9px] font-bold uppercase bg-background border border-border text-muted-foreground px-1.5 py-0.5 rounded">
                                 System
                               </span>
                             )}
@@ -503,7 +503,7 @@ export default function RolesAndAuthorizationPage() {
                             {selectedRole.name} Matrix
                           </h2>
                           {selectedRole.isSystem && (
-                            <span className="text-[9px] font-bold uppercase bg-slate-950/80 text-muted-foreground border border-border/50 px-2 py-0.5 rounded-full">
+                            <span className="text-[9px] font-bold uppercase bg-background text-muted-foreground border border-border/60 px-2 py-0.5 rounded-full">
                               Immutable System Role
                             </span>
                           )}
@@ -535,7 +535,7 @@ export default function RolesAndAuthorizationPage() {
                     </div>
 
                     {/* Role Hierarchy level editor & Inheritance selection */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 bg-slate-950/20 border border-border/40 p-4 rounded-2xl">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 bg-background/20 border border-border/60 p-4 rounded-2xl">
                       <div>
                         <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">
                           Role Hierarchy Level
@@ -755,7 +755,7 @@ export default function RolesAndAuthorizationPage() {
                         <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                           Cloned Permissions list ({newRolePermissionIds.length} loaded)
                         </h4>
-                        <div className="flex items-center gap-1.5 p-2 rounded-xl bg-slate-950/20 text-[10px] text-muted-foreground">
+                        <div className="flex items-center gap-1.5 p-2 rounded-xl bg-background text-[10px] text-muted-foreground">
                           <Info className="h-3.5 w-3.5 text-primary shrink-0" />
                           <span>
                             We have populated permission keys dynamically. Click Save Role below to
@@ -906,8 +906,8 @@ export default function RolesAndAuthorizationPage() {
                   key={policy._id}
                   className={`rounded-2xl border p-5 flex flex-col justify-between transition-all duration-300 ${
                     policy.enabled
-                      ? 'border-border/60 bg-slate-950/10'
-                      : 'border-border/30 bg-slate-950/5 opacity-65'
+                      ? 'border-border/60 bg-background/10'
+                      : 'border-border/30 bg-background/5 opacity-65'
                   }`}
                 >
                   <div>
@@ -943,7 +943,7 @@ export default function RolesAndAuthorizationPage() {
                       </button>
                     </div>
 
-                    <div className="mt-4 p-3 rounded-xl bg-slate-950/40 border border-border/20">
+                    <div className="mt-4 p-3 rounded-xl bg-background/40 border border-border/60">
                       <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">
                         Active Condition Constraint
                       </span>
@@ -968,7 +968,7 @@ export default function RolesAndAuthorizationPage() {
         {/* TAB 3: ACCESS ASSIGNMENTS */}
         {activeTab === 'assignments' && (
           <div className="rounded-3xl border border-border bg-card shadow-2xl overflow-hidden">
-            <div className="px-6 py-4 border-b border-border/40 bg-slate-950/20 flex items-center justify-between">
+            <div className="px-6 py-4 border-b border-border/40 bg-background/20 flex items-center justify-between">
               <div>
                 <h3 className="font-bold text-foreground">User Scoping Assignments</h3>
                 <p className="text-[11px] text-muted-foreground">
@@ -980,7 +980,7 @@ export default function RolesAndAuthorizationPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-border/40 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/80 bg-slate-950/10">
+                  <tr className="border-b border-border/40 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/80 bg-background/10">
                     <th className="px-6 py-3">Team Member</th>
                     <th className="px-6 py-3">Designation</th>
                     <th className="px-6 py-3">Status</th>

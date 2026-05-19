@@ -214,11 +214,7 @@ export default function FinancePage() {
         )}
 
         {activeTab === 'budgets' && (
-          <BudgetPlanner
-            budgets={budgets}
-            onSaveBudget={saveBudget}
-            role={role}
-          />
+          <BudgetPlanner budgets={budgets} onSaveBudget={saveBudget} role={role} />
         )}
 
         {activeTab === 'settings' && (
@@ -245,10 +241,7 @@ export default function FinancePage() {
         )}
 
         {activeTab === 'profitability' && (
-          <ProfitabilityVault
-            dashboardData={dashboardData}
-            role={role}
-          />
+          <ProfitabilityVault dashboardData={dashboardData} role={role} />
         )}
       </div>
     </div>

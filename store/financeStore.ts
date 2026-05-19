@@ -35,11 +35,19 @@ interface FinanceState {
   recordTransaction: (payload: any) => Promise<boolean>;
   reconcileTransaction: (id: string, notes?: string) => Promise<boolean>;
   submitExpense: (payload: any) => Promise<boolean>;
-  approveExpense: (id: string, status: 'approved' | 'rejected', comments?: string) => Promise<boolean>;
+  approveExpense: (
+    id: string,
+    status: 'approved' | 'rejected',
+    comments?: string
+  ) => Promise<boolean>;
   saveBudget: (payload: any) => Promise<boolean>;
   saveVendor: (payload: any) => Promise<boolean>;
   createPurchaseOrder: (payload: any) => Promise<boolean>;
-  approvePurchaseOrder: (id: string, status: 'approved' | 'rejected', comments?: string) => Promise<boolean>;
+  approvePurchaseOrder: (
+    id: string,
+    status: 'approved' | 'rejected',
+    comments?: string
+  ) => Promise<boolean>;
   runFinanceSeeder: () => Promise<boolean>;
   initializeRealtime: (companyId: string) => () => void;
 }
@@ -477,7 +485,9 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
       });
       const json = await res.json();
       if (json.success) {
-        toast.success(payload._id ? `Budget updated successfully!` : `New Budget allocated successfully!`);
+        toast.success(
+          payload._id ? `Budget updated successfully!` : `New Budget allocated successfully!`
+        );
         get().fetchBudgets();
         get().fetchDashboardData();
         return true;
