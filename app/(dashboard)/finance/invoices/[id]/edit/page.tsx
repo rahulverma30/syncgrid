@@ -24,6 +24,7 @@ interface FormItem {
 export default function EditInvoicePage() {
   const router = useRouter();
   const params = useParams();
+  const invoiceId = params?.id ? (Array.isArray(params.id) ? params.id[0] : params.id) : '';
   const [mounted, setMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -38,16 +39,17 @@ export default function EditInvoicePage() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
+    if (!invoiceId) return;
     const fetchInvoice = async () => {
       setIsLoading(true);
       try {
         await new Promise((resolve) => setTimeout(resolve, 500));
-        if (params.id === 'i1') {
+        if (invoiceId === 'i1') {
           setInvoiceNumber('INV-2026-001');
           setIssueDate('2026-05-01');
           setDueDate('2026-05-31');
           setItems([{ description: 'Next.js Custom ERP Build', quantity: 1, rate: 45000 }]);
-        } else if (params.id === 'i3') {
+        } else if (invoiceId === 'i3') {
           setInvoiceNumber('INV-2026-003');
           setIssueDate('2026-04-15');
           setDueDate('2026-05-15');
@@ -69,7 +71,7 @@ export default function EditInvoicePage() {
       }
     };
     fetchInvoice();
-  }, [params.id]);
+  }, [invoiceId]);
 
   const handleAddItem = () => {
     setItems([...items, { description: '', quantity: 1, rate: 1000 }]);
@@ -95,7 +97,7 @@ export default function EditInvoicePage() {
     try {
       await new Promise((resolve) => setTimeout(resolve, 600));
       toast.success(`Invoice "${invoiceNumber}" saved successfully.`);
-      router.push(`/finance/invoices/${params.id}`);
+      router.push(`/finance/invoices/${invoiceId}`);
     } catch (err) {
       toast.error('Failed to save invoice corrections.');
     } finally {
@@ -124,7 +126,7 @@ export default function EditInvoicePage() {
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
       <div className="flex items-center gap-2 select-none font-semibold">
-        <Link href={`/finance/invoices/${params.id}`}>
+        <Link href={`/finance/invoices/${invoiceId}`}>
           <Button variant="outline" size="sm" className="h-8 hover:bg-accent/40 text-xs gap-1">
             <ArrowLeft className="h-3.5 w-3.5" />
             Back to Details
@@ -321,7 +323,7 @@ export default function EditInvoicePage() {
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-4 border-t border-border/40 select-none">
-              <Link href={`/finance/invoices/${params.id}`}>
+              <Link href={`/finance/invoices/${invoiceId}`}>
                 <Button
                   variant="outline"
                   size="sm"
@@ -331,6 +333,7 @@ export default function EditInvoicePage() {
                   Cancel
                 </Button>
               </Link>
+
               <Button
                 disabled={isSubmitting}
                 type="submit"

@@ -16,6 +16,7 @@ interface PermissionRule {
 
 export default function RoleDetailsPage() {
   const params = useParams();
+  const roleId = params?.id ? (Array.isArray(params.id) ? params.id[0] : params.id) : '';
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -38,11 +39,12 @@ export default function RoleDetailsPage() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
+    if (!roleId) return;
     const fetchRoleDetails = async () => {
       setIsLoading(true);
       try {
         await new Promise((resolve) => setTimeout(resolve, 500));
-        if (params.id === 'r1') {
+        if (roleId === 'r1') {
           setName('Super Admin');
           setLevel(100);
           setDescription(
@@ -65,7 +67,7 @@ export default function RoleDetailsPage() {
             },
             { module: 'Project Workspaces', read: true, write: true, delete: true },
           ]);
-        } else if (params.id === 'r3') {
+        } else if (roleId === 'r3') {
           setName('Client Partner');
           setLevel(40);
           setDescription(
@@ -96,7 +98,7 @@ export default function RoleDetailsPage() {
       }
     };
     fetchRoleDetails();
-  }, [params.id]);
+  }, [roleId]);
 
   const handleTogglePermission = (idx: number, field: keyof Omit<PermissionRule, 'module'>) => {
     setPermissions(permissions.map((p, i) => (i === idx ? { ...p, [field]: !p[field] } : p)));

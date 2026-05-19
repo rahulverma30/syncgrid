@@ -45,6 +45,7 @@ interface Document {
 
 export default function AccountDetailsPage() {
   const params = useParams();
+  const accountId = params?.id ? (Array.isArray(params.id) ? params.id[0] : params.id) : '';
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -100,10 +101,11 @@ export default function AccountDetailsPage() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
+    if (!accountId) return;
     const fetchAccountDetails = async () => {
       setIsLoading(true);
       try {
-        const res = await fetch(`/api/protected/clients/${params.id}`);
+        const res = await fetch(`/api/protected/clients/${accountId}`);
         const d = await res.json();
         if (d.success && d.data) {
           const a = d.data;
@@ -127,7 +129,7 @@ export default function AccountDetailsPage() {
       }
     };
     fetchAccountDetails();
-  }, [params.id]);
+  }, [accountId]);
 
   const handleAddNote = () => {
     if (!noteText.trim()) return;
@@ -163,7 +165,7 @@ export default function AccountDetailsPage() {
             Back to Accounts
           </Button>
         </Link>
-        <Link href={`/crm/accounts/${params.id}/edit`}>
+        <Link href={`/crm/accounts/${accountId}/edit`}>
           <Button variant="default" size="sm" className="h-8 text-xs gap-1">
             <Edit2 className="h-3.5 w-3.5" />
             Edit Corporate Details

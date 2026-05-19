@@ -29,6 +29,7 @@ interface Note {
 
 export default function DealDetailsPage() {
   const params = useParams();
+  const dealId = params?.id ? (Array.isArray(params.id) ? params.id[0] : params.id) : '';
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -63,10 +64,11 @@ export default function DealDetailsPage() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
+    if (!dealId) return;
     const fetchLeadDetails = async () => {
       setIsLoading(true);
       try {
-        const res = await fetch(`/api/protected/crm/leads/${params.id}`);
+        const res = await fetch(`/api/protected/crm/leads/${dealId}`);
         const d = await res.json();
         if (d.success && d.data) {
           const l = d.data;
@@ -100,12 +102,12 @@ export default function DealDetailsPage() {
       }
     };
     fetchLeadDetails();
-  }, [params.id]);
+  }, [dealId]);
 
   const handleUpdateStage = async (newStage: string) => {
     setStatus(newStage);
     try {
-      const res = await fetch(`/api/protected/crm/leads/${params.id}`, {
+      const res = await fetch(`/api/protected/crm/leads/${dealId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStage }),
@@ -123,7 +125,7 @@ export default function DealDetailsPage() {
     if (!noteText.trim()) return;
 
     try {
-      const res = await fetch(`/api/protected/crm/leads/${params.id}/notes`, {
+      const res = await fetch(`/api/protected/crm/leads/${dealId}/notes`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content: noteText }),

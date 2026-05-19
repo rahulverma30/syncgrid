@@ -26,6 +26,7 @@ interface InvoiceItem {
 
 export default function InvoiceDetailsPage() {
   const params = useParams();
+  const invoiceId = params?.id ? (Array.isArray(params.id) ? params.id[0] : params.id) : '';
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -53,11 +54,12 @@ export default function InvoiceDetailsPage() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
+    if (!invoiceId) return;
     const fetchInvoiceDetails = async () => {
       setIsLoading(true);
       try {
         await new Promise((resolve) => setTimeout(resolve, 500));
-        if (params.id === 'i1') {
+        if (invoiceId === 'i1') {
           setInvoiceNumber('INV-2026-001');
           setClientName('Acme Corp');
           setItems([
@@ -68,7 +70,7 @@ export default function InvoiceDetailsPage() {
           setTotal(49500);
           setStatus('paid');
           setPaymentMethod('ACH Transfer');
-        } else if (params.id === 'i3') {
+        } else if (invoiceId === 'i3') {
           setInvoiceNumber('INV-2026-003');
           setClientName('Umbrella Corp');
           setItems([
@@ -91,7 +93,7 @@ export default function InvoiceDetailsPage() {
       }
     };
     fetchInvoiceDetails();
-  }, [params.id]);
+  }, [invoiceId]);
 
   const handleMarkAsPaid = () => {
     setStatus('paid');

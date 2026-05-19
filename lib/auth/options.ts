@@ -1,11 +1,13 @@
 import type { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
+import { headers } from 'next/headers';
 import { connectToDatabase } from '@/lib/db';
 import { getAuthSecret } from '@/lib/env';
 import { verifyPassword, isAccountLocked } from '@/lib/security/password';
 import { loginSchema } from '@/schemas/auth';
 import { Permission, Role, User } from '@/models';
 import { compactPermissions } from './permission-checks';
+import { rateLimit } from '@/lib/security/rateLimiter';
 
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCK_MINUTES = 15;
@@ -90,6 +92,20 @@ export const authOptions: NextAuthOptions = {
 
         if (!parsed.success) {
           return null;
+        }
+
+        // Apply sliding-window rate limit on login attempts
+        try {
+          const headerList = await headers();
+          const ip = headerList.get('x-forwarded-for') || '127.0.0.1';
+          const limitResult = await rateLimit(`rate:login:${ip}`, 5, 15 * 60 * 1000); // Max 5 logins / 15 mins
+          if (!limitResult.success) {
+            throw new Error('Too many login attempts. Please try again in 15 minutes.');
+          }
+        } catch (e: any) {
+          if (e.message?.includes('Too many login attempts')) {
+            throw e;
+          }
         }
 
         const tDbStart = performance.now();

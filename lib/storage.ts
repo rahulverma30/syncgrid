@@ -1,29 +1,34 @@
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { logger } from './logger';
-
-/**
- * Enterprise Storage & Attachment Upload Engine
- * Supports normalized metadata generation, secure upload tokens,
- * tenant isolation, and AWS S3 / Cloudflare R2 presigned URL signer signatures.
- */
 
 export interface NormalizedAttachmentMetadata {
   fileName: string;
   fileSize: number;
   mimeType: string;
-  storageProvider: 's3' | 'r2' | 'mock';
+  storageProvider: 's3' | 'local';
   key: string;
   fileUrl: string;
 }
 
 export class CloudStorageEngine {
-  private static provider: 's3' | 'r2' | 'mock' = 'mock';
+  private static getS3Config() {
+    const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
+    const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
+    const bucketName = process.env.S3_BUCKET_NAME;
+    const region = process.env.S3_REGION || 'us-east-1';
+    const endpoint = process.env.S3_ENDPOINT; // For R2, Minio, etc.
+
+    if (accessKeyId && secretAccessKey && bucketName) {
+      return { accessKeyId, secretAccessKey, bucketName, region, endpoint };
+    }
+    return null;
+  }
 
   /**
-   * Generates a secure, tenant-isolated presigned upload URL
-   * AWS S3 / Cloudflare R2 equivalence:
-   *   const s3 = new S3Client({...});
-   *   const command = new PutObjectCommand({ Bucket: bucket, Key: key, ContentType: mimeType });
-   *   const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
+   * Generates a secure, tenant-isolated upload destination.
+   * If S3 credentials are set, compiles a real presigned PUT signature.
+   * Otherwise, maps it to a high-fidelity local endpoint upload route.
    */
   public static async getPresignedUploadUrl(
     companyId: string,
@@ -31,30 +36,49 @@ export class CloudStorageEngine {
     fileName: string,
     mimeType: string
   ): Promise<{ uploadUrl: string; fileUrl: string; token: string; key: string }> {
-    // Generate isolated key path: tenant-id/user-id/timestamp-filename
     const cleanFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
     const timestamp = Date.now();
     const key = `company_${companyId}/user_${userId}/${timestamp}_${cleanFileName}`;
 
-    logger.info(`[Storage Presign] Generating upload path: ${key}`, { companyId, userId });
+    const s3Config = this.getS3Config();
+    const verificationToken = Buffer.from(
+      JSON.stringify({ companyId, userId, key, expiresAt: Date.now() + 60 * 60 * 1000 })
+    ).toString('base64');
 
     let uploadUrl = '';
     let fileUrl = '';
 
-    if (this.provider === 'mock') {
-      // Return a fully qualified premium simulated presigned upload URL
-      uploadUrl = `https://syncgrid-workspace-files.s3.us-east-1.amazonaws.com/${key}?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIOSFODNN7EXAMPLE%2F20260518%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20260518T120000Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=mockedAmzSignatureValue1234567890`;
-      fileUrl = `https://syncgrid-workspace-files.s3.us-east-1.amazonaws.com/${key}`;
-    } else {
-      // In S3 production:
-      // uploadUrl = await getSignedUrlForPut(key, mimeType);
-      // fileUrl = `https://${bucketName}.s3.${region}.amazonaws.com/${key}`;
-    }
+    if (s3Config) {
+      logger.info(`[Storage Presign] Provisioning AWS S3 URL: ${s3Config.bucketName}`, {
+        companyId,
+        userId,
+      });
+      const client = new S3Client({
+        region: s3Config.region,
+        credentials: {
+          accessKeyId: s3Config.accessKeyId,
+          secretAccessKey: s3Config.secretAccessKey,
+        },
+        endpoint: s3Config.endpoint,
+        forcePathStyle: !!s3Config.endpoint,
+      });
 
-    // Secure verification token to track execution safety
-    const verificationToken = Buffer.from(
-      JSON.stringify({ companyId, userId, key, expiresAt: Date.now() + 60 * 60 * 1000 })
-    ).toString('base64');
+      const command = new PutObjectCommand({
+        Bucket: s3Config.bucketName,
+        Key: key,
+        ContentType: mimeType,
+      });
+
+      uploadUrl = await getSignedUrl(client, command, { expiresIn: 3600 });
+      fileUrl = s3Config.endpoint
+        ? `${s3Config.endpoint}/${s3Config.bucketName}/${key}`
+        : `https://${s3Config.bucketName}.s3.${s3Config.region}.amazonaws.com/${key}`;
+    } else {
+      logger.info(`[Storage Presign] Local fallback activated.`, { companyId, userId });
+      const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+      uploadUrl = `${baseUrl}/api/storage/local?token=${encodeURIComponent(verificationToken)}`;
+      fileUrl = `/uploads/${key}`;
+    }
 
     return {
       uploadUrl,
@@ -64,9 +88,6 @@ export class CloudStorageEngine {
     };
   }
 
-  /**
-   * Normalizes metadata structure
-   */
   public static normalizeMetadata(
     fileName: string,
     fileSize: number,
@@ -74,11 +95,12 @@ export class CloudStorageEngine {
     key: string,
     fileUrl: string
   ): NormalizedAttachmentMetadata {
+    const s3Config = this.getS3Config();
     return {
       fileName,
       fileSize,
       mimeType,
-      storageProvider: this.provider,
+      storageProvider: s3Config ? 's3' : 'local',
       key,
       fileUrl,
     };

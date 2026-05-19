@@ -28,6 +28,8 @@ export function apiError(error: unknown) {
   );
 }
 
+import { runInTenantContext } from '@/lib/saas/tenantStore';
+
 /**
  * Higher-order function: Protect API route with authentication
  * Usage: export const GET = withApiAuth(async (req, ctx, session) => {...})
@@ -36,6 +38,10 @@ export function withApiAuth(handler: Function) {
   return async function guardedHandler(request: Request, context: any) {
     try {
       const session = await requireApiAuth();
+      const companyId = session.user?.companyId;
+      if (companyId) {
+        return runInTenantContext(companyId, () => handler(request, context, session));
+      }
       return handler(request, context, session);
     } catch (error) {
       return apiError(error);
@@ -51,6 +57,10 @@ export function withApiPermission(resource: string, action: string, handler: Fun
   return async function guardedHandler(request: Request, context: any) {
     try {
       const session = await requirePermission(resource, action);
+      const companyId = session.user?.companyId;
+      if (companyId) {
+        return runInTenantContext(companyId, () => handler(request, context, session));
+      }
       return handler(request, context, session);
     } catch (error) {
       return apiError(error);
@@ -66,6 +76,10 @@ export function withApiRole(roles: string[], handler: Function) {
   return async function guardedHandler(request: Request, context: any) {
     try {
       const session = await requireRole(roles);
+      const companyId = session.user?.companyId;
+      if (companyId) {
+        return runInTenantContext(companyId, () => handler(request, context, session));
+      }
       return handler(request, context, session);
     } catch (error) {
       return apiError(error);

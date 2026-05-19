@@ -1,116 +1,123 @@
-import { toast } from 'sonner';
+import { io, Socket } from 'socket.io-client';
 
 export type SocketCallback = (data: any) => void;
 
-class MockSocketGateway {
+class RealSocketGateway {
+  private socket: Socket | null = null;
   private subscriptions = new Map<string, Set<SocketCallback>>();
-  private isConnected = false;
   private currentCompanyId: string | null = null;
-  private reconnectInterval: any = null;
+  private isConnecting = false;
 
   /**
-   * Initializes the socket gateway for a specific tenant scope
+   * Initializes a secure live WebSocket session scoped to a specific tenant
    */
-  public connect(companyId: string): void {
-    if (this.isConnected && this.currentCompanyId === companyId) return;
+  public async connect(companyId: string): Promise<void> {
+    if (this.socket?.connected && this.currentCompanyId === companyId) return;
+    if (this.isConnecting) return;
 
+    this.isConnecting = true;
     this.currentCompanyId = companyId;
-    this.isConnected = true;
-    console.log(`[SOCKET_GATEWAY] Connected to tenant space: ws://syncgrid.io/tenant/${companyId}`);
 
-    // Emulate a steady stream of collaborative presence modifications or notifications
-    this.startHeartbeat();
+    try {
+      // Hit the socket initialization API to warm up the Pages Router endpoint
+      await fetch('/api/socket/io');
+
+      // Instantiate Socket.io connection client
+      this.socket = io({
+        path: '/api/socket/io',
+        autoConnect: true,
+        reconnection: true,
+        reconnectionAttempts: 8,
+        reconnectionDelay: 2000,
+      });
+
+      this.socket.on('connect', () => {
+        console.log(`🔌 [SOCKET_GATEWAY] Live WebSocket established: ${this.socket?.id}`);
+        this.isConnecting = false;
+
+        // Scope connection to the multi-tenant room immediately upon handshake
+        this.socket?.emit('join-tenant', companyId);
+      });
+
+      this.socket.on('connect_error', (error) => {
+        console.error('🔌 [SOCKET_GATEWAY] Handshake failed:', error);
+        this.isConnecting = false;
+      });
+
+      // Bind all pre-registered event callbacks to the newly connected socket instance
+      this.subscriptions.forEach((callbacks, event) => {
+        this.socket?.on(event, (data) => {
+          callbacks.forEach((cb) => {
+            try {
+              cb(data);
+            } catch (e) {
+              console.error(`🔌 [SOCKET_GATEWAY] Callback error on event ${event}:`, e);
+            }
+          });
+        });
+      });
+
+      this.socket.on('disconnect', (reason) => {
+        console.log(`🔌 [SOCKET_GATEWAY] Socket connection closed: ${reason}`);
+      });
+    } catch (err) {
+      console.error('🔌 [SOCKET_GATEWAY] Failed to connect:', err);
+      this.isConnecting = false;
+    }
   }
 
   /**
-   * Disconnects the socket gateway
+   * Closes active connections
    */
   public disconnect(): void {
-    this.isConnected = false;
-    this.currentCompanyId = null;
-    if (this.reconnectInterval) {
-      clearInterval(this.reconnectInterval);
+    if (this.socket) {
+      this.socket.disconnect();
+      this.socket = null;
     }
-    console.log('[SOCKET_GATEWAY] Socket disconnected.');
+    this.currentCompanyId = null;
+    console.log('🔌 [SOCKET_GATEWAY] Connection released.');
   }
 
   /**
-   * Subscribes to a socket channel event
+   * Bind event listener
    */
   public on(event: string, callback: SocketCallback): () => void {
     if (!this.subscriptions.has(event)) {
       this.subscriptions.set(event, new Set());
-    }
-    this.subscriptions.get(event)!.add(callback);
 
+      // Bind straight to the active socket connection if it's currently connected
+      this.socket?.on(event, (data) => {
+        this.subscriptions.get(event)?.forEach((cb) => cb(data));
+      });
+    }
+
+    this.subscriptions.get(event)!.add(callback);
     return () => this.off(event, callback);
   }
 
   /**
-   * Unsubscribes from a channel event
+   * Unbind event listener
    */
   public off(event: string, callback: SocketCallback): void {
     const set = this.subscriptions.get(event);
     if (set) {
       set.delete(callback);
+      if (set.size === 0) {
+        this.subscriptions.delete(event);
+        this.socket?.off(event);
+      }
     }
   }
 
   /**
-   * Broadcasts a simulated event locally for collaborative response
+   * Keep signature compatibility for any internal legacy triggers
    */
   public broadcastSimulated(event: string, data: any): void {
-    if (!this.isConnected) return;
-
     const set = this.subscriptions.get(event);
     if (set) {
-      set.forEach((cb) => {
-        try {
-          cb(data);
-        } catch (e) {
-          console.error(`Socket broadcast callback error on ${event}:`, e);
-        }
-      });
+      set.forEach((cb) => cb(data));
     }
-  }
-
-  /**
-   * Periodically trigger a real-time activity alert simulation
-   */
-  private startHeartbeat(): void {
-    if (this.reconnectInterval) clearInterval(this.reconnectInterval);
-
-    this.reconnectInterval = setInterval(() => {
-      if (!this.isConnected || !this.currentCompanyId) return;
-
-      // Simulated background activities
-      const events = [
-        {
-          name: 'project_activity_alert',
-          payload: {
-            title: 'Task progress logged',
-            message: 'Milestone Alpha reached 80% progress by Developer',
-          },
-        },
-        {
-          name: 'presence_update',
-          payload: {
-            usersOnline: ['Super Admin', 'Project Manager', 'Developer'],
-          },
-        },
-      ];
-
-      const choice = events[Math.floor(Math.random() * events.length)];
-      this.broadcastSimulated(choice.name, choice.payload);
-
-      // Toast notification to let the user know real-time sync is working
-      if (choice.name === 'project_activity_alert') {
-        toast.info(`[Real-time Alert] ${choice.payload.title}: ${choice.payload.message}`, {
-          duration: 3500,
-        });
-      }
-    }, 45000); // every 45s to avoid excessive dashboard interruptions
   }
 }
 
-export const socketGateway = new MockSocketGateway();
+export const socketGateway = new RealSocketGateway();

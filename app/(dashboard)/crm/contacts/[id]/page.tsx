@@ -37,6 +37,7 @@ interface Activity {
 
 export default function ContactDetailsPage() {
   const params = useParams();
+  const contactId = params?.id ? (Array.isArray(params.id) ? params.id[0] : params.id) : '';
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -88,12 +89,13 @@ export default function ContactDetailsPage() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
+    if (!contactId) return;
     const fetchContactDetails = async () => {
       setIsLoading(true);
       try {
         await new Promise((resolve) => setTimeout(resolve, 600));
         // Fallback or seed dynamically based on mock values or API
-        if (params.id === 'c2') {
+        if (contactId === 'c2') {
           setName('Samantha Vance');
           setRole('VP Marketing');
           setEmail('vance@globex.co');
@@ -101,7 +103,7 @@ export default function ContactDetailsPage() {
           setCompanyName('Globex Inc');
           setIsPrimary(true);
           setCommunicationPref('slack');
-        } else if (params.id === 'c3') {
+        } else if (contactId === 'c3') {
           setName('Albert Wesker');
           setRole('Head of Operations');
           setEmail('wesker@umbrella.com');
@@ -109,7 +111,7 @@ export default function ContactDetailsPage() {
           setCompanyName('Umbrella Corp');
           setIsPrimary(false);
           setCommunicationPref('zoom');
-        } else if (params.id === 'c4') {
+        } else if (contactId === 'c4') {
           setName('Pepper Potts');
           setRole('CEO');
           setEmail('potts@stark.com');
@@ -125,7 +127,7 @@ export default function ContactDetailsPage() {
       }
     };
     fetchContactDetails();
-  }, [params.id]);
+  }, [contactId]);
 
   const handleAddNote = () => {
     if (!noteText.trim()) return;
@@ -162,7 +164,7 @@ export default function ContactDetailsPage() {
             Back to Directory
           </Button>
         </Link>
-        <Link href={`/crm/contacts/${params.id}/edit`}>
+        <Link href={`/crm/contacts/${contactId}/edit`}>
           <Button variant="default" size="sm" className="h-8 text-xs gap-1">
             <Edit2 className="h-3.5 w-3.5" />
             Edit Profile

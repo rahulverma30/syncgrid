@@ -49,6 +49,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
 function PortalLayoutContent({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
+  const safePathname = pathname || '';
   const { sessionUser, isLoading: isSessionLoading, logout } = usePortalSession();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -62,7 +63,7 @@ function PortalLayoutContent({ children }: { children: React.ReactNode }) {
   const mobileDrawerRef = useRef<HTMLDivElement>(null);
   const searchModalRef = useRef<HTMLDivElement>(null);
 
-  const isLoginPage = pathname === '/portal/login';
+  const isLoginPage = safePathname === '/portal/login';
 
   // 1. Listen for CMD+K/CTRL+K to trigger unified search
   useEffect(() => {
@@ -239,7 +240,7 @@ function PortalLayoutContent({ children }: { children: React.ReactNode }) {
 
         <nav className="flex-1 space-y-1 overflow-y-auto pr-1" aria-label="Main Navigation">
           {sidebarLinks.map((link) => {
-            const isActive = pathname === link.href;
+            const isActive = safePathname === link.href;
             const Icon = link.icon;
 
             return (
@@ -327,7 +328,7 @@ function PortalLayoutContent({ children }: { children: React.ReactNode }) {
             <span>SyncGrid Space</span>
             <span>/</span>
             <span className="text-slate-300 capitalize">
-              {pathname.split('/').pop() || 'Dashboard'}
+              {safePathname.split('/').pop() || 'Dashboard'}
             </span>
           </div>
 
@@ -521,7 +522,7 @@ function PortalLayoutContent({ children }: { children: React.ReactNode }) {
 
               <nav className="flex-1 space-y-1 overflow-y-auto">
                 {sidebarLinks.map((link) => {
-                  const isActive = pathname === link.href;
+                  const isActive = safePathname === link.href;
                   const Icon = link.icon;
 
                   return (

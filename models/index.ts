@@ -123,3 +123,4 @@ export {
   SaaSUsageMetric,
   SaaSBackup,
 } from './SaaSModels';
+export { Invitation } from './Invitation';

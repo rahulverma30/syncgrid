@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server';
+import { headers } from 'next/headers';
 import { connectToDatabase } from '@/lib/db';
 import { hashPassword } from '@/lib/security/password';
 import { registerSchema } from '@/schemas/auth';
 import { ensureSystemRoles } from '@/lib/auth/seed';
 import { slugifyRole } from '@/lib/auth/permission-checks';
 import { AuditLog, Company, Role, User } from '@/models';
+import { rateLimit } from '@/lib/security/rateLimiter';
 
 function slugifyCompany(name) {
   return name
@@ -17,6 +19,20 @@ function slugifyCompany(name) {
 
 export async function POST(request) {
   try {
+    const headerList = await headers();
+    const ip = headerList.get('x-forwarded-for') || '127.0.0.1';
+    const limitResult = await rateLimit(`rate:register:${ip}`, 3, 60 * 60 * 1000); // 3 registrations per hour
+    if (!limitResult.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'TOO_MANY_REQUESTS',
+          message: 'Too many registration attempts from this IP. Please try again in an hour.',
+        },
+        { status: 429 }
+      );
+    }
+
     const body = await request.json();
     const parsed = registerSchema.safeParse(body);
 

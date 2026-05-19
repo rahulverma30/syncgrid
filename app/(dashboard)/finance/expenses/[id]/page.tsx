@@ -18,6 +18,7 @@ import { toast } from 'sonner';
 
 export default function ExpenseDetailsPage() {
   const params = useParams();
+  const expenseId = params?.id ? (Array.isArray(params.id) ? params.id[0] : params.id) : '';
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -35,11 +36,12 @@ export default function ExpenseDetailsPage() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
+    if (!expenseId) return;
     const fetchExpenseDetails = async () => {
       setIsLoading(true);
       try {
         await new Promise((resolve) => setTimeout(resolve, 500));
-        if (params.id === 'e1') {
+        if (expenseId === 'e1') {
           setCategory('software');
           setAmount(2450);
           setPaymentMethod('Corporate Card');
@@ -48,7 +50,7 @@ export default function ExpenseDetailsPage() {
           setStatus('approved');
           setNotes('Production hosting services for enterprise tenants.');
           setReceiptUrl('https://syncgrid.co/receipts/aws_389.pdf');
-        } else if (params.id === 'e3') {
+        } else if (expenseId === 'e3') {
           setCategory('travel');
           setAmount(850);
           setPaymentMethod('Reimbursement');
@@ -65,7 +67,7 @@ export default function ExpenseDetailsPage() {
       }
     };
     fetchExpenseDetails();
-  }, [params.id]);
+  }, [expenseId]);
 
   const handleApprove = () => {
     setStatus('approved');

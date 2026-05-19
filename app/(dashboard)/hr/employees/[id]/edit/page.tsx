@@ -19,6 +19,7 @@ import { toast } from 'sonner';
 export default function EditEmployeePage() {
   const router = useRouter();
   const params = useParams();
+  const employeeId = params?.id ? (Array.isArray(params.id) ? params.id[0] : params.id) : '';
   const [mounted, setMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -36,11 +37,12 @@ export default function EditEmployeePage() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
+    if (!employeeId) return;
     const fetchEmployee = async () => {
       setIsLoading(true);
       try {
         await new Promise((resolve) => setTimeout(resolve, 500));
-        if (params.id === 'e2') {
+        if (employeeId === 'e2') {
           setName('Selina Kyle');
           setRole('Strategic Acquisition Manager');
           setDepartment('Operations');
@@ -49,7 +51,7 @@ export default function EditEmployeePage() {
           setSalary(115000);
           setStartDate('2025-03-15');
           setStatus('active');
-        } else if (params.id === 'e3') {
+        } else if (employeeId === 'e3') {
           setName('Pamela Isley');
           setRole('Bio-diversity Lead Research');
           setDepartment('Research');
@@ -71,11 +73,10 @@ export default function EditEmployeePage() {
       } catch (err) {
         toast.error('Failed to load employee details for editing.');
       }
-      opacity: 1;
       setIsLoading(false);
     };
     fetchEmployee();
-  }, [params.id]);
+  }, [employeeId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,7 +89,7 @@ export default function EditEmployeePage() {
     try {
       await new Promise((resolve) => setTimeout(resolve, 600));
       toast.success(`Employee details for "${name}" updated successfully.`);
-      router.push(`/hr/employees/${params.id}`);
+      router.push(`/hr/employees/${employeeId}`);
     } catch (err) {
       toast.error('Failed to save employee profile adjustments.');
     } finally {
@@ -112,7 +113,7 @@ export default function EditEmployeePage() {
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
       <div className="flex items-center gap-2 select-none font-semibold">
-        <Link href={`/hr/employees/${params.id}`}>
+        <Link href={`/hr/employees/${employeeId}`}>
           <Button variant="outline" size="sm" className="h-8 hover:bg-accent/40 text-xs gap-1">
             <ArrowLeft className="h-3.5 w-3.5" />
             Back to Profile
@@ -282,7 +283,7 @@ export default function EditEmployeePage() {
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-4 border-t border-border/40 select-none">
-              <Link href={`/hr/employees/${params.id}`}>
+              <Link href={`/hr/employees/${employeeId}`}>
                 <Button
                   variant="outline"
                   size="sm"
@@ -292,6 +293,7 @@ export default function EditEmployeePage() {
                   Cancel
                 </Button>
               </Link>
+
               <Button
                 disabled={isSubmitting}
                 type="submit"

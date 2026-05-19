@@ -20,6 +20,7 @@ import { toast } from 'sonner';
 export default function EditAccountPage() {
   const router = useRouter();
   const params = useParams();
+  const accountId = params?.id ? (Array.isArray(params.id) ? params.id[0] : params.id) : '';
   const [mounted, setMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -38,10 +39,11 @@ export default function EditAccountPage() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
+    if (!accountId) return;
     const fetchAccount = async () => {
       setIsLoading(true);
       try {
-        const res = await fetch(`/api/protected/clients/${params.id}`);
+        const res = await fetch(`/api/protected/clients/${accountId}`);
         const d = await res.json();
         if (d.success && d.data) {
           const a = d.data;
@@ -62,7 +64,7 @@ export default function EditAccountPage() {
       }
     };
     fetchAccount();
-  }, [params.id]);
+  }, [accountId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,7 +77,7 @@ export default function EditAccountPage() {
     try {
       await new Promise((resolve) => setTimeout(resolve, 600));
       toast.success(`Enterprise Account "${name}" details saved successfully.`);
-      router.push(`/crm/accounts/${params.id}`);
+      router.push(`/crm/accounts/${accountId}`);
     } catch (err) {
       toast.error('Failed to save account details.');
     } finally {
@@ -99,7 +101,7 @@ export default function EditAccountPage() {
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
       <div className="flex items-center gap-2 select-none">
-        <Link href={`/crm/accounts/${params.id}`}>
+        <Link href={`/crm/accounts/${accountId}`}>
           <Button variant="outline" size="sm" className="h-8 hover:bg-accent/40 text-xs gap-1">
             <ArrowLeft className="h-3.5 w-3.5" />
             Back to Profile
@@ -303,7 +305,7 @@ export default function EditAccountPage() {
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-4 border-t border-border/40 select-none">
-              <Link href={`/crm/accounts/${params.id}`}>
+              <Link href={`/crm/accounts/${accountId}`}>
                 <Button
                   variant="outline"
                   size="sm"
@@ -313,6 +315,7 @@ export default function EditAccountPage() {
                   Cancel
                 </Button>
               </Link>
+
               <Button
                 disabled={isSubmitting}
                 type="submit"

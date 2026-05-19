@@ -19,6 +19,7 @@ import { cn } from '@/lib/cn';
 
 export function Sidebar() {
   const pathname = usePathname();
+  const safePathname = pathname || '';
   const { data: session } = useSession();
   const { isCollapsed, isOpen, toggleCollapse, setIsOpen } = useSidebarStore();
 
@@ -30,7 +31,7 @@ export function Sidebar() {
 
   useEffect(() => {
     setIsOpen(false);
-  }, [pathname, setIsOpen]);
+  }, [safePathname, setIsOpen]);
 
   const toggleGroupExpanded = (groupId: unknown) => {
     const newExpanded = new Set(expandedGroups);
@@ -42,7 +43,9 @@ export function Sidebar() {
     setExpandedGroups(newExpanded);
   };
 
-  const isItemActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
+  const isItemActive = (href: string) =>
+    safePathname === href || safePathname.startsWith(href + '/');
+
   const navigationGroups = filterNavigationByUser(SIDEBAR_GROUPS as any, session?.user);
 
   const renderNav = (mobile = false) => (

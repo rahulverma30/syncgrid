@@ -16,6 +16,7 @@ import {
   Command,
   UploadCloud,
   CheckCircle,
+  Loader2,
 } from 'lucide-react';
 import { useCommunicationStore } from '@/store';
 import { useSession } from 'next-auth/react';
@@ -45,6 +46,7 @@ export function MessageComposer({ onSendMessage }: MessageComposerProps) {
   const [text, setText] = useState('');
   const [attachments, setAttachments] = useState<any[]>([]);
   const [uploadingFile, setUploadingFile] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
   // Live Markdown & Layout States
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
@@ -157,49 +159,93 @@ export function MessageComposer({ onSendMessage }: MessageComposerProps) {
   };
 
   // 2. TRUE CLOUD STORAGE UPLOAD: Presigned URL orchestration workflow
-  const triggerSecureCloudUpload = async () => {
-    setUploadingFile(true);
-    const mockFiles = [
-      { name: 'technical-specs-ledger.pdf', size: 350200, type: 'application/pdf' },
-      { name: 'release-charts-cockpit.png', size: 1310700, type: 'image/png' },
-      { name: 'onboarding-guidelines.docx', size: 524288, type: 'application/vnd.ms-word' },
-    ];
-    // Pick file
-    const chosen = mockFiles[Math.floor(Math.random() * mockFiles.length)];
+  const triggerSecureCloudUpload = () => {
+    // Dynamically spawn a file chooser
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '*/*'; // Accept all file formats
 
-    try {
-      // Step A: Request isolated presigned URL and authentication token from API
-      const res = await fetch('/api/protected/collaboration/presign', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fileName: chosen.name, mimeType: chosen.type }),
-      });
-      const creds = await res.json();
+    fileInput.onchange = async (event: any) => {
+      const file = event.target?.files?.[0];
+      if (!file) return;
 
-      if (creds.success) {
-        const { uploadUrl, fileUrl, token, key } = creds.data;
-
-        // Step B: Simulate direct low-latency binary stream to secure Amazon S3 Bucket
-        await new Promise((resolve) => setTimeout(resolve, 800)); // Simulating network transfer delay
-
-        const attachmentMetadata = {
-          fileName: chosen.name,
-          fileSize: chosen.size,
-          mimeType: chosen.type,
-          fileUrl,
-          key,
-          uploadToken: token,
-        };
-
-        setAttachments((prev) => [...prev, attachmentMetadata]);
-        toast.success(`Uploaded ${chosen.name} safely to Cloud storage.`);
+      // Restrict payload to safe bounds (e.g. 50MB)
+      if (file.size > 50 * 1024 * 1024) {
+        toast.error('File size exceeds the 50MB enterprise limit.');
+        return;
       }
-    } catch (err) {
-      toast.error('Cloud attachment upload failed.');
-      console.error(err);
-    } finally {
-      setUploadingFile(false);
-    }
+
+      setUploadingFile(true);
+      setUploadProgress(0);
+
+      try {
+        // Step A: Request isolated presigned URL and verification token from API
+        const res = await fetch('/api/protected/collaboration/presign', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fileName: file.name,
+            mimeType: file.type || 'application/octet-stream',
+          }),
+        });
+        const creds = await res.json();
+
+        if (creds.success) {
+          const { uploadUrl, fileUrl, token, key } = creds.data;
+
+          // Step B: Direct PUT binary stream using XHR for realtime upload progress updates
+          const xhr = new XMLHttpRequest();
+          xhr.open('PUT', uploadUrl);
+          xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+
+          xhr.upload.onprogress = (progressEvent) => {
+            if (progressEvent.lengthComputable) {
+              const percentage = Math.round((progressEvent.loaded / progressEvent.total) * 100);
+              setUploadProgress(percentage);
+            }
+          };
+
+          xhr.onload = () => {
+            if (xhr.status === 200) {
+              const attachmentMetadata = {
+                fileName: file.name,
+                fileSize: file.size,
+                mimeType: file.type || 'application/octet-stream',
+                fileUrl,
+                key,
+                uploadToken: token,
+              };
+
+              setAttachments((prev) => [...prev, attachmentMetadata]);
+              toast.success(`Uploaded ${file.name} successfully.`);
+            } else {
+              toast.error(`Upload failed with status code ${xhr.status}.`);
+            }
+            setUploadProgress(null);
+            setUploadingFile(false);
+          };
+
+          xhr.onerror = () => {
+            toast.error('Network connection error uploading attachment.');
+            setUploadProgress(null);
+            setUploadingFile(false);
+          };
+
+          xhr.send(file);
+        } else {
+          toast.error(creds.message || 'Presign credentials check failed.');
+          setUploadProgress(null);
+          setUploadingFile(false);
+        }
+      } catch (err) {
+        toast.error('Cloud attachment upload failed.');
+        console.error(err);
+        setUploadProgress(null);
+        setUploadingFile(false);
+      }
+    };
+
+    fileInput.click();
   };
 
   const removeAttachment = (idx: number) => {
@@ -312,7 +358,7 @@ export function MessageComposer({ onSendMessage }: MessageComposerProps) {
       )}
 
       {/* File Upload List */}
-      {attachments.length > 0 && (
+      {(attachments.length > 0 || uploadingFile) && (
         <div className="flex flex-wrap gap-2 mb-3">
           {attachments.map((file, idx) => (
             <div
@@ -335,6 +381,21 @@ export function MessageComposer({ onSendMessage }: MessageComposerProps) {
               </button>
             </div>
           ))}
+          {uploadingFile && uploadProgress !== null && (
+            <div className="flex items-center gap-3 rounded-lg border border-primary/20 bg-primary/5 px-3 py-1.5 text-xs text-foreground animate-pulse">
+              <Loader2 className="h-4 w-4 animate-spin text-primary shrink-0" />
+              <div className="flex flex-col min-w-[120px]">
+                <span className="font-semibold text-primary">Uploading to Cloud...</span>
+                <div className="w-full bg-slate-800 h-1 rounded-full overflow-hidden mt-1.5">
+                  <div
+                    className="bg-primary h-full transition-all duration-150"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+              </div>
+              <span className="text-[10px] font-bold text-primary shrink-0">{uploadProgress}%</span>
+            </div>
+          )}
         </div>
       )}
 

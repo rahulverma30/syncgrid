@@ -27,6 +27,7 @@ interface Payslip {
 
 export default function EmployeeDetailsPage() {
   const params = useParams();
+  const employeeId = params?.id ? (Array.isArray(params.id) ? params.id[0] : params.id) : '';
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -56,11 +57,12 @@ export default function EmployeeDetailsPage() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
+    if (!employeeId) return;
     const fetchEmployeeDetails = async () => {
       setIsLoading(true);
       try {
         await new Promise((resolve) => setTimeout(resolve, 500));
-        if (params.id === 'e2') {
+        if (employeeId === 'e2') {
           setName('Selina Kyle');
           setRole('Strategic Acquisition Manager');
           setDepartment('Operations');
@@ -73,7 +75,7 @@ export default function EmployeeDetailsPage() {
             { _id: 'p3', payPeriod: 'April 2026', netPay: 9583.33, paymentDate: '2026-04-30' },
             { _id: 'p4', payPeriod: 'March 2026', netPay: 9583.33, paymentDate: '2026-03-31' },
           ]);
-        } else if (params.id === 'e3') {
+        } else if (employeeId === 'e3') {
           setName('Pamela Isley');
           setRole('Bio-diversity Lead Research');
           setDepartment('Research');
@@ -91,7 +93,7 @@ export default function EmployeeDetailsPage() {
       }
     };
     fetchEmployeeDetails();
-  }, [params.id]);
+  }, [employeeId]);
 
   const handleAddNote = () => {
     if (!noteText.trim()) return;
@@ -127,7 +129,7 @@ export default function EmployeeDetailsPage() {
             Back to Employees
           </Button>
         </Link>
-        <Link href={`/hr/employees/${params.id}/edit`}>
+        <Link href={`/hr/employees/${employeeId}/edit`}>
           <Button variant="default" size="sm" className="h-8 text-xs gap-1">
             <Edit2 className="h-3.5 w-3.5" />
             Edit Profile details

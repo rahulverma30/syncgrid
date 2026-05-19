@@ -19,6 +19,7 @@ import { toast } from 'sonner';
 export default function EditContactPage() {
   const router = useRouter();
   const params = useParams();
+  const contactId = params?.id ? (Array.isArray(params.id) ? params.id[0] : params.id) : '';
   const [mounted, setMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -35,25 +36,26 @@ export default function EditContactPage() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
+    if (!contactId) return;
     const fetchContact = async () => {
       setIsLoading(true);
       try {
         await new Promise((resolve) => setTimeout(resolve, 500));
-        if (params.id === 'c2') {
+        if (contactId === 'c2') {
           setName('Samantha Vance');
           setRole('VP Marketing');
           setEmail('vance@globex.co');
           setPhone('650-555-0143');
           setIsPrimary(true);
           setCommunicationPref('slack');
-        } else if (params.id === 'c3') {
+        } else if (contactId === 'c3') {
           setName('Albert Wesker');
           setRole('Head of Operations');
           setEmail('wesker@umbrella.com');
           setPhone('312-555-0105');
           setIsPrimary(false);
           setCommunicationPref('zoom');
-        } else if (params.id === 'c4') {
+        } else if (contactId === 'c4') {
           setName('Pepper Potts');
           setRole('CEO');
           setEmail('potts@stark.com');
@@ -68,7 +70,7 @@ export default function EditContactPage() {
       }
     };
     fetchContact();
-  }, [params.id]);
+  }, [contactId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,7 +83,7 @@ export default function EditContactPage() {
     try {
       await new Promise((resolve) => setTimeout(resolve, 600));
       toast.success(`Contact details for "${name}" updated successfully.`);
-      router.push(`/crm/contacts/${params.id}`);
+      router.push(`/crm/contacts/${contactId}`);
     } catch (err) {
       toast.error('Failed to save updates.');
     } finally {
@@ -105,7 +107,7 @@ export default function EditContactPage() {
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
       <div className="flex items-center gap-2 select-none">
-        <Link href={`/crm/contacts/${params.id}`}>
+        <Link href={`/crm/contacts/${contactId}`}>
           <Button variant="outline" size="sm" className="h-8 hover:bg-accent/40 text-xs gap-1">
             <ArrowLeft className="h-3.5 w-3.5" />
             Back to Profile
@@ -240,7 +242,7 @@ export default function EditContactPage() {
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-4 border-t border-border/40 select-none">
-              <Link href={`/crm/contacts/${params.id}`}>
+              <Link href={`/crm/contacts/${contactId}`}>
                 <Button
                   variant="outline"
                   size="sm"

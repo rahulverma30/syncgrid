@@ -1,5 +1,9 @@
 import mongoose from 'mongoose';
 import { assertDatabaseEnv, env } from '@/lib/env';
+import { tenantPlugin } from './tenantPlugin';
+
+// Register global multi-tenant isolation interceptor
+mongoose.plugin(tenantPlugin);
 
 type MongooseCache = {
   conn: typeof mongoose | null;

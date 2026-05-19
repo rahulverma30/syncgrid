@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { withApiAuth } from '@/lib/auth/api';
 import { connectToDatabase } from '@/lib/db/mongodb';
-import { Employee, EmployeeActivity } from '@/models';
+import { Employee, EmployeeActivity, User } from '@/models';
 import { EmployeeUpdateSchema } from '@/schemas/hr';
 import { hasRole } from '@/lib/auth/permission-checks';
 
@@ -135,6 +135,15 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
     Object.assign(employee, validated);
     await employee.save();
 
+    // Synchronize User status when employee status is updated
+    if (validated.status && employee.userId) {
+      const userStatus =
+        validated.status === 'suspended' || validated.status === 'terminated'
+          ? 'disabled'
+          : 'active';
+      await User.updateOne({ _id: employee.userId }, { $set: { status: userStatus } });
+    }
+
     // Log Activity
     const activity = new EmployeeActivity({
       companyId,
@@ -197,6 +206,11 @@ export const DELETE = withApiAuth(async (request: Request, context: any, session
     employee.status = 'terminated';
     employee.exitDate = new Date();
     await employee.save();
+
+    // Deactivate User account on termination
+    if (employee.userId) {
+      await User.updateOne({ _id: employee.userId }, { $set: { status: 'disabled' } });
+    }
 
     // Log Activity
     const activity = new EmployeeActivity({

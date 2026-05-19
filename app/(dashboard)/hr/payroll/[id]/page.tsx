@@ -28,6 +28,7 @@ interface PayrollEmployeeItem {
 
 export default function PayrollRunDetailsPage() {
   const params = useParams();
+  const payRunId = params?.id ? (Array.isArray(params.id) ? params.id[0] : params.id) : '';
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -73,15 +74,16 @@ export default function PayrollRunDetailsPage() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
+    if (!payRunId) return;
     const fetchRunDetails = async () => {
       setIsLoading(true);
       try {
         await new Promise((resolve) => setTimeout(resolve, 500));
-        if (params.id === 'pr2') {
+        if (payRunId === 'pr2') {
           setPayPeriod('April 2026');
           setStatus('paid');
           setPaymentDate('2026-04-30');
-        } else if (params.id === 'pr3') {
+        } else if (payRunId === 'pr3') {
           setPayPeriod('March 2026');
           setGrossAmount(28000);
           setTaxWithheld(2800);
@@ -116,7 +118,7 @@ export default function PayrollRunDetailsPage() {
       }
     };
     fetchRunDetails();
-  }, [params.id]);
+  }, [payRunId]);
 
   const handleProcessPayroll = () => {
     setStatus('paid');

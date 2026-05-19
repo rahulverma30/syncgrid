@@ -20,7 +20,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { data: session } = useSession();
 
   const breadcrumbs = useMemo(() => {
-    return buildBreadcrumbs(pathname, session?.user);
+    return buildBreadcrumbs(pathname || '', session?.user);
   }, [pathname, session?.user]);
 
   return (
