@@ -17,14 +17,14 @@ import { useCommandPaletteStore, useSidebarStore } from '@/store';
 
 export function Header() {
   const isMounted = useMounted();
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, resolvedTheme } = useTheme();
   const { data: session } = useSession();
   const { isOpen, setIsOpen } = useSidebarStore();
   const { togglePalette } = useCommandPaletteStore();
 
   if (!isMounted) return null;
 
-  const isDark = theme === 'dark';
+  const isDark = resolvedTheme === 'dark';
 
   return (
     <header className="fixed inset-x-0 top-0 z-40 h-16 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
