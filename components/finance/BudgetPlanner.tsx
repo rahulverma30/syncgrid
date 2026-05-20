@@ -10,7 +10,7 @@ import {
   X,
   Check,
 } from 'lucide-react';
-import { Button, Input } from '@/components/ui';
+import { Button, Input, Select } from '@/components/ui';
 import { toast } from 'sonner';
 
 interface BudgetPlannerProps {
@@ -257,37 +257,30 @@ export const BudgetPlanner: React.FC<BudgetPlannerProps> = ({ budgets, onSaveBud
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
-                    Budget Type
-                  </label>
-                  <select
+                  <Select
+                    label="Budget Type"
                     value={type}
-                    onChange={(e) => setType(e.target.value as any)}
-                    className="w-full h-9 px-3 border border-border bg-background/40 text-xs rounded-md focus:outline-none"
-                  >
-                    <option value="operational">Operational Overhead</option>
-                    <option value="project">Project Schedule Allocation</option>
-                    <option value="department">Department Fund</option>
-                  </select>
+                    onChange={(val) => setType(val)}
+                    options={[
+                      { value: 'operational', label: 'Operational Overhead' },
+                      { value: 'project', label: 'Project Schedule Allocation' },
+                      { value: 'department', label: 'Department Fund' },
+                    ]}
+                  />
                 </div>
 
                 {type === 'project' && (
                   <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
-                      Target Project *
-                    </label>
-                    <select
+                    <Select
+                      label="Target Project *"
                       value={selectedProject}
-                      onChange={(e) => setSelectedProject(e.target.value)}
-                      className="w-full h-9 px-3 border border-border bg-background/40 text-xs rounded-md focus:outline-none"
-                    >
-                      <option value="">Select Project...</option>
-                      {projects.map((p) => (
-                        <option key={p._id} value={p._id}>
-                          {p.name}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(val) => setSelectedProject(val)}
+                      placeholder="Select Project..."
+                      options={projects.map((p) => ({
+                        value: p._id,
+                        label: p.name,
+                      }))}
+                    />
                   </div>
                 )}
 

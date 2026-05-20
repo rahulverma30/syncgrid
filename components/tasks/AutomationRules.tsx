@@ -5,6 +5,7 @@ import { Play, ToggleLeft, ToggleRight, Plus, HelpCircle, Save, Trash } from 'lu
 import { useTasksStore } from '@/store/tasksStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
 
 export function AutomationRules() {
   const { statuses, fetchStatuses } = useTasksStore();
@@ -161,14 +162,14 @@ export function AutomationRules() {
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="text-[9px] font-bold text-muted-foreground uppercase">When</label>
-              <select
-                className="w-full bg-background border border-border rounded text-[10px] px-2 py-1.5 focus:outline-none"
+              <Select
                 value={triggerType}
-                onChange={(e) => setTriggerType(e.target.value)}
-              >
-                <option value="on_status_change">Status changes</option>
-                <option value="on_creation">Task is created</option>
-              </select>
+                onChange={setTriggerType}
+                options={[
+                  { value: 'on_status_change', label: 'Status changes' },
+                  { value: 'on_creation', label: 'Task is created' },
+                ]}
+              />
             </div>
 
             {triggerType === 'on_status_change' && (
@@ -176,17 +177,11 @@ export function AutomationRules() {
                 <label className="text-[9px] font-bold text-muted-foreground uppercase">
                   To Stage
                 </label>
-                <select
-                  className="w-full bg-background border border-border rounded text-[10px] px-2 py-1.5 focus:outline-none"
+                <Select
                   value={triggerStatusId}
-                  onChange={(e) => setTriggerStatusId(e.target.value)}
-                >
-                  {statuses.map((s) => (
-                    <option key={s._id} value={s._id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setTriggerStatusId}
+                  options={statuses.map((s) => ({ value: s._id, label: s.name }))}
+                />
               </div>
             )}
           </div>
@@ -203,14 +198,14 @@ export function AutomationRules() {
               <label className="text-[9px] font-bold text-muted-foreground uppercase">
                 Perform Action
               </label>
-              <select
-                className="w-full bg-background border border-border rounded text-[10px] px-2 py-1.5 focus:outline-none"
+              <Select
                 value={actionType}
-                onChange={(e) => setActionType(e.target.value)}
-              >
-                <option value="assign_user">Assign Task</option>
-                <option value="change_status">Change Status Stage</option>
-              </select>
+                onChange={setActionType}
+                options={[
+                  { value: 'assign_user', label: 'Assign Task' },
+                  { value: 'change_status', label: 'Change Status Stage' },
+                ]}
+              />
             </div>
 
             {actionType === 'change_status' ? (
@@ -218,35 +213,25 @@ export function AutomationRules() {
                 <label className="text-[9px] font-bold text-muted-foreground uppercase">
                   Set Status To
                 </label>
-                <select
-                  className="w-full bg-background border border-border rounded text-[10px] px-2 py-1.5 focus:outline-none"
+                <Select
                   value={actionStatusId}
-                  onChange={(e) => setActionStatusId(e.target.value)}
-                >
-                  {statuses.map((s) => (
-                    <option key={s._id} value={s._id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setActionStatusId}
+                  options={statuses.map((s) => ({ value: s._id, label: s.name }))}
+                />
               </div>
             ) : (
               <div className="space-y-1">
                 <label className="text-[9px] font-bold text-muted-foreground uppercase">
                   Assign To User
                 </label>
-                <select
-                  className="w-full bg-background border border-border rounded text-[10px] px-2 py-1.5 focus:outline-none"
+                <Select
                   value={selectedAssigneeId}
-                  onChange={(e) => setSelectedAssigneeId(e.target.value)}
-                >
-                  <option value="">Select User...</option>
-                  {users.map((u) => (
-                    <option key={u._id} value={u._id}>
-                      {u.name}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setSelectedAssigneeId}
+                  options={[
+                    { value: '', label: 'Select User...' },
+                    ...users.map((u) => ({ value: u._id, label: u.name })),
+                  ]}
+                />
               </div>
             )}
           </div>

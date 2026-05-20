@@ -3,7 +3,15 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { PageHeader, Card, CardContent, Button, Input, LoadingSpinner } from '@/components/ui';
+import {
+  PageHeader,
+  Card,
+  CardContent,
+  Button,
+  Input,
+  LoadingSpinner,
+  Select,
+} from '@/components/ui';
 import {
   Building2,
   Globe,
@@ -141,27 +149,18 @@ export default function EditAccountPage() {
                 </label>
                 <div className="relative">
                   <Compass className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                  <select
+                  <Select
                     value={clientType}
-                    onChange={(e) => setClientType(e.target.value)}
+                    onChange={(val) => setClientType(val)}
                     className="w-full pl-10 pr-4 bg-background/30 border border-border/60 hover:border-primary/20 rounded-xl h-10 text-xs text-slate-300 focus:ring-0 outline-none cursor-pointer"
-                  >
-                    <option value="Startup" className="bg-slate-950">
-                      Startup Profile
-                    </option>
-                    <option value="Enterprise" className="bg-slate-950">
-                      Enterprise Level
-                    </option>
-                    <option value="VIP" className="bg-slate-950">
-                      VIP Corporate
-                    </option>
-                    <option value="High Value" className="bg-slate-950">
-                      High Value Client
-                    </option>
-                    <option value="Retainer" className="bg-slate-950">
-                      Retainer Period
-                    </option>
-                  </select>
+                    options={[
+                      { value: 'Startup', label: 'Startup Profile' },
+                      { value: 'Enterprise', label: 'Enterprise Level' },
+                      { value: 'VIP', label: 'VIP Corporate' },
+                      { value: 'High Value', label: 'High Value Client' },
+                      { value: 'Retainer', label: 'Retainer Period' },
+                    ]}
+                  />
                 </div>
               </div>
 
@@ -171,27 +170,18 @@ export default function EditAccountPage() {
                 </label>
                 <div className="relative">
                   <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                  <select
+                  <Select
                     value={industry}
-                    onChange={(e) => setIndustry(e.target.value)}
+                    onChange={(val) => setIndustry(val)}
                     className="w-full pl-10 pr-4 bg-background/30 border border-border/60 hover:border-primary/20 rounded-xl h-10 text-xs text-slate-300 focus:ring-0 outline-none cursor-pointer"
-                  >
-                    <option value="SaaS" className="bg-slate-950">
-                      SaaS Products
-                    </option>
-                    <option value="Biotech" className="bg-slate-950">
-                      Biotech Medical
-                    </option>
-                    <option value="Retail" className="bg-slate-950">
-                      Retail / Logistics
-                    </option>
-                    <option value="E-Commerce" className="bg-slate-950">
-                      Digital E-Commerce
-                    </option>
-                    <option value="Finance" className="bg-slate-950">
-                      Financial Tech
-                    </option>
-                  </select>
+                    options={[
+                      { value: 'SaaS', label: 'SaaS Products' },
+                      { value: 'Biotech', label: 'Biotech Medical' },
+                      { value: 'Retail', label: 'Retail / Logistics' },
+                      { value: 'E-Commerce', label: 'Digital E-Commerce' },
+                      { value: 'Finance', label: 'Financial Tech' },
+                    ]}
+                  />
                 </div>
               </div>
             </div>
@@ -253,24 +243,17 @@ export default function EditAccountPage() {
                 </label>
                 <div className="relative">
                   <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                  <select
+                  <Select
                     value={companySize}
-                    onChange={(e) => setCompanySize(e.target.value)}
+                    onChange={(val) => setCompanySize(val)}
                     className="w-full pl-10 pr-4 bg-background/30 border border-border/60 hover:border-primary/20 rounded-xl h-10 text-xs text-slate-300 focus:ring-0 outline-none cursor-pointer"
-                  >
-                    <option value="1-10" className="bg-slate-950">
-                      1 - 10 employees
-                    </option>
-                    <option value="11-50" className="bg-slate-950">
-                      11 - 50 employees
-                    </option>
-                    <option value="51-200" className="bg-slate-950">
-                      51 - 200 employees
-                    </option>
-                    <option value="201+" className="bg-slate-950">
-                      201+ employees
-                    </option>
-                  </select>
+                    options={[
+                      { value: '1-10', label: '1 - 10 employees' },
+                      { value: '11-50', label: '11 - 50 employees' },
+                      { value: '51-200', label: '51 - 200 employees' },
+                      { value: '201+', label: '201+ employees' },
+                    ]}
+                  />
                 </div>
               </div>
             </div>

@@ -13,7 +13,7 @@ import {
   ShieldCheck,
   CheckCircle,
 } from 'lucide-react';
-import { Button, Input } from '@/components/ui';
+import { Button, Input, Select } from '@/components/ui';
 import { toast } from 'sonner';
 
 interface ClientVendorSettingsProps {
@@ -580,26 +580,21 @@ export const ClientVendorSettings: React.FC<ClientVendorSettingsProps> = ({
 
               <form onSubmit={handleSaveBillingSubmit} className="space-y-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
-                    Select Customer *
-                  </label>
-                  <select
+                  <Select
+                    label="Select Customer *"
                     disabled={selectedClientBilling !== null}
                     value={clientIdVal}
-                    onChange={(e) => setClientIdVal(e.target.value)}
-                    className="w-full h-9 px-3 border border-border bg-background/40 text-xs rounded-md focus:outline-none"
-                  >
-                    <option value="">Select Customer Client...</option>
-                    {clientsList.map((c) => (
-                      <option key={c._id} value={c._id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(val) => setClientIdVal(val)}
+                    placeholder="Select Customer Client..."
+                    options={clientsList.map((c) => ({
+                      value: c._id,
+                      label: c.name,
+                    }))}
+                  />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+                  <label className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
                     Billing email *
                   </label>
                   <Input
@@ -608,40 +603,36 @@ export const ClientVendorSettings: React.FC<ClientVendorSettingsProps> = ({
                     value={billEmail}
                     onChange={(e) => setBillEmail(e.target.value)}
                     placeholder="billing@customer.com"
-                    className="h-9 text-xs"
+                    className="h-10 text-xs"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
-                      Currency
-                    </label>
-                    <select
+                    <Select
+                      label="Currency"
                       value={prefCurrency}
-                      onChange={(e) => setPrefCurrency(e.target.value)}
-                      className="w-full h-9 px-3 border border-border bg-background/40 text-xs rounded-md focus:outline-none"
-                    >
-                      <option value="USD">USD ($)</option>
-                      <option value="EUR">EUR (€)</option>
-                      <option value="GBP">GBP (£)</option>
-                      <option value="INR">INR (₹)</option>
-                    </select>
+                      onChange={(val) => setPrefCurrency(val)}
+                      options={[
+                        { value: 'USD', label: 'USD ($)' },
+                        { value: 'EUR', label: 'EUR (€)' },
+                        { value: 'GBP', label: 'GBP (£)' },
+                        { value: 'INR', label: 'INR (₹)' },
+                      ]}
+                    />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
-                      Terms
-                    </label>
-                    <select
+                    <Select
+                      label="Terms"
                       value={payTerms}
-                      onChange={(e) => setPayTerms(e.target.value)}
-                      className="w-full h-9 px-3 border border-border bg-background/40 text-xs rounded-md focus:outline-none"
-                    >
-                      <option value="due_on_receipt">Due on receipt</option>
-                      <option value="net_15">Net 15</option>
-                      <option value="net_30">Net 30</option>
-                      <option value="net_60">Net 60</option>
-                    </select>
+                      onChange={(val) => setPayTerms(val)}
+                      options={[
+                        { value: 'due_on_receipt', label: 'Due on receipt' },
+                        { value: 'net_15', label: 'Net 15' },
+                        { value: 'net_30', label: 'Net 30' },
+                        { value: 'net_60', label: 'Net 60' },
+                      ]}
+                    />
                   </div>
                 </div>
 
@@ -751,39 +742,37 @@ export const ClientVendorSettings: React.FC<ClientVendorSettingsProps> = ({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4 items-end">
                   <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
-                      Category
-                    </label>
-                    <select
+                    <Select
+                      label="Category"
                       value={vCat}
-                      onChange={(e) => setVCat(e.target.value)}
-                      className="w-full h-9 px-3 border border-border bg-background/40 text-xs rounded-md focus:outline-none"
-                    >
-                      <option value="software">Software/SaaS</option>
-                      <option value="hardware">Hardware infrastructure</option>
-                      <option value="consulting">Auditing/Consulting</option>
-                      <option value="office_supplies">Office supplies</option>
-                      <option value="marketing">Marketing campaigns</option>
-                      <option value="rent">Rent/Lease</option>
-                      <option value="other">Other Operations</option>
-                    </select>
+                      onChange={(val) => setVCat(val)}
+                      placeholder="Select category..."
+                      options={[
+                        { value: 'software', label: 'Software/SaaS' },
+                        { value: 'hardware', label: 'Hardware infrastructure' },
+                        { value: 'consulting', label: 'Auditing/Consulting' },
+                        { value: 'office_supplies', label: 'Office supplies' },
+                        { value: 'marketing', label: 'Marketing campaigns' },
+                        { value: 'rent', label: 'Rent/Lease' },
+                        { value: 'other', label: 'Other Operations' },
+                      ]}
+                    />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
-                      Terms
-                    </label>
-                    <select
+                    <Select
+                      label="Terms"
                       value={vPayTerms}
-                      onChange={(e) => setVPayTerms(e.target.value)}
-                      className="w-full h-9 px-3 border border-border bg-background/40 text-xs rounded-md focus:outline-none"
-                    >
-                      <option value="due_on_receipt">Due on receipt</option>
-                      <option value="net_15">Net 15</option>
-                      <option value="net_30">Net 30</option>
-                      <option value="net_60">Net 60</option>
-                    </select>
+                      onChange={(val) => setVPayTerms(val)}
+                      placeholder="Select terms..."
+                      options={[
+                        { value: 'due_on_receipt', label: 'Due on receipt' },
+                        { value: 'net_15', label: 'Net 15' },
+                        { value: 'net_30', label: 'Net 30' },
+                        { value: 'net_60', label: 'Net 60' },
+                      ]}
+                    />
                   </div>
                 </div>
 
@@ -854,41 +843,30 @@ export const ClientVendorSettings: React.FC<ClientVendorSettingsProps> = ({
               </div>
 
               <form onSubmit={handlePOSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4 items-end">
                   <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
-                      Supplier Vendor *
-                    </label>
-                    <select
-                      required
+                    <Select
+                      label="Supplier Vendor *"
                       value={poVendorId}
-                      onChange={(e) => setPOVendorId(e.target.value)}
-                      className="w-full h-9 px-3 border border-border bg-background/40 text-xs rounded-md focus:outline-none"
-                    >
-                      <option value="">Select Vendor...</option>
-                      {vendors.map((v) => (
-                        <option key={v._id} value={v._id}>
-                          {v.name}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(val) => setPOVendorId(val)}
+                      placeholder="Select Vendor..."
+                      options={vendors.map((v) => ({
+                        value: v._id,
+                        label: v.name,
+                      }))}
+                    />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
-                      Linked Project (Optional)
-                    </label>
-                    <select
+                    <Select
+                      label="Linked Project (Optional)"
                       value={poProjectId}
-                      onChange={(e) => setPOProjectId(e.target.value)}
-                      className="w-full h-9 px-3 border border-border bg-background/40 text-xs rounded-md focus:outline-none"
-                    >
-                      <option value="">No Project Linked...</option>
-                      {projects.map((p) => (
-                        <option key={p._id} value={p._id}>
-                          {p.name}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(val) => setPOProjectId(val)}
+                      placeholder="No Project Linked..."
+                      options={projects.map((p) => ({
+                        value: p._id,
+                        label: p.name,
+                      }))}
+                    />
                   </div>
                 </div>
 

@@ -15,7 +15,7 @@ import {
   Clock,
   AlertCircle,
 } from 'lucide-react';
-import { Button, Input } from '@/components/ui';
+import { Button, Input, Select } from '@/components/ui';
 
 interface InvoiceManagerProps {
   invoices: any[];
@@ -116,18 +116,22 @@ export const InvoiceManager: React.FC<InvoiceManagerProps> = ({
               className="pl-8 h-9 text-xs bg-background/30"
             />
           </div>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="h-9 px-3 border border-border bg-background/40 text-xs rounded-md focus:outline-none"
-          >
-            <option value="all">All statuses</option>
-            <option value="draft">Draft</option>
-            <option value="sent">Sent</option>
-            <option value="partially_paid">Partially paid</option>
-            <option value="paid">Paid</option>
-            <option value="overdue">Overdue</option>
-          </select>
+          <div className="w-48">
+            <Select
+              value={statusFilter}
+              onChange={(val) => setStatusFilter(val)}
+              className="h-9"
+              placeholder="All statuses"
+              options={[
+                { value: 'all', label: 'All statuses' },
+                { value: 'draft', label: 'Draft' },
+                { value: 'sent', label: 'Sent' },
+                { value: 'partially_paid', label: 'Partially paid' },
+                { value: 'paid', label: 'Paid' },
+                { value: 'overdue', label: 'Overdue' },
+              ]}
+            />
+          </div>
         </div>
 
         {isFinance && (
@@ -296,21 +300,19 @@ export const InvoiceManager: React.FC<InvoiceManagerProps> = ({
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
-                    Payment Gateway / Method
-                  </label>
-                  <select
+                  <Select
+                    label="Payment Gateway / Method"
                     value={payMethod}
-                    onChange={(e) => setPayMethod(e.target.value as any)}
-                    className="w-full h-9 px-3 border border-border bg-background/40 text-xs rounded-md focus:outline-none"
-                  >
-                    <option value="bank_transfer">Direct Bank Payout</option>
-                    <option value="stripe">Stripe Gateway</option>
-                    <option value="razorpay">Razorpay UPI</option>
-                    <option value="upi">UPI/QR Code</option>
-                    <option value="cash">Cash Ledger</option>
-                    <option value="manual">Manual Ledger Balance</option>
-                  </select>
+                    onChange={(val) => setPayMethod(val)}
+                    options={[
+                      { value: 'bank_transfer', label: 'Direct Bank Payout' },
+                      { value: 'stripe', label: 'Stripe Gateway' },
+                      { value: 'razorpay', label: 'Razorpay UPI' },
+                      { value: 'upi', label: 'UPI/QR Code' },
+                      { value: 'cash', label: 'Cash Ledger' },
+                      { value: 'manual', label: 'Manual Ledger Balance' },
+                    ]}
+                  />
                 </div>
 
                 <div className="space-y-1">

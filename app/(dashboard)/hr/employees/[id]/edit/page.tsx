@@ -3,7 +3,15 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { PageHeader, Card, CardContent, Button, Input, LoadingSpinner } from '@/components/ui';
+import {
+  PageHeader,
+  Card,
+  CardContent,
+  Button,
+  Input,
+  LoadingSpinner,
+  Select,
+} from '@/components/ui';
 import {
   Users,
   ArrowLeft,
@@ -167,27 +175,18 @@ export default function EditEmployeePage() {
                 <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                   Select Department
                 </label>
-                <select
+                <Select
                   value={department}
-                  onChange={(e) => setDepartment(e.target.value)}
+                  onChange={(val) => setDepartment(val)}
                   className="w-full px-3 bg-background/30 border border-border/60 hover:border-primary/20 rounded-xl h-10 text-xs text-slate-300 focus:ring-0 outline-none cursor-pointer"
-                >
-                  <option value="Operations" className="bg-slate-950">
-                    Operations Department
-                  </option>
-                  <option value="Legal" className="bg-slate-950">
-                    Legal Counsel
-                  </option>
-                  <option value="Research" className="bg-slate-950">
-                    Bio-Research
-                  </option>
-                  <option value="Engineering" className="bg-slate-950">
-                    Engineering Suite
-                  </option>
-                  <option value="Sales" className="bg-slate-950">
-                    Commercial Sales
-                  </option>
-                </select>
+                  options={[
+                    { value: 'Operations', label: 'Operations Department' },
+                    { value: 'Legal', label: 'Legal Counsel' },
+                    { value: 'Research', label: 'Bio-Research' },
+                    { value: 'Engineering', label: 'Engineering Suite' },
+                    { value: 'Sales', label: 'Commercial Sales' },
+                  ]}
+                />
               </div>
             </div>
 
@@ -264,21 +263,16 @@ export default function EditEmployeePage() {
                 <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                   Employee Status
                 </label>
-                <select
+                <Select
                   value={status}
-                  onChange={(e) => setStatus(e.target.value)}
+                  onChange={(val) => setStatus(val)}
                   className="w-full px-3 bg-background/30 border border-border/60 hover:border-primary/20 rounded-xl h-10 text-xs text-slate-300 focus:ring-0 outline-none cursor-pointer"
-                >
-                  <option value="active" className="bg-slate-950">
-                    Active Duty
-                  </option>
-                  <option value="on-leave" className="bg-slate-950">
-                    On Paid Leave
-                  </option>
-                  <option value="terminated" className="bg-slate-950">
-                    Terminated
-                  </option>
-                </select>
+                  options={[
+                    { value: 'active', label: 'Active Duty' },
+                    { value: 'on-leave', label: 'On Paid Leave' },
+                    { value: 'terminated', label: 'Terminated' },
+                  ]}
+                />
               </div>
             </div>
 

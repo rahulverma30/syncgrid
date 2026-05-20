@@ -3,7 +3,15 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { PageHeader, Card, CardContent, Button, Input, LoadingSpinner } from '@/components/ui';
+import {
+  PageHeader,
+  Card,
+  CardContent,
+  Button,
+  Input,
+  LoadingSpinner,
+  Select,
+} from '@/components/ui';
 import {
   DollarSign,
   ArrowLeft,
@@ -163,22 +171,17 @@ export default function EditInvoicePage() {
                 </label>
                 <div className="relative select-none">
                   <Building className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                  <select
+                  <Select
                     value={companyId}
-                    disabled
-                    onChange={(e) => setCompanyId(e.target.value)}
+                    onChange={(val) => setCompanyId(val)}
+                    disabled={true}
                     className="w-full pl-10 pr-4 bg-background/20 border border-border/40 rounded-xl h-10 text-xs text-slate-500 cursor-not-allowed outline-none"
-                  >
-                    <option value="acme123" className="bg-slate-950">
-                      Acme Corp
-                    </option>
-                    <option value="globex123" className="bg-slate-950">
-                      Globex Inc
-                    </option>
-                    <option value="umbrella123" className="bg-slate-950">
-                      Umbrella Corp
-                    </option>
-                  </select>
+                    options={[
+                      { value: 'acme123', label: 'Acme Corp' },
+                      { value: 'globex123', label: 'Globex Inc' },
+                      { value: 'umbrella123', label: 'Umbrella Corp' },
+                    ]}
+                  />
                 </div>
               </div>
             </div>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Input, Badge, CenteredModal, ConfirmationModal } from '@/components/ui';
+import { Button, Input, Badge, CenteredModal, ConfirmationModal, Select } from '@/components/ui';
 import {
   Search,
   Download,
@@ -353,50 +353,62 @@ export const ClientTable: React.FC = () => {
       {/* Ledger filters & Export & View Columns */}
       <div className="flex justify-between items-center flex-wrap gap-3 pb-3 border-b border-border/40 select-none">
         <div className="flex gap-2 flex-wrap items-center">
-          <select
-            value={typeFilter}
-            onChange={(e) => setFilters({ typeFilter: e.target.value })}
-            className="h-8 rounded-lg border border-border/80 bg-background/50 px-2 text-xs text-foreground focus:outline-none"
-          >
-            <option value="">All Classifications</option>
-            <option value="VIP">VIP</option>
-            <option value="Enterprise">Enterprise</option>
-            <option value="Startup">Startup</option>
-            <option value="Retainer">Retainer</option>
-            <option value="High Value">High Value</option>
-            <option value="Inactive">Inactive</option>
-          </select>
+          <div className="w-40">
+            <Select
+              value={typeFilter}
+              onChange={(value) => setFilters({ typeFilter: value })}
+              options={[
+                { value: '', label: 'All Classifications' },
+                { value: 'VIP', label: 'VIP' },
+                { value: 'Enterprise', label: 'Enterprise' },
+                { value: 'Startup', label: 'Startup' },
+                { value: 'Retainer', label: 'Retainer' },
+                { value: 'High Value', label: 'High Value' },
+                { value: 'Inactive', label: 'Inactive' },
+              ]}
+              className="h-8 text-xs rounded-lg px-2"
+            />
+          </div>
 
-          <select
-            value={onboardingFilter}
-            onChange={(e) => setFilters({ onboardingFilter: e.target.value })}
-            className="h-8 rounded-lg border border-border/80 bg-background/50 px-2 text-xs text-foreground focus:outline-none"
-          >
-            <option value="">All Onboard Progress</option>
-            <option value="pending">Pending Onboarding</option>
-            <option value="in-progress">In Progress</option>
-            <option value="completed">Completed</option>
-          </select>
+          <div className="w-44">
+            <Select
+              value={onboardingFilter}
+              onChange={(value) => setFilters({ onboardingFilter: value })}
+              options={[
+                { value: '', label: 'All Onboard Progress' },
+                { value: 'pending', label: 'Pending Onboarding' },
+                { value: 'in-progress', label: 'In Progress' },
+                { value: 'completed', label: 'Completed' },
+              ]}
+              className="h-8 text-xs rounded-lg px-2"
+            />
+          </div>
 
-          <select
-            value={retentionFilter}
-            onChange={(e) => setFilters({ retentionFilter: e.target.value })}
-            className="h-8 rounded-lg border border-border/80 bg-background/50 px-2 text-xs text-foreground focus:outline-none"
-          >
-            <option value="">All Retention status</option>
-            <option value="retained">Retained (Stable)</option>
-            <option value="churn-risk">Churn Risk</option>
-            <option value="churned">Churned</option>
-          </select>
+          <div className="w-44">
+            <Select
+              value={retentionFilter}
+              onChange={(value) => setFilters({ retentionFilter: value })}
+              options={[
+                { value: '', label: 'All Retention status' },
+                { value: 'retained', label: 'Retained (Stable)' },
+                { value: 'churn-risk', label: 'Churn Risk' },
+                { value: 'churned', label: 'Churned' },
+              ]}
+              className="h-8 text-xs rounded-lg px-2"
+            />
+          </div>
 
-          <select
-            value={isArchivedFilter ? 'archived' : 'active'}
-            onChange={(e) => setFilters({ isArchivedFilter: e.target.value === 'archived' })}
-            className="h-8 rounded-lg border border-border/80 bg-background/50 px-2 text-xs text-foreground focus:outline-none"
-          >
-            <option value="active">Active Accounts</option>
-            <option value="archived">Archived Recoveries</option>
-          </select>
+          <div className="w-40">
+            <Select
+              value={isArchivedFilter ? 'archived' : 'active'}
+              onChange={(value) => setFilters({ isArchivedFilter: value === 'archived' })}
+              options={[
+                { value: 'active', label: 'Active Accounts' },
+                { value: 'archived', label: 'Archived Recoveries' },
+              ]}
+              className="h-8 text-xs rounded-lg px-2"
+            />
+          </div>
 
           <Button
             onClick={resetFilters}
@@ -534,16 +546,19 @@ export const ClientTable: React.FC = () => {
               accounts
             </span>
             <div className="flex gap-2 items-center">
-              <select
-                value={bulkManager}
-                onChange={(e) => setBulkManager(e.target.value)}
-                className="h-8 rounded-lg border border-border bg-background px-2 text-xs text-foreground focus:outline-none"
-              >
-                <option value="">Reassign Owner...</option>
-                <option value="Pepper Potts">Pepper Potts</option>
-                <option value="Lucius Fox">Lucius Fox</option>
-                <option value="Samantha Vance">Samantha Vance</option>
-              </select>
+              <div className="w-48">
+                <Select
+                  value={bulkManager}
+                  onChange={(value) => setBulkManager(value)}
+                  options={[
+                    { value: '', label: 'Reassign Owner...' },
+                    { value: 'Pepper Potts', label: 'Pepper Potts' },
+                    { value: 'Lucius Fox', label: 'Lucius Fox' },
+                    { value: 'Samantha Vance', label: 'Samantha Vance' },
+                  ]}
+                  className="h-8 text-xs rounded-lg px-2"
+                />
+              </div>
               <Button onClick={handleBulkReassign} size="sm" className="h-8 text-xs font-bold">
                 Apply Reassignment
               </Button>
@@ -775,16 +790,19 @@ export const ClientTable: React.FC = () => {
         <div className="flex justify-between items-center flex-wrap gap-3 pt-2 text-xs select-none">
           <div className="flex items-center gap-2">
             <span className="text-muted-foreground">Rows per page:</span>
-            <select
-              value={pageSize}
-              onChange={(e) => setPageSize(parseInt(e.target.value) || 10)}
-              className="h-8 rounded-lg border border-border/80 bg-background/50 px-2 text-xs text-foreground focus:outline-none"
-            >
-              <option value="5">5</option>
-              <option value="10">10</option>
-              <option value="20">20</option>
-              <option value="50">50</option>
-            </select>
+            <div className="w-16">
+              <Select
+                value={String(pageSize)}
+                onChange={(value) => setPageSize(parseInt(value) || 10)}
+                options={[
+                  { value: '5', label: '5' },
+                  { value: '10', label: '10' },
+                  { value: '20', label: '20' },
+                  { value: '50', label: '50' },
+                ]}
+                className="h-8 text-xs rounded-lg px-2"
+              />
+            </div>
             <span className="text-muted-foreground ml-2">
               Showing{' '}
               <span className="font-bold text-foreground">{(currentPage - 1) * pageSize + 1}</span>{' '}

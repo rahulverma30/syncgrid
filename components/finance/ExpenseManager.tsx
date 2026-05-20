@@ -13,7 +13,7 @@ import {
   ClipboardCheck,
   ArrowUpRight,
 } from 'lucide-react';
-import { Button, Input } from '@/components/ui';
+import { Button, Input, Select } from '@/components/ui';
 import { toast } from 'sonner';
 
 interface ExpenseManagerProps {
@@ -135,22 +135,26 @@ export const ExpenseManager: React.FC<ExpenseManagerProps> = ({
               className="pl-8 h-9 text-xs bg-background/30"
             />
           </div>
-          <select
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            className="h-9 px-3 border border-border bg-background/40 text-xs rounded-md focus:outline-none"
-          >
-            <option value="all">All Categories</option>
-            <option value="travel">Travel</option>
-            <option value="meals">Meals</option>
-            <option value="software">Software</option>
-            <option value="hardware">Hardware</option>
-            <option value="marketing">Marketing</option>
-            <option value="utilities">Utilities</option>
-            <option value="rent">Rent/Office</option>
-            <option value="consulting">Advisory/Consulting</option>
-            <option value="other">Other</option>
-          </select>
+          <div className="w-48">
+            <Select
+              value={categoryFilter}
+              onChange={(val) => setCategoryFilter(val)}
+              className="h-9"
+              placeholder="All Categories"
+              options={[
+                { value: 'all', label: 'All Categories' },
+                { value: 'travel', label: 'TravelSpend' },
+                { value: 'meals', label: 'Meals & Dining' },
+                { value: 'software', label: 'Software & SaaS' },
+                { value: 'hardware', label: 'Hardware' },
+                { value: 'marketing', label: 'Marketing' },
+                { value: 'utilities', label: 'Utilities' },
+                { value: 'rent', label: 'Rent/Office' },
+                { value: 'consulting', label: 'Advisory/Consult' },
+                { value: 'other', label: 'Other Ops' },
+              ]}
+            />
+          </div>
         </div>
 
         <Button
@@ -276,28 +280,26 @@ export const ExpenseManager: React.FC<ExpenseManagerProps> = ({
 
               <form onSubmit={handleFormSubmit} className="space-y-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
-                    Claim Category
-                  </label>
-                  <select
+                  <Select
+                    label="Claim Category"
                     value={category}
-                    onChange={(e) => setCategory(e.target.value as any)}
-                    className="w-full h-9 px-3 border border-border bg-background/40 text-xs rounded-md focus:outline-none"
-                  >
-                    <option value="travel">Travel & Flights</option>
-                    <option value="meals">Client Meals & Dining</option>
-                    <option value="software">Software Tools & SaaS</option>
-                    <option value="hardware">Hardware & Workstation</option>
-                    <option value="marketing">Marketing Outflows</option>
-                    <option value="utilities">Office Utilities</option>
-                    <option value="rent">Office Rent</option>
-                    <option value="consulting">Audit advisory consulting</option>
-                    <option value="other">Other Operations spend</option>
-                  </select>
+                    onChange={(val) => setCategory(val)}
+                    options={[
+                      { value: 'travel', label: 'Travel & Flights' },
+                      { value: 'meals', label: 'Client Meals & Dining' },
+                      { value: 'software', label: 'Software Tools & SaaS' },
+                      { value: 'hardware', label: 'Hardware & Workstation' },
+                      { value: 'marketing', label: 'Marketing Outflows' },
+                      { value: 'utilities', label: 'Office Utilities' },
+                      { value: 'rent', label: 'Office Rent' },
+                      { value: 'consulting', label: 'Audit advisory consulting' },
+                      { value: 'other', label: 'Other Operations spend' },
+                    ]}
+                  />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+                  <label className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
                     Merchant / Vendor Name
                   </label>
                   <Input
@@ -305,26 +307,21 @@ export const ExpenseManager: React.FC<ExpenseManagerProps> = ({
                     value={merchant}
                     onChange={(e) => setMerchant(e.target.value)}
                     placeholder="e.g. AWS Charges, Delta Flights"
-                    className="h-9 text-xs"
+                    className="h-10 text-xs"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
-                    Linked Project (Optional)
-                  </label>
-                  <select
+                  <Select
+                    label="Linked Project (Optional)"
                     value={selectedProject}
-                    onChange={(e) => setSelectedProject(e.target.value)}
-                    className="w-full h-9 px-3 border border-border bg-background/40 text-xs rounded-md focus:outline-none"
-                  >
-                    <option value="">No Linked Project...</option>
-                    {projects.map((p) => (
-                      <option key={p._id} value={p._id}>
-                        {p.name}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(val) => setSelectedProject(val)}
+                    placeholder="No Linked Project..."
+                    options={projects.map((p) => ({
+                      value: p._id,
+                      label: p.name,
+                    }))}
+                  />
                 </div>
 
                 <div className="space-y-1">

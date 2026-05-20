@@ -23,6 +23,7 @@ import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Select } from '@/components/ui/select';
 import { toast } from 'sonner';
 
 export default function InternalPortalManagerPage() {
@@ -42,7 +43,7 @@ export default function InternalPortalManagerPage() {
     try {
       setIsLoading(true);
       // Retrieve clients
-      const clientsRes = await fetch('/api/clients');
+      const clientsRes = await fetch('/api/protected/clients');
       const clientsBody = await clientsRes.json();
 
       if (clientsBody.success) {
@@ -66,7 +67,7 @@ export default function InternalPortalManagerPage() {
     if (!selectedClient) return;
     try {
       // Fetch internal projects linked to client
-      const projRes = await fetch(`/api/projects?clientId=${selectedClient._id}`);
+      const projRes = await fetch(`/api/protected/projects?clientId=${selectedClient._id}`);
       const projBody = await projRes.json();
 
       if (projBody.success) {
@@ -286,19 +287,17 @@ export default function InternalPortalManagerPage() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold text-slate-400">
-                    Portal Role
-                  </label>
-                  <select
-                    className="w-full bg-slate-950 border border-slate-850 text-slate-200 text-xs rounded-xl p-2.5 outline-none cursor-pointer"
+                  <Select
+                    label="Portal Role"
                     value={inviteRole}
-                    onChange={(e) => setInviteRole(e.target.value)}
-                  >
-                    <option value="Client Owner">Client Owner (Full Control)</option>
-                    <option value="Client Stakeholder">Client Stakeholder</option>
-                    <option value="Client Reviewer">Client Reviewer (Approvals only)</option>
-                    <option value="Client Finance Contact">Client Finance Contact</option>
-                  </select>
+                    onChange={(val) => setInviteRole(val)}
+                    options={[
+                      { value: 'Client Owner', label: 'Client Owner (Full Control)' },
+                      { value: 'Client Stakeholder', label: 'Client Stakeholder' },
+                      { value: 'Client Reviewer', label: 'Client Reviewer (Approvals only)' },
+                      { value: 'Client Finance Contact', label: 'Client Finance Contact' },
+                    ]}
+                  />
                 </div>
 
                 <Button

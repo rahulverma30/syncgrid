@@ -10,6 +10,7 @@ import {
   Input,
   LoadingSpinner,
   ConfirmationModal,
+  Select,
 } from '@/components/ui';
 import { Shield, ArrowLeft, Key, Trash2, Plus, Clock, Lock, Globe } from 'lucide-react';
 import { toast } from 'sonner';
@@ -199,21 +200,16 @@ export default function SettingsAccessPage() {
                 <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">
                   Target Scope Level
                 </label>
-                <select
+                <Select
                   value={newKeyScope}
-                  onChange={(e) => setNewKeyScope(e.target.value)}
+                  onChange={(val) => setNewKeyScope(val)}
                   className="w-full px-3 bg-background/30 border border-border/60 hover:border-primary/20 rounded-xl h-9 text-xs text-foreground/85 focus:ring-0 outline-none cursor-pointer"
-                >
-                  <option value="read-only" className="bg-background text-foreground">
-                    Read Only Scope
-                  </option>
-                  <option value="read-write" className="bg-background text-foreground">
-                    Read & Write Scope
-                  </option>
-                  <option value="admin" className="bg-background text-foreground">
-                    Full Admin Scope
-                  </option>
-                </select>
+                  options={[
+                    { value: 'read-only', label: 'Read Only Scope' },
+                    { value: 'read-write', label: 'Read & Write Scope' },
+                    { value: 'admin', label: 'Full Admin Scope' },
+                  ]}
+                />
               </div>
 
               <Button

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useHRStore } from '@/store/hrStore';
-import { Button, Badge, Input, Modal } from '@/components/ui';
+import { Button, Badge, Input, Modal, Select } from '@/components/ui';
 import { Users, Search, Plus, Mail, Phone, ChevronRight } from 'lucide-react';
 import { EmployeeDetailModal } from './EmployeeDetailModal';
 
@@ -127,66 +127,44 @@ export function HrDirectory() {
             <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
               Filter Department
             </label>
-            <select
+            <Select
               value={deptFilter}
-              onChange={(e) => setDeptFilter(e.target.value)}
-              className="w-full bg-card/20 border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary"
-            >
-              <option value="" className="bg-card text-foreground">
-                All Departments
-              </option>
-              {departmentsList.map((d) => (
-                <option key={d._id} value={d._id} className="bg-card text-foreground">
-                  {d.name}
-                </option>
-              ))}
-            </select>
+              onChange={setDeptFilter}
+              options={[
+                { value: '', label: 'All Departments' },
+                ...departmentsList.map((d) => ({ value: d._id, label: d.name })),
+              ]}
+            />
           </div>
           <div>
             <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
               Filter Status
             </label>
-            <select
+            <Select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full bg-card/20 border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary"
-            >
-              <option value="" className="bg-card text-foreground">
-                All Statuses
-              </option>
-              <option value="active" className="bg-card text-foreground">
-                Active
-              </option>
-              <option value="onboarding" className="bg-card text-foreground">
-                Onboarding
-              </option>
-              <option value="suspended" className="bg-card text-foreground">
-                Suspended
-              </option>
-            </select>
+              onChange={setStatusFilter}
+              options={[
+                { value: '', label: 'All Statuses' },
+                { value: 'active', label: 'Active' },
+                { value: 'onboarding', label: 'Onboarding' },
+                { value: 'suspended', label: 'Suspended' },
+              ]}
+            />
           </div>
           <div>
             <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
               Filter Work Mode
             </label>
-            <select
+            <Select
               value={modeFilter}
-              onChange={(e) => setModeFilter(e.target.value)}
-              className="w-full bg-card/20 border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary"
-            >
-              <option value="" className="bg-card text-foreground">
-                All Work Modes
-              </option>
-              <option value="remote" className="bg-card text-foreground">
-                Remote
-              </option>
-              <option value="hybrid" className="bg-card text-foreground">
-                Hybrid
-              </option>
-              <option value="office" className="bg-card text-foreground">
-                Office
-              </option>
-            </select>
+              onChange={setModeFilter}
+              options={[
+                { value: '', label: 'All Work Modes' },
+                { value: 'remote', label: 'Remote' },
+                { value: 'hybrid', label: 'Hybrid' },
+                { value: 'office', label: 'Office' },
+              ]}
+            />
           </div>
         </div>
       </div>
@@ -353,43 +331,29 @@ export function HrDirectory() {
               <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
                 Department
               </label>
-              <select
+              <Select
                 value={form.departmentId}
-                onChange={(e) => setForm({ ...form, departmentId: e.target.value })}
-                className="w-full bg-card/20 border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary"
-              >
-                <option value="" className="bg-card text-foreground">
-                  Select Department...
-                </option>
-                {departmentsList.map((d) => (
-                  <option key={d._id} value={d._id} className="bg-card text-foreground">
-                    {d.name}
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => setForm({ ...form, departmentId: val })}
+                options={[
+                  { value: '', label: 'Select Department...' },
+                  ...departmentsList.map((d) => ({ value: d._id, label: d.name })),
+                ]}
+              />
             </div>
             <div>
               <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
                 Employment Type
               </label>
-              <select
+              <Select
                 value={form.employmentType}
-                onChange={(e) => setForm({ ...form, employmentType: e.target.value })}
-                className="w-full bg-card/20 border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary"
-              >
-                <option value="full-time" className="bg-card text-foreground">
-                  Full Time
-                </option>
-                <option value="part-time" className="bg-card text-foreground">
-                  Part Time
-                </option>
-                <option value="contractor" className="bg-card text-foreground">
-                  Contractor
-                </option>
-                <option value="intern" className="bg-card text-foreground">
-                  Intern
-                </option>
-              </select>
+                onChange={(val) => setForm({ ...form, employmentType: val })}
+                options={[
+                  { value: 'full-time', label: 'Full Time' },
+                  { value: 'part-time', label: 'Part Time' },
+                  { value: 'contractor', label: 'Contractor' },
+                  { value: 'intern', label: 'Intern' },
+                ]}
+              />
             </div>
           </div>
 
@@ -398,21 +362,15 @@ export function HrDirectory() {
               <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
                 Work Mode
               </label>
-              <select
+              <Select
                 value={form.workMode}
-                onChange={(e) => setForm({ ...form, workMode: e.target.value })}
-                className="w-full bg-card/20 border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary"
-              >
-                <option value="remote" className="bg-card text-foreground">
-                  Remote
-                </option>
-                <option value="hybrid" className="bg-card text-foreground">
-                  Hybrid
-                </option>
-                <option value="office" className="bg-card text-foreground">
-                  Office
-                </option>
-              </select>
+                onChange={(val) => setForm({ ...form, workMode: val })}
+                options={[
+                  { value: 'remote', label: 'Remote' },
+                  { value: 'hybrid', label: 'Hybrid' },
+                  { value: 'office', label: 'Office' },
+                ]}
+              />
             </div>
             <div>
               <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">

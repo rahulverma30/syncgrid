@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Button, Input } from '@/components/ui';
+import { Button, Input, Select } from '@/components/ui';
 import {
   Users,
   DollarSign,
@@ -481,44 +481,41 @@ export const ProjectDetailDrawer: React.FC = () => {
           {activeTab === 'overview' && (
             <div className="space-y-5">
               {/* Dynamic Status / Priority Controllers */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4 items-end">
                 <div className="space-y-1">
-                  <label className="text-[9px] font-bold text-muted-foreground uppercase">
-                    Project Lifecycle Status
-                  </label>
-                  <select
+                  <Select
+                    label="Project Lifecycle Status"
                     value={selectedProject.status}
-                    onChange={(e) => handleStatusChange(e.target.value)}
-                    className="w-full h-8.5 rounded-md border border-input bg-background/50 px-2 py-1 text-xs text-foreground focus:outline-none font-bold"
-                  >
-                    <option value={selectedProject.status}>
-                      {ENTERPRISE_WORKFLOWS[selectedProject.status]?.label ||
-                        selectedProject.status}{' '}
-                      (Current)
-                    </option>
-                    {(ENTERPRISE_WORKFLOWS[selectedProject.status]?.allowedTransitions || []).map(
-                      (statusId) => (
-                        <option key={statusId} value={statusId}>
-                          {ENTERPRISE_WORKFLOWS[statusId]?.label || statusId}
-                        </option>
-                      )
-                    )}
-                  </select>
+                    onChange={(val) => handleStatusChange(val)}
+                    options={[
+                      {
+                        value: selectedProject.status,
+                        label: `${
+                          ENTERPRISE_WORKFLOWS[selectedProject.status]?.label ||
+                          selectedProject.status
+                        } (Current)`,
+                      },
+                      ...(
+                        ENTERPRISE_WORKFLOWS[selectedProject.status]?.allowedTransitions || []
+                      ).map((statusId) => ({
+                        value: statusId,
+                        label: ENTERPRISE_WORKFLOWS[statusId]?.label || statusId,
+                      })),
+                    ]}
+                  />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[9px] font-bold text-muted-foreground uppercase">
-                    Priority Escalation
-                  </label>
-                  <select
+                  <Select
+                    label="Priority Escalation"
                     value={selectedProject.priority}
-                    onChange={(e) => handlePriorityChange(e.target.value)}
-                    className="w-full h-8.5 rounded-md border border-input bg-background/50 px-2 py-1 text-xs text-foreground focus:outline-none"
-                  >
-                    <option value="low">Low Priority</option>
-                    <option value="medium">Medium Priority</option>
-                    <option value="high">High Priority</option>
-                    <option value="urgent">Urgent Priority</option>
-                  </select>
+                    onChange={(val) => handlePriorityChange(val)}
+                    options={[
+                      { value: 'low', label: 'Low Priority' },
+                      { value: 'medium', label: 'Medium Priority' },
+                      { value: 'high', label: 'High Priority' },
+                      { value: 'urgent', label: 'Urgent Priority' },
+                    ]}
+                  />
                 </div>
               </div>
 
@@ -605,18 +602,19 @@ export const ProjectDetailDrawer: React.FC = () => {
                     className="h-8 text-xs bg-background"
                     required
                   />
-                  <select
+                  <Select
                     value={newTeamRole}
-                    onChange={(e) => setNewTeamRole(e.target.value as any)}
-                    className="h-8 rounded border border-input bg-background px-2 text-xs focus:outline-none"
-                  >
-                    <option value="developer">Developer</option>
-                    <option value="project-manager">PM</option>
-                    <option value="team-lead">Lead</option>
-                    <option value="qa">QA</option>
-                    <option value="designer">Designer</option>
-                    <option value="devops">DevOps</option>
-                  </select>
+                    onChange={(val) => setNewTeamRole(val as any)}
+                    placeholder="Role"
+                    options={[
+                      { value: 'developer', label: 'Developer' },
+                      { value: 'project-manager', label: 'PM' },
+                      { value: 'team-lead', label: 'Lead' },
+                      { value: 'qa', label: 'QA' },
+                      { value: 'designer', label: 'Designer' },
+                      { value: 'devops', label: 'DevOps' },
+                    ]}
+                  />
                   <Input
                     type="number"
                     placeholder="Alloc %"
@@ -732,30 +730,27 @@ export const ProjectDetailDrawer: React.FC = () => {
                 />
 
                 {/* Milestone dependency and parent mapping */}
-                <div className="grid grid-cols-2 gap-2 text-left select-none">
+                <div className="grid grid-cols-2 gap-2 text-left items-end select-none">
                   <div className="space-y-0.5">
-                    <label className="text-[8px] font-black text-muted-foreground uppercase tracking-wide">
-                      Depends On (Blocker)
-                    </label>
-                    <select
-                      onChange={(e) => {
-                        const val = e.target.value;
+                    <Select
+                      label="Depends On (Blocker)"
+                      value=""
+                      onChange={(val) => {
                         if (val) {
                           if (!newMilestoneDependsOn.includes(val)) {
                             setNewMilestoneDependsOn([...newMilestoneDependsOn, val]);
                           }
-                          e.target.value = '';
                         }
                       }}
-                      className="w-full h-8 rounded border border-input bg-background px-2 text-xs focus:outline-none font-bold"
-                    >
-                      <option value="">Select Blocker...</option>
-                      {selectedProject.milestones?.map((m) => (
-                        <option key={m._id} value={m._id}>
-                          {m.title}
-                        </option>
-                      ))}
-                    </select>
+                      placeholder="Select Blocker..."
+                      options={[
+                        { value: '', label: 'Select Blocker...' },
+                        ...(selectedProject.milestones || []).map((m) => ({
+                          value: m._id,
+                          label: m.title,
+                        })),
+                      ]}
+                    />
                     {newMilestoneDependsOn.length > 0 && (
                       <div className="flex flex-wrap gap-1 mt-1">
                         {newMilestoneDependsOn.map((id) => {
@@ -779,21 +774,19 @@ export const ProjectDetailDrawer: React.FC = () => {
                   </div>
 
                   <div className="space-y-0.5">
-                    <label className="text-[8px] font-black text-muted-foreground uppercase tracking-wide">
-                      Parent Milestone
-                    </label>
-                    <select
+                    <Select
+                      label="Parent Milestone"
                       value={newMilestoneParent}
-                      onChange={(e) => setNewMilestoneParent(e.target.value)}
-                      className="w-full h-8 rounded border border-input bg-background px-2 text-xs focus:outline-none font-bold"
-                    >
-                      <option value="">None (Top Level)</option>
-                      {selectedProject.milestones?.map((m) => (
-                        <option key={m._id} value={m._id}>
-                          {m.title}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(val) => setNewMilestoneParent(val)}
+                      placeholder="None (Top Level)"
+                      options={[
+                        { value: '', label: 'None (Top Level)' },
+                        ...(selectedProject.milestones || []).map((m) => ({
+                          value: m._id,
+                          label: m.title,
+                        })),
+                      ]}
+                    />
                   </div>
                 </div>
 
@@ -1018,18 +1011,19 @@ export const ProjectDetailDrawer: React.FC = () => {
                     className="h-8 text-xs bg-background"
                     required
                   />
-                  <select
+                  <Select
                     value={newDocCat}
-                    onChange={(e) => setNewDocCat(e.target.value as any)}
-                    className="h-8 rounded border border-input bg-background px-2 text-xs focus:outline-none"
-                  >
-                    <option value="other">Other Asset</option>
-                    <option value="requirements">Requirements</option>
-                    <option value="design">Design Specs</option>
-                    <option value="technical">Technical Architecture</option>
-                    <option value="meeting-notes">Meeting Notes</option>
-                    <option value="contract">Legal / Contract</option>
-                  </select>
+                    onChange={(val) => setNewDocCat(val as any)}
+                    placeholder="Category"
+                    options={[
+                      { value: 'other', label: 'Other Asset' },
+                      { value: 'requirements', label: 'Requirements' },
+                      { value: 'design', label: 'Design Specs' },
+                      { value: 'technical', label: 'Technical Architecture' },
+                      { value: 'meeting-notes', label: 'Meeting Notes' },
+                      { value: 'contract', label: 'Legal / Contract' },
+                    ]}
+                  />
                 </div>
                 <Input
                   placeholder="URL Asset Link (e.g. Google Drive / Figma / GitHub)"
@@ -1095,7 +1089,7 @@ export const ProjectDetailDrawer: React.FC = () => {
                 <span className="text-[9px] font-bold text-muted-foreground uppercase block">
                   Register Project Risk factor
                 </span>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-2 items-end">
                   <Input
                     placeholder="Risk Title"
                     value={newRiskTitle}
@@ -1103,35 +1097,34 @@ export const ProjectDetailDrawer: React.FC = () => {
                     className="h-8 text-xs bg-background"
                     required
                   />
-                  <select
+                  <Select
                     value={newRiskSeverity}
-                    onChange={(e) => setNewRiskSeverity(e.target.value as any)}
-                    className="h-8 rounded border border-input bg-background px-2 text-xs focus:outline-none"
-                  >
-                    <option value="low">Low Severity</option>
-                    <option value="medium">Medium Severity</option>
-                    <option value="high">High Severity</option>
-                    <option value="critical">CRITICAL SEVERITY</option>
-                  </select>
+                    onChange={(val) => setNewRiskSeverity(val as any)}
+                    placeholder="Severity"
+                    options={[
+                      { value: 'low', label: 'Low Severity' },
+                      { value: 'medium', label: 'Medium Severity' },
+                      { value: 'high', label: 'High Severity' },
+                      { value: 'critical', label: 'CRITICAL SEVERITY' },
+                    ]}
+                  />
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 text-left">
+                <div className="grid grid-cols-2 gap-2 text-left items-end">
                   <div className="space-y-0.5">
-                    <label className="text-[8px] font-black text-muted-foreground uppercase tracking-wide">
-                      Risk Category
-                    </label>
-                    <select
+                    <Select
+                      label="Risk Category"
                       value={newRiskCategory}
-                      onChange={(e) => setNewRiskCategory(e.target.value as any)}
-                      className="w-full h-8 rounded border border-input bg-background px-2 text-xs focus:outline-none font-bold"
-                    >
-                      <option value="technical">Technical Architecture</option>
-                      <option value="staffing">Staffing / Resources</option>
-                      <option value="financial">Financial / Budgetary</option>
-                      <option value="timeline">Timeline / Deadlines</option>
-                      <option value="dependency">External Dependencies</option>
-                      <option value="operational">Operational Systems</option>
-                    </select>
+                      onChange={(val) => setNewRiskCategory(val as any)}
+                      options={[
+                        { value: 'technical', label: 'Technical Architecture' },
+                        { value: 'staffing', label: 'Staffing / Resources' },
+                        { value: 'financial', label: 'Financial / Budgetary' },
+                        { value: 'timeline', label: 'Timeline / Deadlines' },
+                        { value: 'dependency', label: 'External Dependencies' },
+                        { value: 'operational', label: 'Operational Systems' },
+                      ]}
+                    />
                   </div>
                   <div className="space-y-0.5 flex flex-col justify-end">
                     <div className="p-1 rounded bg-primary/10 border border-primary/20 text-center select-none">

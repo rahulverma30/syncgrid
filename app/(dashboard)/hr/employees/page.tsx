@@ -10,6 +10,7 @@ import {
   Input,
   LoadingSpinner,
   ConfirmationModal,
+  Select,
 } from '@/components/ui';
 import {
   Users,
@@ -272,43 +273,29 @@ export default function HREmployeesPage() {
           <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
             <div className="flex items-center gap-1.5 bg-background/30 px-3 py-1.5 rounded-xl border border-border/40">
               <Building className="h-3 w-3 text-slate-400" />
-              <select
+              <Select
                 value={deptFilter}
-                onChange={(e) => setDeptFilter(e.target.value)}
+                onChange={(val) => setDeptFilter(val)}
                 className="bg-transparent border-0 text-[10px] font-bold uppercase tracking-wider text-slate-300 focus:ring-0 outline-none cursor-pointer"
-              >
-                <option value="" className="bg-slate-900">
-                  All Departments
-                </option>
-                <option value="Legal" className="bg-slate-900">
-                  Legal
-                </option>
-                <option value="Operations" className="bg-slate-900">
-                  Operations
-                </option>
-                <option value="Research" className="bg-slate-900">
-                  Research
-                </option>
-              </select>
+                options={[
+                  { value: 'Legal', label: 'Legal' },
+                  { value: 'Operations', label: 'Operations' },
+                  { value: 'Research', label: 'Research' },
+                ]}
+              />
             </div>
 
             <div className="flex items-center gap-1.5 bg-background/30 px-3 py-1.5 rounded-xl border border-border/40">
               <Filter className="h-3 w-3 text-slate-400" />
-              <select
+              <Select
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
+                onChange={(val) => setStatusFilter(val)}
                 className="bg-transparent border-0 text-[10px] font-bold uppercase tracking-wider text-slate-300 focus:ring-0 outline-none cursor-pointer"
-              >
-                <option value="" className="bg-slate-900">
-                  All Statuses
-                </option>
-                <option value="active" className="bg-slate-900">
-                  Active
-                </option>
-                <option value="on-leave" className="bg-slate-900">
-                  On Leave
-                </option>
-              </select>
+                options={[
+                  { value: 'active', label: 'Active' },
+                  { value: 'on-leave', label: 'On Leave' },
+                ]}
+              />
             </div>
           </div>
         </div>

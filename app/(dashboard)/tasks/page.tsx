@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { Select } from '@/components/ui';
 import { useTasksStore } from '@/store/tasksStore';
 import { TaskCreateModal } from '@/components/tasks/TaskCreateModal';
 import { TaskDetailModal } from '@/components/tasks/TaskDetailModal';
@@ -231,18 +232,18 @@ export default function TasksPage() {
             <label className="text-[9px] font-bold text-muted-foreground uppercase">
               Project Filter
             </label>
-            <select
-              className="w-full bg-background border border-border rounded text-[10px] px-2 py-1.5 focus:outline-none"
-              value={filters.projectId}
-              onChange={(e) => setFilters({ projectId: e.target.value })}
-            >
-              <option value="">All Projects</option>
-              {projects.map((p) => (
-                <option key={p._id} value={p._id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
+            <Select
+              value={filters.projectId || ''}
+              onChange={(val) => setFilters({ projectId: val })}
+              placeholder="All Projects"
+              options={[
+                { value: '', label: 'All Projects' },
+                ...projects.map((p) => ({
+                  value: p._id,
+                  label: p.name,
+                })),
+              ]}
+            />
           </div>
 
           {/* Priority filter */}
@@ -250,17 +251,18 @@ export default function TasksPage() {
             <label className="text-[9px] font-bold text-muted-foreground uppercase">
               Priority Filter
             </label>
-            <select
-              className="w-full bg-background border border-border rounded text-[10px] px-2 py-1.5 focus:outline-none"
-              value={filters.priority}
-              onChange={(e) => setFilters({ priority: e.target.value })}
-            >
-              <option value="">All Priorities</option>
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-              <option value="urgent">Urgent</option>
-            </select>
+            <Select
+              value={filters.priority || ''}
+              onChange={(val) => setFilters({ priority: val })}
+              placeholder="All Priorities"
+              options={[
+                { value: '', label: 'All Priorities' },
+                { value: 'low', label: 'Low' },
+                { value: 'medium', label: 'Medium' },
+                { value: 'high', label: 'High' },
+                { value: 'urgent', label: 'Urgent' },
+              ]}
+            />
           </div>
 
           {/* Severity filter */}
@@ -268,17 +270,18 @@ export default function TasksPage() {
             <label className="text-[9px] font-bold text-muted-foreground uppercase">
               Severity Filter
             </label>
-            <select
-              className="w-full bg-background border border-border rounded text-[10px] px-2 py-1.5 focus:outline-none"
-              value={filters.severity}
-              onChange={(e) => setFilters({ severity: e.target.value })}
-            >
-              <option value="">All Severities</option>
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-              <option value="critical">Critical</option>
-            </select>
+            <Select
+              value={filters.severity || ''}
+              onChange={(val) => setFilters({ severity: val })}
+              placeholder="All Severities"
+              options={[
+                { value: '', label: 'All Severities' },
+                { value: 'low', label: 'Low' },
+                { value: 'medium', label: 'Medium' },
+                { value: 'high', label: 'High' },
+                { value: 'critical', label: 'Critical' },
+              ]}
+            />
           </div>
 
           {/* Reset Filters */}

@@ -499,17 +499,18 @@ export function EmployeeDetailModal({ employeeId, isOpen, onClose }: EmployeeDet
                 <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground block">
                   Onboarding Checklist Template
                 </span>
-                <select
+                <Select
                   value={template}
-                  onChange={(e) => handleUpdateTemplate(e.target.value)}
-                  className="bg-card text-foreground border border-border rounded-lg px-2.5 py-1 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-primary shadow-sm hover:border-primary"
-                >
-                  <option value="standard">Standard onboarding</option>
-                  <option value="developer">💻 Developer Workflow</option>
-                  <option value="hr">💼 HR Operations</option>
-                  <option value="designer">🎨 Designer Onboarding</option>
-                  <option value="contractor">📄 Contractor clearance</option>
-                </select>
+                  onChange={handleUpdateTemplate}
+                  options={[
+                    { value: 'standard', label: 'Standard onboarding' },
+                    { value: 'developer', label: '💻 Developer Workflow' },
+                    { value: 'hr', label: '💼 HR Operations' },
+                    { value: 'designer', label: '🎨 Designer Onboarding' },
+                    { value: 'contractor', label: '📄 Contractor clearance' },
+                  ]}
+                  className="w-48 text-xs font-semibold"
+                />
               </div>
 
               <div className="space-y-2 mt-3">

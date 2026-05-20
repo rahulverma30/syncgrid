@@ -23,10 +23,12 @@ export const GET = withApiPermission(
       const projectManager = url.searchParams.get('projectManager') || '';
       const riskLevel = url.searchParams.get('riskLevel') || '';
       const billingType = url.searchParams.get('billingType') || '';
+      const clientId = url.searchParams.get('clientId') || '';
       const isArchivedParam = url.searchParams.get('isArchived');
       const isArchived = isArchivedParam === 'true';
 
       const query: Record<string, any> = { companyId, isArchived };
+      if (clientId) query.clientId = clientId;
 
       // Dynamic Permission: Only project managers/admins can view all projects. Non-elevated users see assigned projects.
       const hasElevatedAccess = hasPermission(session.user.permissions || [], 'projects', 'manage');

@@ -3,7 +3,15 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { PageHeader, Card, CardContent, Button, Input, LoadingSpinner } from '@/components/ui';
+import {
+  PageHeader,
+  Card,
+  CardContent,
+  Button,
+  Input,
+  LoadingSpinner,
+  Select,
+} from '@/components/ui';
 import {
   DollarSign,
   ArrowLeft,
@@ -115,24 +123,17 @@ export default function CreateExpensePage() {
                 </label>
                 <div className="relative">
                   <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                  <select
+                  <Select
                     value={category}
-                    onChange={(e) => setCategory(e.target.value)}
+                    onChange={(val) => setCategory(val)}
                     className="w-full pl-10 pr-4 bg-background/30 border border-border/60 hover:border-primary/20 rounded-xl h-10 text-xs text-slate-300 focus:ring-0 outline-none cursor-pointer"
-                  >
-                    <option value="software" className="bg-slate-950">
-                      Software / SaaS
-                    </option>
-                    <option value="marketing" className="bg-slate-950">
-                      Marketing Ads
-                    </option>
-                    <option value="travel" className="bg-slate-950">
-                      Travel & Meals
-                    </option>
-                    <option value="office" className="bg-slate-950">
-                      Office Operations
-                    </option>
-                  </select>
+                    options={[
+                      { value: 'software', label: 'Software / SaaS' },
+                      { value: 'marketing', label: 'Marketing Ads' },
+                      { value: 'travel', label: 'Travel & Meals' },
+                      { value: 'office', label: 'Office Operations' },
+                    ]}
+                  />
                 </div>
               </div>
             </div>
@@ -158,21 +159,16 @@ export default function CreateExpensePage() {
                 <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                   Payment Method
                 </label>
-                <select
+                <Select
                   value={paymentMethod}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
+                  onChange={(val) => setPaymentMethod(val)}
                   className="w-full px-3 bg-background/30 border border-border/60 hover:border-primary/20 rounded-xl h-10 text-xs text-slate-300 focus:ring-0 outline-none cursor-pointer"
-                >
-                  <option value="Corporate Card" className="bg-slate-950">
-                    Corporate Card
-                  </option>
-                  <option value="ACH Transfer" className="bg-slate-950">
-                    ACH Transfer
-                  </option>
-                  <option value="Reimbursement" className="bg-slate-950">
-                    Personal Reimbursement
-                  </option>
-                </select>
+                  options={[
+                    { value: 'Corporate Card', label: 'Corporate Card' },
+                    { value: 'ACH Transfer', label: 'ACH Transfer' },
+                    { value: 'Reimbursement', label: 'Personal Reimbursement' },
+                  ]}
+                />
               </div>
             </div>
 

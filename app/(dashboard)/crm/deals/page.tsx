@@ -10,6 +10,7 @@ import {
   Input,
   LoadingSpinner,
   ConfirmationModal,
+  Select,
 } from '@/components/ui';
 import {
   TrendingUp,
@@ -247,55 +248,33 @@ export default function CRMDealsPage() {
           <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
             <div className="flex items-center gap-1.5 bg-background/30 px-3 py-1.5 rounded-xl border border-border/40">
               <Filter className="h-3 w-3 text-slate-400" />
-              <select
+              <Select
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
+                onChange={(val) => setStatusFilter(val)}
                 className="bg-transparent border-0 text-[10px] font-bold uppercase tracking-wider text-slate-300 focus:ring-0 outline-none cursor-pointer"
-              >
-                <option value="" className="bg-slate-900">
-                  All Stages
-                </option>
-                <option value="new" className="bg-slate-900">
-                  New
-                </option>
-                <option value="contacted" className="bg-slate-900">
-                  Contacted
-                </option>
-                <option value="proposal" className="bg-slate-900">
-                  Proposal Sent
-                </option>
-                <option value="negotiation" className="bg-slate-900">
-                  Negotiating
-                </option>
-                <option value="won" className="bg-slate-900">
-                  Won
-                </option>
-                <option value="lost" className="bg-slate-900">
-                  Lost
-                </option>
-              </select>
+                options={[
+                  { value: 'new', label: 'New' },
+                  { value: 'contacted', label: 'Contacted' },
+                  { value: 'proposal', label: 'Proposal Sent' },
+                  { value: 'negotiation', label: 'Negotiating' },
+                  { value: 'won', label: 'Won' },
+                  { value: 'lost', label: 'Lost' },
+                ]}
+              />
             </div>
 
             <div className="flex items-center gap-1.5 bg-background/30 px-3 py-1.5 rounded-xl border border-border/40">
               <Tag className="h-3 w-3 text-slate-400" />
-              <select
+              <Select
                 value={priorityFilter}
-                onChange={(e) => setPriorityFilter(e.target.value)}
+                onChange={(val) => setPriorityFilter(val)}
                 className="bg-transparent border-0 text-[10px] font-bold uppercase tracking-wider text-slate-300 focus:ring-0 outline-none cursor-pointer"
-              >
-                <option value="" className="bg-slate-900">
-                  All Priorities
-                </option>
-                <option value="high" className="bg-slate-900">
-                  High
-                </option>
-                <option value="medium" className="bg-slate-900">
-                  Medium
-                </option>
-                <option value="low" className="bg-slate-900">
-                  Low
-                </option>
-              </select>
+                options={[
+                  { value: 'high', label: 'High' },
+                  { value: 'medium', label: 'Medium' },
+                  { value: 'low', label: 'Low' },
+                ]}
+              />
             </div>
           </div>
         </div>

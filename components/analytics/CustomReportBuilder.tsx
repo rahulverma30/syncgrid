@@ -6,6 +6,7 @@ import { ChartWrapper } from './ChartWrapper';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui';
 import { toast } from 'sonner';
 import { FileSpreadsheet, Download, Filter, Calendar, Send, Printer } from 'lucide-react';
 import { ICustomReportQuery } from '@/types/analytics';
@@ -239,10 +240,10 @@ export function CustomReportBuilder() {
               <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                 Module Category
               </label>
-              <select
+              <Select
                 value={reportQuery.type}
-                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-                  const newType = e.target.value as ICustomReportQuery['type'];
+                onChange={(val) => {
+                  const newType = val as ICustomReportQuery['type'];
                   setReportQuery({
                     type: newType,
                     groupBy:
@@ -259,46 +260,37 @@ export function CustomReportBuilder() {
                           : ['count'],
                   });
                 }}
-                className="w-full bg-background border border-border rounded-lg p-2 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-primary"
-              >
-                <option value="financial">Financial Ledger Cashflows</option>
-                <option value="workforce">Workforce Utilization logs</option>
-                <option value="productivity">Task Productivity Delivery</option>
-              </select>
+                className="h-9 text-xs rounded-lg px-2 bg-background border-border"
+                options={[
+                  { value: 'financial', label: 'Financial Ledger Cashflows' },
+                  { value: 'workforce', label: 'Workforce Utilization logs' },
+                  { value: 'productivity', label: 'Task Productivity Delivery' },
+                ]}
+              />
             </div>
 
             <div className="space-y-1.5">
               <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                 Group Data By
               </label>
-              <select
+              <Select
                 value={reportQuery.groupBy}
-                onChange={(e) => setReportQuery({ groupBy: e.target.value })}
-                className="w-full bg-background border border-border rounded-lg p-2 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-primary"
-              >
-                {groupingOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => setReportQuery({ groupBy: val })}
+                className="h-9 text-xs rounded-lg px-2 bg-background border-border"
+                options={groupingOptions}
+              />
             </div>
 
             <div className="space-y-1.5">
               <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                 Aggregation metric
               </label>
-              <select
+              <Select
                 value={reportQuery.metrics[0]}
-                onChange={(e) => setReportQuery({ metrics: [e.target.value] })}
-                className="w-full bg-background border border-border rounded-lg p-2 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-primary"
-              >
-                {metricOptions.map((opt) => (
-                  <option key={opt.key} value={opt.key}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => setReportQuery({ metrics: [val] })}
+                className="h-9 text-xs rounded-lg px-2 bg-background border-border"
+                options={metricOptions.map((opt) => ({ value: opt.key, label: opt.label }))}
+              />
             </div>
 
             <div className="space-y-3 pt-2">

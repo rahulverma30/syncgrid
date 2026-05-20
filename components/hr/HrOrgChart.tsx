@@ -12,6 +12,7 @@ import {
   Badge,
   Input,
   Modal,
+  Select,
 } from '@/components/ui';
 import { Network, Plus, User, Users, ChevronDown, ChevronRight, FolderOpen } from 'lucide-react';
 
@@ -211,47 +212,33 @@ export function HrOrgChart() {
           </div>
 
           <div>
-            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
-              Parent Department
-            </label>
-            <select
+            <Select
+              label="Parent Department"
               value={form.parentDepartmentId}
-              onChange={(e) => setForm({ ...form, parentDepartmentId: e.target.value })}
-              className="w-full bg-card/20 border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary"
-            >
-              <option value="" className="bg-card text-foreground">
-                None (Make Root Department)
-              </option>
-              {departmentsList.map((d) => (
-                <option key={d._id} value={d._id} className="bg-card text-foreground">
-                  {d.name}
-                </option>
-              ))}
-            </select>
+              onChange={(value) => setForm({ ...form, parentDepartmentId: value })}
+              options={[
+                { value: '', label: 'None (Make Root Department)' },
+                ...departmentsList.map((d) => ({
+                  value: d._id,
+                  label: d.name,
+                })),
+              ]}
+            />
           </div>
 
           <div>
-            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
-              Manager
-            </label>
-            <select
+            <Select
+              label="Manager"
               value={form.managerId}
-              onChange={(e) => setForm({ ...form, managerId: e.target.value })}
-              className="w-full bg-card/20 border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary"
-            >
-              <option value="" className="bg-card text-foreground">
-                Select Manager...
-              </option>
-              {employees.map((emp) => (
-                <option
-                  key={emp._id}
-                  value={emp.userId?._id || ''}
-                  className="bg-card text-foreground"
-                >
-                  {emp.fullName}
-                </option>
-              ))}
-            </select>
+              onChange={(value) => setForm({ ...form, managerId: value })}
+              options={[
+                { value: '', label: 'Select Manager...' },
+                ...employees.map((emp) => ({
+                  value: emp.userId?._id || '',
+                  label: emp.fullName,
+                })),
+              ]}
+            />
           </div>
 
           <div>

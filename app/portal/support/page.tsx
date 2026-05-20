@@ -22,7 +22,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
-import { EmptyState } from '@/components/ui';
+import { EmptyState, Select } from '@/components/ui';
 import { toast } from 'sonner';
 import { usePortalRealtime } from '@/providers/portal-realtime-provider';
 
@@ -259,35 +259,37 @@ export default function PortalSupportPage() {
                 <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
                   Category
                 </label>
-                <select
-                  className="w-full bg-slate-950 border border-slate-850 text-slate-200 text-xs rounded-xl p-3 focus:border-blue-500 focus:ring-blue-500/25 cursor-pointer outline-none"
+                <Select
                   value={category}
                   onChange={(e: any) => setCategory(e.target.value)}
                   disabled={isSubmitting}
-                >
-                  <option value="general">General Help</option>
-                  <option value="billing">Billing issue</option>
-                  <option value="technical">Technical Support</option>
-                  <option value="bug">Report a Bug</option>
-                  <option value="feature-request">Feature Request</option>
-                </select>
+                  className="w-full bg-slate-950 border border-slate-850 text-slate-200 text-xs rounded-xl p-3 focus:border-blue-500 focus:ring-blue-500/25 cursor-pointer outline-none"
+                  options={[
+                    { value: 'general', label: 'General Help' },
+                    { value: 'billing', label: 'Billing issue' },
+                    { value: 'technical', label: 'Technical Support' },
+                    { value: 'bug', label: 'Report a Bug' },
+                    { value: 'feature-request', label: 'Feature Request' },
+                  ]}
+                />
               </div>
 
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
                   Priority
                 </label>
-                <select
-                  className="w-full bg-slate-950 border border-slate-850 text-slate-200 text-xs rounded-xl p-3 focus:border-blue-500 focus:ring-blue-500/25 cursor-pointer outline-none"
+                <Select
                   value={priority}
                   onChange={(e: any) => setPriority(e.target.value)}
                   disabled={isSubmitting}
-                >
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                  <option value="urgent">Urgent</option>
-                </select>
+                  className="w-full bg-slate-950 border border-slate-850 text-slate-200 text-xs rounded-xl p-3 focus:border-blue-500 focus:ring-blue-500/25 cursor-pointer outline-none"
+                  options={[
+                    { value: 'low', label: 'Low' },
+                    { value: 'medium', label: 'Medium' },
+                    { value: 'high', label: 'High' },
+                    { value: 'urgent', label: 'Urgent' },
+                  ]}
+                />
               </div>
             </div>
 

@@ -4,6 +4,7 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useAnalyticsStore } from '@/store/analyticsStore';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Select } from '@/components/ui';
 import { toast } from 'sonner';
 import {
   TrendingUp,
@@ -191,14 +192,15 @@ export function ProfitabilityForecaster() {
             <Sliders className="h-3.5 w-3.5" />
             Forecast Target
           </label>
-          <select
+          <Select
             value={metricName}
-            onChange={(e) => setMetricName(e.target.value as 'revenue' | 'workload')}
-            className="w-full bg-background border border-border rounded-lg p-2 text-xs font-bold focus:outline-none focus:ring-1 focus:ring-primary"
-          >
-            <option value="revenue">Corporate Cashflow Revenue</option>
-            <option value="workload">Workforce Billable Hours</option>
-          </select>
+            onChange={(val) => setMetricName(val as 'revenue' | 'workload')}
+            className="h-9 text-xs rounded-lg px-2 bg-background border-border"
+            options={[
+              { value: 'revenue', label: 'Corporate Cashflow Revenue' },
+              { value: 'workload', label: 'Workforce Billable Hours' },
+            ]}
+          />
         </div>
 
         <div className="space-y-1">
@@ -206,15 +208,16 @@ export function ProfitabilityForecaster() {
             <CalendarDays className="h-3.5 w-3.5" />
             Timeline Horizon
           </label>
-          <select
-            value={timelineMonths}
-            onChange={(e) => setTimelineMonths(Number(e.target.value))}
-            className="w-full bg-background border border-border rounded-lg p-2 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-primary"
-          >
-            <option value={3}>Next 3 Months (Quarterly Projection)</option>
-            <option value={6}>Next 6 Months (Mid-Year Projection)</option>
-            <option value={12}>Next 12 Months (Annual Target Model)</option>
-          </select>
+          <Select
+            value={String(timelineMonths)}
+            onChange={(val) => setTimelineMonths(Number(val))}
+            className="h-9 text-xs rounded-lg px-2 bg-background border-border"
+            options={[
+              { value: '3', label: 'Next 3 Months (Quarterly Projection)' },
+              { value: '6', label: 'Next 6 Months (Mid-Year Projection)' },
+              { value: '12', label: 'Next 12 Months (Annual Target Model)' },
+            ]}
+          />
         </div>
 
         <div className="space-y-1">
@@ -222,15 +225,16 @@ export function ProfitabilityForecaster() {
             <Gauge className="h-3.5 w-3.5" />
             Confidence Margin
           </label>
-          <select
-            value={confidenceInterval}
-            onChange={(e) => setConfidenceInterval(Number(e.target.value))}
-            className="w-full bg-background border border-border rounded-lg p-2 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-primary"
-          >
-            <option value={90}>90% Confidence Interval Bounds</option>
-            <option value={95}>95% Confidence Interval Bounds (Standard)</option>
-            <option value={99}>99% Confidence Interval Bounds (High-Risk)</option>
-          </select>
+          <Select
+            value={String(confidenceInterval)}
+            onChange={(val) => setConfidenceInterval(Number(val))}
+            className="h-9 text-xs rounded-lg px-2 bg-background border-border"
+            options={[
+              { value: '90', label: '90% Confidence Interval Bounds' },
+              { value: '95', label: '95% Confidence Interval Bounds (Standard)' },
+              { value: '99', label: '99% Confidence Interval Bounds (High-Risk)' },
+            ]}
+          />
         </div>
 
         <div className="space-y-1">
@@ -238,14 +242,15 @@ export function ProfitabilityForecaster() {
             <Brain className="h-3.5 w-3.5" />
             Equation Strategy
           </label>
-          <select
+          <Select
             value={forecastMethod}
-            onChange={(e) => setForecastMethod(e.target.value as 'holt-winters' | 'ols')}
-            className="w-full bg-background border border-border rounded-lg p-2 text-xs font-bold focus:outline-none focus:ring-1 focus:ring-primary text-primary"
-          >
-            <option value="holt-winters">Holt-Winters Double Exponential</option>
-            <option value="ols">OLS Linear Regression (Linear)</option>
-          </select>
+            onChange={(val) => setForecastMethod(val as 'holt-winters' | 'ols')}
+            className="h-9 text-xs rounded-lg px-2 bg-background border-border text-primary font-bold"
+            options={[
+              { value: 'holt-winters', label: 'Holt-Winters Double Exponential' },
+              { value: 'ols', label: 'OLS Linear Regression (Linear)' },
+            ]}
+          />
         </div>
 
         <div className="pt-4 lg:pt-0 lg:flex lg:justify-end">

@@ -3,7 +3,15 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { PageHeader, Card, CardContent, Button, Input, LoadingSpinner } from '@/components/ui';
+import {
+  PageHeader,
+  Card,
+  CardContent,
+  Button,
+  Input,
+  LoadingSpinner,
+  Select,
+} from '@/components/ui';
 import {
   TrendingUp,
   Mail,
@@ -193,45 +201,33 @@ export default function CreateDealPage() {
                 <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                   Pipeline Stage
                 </label>
-                <select
+                <Select
                   value={status}
-                  onChange={(e) => setStatus(e.target.value)}
+                  onChange={(val) => setStatus(val)}
                   className="w-full px-3 bg-background/30 border border-border/60 hover:border-primary/20 rounded-xl h-10 text-xs text-slate-300 focus:ring-0 outline-none cursor-pointer"
-                >
-                  <option value="new" className="bg-slate-950">
-                    New Lead
-                  </option>
-                  <option value="contacted" className="bg-slate-950">
-                    Contacted
-                  </option>
-                  <option value="proposal" className="bg-slate-950">
-                    Proposal Sent
-                  </option>
-                  <option value="negotiation" className="bg-slate-950">
-                    Negotiating
-                  </option>
-                </select>
+                  options={[
+                    { value: 'new', label: 'New Lead' },
+                    { value: 'contacted', label: 'Contacted' },
+                    { value: 'proposal', label: 'Proposal Sent' },
+                    { value: 'negotiation', label: 'Negotiating' },
+                  ]}
+                />
               </div>
 
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                   Priority Rating
                 </label>
-                <select
+                <Select
                   value={priority}
-                  onChange={(e) => setPriority(e.target.value)}
+                  onChange={(val) => setPriority(val)}
                   className="w-full px-3 bg-background/30 border border-border/60 hover:border-primary/20 rounded-xl h-10 text-xs text-slate-300 focus:ring-0 outline-none cursor-pointer"
-                >
-                  <option value="low" className="bg-slate-950">
-                    Low Priority
-                  </option>
-                  <option value="medium" className="bg-slate-950">
-                    Medium Priority
-                  </option>
-                  <option value="high" className="bg-slate-950">
-                    High Priority
-                  </option>
-                </select>
+                  options={[
+                    { value: 'low', label: 'Low Priority' },
+                    { value: 'medium', label: 'Medium Priority' },
+                    { value: 'high', label: 'High Priority' },
+                  ]}
+                />
               </div>
 
               <div className="space-y-2">

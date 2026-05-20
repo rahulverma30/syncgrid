@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useCommunicationStore } from '@/store';
 import { useSession } from 'next-auth/react';
-import { PageHeader, Button, LoadingSpinner, Modal } from '@/components/ui';
+import { PageHeader, Button, LoadingSpinner, Modal, Select } from '@/components/ui';
 import {
   AnnouncementBanner,
   WorkspaceSidebar,
@@ -85,18 +85,10 @@ export default function CollaborationDashboard() {
         if (data.success) {
           setAllUsers(data.data);
         } else {
-          setAllUsers([
-            { _id: 'mock-1', name: 'Sarah Jenkins', email: 'sarah.j@syncgrid.com' },
-            { _id: 'mock-2', name: 'Marcus Brody', email: 'marcus.b@syncgrid.com' },
-            { _id: 'mock-3', name: 'Elena Rostova', email: 'elena.r@syncgrid.com' },
-          ]);
+          setAllUsers([]);
         }
       } catch (err) {
-        setAllUsers([
-          { _id: 'mock-1', name: 'Sarah Jenkins', email: 'sarah.j@syncgrid.com' },
-          { _id: 'mock-2', name: 'Marcus Brody', email: 'marcus.b@syncgrid.com' },
-          { _id: 'mock-3', name: 'Elena Rostova', email: 'elena.r@syncgrid.com' },
-        ]);
+        setAllUsers([]);
       }
     };
 
@@ -389,19 +381,17 @@ export default function CollaborationDashboard() {
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-bold text-muted-foreground uppercase">
-              Channel Visibility
-            </label>
-            <select
+            <Select
+              label="Channel Visibility"
               value={newChanType}
-              onChange={(e) => setNewChanType(e.target.value as any)}
-              className="w-full rounded-md border border-border bg-slate-950/40 px-3 py-2 text-xs font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-            >
-              <option value="public">Public (#general)</option>
-              <option value="private">Private (Invite Only)</option>
-              <option value="department">Department-Linked (HR/Finance)</option>
-              <option value="project">Project-Linked (Active Project)</option>
-            </select>
+              onChange={(val) => setNewChanType(val as any)}
+              options={[
+                { value: 'public', label: 'Public (#general)' },
+                { value: 'private', label: 'Private (Invite Only)' },
+                { value: 'department', label: 'Department-Linked (HR/Finance)' },
+                { value: 'project', label: 'Project-Linked (Active Project)' },
+              ]}
+            />
           </div>
           <div className="space-y-1">
             <label className="text-xs font-bold text-muted-foreground uppercase">Description</label>

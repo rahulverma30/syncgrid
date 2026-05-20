@@ -12,6 +12,7 @@ import {
   Tabs,
   Badge,
   ConfirmationModal,
+  Select,
 } from '@/components/ui';
 import {
   Users,
@@ -794,7 +795,9 @@ export default function CRMPage() {
                       </p>
                       <h3 className="text-2xl font-black font-mono">
                         {leads.reduce(
-                          (acc, l) => acc + l.reminders.filter((r) => !r.isCompleted).length,
+                          (acc, l) =>
+                            acc +
+                            (l?.reminders ? l.reminders.filter((r) => !r.isCompleted).length : 0),
                           0
                         )}
                       </h3>
@@ -865,7 +868,7 @@ export default function CRMPage() {
                     <div className="space-y-2 max-h-[250px] overflow-y-auto pr-1">
                       {leads.flatMap((l) =>
                         l.reminders
-                          .filter((r) => !r.isCompleted)
+                          ?.filter((r) => !r.isCompleted)
                           .map((rem) => (
                             <div
                               key={rem._id}
@@ -903,7 +906,7 @@ export default function CRMPage() {
                           ))
                       )}
                       {leads.every(
-                        (l) => l.reminders.filter((r) => !r.isCompleted).length === 0
+                        (l) => l.reminders?.filter((r) => !r.isCompleted).length === 0
                       ) && (
                         <div className="py-12 text-center text-xs text-muted-foreground">
                           🎉 Beautiful! All pipeline reminders have been completely cleared!
@@ -964,33 +967,33 @@ export default function CRMPage() {
             >
               {/* Kanban filter options */}
               <div className="flex gap-2 flex-wrap pb-2 border-b border-border/40">
-                <select
+                <Select
                   value={priorityFilter}
-                  onChange={(e) => setPriorityFilter(e.target.value)}
+                  onChange={(val) => setPriorityFilter(val)}
                   className="h-8.5 rounded-lg border border-border/80 bg-background/50 px-2 py-1 text-xs text-foreground focus:outline-none"
-                >
-                  <option value="">All Priorities</option>
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                </select>
-                <select
+                  placeholder="All Priorities"
+                  options={[
+                    { value: '', label: 'All Priorities' },
+                    { value: 'low', label: 'Low' },
+                    { value: 'medium', label: 'Medium' },
+                    { value: 'high', label: 'High' },
+                  ]}
+                />
+                <Select
                   value={sourceFilter}
-                  onChange={(e) => setSourceFilter(e.target.value)}
+                  onChange={(val) => setSourceFilter(val)}
                   className="h-8.5 rounded-lg border border-border/80 bg-background/50 px-2 py-1 text-xs text-foreground focus:outline-none"
-                >
-                  <option value="">All Sources</option>
-                  {stages.map((st) => (
-                    <option key={st.id} value={st.id}>
-                      {st.label}
-                    </option>
-                  ))}
-                  <option value="linkedin">LinkedIn</option>
-                  <option value="website">Website</option>
-                  <option value="referral">Referral</option>
-                  <option value="ads">Ads</option>
-                  <option value="cold-reach">Outreach</option>
-                </select>
+                  placeholder="All Sources"
+                  options={[
+                    { value: '', label: 'All Sources' },
+                    ...stages.map((st) => ({ value: st.id, label: st.label })),
+                    { value: 'linkedin', label: 'LinkedIn' },
+                    { value: 'website', label: 'Website' },
+                    { value: 'referral', label: 'Referral' },
+                    { value: 'ads', label: 'Ads' },
+                    { value: 'cold-reach', label: 'Outreach' },
+                  ]}
+                />
               </div>
 
               {/* Horizontal columns container */}
@@ -1087,18 +1090,15 @@ export default function CRMPage() {
 
                               {/* Hover drop menu for accessible moving */}
                               <div className="relative">
-                                <select
-                                  onClick={(e) => e.stopPropagation()}
+                                <Select
                                   value={lead.status}
-                                  onChange={(e) => handleMoveStage(lead._id, e.target.value)}
+                                  onChange={(val) => handleMoveStage(lead._id, val)}
                                   className="h-5 rounded border border-border/80 bg-background/50 px-1 text-[8px] font-bold text-muted-foreground uppercase focus:outline-none"
-                                >
-                                  {stages.map((st) => (
-                                    <option key={st.id} value={st.id}>
-                                      Shift to: {st.label}
-                                    </option>
-                                  ))}
-                                </select>
+                                  options={stages.map((st) => ({
+                                    value: st.id,
+                                    label: `Shift to: ${st.label}`,
+                                  }))}
+                                />
                               </div>
                             </div>
                           </motion.div>
@@ -1129,40 +1129,42 @@ export default function CRMPage() {
               {/* Ledger filters & Export header */}
               <div className="flex justify-between items-center flex-wrap gap-2 pb-2 border-b border-border/40">
                 <div className="flex gap-2 flex-wrap items-center">
-                  <select
+                  <Select
                     value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
+                    onChange={(val) => setStatusFilter(val)}
                     className="h-8 rounded-lg border border-border/80 bg-background/50 px-2 text-xs text-foreground focus:outline-none"
-                  >
-                    <option value="">All Pipeline Stages</option>
-                    {stages.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.label}
-                      </option>
-                    ))}
-                  </select>
-                  <select
+                    placeholder="All Pipeline Stages"
+                    options={[
+                      { value: '', label: 'All Pipeline Stages' },
+                      ...stages.map((s) => ({ value: s.id, label: s.label })),
+                    ]}
+                  />
+                  <Select
                     value={priorityFilter}
-                    onChange={(e) => setPriorityFilter(e.target.value)}
+                    onChange={(val) => setPriorityFilter(val)}
                     className="h-8 rounded-lg border border-border/80 bg-background/50 px-2 text-xs text-foreground focus:outline-none"
-                  >
-                    <option value="">All Priorities</option>
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                  </select>
-                  <select
+                    placeholder="All Priorities"
+                    options={[
+                      { value: '', label: 'All Priorities' },
+                      { value: 'low', label: 'Low' },
+                      { value: 'medium', label: 'Medium' },
+                      { value: 'high', label: 'High' },
+                    ]}
+                  />
+                  <Select
                     value={sourceFilter}
-                    onChange={(e) => setSourceFilter(e.target.value)}
+                    onChange={(val) => setSourceFilter(val)}
                     className="h-8 rounded-lg border border-border/80 bg-background/50 px-2 text-xs text-foreground focus:outline-none"
-                  >
-                    <option value="">All Sources</option>
-                    <option value="linkedin">LinkedIn</option>
-                    <option value="website">Website</option>
-                    <option value="referral">Referral</option>
-                    <option value="ads">Ads</option>
-                    <option value="cold-reach">Outreach</option>
-                  </select>
+                    placeholder="All Sources"
+                    options={[
+                      { value: '', label: 'All Sources' },
+                      { value: 'linkedin', label: 'LinkedIn' },
+                      { value: 'website', label: 'Website' },
+                      { value: 'referral', label: 'Referral' },
+                      { value: 'ads', label: 'Ads' },
+                      { value: 'cold-reach', label: 'Outreach' },
+                    ]}
+                  />
                 </div>
 
                 <Button
@@ -1187,17 +1189,15 @@ export default function CRMPage() {
                   >
                     <span className="pl-2">{selectedRows.length} Leads selected</span>
                     <div className="flex gap-2 items-center">
-                      <select
-                        onChange={(e) => handleBulkReassign(e.target.value)}
+                      <Select
+                        onChange={(val) => handleBulkReassign(val)}
                         className="h-8 rounded border border-border/80 bg-background px-2 text-xs text-foreground"
-                      >
-                        <option value="">Shift Stage...</option>
-                        {stages.map((st) => (
-                          <option key={st.id} value={st.id}>
-                            {st.label}
-                          </option>
-                        ))}
-                      </select>
+                        placeholder="Shift Stage..."
+                        options={[
+                          { value: '', label: 'Shift Stage...' },
+                          ...stages.map((st) => ({ value: st.id, label: st.label })),
+                        ]}
+                      />
                       <Button
                         onClick={handleBulkDelete}
                         variant="destructive"
@@ -1625,16 +1625,19 @@ export default function CRMPage() {
                           <label className="text-[9px] font-bold text-muted-foreground uppercase">
                             Activity Type
                           </label>
-                          <select
+                          <Select
                             value={reminderType}
-                            onChange={(e) => setReminderType(e.target.value as any)}
+                            onChange={(val) =>
+                              setReminderType(val as 'call' | 'meeting' | 'email' | 'custom')
+                            }
                             className="w-full h-8.5 rounded-md border border-input bg-background/50 px-2 py-1 text-xs text-foreground focus:outline-none"
-                          >
-                            <option value="custom">Custom Task</option>
-                            <option value="call">Phone Call</option>
-                            <option value="meeting">Sales Meeting</option>
-                            <option value="email">Send Email</option>
-                          </select>
+                            options={[
+                              { value: 'custom', label: 'Custom Task' },
+                              { value: 'call', label: 'Phone Call' },
+                              { value: 'meeting', label: 'Sales Meeting' },
+                              { value: 'email', label: 'Send Email' },
+                            ]}
+                          />
                         </div>
                       </div>
                       <div className="space-y-1">
@@ -1724,15 +1727,18 @@ export default function CRMPage() {
                           <label className="text-[9px] font-bold text-muted-foreground uppercase">
                             Category
                           </label>
-                          <select
+                          <Select
                             value={attachCategory}
-                            onChange={(e) => setAttachCategory(e.target.value as any)}
+                            onChange={(val) =>
+                              setAttachCategory(val as 'proposal' | 'contract' | 'other')
+                            }
                             className="w-full h-8.5 rounded-md border border-input bg-background/50 px-2 py-1 text-xs text-foreground focus:outline-none"
-                          >
-                            <option value="proposal">Sales Proposal</option>
-                            <option value="contract">Agreement/Contract</option>
-                            <option value="other">Other Document</option>
-                          </select>
+                            options={[
+                              { value: 'proposal', label: 'Sales Proposal' },
+                              { value: 'contract', label: 'Agreement/Contract' },
+                              { value: 'other', label: 'Other Document' },
+                            ]}
+                          />
                         </div>
                       </div>
 
@@ -1927,32 +1933,34 @@ export default function CRMPage() {
                     <label className="text-[9px] font-bold text-muted-foreground uppercase">
                       Priority
                     </label>
-                    <select
+                    <Select
                       value={formPriority}
-                      onChange={(e) => setFormPriority(e.target.value as any)}
+                      onChange={(val) => setFormPriority(val as 'low' | 'medium' | 'high')}
                       className="w-full h-8.5 rounded-md border border-input bg-background/50 px-2 py-1 text-xs text-foreground focus:outline-none"
-                    >
-                      <option value="low">Low</option>
-                      <option value="medium">Medium</option>
-                      <option value="high">High</option>
-                    </select>
+                      options={[
+                        { value: 'low', label: 'Low' },
+                        { value: 'medium', label: 'Medium' },
+                        { value: 'high', label: 'High' },
+                      ]}
+                    />
                   </div>
                   <div className="space-y-1">
                     <label className="text-[9px] font-bold text-muted-foreground uppercase">
                       Source Channel
                     </label>
-                    <select
+                    <Select
                       value={formSource}
-                      onChange={(e) => setFormSource(e.target.value)}
+                      onChange={(val) => setFormSource(val)}
                       className="w-full h-8.5 rounded-md border border-input bg-background/50 px-2 py-1 text-xs text-foreground focus:outline-none"
-                    >
-                      <option value="website">Website</option>
-                      <option value="linkedin">LinkedIn</option>
-                      <option value="upwork">Upwork</option>
-                      <option value="referral">Referral</option>
-                      <option value="ads">Ads</option>
-                      <option value="cold-reach">Outreach</option>
-                    </select>
+                      options={[
+                        { value: 'website', label: 'Website' },
+                        { value: 'linkedin', label: 'LinkedIn' },
+                        { value: 'upwork', label: 'Upwork' },
+                        { value: 'referral', label: 'Referral' },
+                        { value: 'ads', label: 'Ads' },
+                        { value: 'cold-reach', label: 'Outreach' },
+                      ]}
+                    />
                   </div>
                 </div>
 

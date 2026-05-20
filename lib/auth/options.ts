@@ -158,18 +158,10 @@ export const authOptions: NextAuthOptions = {
         const user = aggResults[0];
 
         if (!user || user.status === 'disabled') {
-          console.log(`[AUTH PERFORMANCE PROFILE - FAILED LOOKUP]
-  Total Latency:        ${(performance.now() - tStart).toFixed(2)}ms
-  Database connection:  ${(tDbEnd - tDbStart).toFixed(2)}ms
-  Aggregation Lookup:   ${(tLookupEnd - tLookupStart).toFixed(2)}ms`);
           return null;
         }
 
         if (isAccountLocked(user)) {
-          console.log(`[AUTH PERFORMANCE PROFILE - LOCKED ACCOUNT]
-  Total Latency:        ${(performance.now() - tStart).toFixed(2)}ms
-  Database connection:  ${(tDbEnd - tDbStart).toFixed(2)}ms
-  Aggregation Lookup:   ${(tLookupEnd - tLookupStart).toFixed(2)}ms`);
           throw new Error('Account is temporarily locked.');
         }
 
@@ -193,12 +185,6 @@ export const authOptions: NextAuthOptions = {
               },
             }
           );
-
-          console.log(`[AUTH PERFORMANCE PROFILE - FAILED PASSWORD]
-  Total Latency:        ${(performance.now() - tStart).toFixed(2)}ms
-  Database connection:  ${(tDbEnd - tDbStart).toFixed(2)}ms
-  Aggregation Lookup:   ${(tLookupEnd - tLookupStart).toFixed(2)}ms
-  Bcrypt verify:        ${(tBcryptEnd - tBcryptStart).toFixed(2)}ms`);
           return null;
         }
 
@@ -218,13 +204,6 @@ export const authOptions: NextAuthOptions = {
         const tSerializeEnd = performance.now();
 
         const totalLatency = performance.now() - tStart;
-        console.log(`[AUTH PERFORMANCE PROFILE - SUCCESS]
-  Total Login Latency:  ${totalLatency.toFixed(2)}ms
-  Database connection:  ${(tDbEnd - tDbStart).toFixed(2)}ms
-  Aggregation Lookup:   ${(tLookupEnd - tLookupStart).toFixed(2)}ms
-  Bcrypt verify:        ${(tBcryptEnd - tBcryptStart).toFixed(2)}ms
-  Session serialize:    ${(tSerializeEnd - tSerializeStart).toFixed(2)}ms`);
-
         return serialized;
       },
     }),
@@ -270,20 +249,9 @@ export const authOptions: NextAuthOptions = {
             token.status = 'disabled'; // User deleted/not found
           }
           (token as any).lastChecked = now;
-
-          console.log(`[AUTH PERFORMANCE PROFILE - JWT VERIFY & REFRESH]
-  DB connection:        ${(tDbEnd - tDbStart).toFixed(2)}ms
-  User Query & Resolve: ${(tQueryEnd - tQueryStart).toFixed(2)}ms
-  Total JWT verification: ${(performance.now() - tStart).toFixed(2)}ms`);
         } catch (error) {
           console.error('Error verifying user status & permissions in JWT callback:', error);
         }
-      }
-
-      const tTotal = performance.now() - tStart;
-      if (user) {
-        console.log(`[AUTH PERFORMANCE PROFILE - JWT CREATION]
-  Total JWT creation:   ${tTotal.toFixed(2)}ms`);
       }
 
       return token;
@@ -297,10 +265,6 @@ export const authOptions: NextAuthOptions = {
         session.user.permissions = (token.permissions as string[]) || [];
         session.user.status = token.status as string;
       }
-
-      console.log(`[AUTH PERFORMANCE PROFILE - SESSION SERIALIZATION]
-  Total Session creation: ${(performance.now() - tStart).toFixed(2)}ms`);
-
       return session;
     },
   },

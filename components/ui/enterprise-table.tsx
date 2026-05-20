@@ -22,6 +22,7 @@ import { Button } from './button';
 import { Input } from './input';
 import { Checkbox } from './checkbox';
 import { DropdownMenu } from './dropdown-menu';
+import { Select } from './select';
 import { toast } from 'sonner';
 
 interface FilterOption {
@@ -194,20 +195,12 @@ export function EnterpriseTableToolbar({
                     {filter.label}
                   </label>
                   <div className="relative">
-                    <select
+                    <Select
                       value={activeFilters[filter.column] ?? ''}
-                      onChange={(e) =>
-                        onFilterChange && onFilterChange(filter.column, e.target.value)
-                      }
-                      className="w-full h-9 rounded-md border border-input bg-background/50 px-2 py-1 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring select-none"
-                    >
-                      <option value="">All options</option>
-                      {filter.options.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(val) => onFilterChange && onFilterChange(filter.column, val)}
+                      className="h-9 text-xs rounded-lg px-2 bg-background/50 border-input"
+                      options={[{ value: '', label: 'All options' }, ...filter.options]}
+                    />
                   </div>
                 </div>
               ))}

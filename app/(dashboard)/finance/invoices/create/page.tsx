@@ -3,7 +3,15 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { PageHeader, Card, CardContent, Button, Input, LoadingSpinner } from '@/components/ui';
+import {
+  PageHeader,
+  Card,
+  CardContent,
+  Button,
+  Input,
+  LoadingSpinner,
+  Select,
+} from '@/components/ui';
 import {
   DollarSign,
   ArrowLeft,
@@ -149,17 +157,12 @@ export default function CreateInvoicePage() {
                 ) : (
                   <div className="relative">
                     <Building className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                    <select
+                    <Select
                       value={companyId}
-                      onChange={(e) => setCompanyId(e.target.value)}
+                      onChange={(val) => setCompanyId(val)}
                       className="w-full pl-10 pr-4 bg-background/30 border border-border/60 hover:border-primary/20 rounded-xl h-10 text-xs text-slate-300 focus:ring-0 outline-none cursor-pointer"
-                    >
-                      {companies.map((c) => (
-                        <option key={c._id} value={c._id} className="bg-slate-950">
-                          {c.name}
-                        </option>
-                      ))}
-                    </select>
+                      options={[{ value: 'c._id', label: '{c.name}' }]}
+                    />
                   </div>
                 )}
               </div>

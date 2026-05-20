@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Input, Modal } from '@/components/ui';
+import { Button, Input, Modal, Select } from '@/components/ui';
 import { Layers, Plus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useProjectsStore } from '@/store/projectsStore';
@@ -198,38 +198,36 @@ export const ProjectCreateModal: React.FC = () => {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-3.5">
+        <div className="grid grid-cols-2 gap-3.5 items-end">
           <div className="space-y-1">
-            <label className="text-[9px] font-bold text-muted-foreground uppercase">Priority</label>
-            <select
+            <Select
+              label="Priority"
               value={formPriority}
-              onChange={(e) => setFormPriority(e.target.value as any)}
-              className="w-full h-8.5 rounded-md border border-input bg-background/50 px-2 py-1 text-xs text-foreground focus:outline-none"
-            >
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-              <option value="urgent">Urgent</option>
-            </select>
+              onChange={(val) => setFormPriority(val as any)}
+              options={[
+                { value: 'low', label: 'Low' },
+                { value: 'medium', label: 'Medium' },
+                { value: 'high', label: 'High' },
+                { value: 'urgent', label: 'Urgent' },
+              ]}
+            />
           </div>
           <div className="space-y-1">
-            <label className="text-[9px] font-bold text-muted-foreground uppercase">
-              Billing Model
-            </label>
-            <select
+            <Select
+              label="Billing Model"
               value={formBillingType}
-              onChange={(e) => setFormBillingType(e.target.value as any)}
-              className="w-full h-8.5 rounded-md border border-input bg-background/50 px-2 py-1 text-xs text-foreground focus:outline-none"
-            >
-              <option value="fixed">Fixed Price</option>
-              <option value="hourly">Hourly Rate</option>
-              <option value="retainer">Retainer</option>
-              <option value="milestone-based">Milestone Based</option>
-            </select>
+              onChange={(val) => setFormBillingType(val as any)}
+              options={[
+                { value: 'fixed', label: 'Fixed Price' },
+                { value: 'hourly', label: 'Hourly Rate' },
+                { value: 'retainer', label: 'Retainer' },
+                { value: 'milestone-based', label: 'Milestone Based' },
+              ]}
+            />
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-3 select-none">
+        <div className="grid grid-cols-3 gap-3 items-end select-none">
           <div className="space-y-1">
             <label className="text-[9px] font-bold text-muted-foreground uppercase">
               Budget ($)
@@ -253,20 +251,18 @@ export const ProjectCreateModal: React.FC = () => {
             />
           </div>
           <div className="space-y-1">
-            <label className="text-[9px] font-bold text-muted-foreground uppercase">
-              Project Manager
-            </label>
-            <select
+            <Select
+              label="Project Manager"
               value={formManager}
-              onChange={(e) => setFormManager(e.target.value)}
-              className="w-full h-8.5 rounded-md border border-input bg-background/50 px-2 py-1 text-xs text-foreground focus:outline-none"
-            >
-              <option value="">Choose PM...</option>
-              <option value="Pepper Potts">Pepper Potts</option>
-              <option value="Lucius Fox">Lucius Fox</option>
-              <option value="Samantha Vance">Samantha Vance</option>
-              <option value="Tony Stark">Tony Stark</option>
-            </select>
+              onChange={(val) => setFormManager(val)}
+              placeholder="Choose PM..."
+              options={[
+                { value: 'Pepper Potts', label: 'Pepper Potts' },
+                { value: 'Lucius Fox', label: 'Lucius Fox' },
+                { value: 'Samantha Vance', label: 'Samantha Vance' },
+                { value: 'Tony Stark', label: 'Tony Stark' },
+              ]}
+            />
           </div>
         </div>
 

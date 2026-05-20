@@ -88,11 +88,6 @@ export async function middleware(request: NextRequest) {
     }
 
     const tEnd = performance.now();
-    console.log(`[AUTH PERFORMANCE PROFILE - MIDDLEWARE]
-  Route:                ${pathname}
-  Token extraction:     ${(tTokenEnd - tStart).toFixed(2)}ms
-  Total Middleware:     ${(tEnd - tStart).toFixed(2)}ms`);
-
     // Token is valid and account is active, allow the request to proceed
     return NextResponse.next();
   }

@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import { Select } from '@/components/ui/select';
 
 interface TaskCreateModalProps {
   isOpen: boolean;
@@ -137,17 +138,14 @@ export function TaskCreateModal({ isOpen, onClose }: TaskCreateModalProps) {
             <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               Project
             </label>
-            <select
-              className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-              {...register('projectId')}
-            >
-              <option value="">Select Project...</option>
-              {projects.map((p) => (
-                <option key={p._id} value={p._id}>
-                  {p.name} ({p.code})
-                </option>
-              ))}
-            </select>
+            <Select
+              value={watch('projectId')}
+              onChange={(val) => setValue('projectId', val, { shouldValidate: true })}
+              options={[
+                { value: '', label: 'Select Project...' },
+                ...projects.map((p) => ({ value: p._id, label: `${p.name} (${p.code})` })),
+              ]}
+            />
             {errors.projectId && (
               <span className="text-xs text-rose-500">{errors.projectId.message as string}</span>
             )}
@@ -158,16 +156,11 @@ export function TaskCreateModal({ isOpen, onClose }: TaskCreateModalProps) {
             <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               Status
             </label>
-            <select
-              className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-              {...register('statusId')}
-            >
-              {statuses.map((s) => (
-                <option key={s._id} value={s._id}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
+            <Select
+              value={watch('statusId')}
+              onChange={(val) => setValue('statusId', val, { shouldValidate: true })}
+              options={statuses.map((s) => ({ value: s._id, label: s.name }))}
+            />
             {errors.statusId && (
               <span className="text-xs text-rose-500">{errors.statusId.message as string}</span>
             )}
@@ -181,34 +174,34 @@ export function TaskCreateModal({ isOpen, onClose }: TaskCreateModalProps) {
               <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Sprint
               </label>
-              <select
-                className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                onChange={(e) => setValue('sprintId', e.target.value || null)}
-              >
-                <option value="">Backlog / No Sprint</option>
-                {sprintOptions.map((s: any) => (
-                  <option key={s._id} value={s._id}>
-                    {s.name} ({s.status})
-                  </option>
-                ))}
-              </select>
+              <Select
+                value={watch('sprintId') || ''}
+                onChange={(val) => setValue('sprintId', val || null, { shouldValidate: true })}
+                options={[
+                  { value: '', label: 'Backlog / No Sprint' },
+                  ...sprintOptions.map((s: any) => ({
+                    value: s._id,
+                    label: `${s.name} (${s.status})`,
+                  })),
+                ]}
+              />
             </div>
 
             <div className="space-y-1">
               <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Milestone
               </label>
-              <select
-                className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                onChange={(e) => setValue('milestoneId', e.target.value || null)}
-              >
-                <option value="">No Milestone</option>
-                {milestoneOptions.map((m: any) => (
-                  <option key={m._id} value={m._id}>
-                    {m.title} ({m.status})
-                  </option>
-                ))}
-              </select>
+              <Select
+                value={watch('milestoneId') || ''}
+                onChange={(val) => setValue('milestoneId', val || null, { shouldValidate: true })}
+                options={[
+                  { value: '', label: 'No Milestone' },
+                  ...milestoneOptions.map((m: any) => ({
+                    value: m._id,
+                    label: `${m.title} (${m.status})`,
+                  })),
+                ]}
+              />
             </div>
           </div>
         )}
@@ -231,47 +224,46 @@ export function TaskCreateModal({ isOpen, onClose }: TaskCreateModalProps) {
             <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               Assignee
             </label>
-            <select
-              className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-              onChange={(e) => setValue('assignees', e.target.value ? [e.target.value] : [])}
-            >
-              <option value="">Unassigned</option>
-              {projectUsers.map((u) => (
-                <option key={u._id} value={u._id}>
-                  {u.name}
-                </option>
-              ))}
-            </select>
+            <Select
+              value={watch('assignees')?.[0] || ''}
+              onChange={(val) => setValue('assignees', val ? [val] : [], { shouldValidate: true })}
+              options={[
+                { value: '', label: 'Unassigned' },
+                ...projectUsers.map((u) => ({ value: u._id, label: u.name })),
+              ]}
+            />
           </div>
 
           <div className="space-y-1">
             <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               Priority
             </label>
-            <select
-              className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-              {...register('priority')}
-            >
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-              <option value="urgent">Urgent</option>
-            </select>
+            <Select
+              value={watch('priority')}
+              onChange={(val) => setValue('priority', val, { shouldValidate: true })}
+              options={[
+                { value: 'low', label: 'Low' },
+                { value: 'medium', label: 'Medium' },
+                { value: 'high', label: 'High' },
+                { value: 'urgent', label: 'Urgent' },
+              ]}
+            />
           </div>
 
           <div className="space-y-1">
             <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               Severity
             </label>
-            <select
-              className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-              {...register('severity')}
-            >
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-              <option value="critical">Critical</option>
-            </select>
+            <Select
+              value={watch('severity')}
+              onChange={(val) => setValue('severity', val, { shouldValidate: true })}
+              options={[
+                { value: 'low', label: 'Low' },
+                { value: 'medium', label: 'Medium' },
+                { value: 'high', label: 'High' },
+                { value: 'critical', label: 'Critical' },
+              ]}
+            />
           </div>
         </div>
 

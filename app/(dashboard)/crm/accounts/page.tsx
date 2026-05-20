@@ -10,6 +10,7 @@ import {
   Input,
   LoadingSpinner,
   ConfirmationModal,
+  Select,
 } from '@/components/ui';
 import {
   Building2,
@@ -249,49 +250,31 @@ export default function CRMAccountsPage() {
           <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
             <div className="flex items-center gap-1.5 bg-background/30 px-3 py-1.5 rounded-xl border border-border/40">
               <Filter className="h-3 w-3 text-slate-400" />
-              <select
+              <Select
                 value={industryFilter}
-                onChange={(e) => setIndustryFilter(e.target.value)}
+                onChange={(val) => setIndustryFilter(val)}
                 className="bg-transparent border-0 text-[10px] font-bold uppercase tracking-wider text-slate-300 focus:ring-0 outline-none cursor-pointer"
-              >
-                <option value="" className="bg-slate-900">
-                  All Industries
-                </option>
-                <option value="saas" className="bg-slate-900">
-                  SaaS
-                </option>
-                <option value="biotech" className="bg-slate-900">
-                  Biotech
-                </option>
-                <option value="retail" className="bg-slate-900">
-                  Retail
-                </option>
-                <option value="ecommerce" className="bg-slate-900">
-                  E-Commerce
-                </option>
-              </select>
+                options={[
+                  { value: 'saas', label: 'SaaS' },
+                  { value: 'biotech', label: 'Biotech' },
+                  { value: 'retail', label: 'Retail' },
+                  { value: 'ecommerce', label: 'E-Commerce' },
+                ]}
+              />
             </div>
 
             <div className="flex items-center gap-1.5 bg-background/30 px-3 py-1.5 rounded-xl border border-border/40">
               <TrendingUp className="h-3 w-3 text-slate-400" />
-              <select
+              <Select
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
+                onChange={(val) => setStatusFilter(val)}
                 className="bg-transparent border-0 text-[10px] font-bold uppercase tracking-wider text-slate-300 focus:ring-0 outline-none cursor-pointer"
-              >
-                <option value="" className="bg-slate-900">
-                  All Statuses
-                </option>
-                <option value="pending" className="bg-slate-900">
-                  Pending
-                </option>
-                <option value="in-progress" className="bg-slate-900">
-                  Onboarding
-                </option>
-                <option value="completed" className="bg-slate-900">
-                  Completed
-                </option>
-              </select>
+                options={[
+                  { value: 'pending', label: 'Pending' },
+                  { value: 'in-progress', label: 'Onboarding' },
+                  { value: 'completed', label: 'Completed' },
+                ]}
+              />
             </div>
           </div>
         </div>

@@ -10,6 +10,8 @@ import {
   Input,
   LoadingSpinner,
   ConfirmationModal,
+  EmptyState,
+  Select,
 } from '@/components/ui';
 import {
   Users,
@@ -86,61 +88,7 @@ export default function CRMContactsPage() {
           }
         });
 
-        // Seed mock contacts if empty to make the platform immediately operational
-        if (flatContacts.length === 0) {
-          setContacts([
-            {
-              _id: 'c1',
-              name: 'John Carter',
-              role: 'CTO',
-              email: 'carter@acme.com',
-              phone: '415-555-0190',
-              isPrimary: true,
-              communicationPref: 'email',
-              companyName: 'Acme Corp',
-              companyId: 'acme123',
-              createdAt: new Date().toISOString(),
-            },
-            {
-              _id: 'c2',
-              name: 'Samantha Vance',
-              role: 'VP Marketing',
-              email: 'vance@globex.co',
-              phone: '650-555-0143',
-              isPrimary: true,
-              communicationPref: 'slack',
-              companyName: 'Globex Inc',
-              companyId: 'globex123',
-              createdAt: new Date().toISOString(),
-            },
-            {
-              _id: 'c3',
-              name: 'Albert Wesker',
-              role: 'Head of Operations',
-              email: 'wesker@umbrella.com',
-              phone: '312-555-0105',
-              isPrimary: false,
-              communicationPref: 'zoom',
-              companyName: 'Umbrella Corp',
-              companyId: 'umbrella123',
-              createdAt: new Date().toISOString(),
-            },
-            {
-              _id: 'c4',
-              name: 'Pepper Potts',
-              role: 'CEO',
-              email: 'potts@stark.com',
-              phone: '212-555-0177',
-              isPrimary: true,
-              communicationPref: 'phone',
-              companyName: 'Stark Industries',
-              companyId: 'stark123',
-              createdAt: new Date().toISOString(),
-            },
-          ]);
-        } else {
-          setContacts(flatContacts);
-        }
+        setContacts(flatContacts);
       }
     } catch (err) {
       toast.error('Could not fetch contacts.');
@@ -303,49 +251,33 @@ export default function CRMContactsPage() {
             />
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-            <div className="flex items-center gap-1.5 bg-background/30 px-3 py-1.5 rounded-xl border border-border/40">
-              <Filter className="h-3 w-3 text-slate-400" />
-              <select
+          <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
+            <div className="w-48">
+              <Select
                 value={roleFilter}
-                onChange={(e) => setRoleFilter(e.target.value)}
-                className="bg-transparent border-0 text-[10px] font-bold uppercase tracking-wider text-slate-300 focus:ring-0 outline-none cursor-pointer"
-              >
-                <option value="" className="bg-slate-900">
-                  All Roles
-                </option>
-                <option value="cto" className="bg-slate-900">
-                  CTO
-                </option>
-                <option value="ceo" className="bg-slate-900">
-                  CEO
-                </option>
-                <option value="vp" className="bg-slate-900">
-                  VP Level
-                </option>
-                <option value="head" className="bg-slate-900">
-                  Operations
-                </option>
-              </select>
+                onChange={(val) => setRoleFilter(val)}
+                placeholder="All Roles"
+                options={[
+                  { value: '', label: 'All Roles' },
+                  { value: 'cto', label: 'CTO' },
+                  { value: 'ceo', label: 'CEO' },
+                  { value: 'vp', label: 'VP Level' },
+                  { value: 'head', label: 'Operations' },
+                ]}
+              />
             </div>
 
-            <div className="flex items-center gap-1.5 bg-background/30 px-3 py-1.5 rounded-xl border border-border/40">
-              <UserCheck className="h-3 w-3 text-slate-400" />
-              <select
+            <div className="w-48">
+              <Select
                 value={primaryFilter}
-                onChange={(e) => setPrimaryFilter(e.target.value)}
-                className="bg-transparent border-0 text-[10px] font-bold uppercase tracking-wider text-slate-300 focus:ring-0 outline-none cursor-pointer"
-              >
-                <option value="" className="bg-slate-900">
-                  All Levels
-                </option>
-                <option value="yes" className="bg-slate-900">
-                  Primary Contact
-                </option>
-                <option value="no" className="bg-slate-900">
-                  Alternative Contact
-                </option>
-              </select>
+                onChange={(val) => setPrimaryFilter(val)}
+                placeholder="All Levels"
+                options={[
+                  { value: '', label: 'All Levels' },
+                  { value: 'yes', label: 'Primary Contact' },
+                  { value: 'no', label: 'Alternative Contact' },
+                ]}
+              />
             </div>
           </div>
         </div>
@@ -359,6 +291,28 @@ export default function CRMContactsPage() {
             Syncing corporate contact directories...
           </p>
         </div>
+      ) : contacts.length === 0 ? (
+        <Card className="bg-card/40 border border-border/60 rounded-2xl p-8 backdrop-blur-md flex flex-col items-center justify-center">
+          <EmptyState
+            icon={<Users className="h-10 w-10 text-slate-500" />}
+            title="No Contacts Found"
+            description="Get started by onboarding your corporate client accounts and assigning primary stakeholders to drive communication pipelines."
+            action={{
+              label: 'Add First Contact',
+              onClick: () => {
+                window.location.href = '/crm/contacts/create';
+              },
+            }}
+          />
+        </Card>
+      ) : filteredContacts.length === 0 ? (
+        <Card className="bg-card/40 border border-border/60 rounded-2xl p-8 backdrop-blur-md flex flex-col items-center justify-center">
+          <EmptyState
+            icon={<Search className="h-10 w-10 text-slate-500" />}
+            title="No Matching Contacts"
+            description="Try adjusting your fuzzy search query or category filters to locate the desired corporate stakeholder record."
+          />
+        </Card>
       ) : (
         <Card className="bg-card/40 border border-border/60 rounded-2xl overflow-hidden backdrop-blur-md">
           <div className="overflow-x-auto">
@@ -519,10 +473,28 @@ export default function CRMContactsPage() {
       <ConfirmationModal
         isOpen={isDeleteConfirmOpen}
         onClose={() => setIsDeleteConfirmOpen(false)}
-        onConfirm={() => {
+        onConfirm={async () => {
           if (contactToDeleteId) {
-            setContacts(contacts.filter((c) => c._id !== contactToDeleteId));
-            toast.success('Contact deleted successfully.');
+            const contactObj = contacts.find((c) => c._id === contactToDeleteId);
+            if (contactObj) {
+              try {
+                const res = await fetch(
+                  `/api/protected/clients/${contactObj.companyId}/contacts/${contactToDeleteId}`,
+                  {
+                    method: 'DELETE',
+                  }
+                );
+                const data = await res.json();
+                if (data.success) {
+                  setContacts(contacts.filter((c) => c._id !== contactToDeleteId));
+                  toast.success('Contact record permanently deleted.');
+                } else {
+                  toast.error(data.message || 'Failed to delete contact.');
+                }
+              } catch (err) {
+                toast.error('Network failure deleting contact.');
+              }
+            }
           }
           setIsDeleteConfirmOpen(false);
         }}
@@ -537,11 +509,31 @@ export default function CRMContactsPage() {
       <ConfirmationModal
         isOpen={isBulkDeleteConfirmOpen}
         onClose={() => setIsBulkDeleteConfirmOpen(false)}
-        onConfirm={() => {
+        onConfirm={async () => {
+          let deletedCount = 0;
+          for (const id of selectedRows) {
+            const contactObj = contacts.find((c) => c._id === id);
+            if (contactObj) {
+              try {
+                const res = await fetch(
+                  `/api/protected/clients/${contactObj.companyId}/contacts/${id}`,
+                  {
+                    method: 'DELETE',
+                  }
+                );
+                const data = await res.json();
+                if (data.success) {
+                  deletedCount++;
+                }
+              } catch (err) {
+                console.error('Error deleting contact in bulk:', err);
+              }
+            }
+          }
           setContacts(contacts.filter((c) => !selectedRows.includes(c._id)));
           setSelectedRows([]);
           setIsBulkDeleteConfirmOpen(false);
-          toast.success('Successfully deleted selected contacts.');
+          toast.success(`Successfully purged ${deletedCount} contact records.`);
         }}
         title="Delete Selected Contacts"
         message={`Are you sure you want to permanently delete all ${selectedRows.length} selected contacts?`}

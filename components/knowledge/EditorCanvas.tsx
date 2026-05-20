@@ -27,6 +27,7 @@ import {
   ArrowRightLeft,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Select } from '@/components/ui';
 
 export function EditorCanvas() {
   const { data: session } = useSession();
@@ -843,18 +844,15 @@ export function EditorCanvas() {
             <label className="text-xs font-semibold text-slate-400 flex items-center gap-1">
               <FileSpreadsheet className="h-3 w-3" /> Folder Classification
             </label>
-            <select
-              value={categoryId}
-              onChange={(e) => setCategoryId(e.target.value)}
-              className="bg-slate-900/60 border border-border/40 rounded px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-slate-700"
-            >
-              <option value="">No folder category</option>
-              {categories.map((cat) => (
-                <option key={cat._id} value={cat._id}>
-                  {cat.name}
-                </option>
-              ))}
-            </select>
+            <Select
+              value={categoryId || ''}
+              onChange={(val) => setCategoryId(val)}
+              className="h-9 text-xs rounded-lg px-2 bg-slate-900 border-border/40"
+              options={[
+                { value: '', label: 'No folder category' },
+                ...categories.map((cat) => ({ value: cat._id, label: cat.name })),
+              ]}
+            />
           </div>
 
           {/* Visibility Scope */}
@@ -862,16 +860,17 @@ export function EditorCanvas() {
             <label className="text-xs font-semibold text-slate-400 flex items-center gap-1">
               <Shield className="h-3 w-3" /> Visibility Permission
             </label>
-            <select
+            <Select
               value={visibility}
-              onChange={(e) => setVisibility(e.target.value)}
-              className="bg-slate-900/60 border border-border/40 rounded px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-slate-700"
-            >
-              <option value="internal">Internal (Workspace Employees)</option>
-              <option value="public">Public (Everyone)</option>
-              <option value="private">Private (Only Owner & Admins)</option>
-              <option value="restricted">Restricted (Selected Members)</option>
-            </select>
+              onChange={(val) => setVisibility(val)}
+              className="h-9 text-xs rounded-lg px-2 bg-slate-900 border-border/40"
+              options={[
+                { value: 'internal', label: 'Internal (Workspace Employees)' },
+                { value: 'public', label: 'Public (Everyone)' },
+                { value: 'private', label: 'Private (Only Owner & Admins)' },
+                { value: 'restricted', label: 'Restricted (Selected Members)' },
+              ]}
+            />
           </div>
 
           {/* SOP Compliance Switch */}

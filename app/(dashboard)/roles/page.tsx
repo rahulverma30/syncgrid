@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { Select } from '@/components/ui';
 import { PERMISSION_RESOURCES } from '@/constants/rbac';
 
 import {
@@ -841,31 +842,27 @@ export default function RolesAndAuthorizationPage() {
                       <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">
                         Target Resource Module
                       </label>
-                      <select
+                      <Select
                         value={newPolicyResource}
-                        onChange={(e) => setNewPolicyResource(e.target.value)}
+                        onChange={(val) => setNewPolicyResource(val)}
                         className="w-full bg-background border border-border px-3.5 py-2 rounded-xl text-xs focus:outline-none"
-                      >
-                        {PERMISSION_RESOURCES.map((res) => (
-                          <option key={res} value={res}>
-                            {res}
-                          </option>
-                        ))}
-                      </select>
+                        options={PERMISSION_RESOURCES.map((res) => ({ value: res, label: res }))}
+                      />
                     </div>
 
                     <div className="space-y-1">
                       <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">
                         Policy Enforcement Effect
                       </label>
-                      <select
+                      <Select
                         value={newPolicyEffect}
-                        onChange={(e) => setNewPolicyEffect(e.target.value as any)}
+                        onChange={(val) => setNewPolicyEffect(val as 'allow' | 'deny')}
                         className="w-full bg-background border border-border px-3.5 py-2 rounded-xl text-xs focus:outline-none"
-                      >
-                        <option value="allow">ALLOW (Explicit Privilege)</option>
-                        <option value="deny">DENY (Override Restriction)</option>
-                      </select>
+                        options={[
+                          { value: 'allow', label: 'ALLOW (Explicit Privilege)' },
+                          { value: 'deny', label: 'DENY (Override Restriction)' },
+                        ]}
+                      />
                     </div>
                   </div>
 

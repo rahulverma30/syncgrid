@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import { Select } from '@/components/ui/select';
 import {
   Play,
   Square,
@@ -526,37 +527,37 @@ export function TaskDetailModal({ isOpen, onClose, taskCode }: TaskDetailModalPr
                 </span>
                 <div className="grid grid-cols-12 gap-3">
                   {/* Relation type */}
-                  <select
-                    className="col-span-3 bg-background border border-border rounded-md px-3 py-1.5 text-xs focus:outline-none"
-                    value={blockerType}
-                    onChange={(e: any) => setBlockerType(e.target.value)}
-                  >
-                    <option value="blocked_by">Blocked By</option>
-                    <option value="blocks">Blocks</option>
-                    <option value="relates_to">Relates To</option>
-                  </select>
+                  <div className="col-span-3">
+                    <Select
+                      value={blockerType}
+                      onChange={(val: any) => setBlockerType(val)}
+                      options={[
+                        { value: 'blocked_by', label: 'Blocked By' },
+                        { value: 'blocks', label: 'Blocks' },
+                        { value: 'relates_to', label: 'Relates To' },
+                      ]}
+                    />
+                  </div>
 
                   {/* Task Searcher Dropdown */}
-                  <select
-                    className="col-span-6 bg-background border border-border rounded-md px-3 py-1.5 text-xs focus:outline-none"
-                    value={selectedBlockerId}
-                    onChange={(e) => setSelectedBlockerId(e.target.value)}
-                  >
-                    <option value="">Select Task...</option>
-                    {tasks
-                      .filter((t) => t._id !== activeTask._id)
-                      .map((t) => (
-                        <option key={t._id} value={t._id}>
-                          [{t.code}] {t.title}
-                        </option>
-                      ))}
-                  </select>
+                  <div className="col-span-6">
+                    <Select
+                      value={selectedBlockerId}
+                      onChange={setSelectedBlockerId}
+                      options={[
+                        { value: '', label: 'Select Task...' },
+                        ...tasks
+                          .filter((t) => t._id !== activeTask._id)
+                          .map((t) => ({ value: t._id, label: `[${t.code}] ${t.title}` })),
+                      ]}
+                    />
+                  </div>
 
                   <Button
                     variant="default"
                     size="sm"
                     type="submit"
-                    className="col-span-3 h-9 text-xs"
+                    className="col-span-3 h-10 text-xs"
                   >
                     Link Task
                   </Button>
@@ -641,23 +642,17 @@ export function TaskDetailModal({ isOpen, onClose, taskCode }: TaskDetailModalPr
               <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
                 Workflow Status
               </label>
-              <select
-                className="w-full bg-background border border-border rounded-md px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+              <Select
                 value={activeTask.statusId?._id || activeTask.statusId}
-                onChange={async (e) => {
-                  const success = await updateTask(activeTask._id, { statusId: e.target.value });
+                onChange={async (val) => {
+                  const success = await updateTask(activeTask._id, { statusId: val });
                   if (success) {
                     toast.success('Status updated!');
                     fetchTasks();
                   }
                 }}
-              >
-                {statuses.map((s) => (
-                  <option key={s._id} value={s._id}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
+                options={statuses.map((s) => ({ value: s._id, label: s.name }))}
+              />
             </div>
 
             {/* Priority */}
@@ -665,22 +660,22 @@ export function TaskDetailModal({ isOpen, onClose, taskCode }: TaskDetailModalPr
               <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
                 Task Priority
               </label>
-              <select
-                className="w-full bg-background border border-border rounded-md px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+              <Select
                 value={activeTask.priority}
-                onChange={async (e) => {
-                  const success = await updateTask(activeTask._id, { priority: e.target.value });
+                onChange={async (val) => {
+                  const success = await updateTask(activeTask._id, { priority: val });
                   if (success) {
                     toast.success('Priority updated!');
                     fetchTasks();
                   }
                 }}
-              >
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-                <option value="urgent">Urgent</option>
-              </select>
+                options={[
+                  { value: 'low', label: 'Low' },
+                  { value: 'medium', label: 'Medium' },
+                  { value: 'high', label: 'High' },
+                  { value: 'urgent', label: 'Urgent' },
+                ]}
+              />
             </div>
 
             {/* Story Points */}

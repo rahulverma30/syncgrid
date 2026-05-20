@@ -11,6 +11,7 @@ import {
   CardTitle,
   Button,
   Badge,
+  Select,
 } from '@/components/ui';
 import {
   User,
@@ -222,15 +223,16 @@ export default function ProfilePage() {
           <span className="text-xs text-muted-foreground font-bold uppercase tracking-wider">
             Presence Status
           </span>
-          <select
+          <Select
             value={myProfile.presenceStatus || 'offline'}
-            onChange={(e) => setPresence(e.target.value as any)}
+            onChange={(val) => setPresence(val as 'online' | 'offline' | 'away')}
             className="bg-card text-foreground border border-border rounded-lg px-3 py-1.5 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-primary shadow-sm hover:border-primary transition-all duration-200"
-          >
-            <option value="online">🟢 Online</option>
-            <option value="away">🟡 Away</option>
-            <option value="offline">⚪ Offline</option>
-          </select>
+            options={[
+              { value: 'online', label: '🟢 Online' },
+              { value: 'away', label: '🟡 Away' },
+              { value: 'offline', label: '⚪ Offline' },
+            ]}
+          />
         </div>
       </div>
 
@@ -405,17 +407,18 @@ export default function ProfilePage() {
                           <label className="text-xs font-bold text-muted-foreground uppercase">
                             Workplace Timezone
                           </label>
-                          <select
+                          <Select
                             value={timezone}
-                            onChange={(e) => setTimezone(e.target.value)}
+                            onChange={(val) => setTimezone(val)}
                             className="bg-card text-foreground border border-border rounded-lg w-full px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                          >
-                            <option value="UTC">UTC (GMT+0)</option>
-                            <option value="EST">EST (New York)</option>
-                            <option value="PST">PST (Los Angeles)</option>
-                            <option value="IST">IST (New Delhi)</option>
-                            <option value="GMT">GMT (London)</option>
-                          </select>
+                            options={[
+                              { value: 'UTC', label: 'UTC (GMT+0)' },
+                              { value: 'EST', label: 'EST (New York)' },
+                              { value: 'PST', label: 'PST (Los Angeles)' },
+                              { value: 'IST', label: 'IST (New Delhi)' },
+                              { value: 'GMT', label: 'GMT (London)' },
+                            ]}
+                          />
                         </div>
                       </div>
                       <Button type="submit" size="sm" className="gap-2 shadow-sm font-bold">
@@ -524,16 +527,17 @@ export default function ProfilePage() {
                             <label className="text-xs font-bold text-muted-foreground uppercase">
                               Work Mode
                             </label>
-                            <select
+                            <Select
                               value={workMode}
-                              onChange={(e) => setWorkMode(e.target.value)}
+                              onChange={(val) => setWorkMode(val)}
                               disabled={!!(todayPunch && !todayPunch.checkOut)}
                               className="bg-card text-foreground border border-border rounded-lg w-full px-3 py-1.5 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-primary shadow-sm"
-                            >
-                              <option value="remote">💻 Remote</option>
-                              <option value="hybrid">🚗 Hybrid</option>
-                              <option value="office">🏢 Office</option>
-                            </select>
+                              options={[
+                                { value: 'remote', label: '💻 Remote' },
+                                { value: 'hybrid', label: '🚗 Hybrid' },
+                                { value: 'office', label: '🏢 Office' },
+                              ]}
+                            />
                           </div>
                           <div className="space-y-1">
                             <label className="text-xs font-bold text-muted-foreground uppercase">
@@ -711,15 +715,16 @@ export default function ProfilePage() {
                           <label className="text-xs font-bold text-muted-foreground uppercase">
                             Leave Type
                           </label>
-                          <select
+                          <Select
                             value={leaveType}
-                            onChange={(e) => setLeaveType(e.target.value)}
+                            onChange={(val) => setLeaveType(val)}
                             className="bg-card text-foreground border border-border rounded-lg w-full px-3 py-1.5 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-primary shadow-sm"
-                          >
-                            <option value="casual">Casual Leave</option>
-                            <option value="sick">Sick Leave</option>
-                            <option value="paid">Paid Time Off</option>
-                          </select>
+                            options={[
+                              { value: 'casual', label: 'Casual Leave' },
+                              { value: 'sick', label: 'Sick Leave' },
+                              { value: 'paid', label: 'Paid Time Off' },
+                            ]}
+                          />
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                           <div className="space-y-1.5">
@@ -937,14 +942,18 @@ export default function ProfilePage() {
                           Government Identity Document
                         </label>
                         <div className="flex items-center gap-3">
-                          <select
+                          <Select
                             value={govIdVerified ? 'true' : 'false'}
-                            onChange={(e) => setGovIdVerified(e.target.value === 'true')}
+                            onChange={(val) => {
+                              const fakeEvent = { target: { value: val } };
+                              ((e) => setGovIdVerified(e.target.value === 'true'))(fakeEvent);
+                            }}
                             className="bg-card text-foreground border border-border rounded-lg px-3 py-1.5 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-primary"
-                          >
-                            <option value="false">❌ ID Verification Pending</option>
-                            <option value="true">✅ Government Passport/ID Verified</option>
-                          </select>
+                            options={[
+                              { value: 'false', label: '❌ ID Verification Pending' },
+                              { value: 'true', label: '✅ Government Passport/ID Verified' },
+                            ]}
+                          />
                           <span className="text-[10px] text-muted-foreground">
                             Verification status is audited
                           </span>

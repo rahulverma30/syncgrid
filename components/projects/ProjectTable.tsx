@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useRef } from 'react';
-import { Button, CenteredModal, ConfirmationModal } from '@/components/ui';
+import { Button, CenteredModal, ConfirmationModal, Select } from '@/components/ui';
 import {
   ArrowUpDown,
   ChevronLeft,
@@ -177,53 +177,56 @@ export const ProjectTable: React.FC = () => {
       {/* Filters & Export Row */}
       <div className="flex justify-between items-center flex-wrap gap-3 pb-3 border-b border-border/40 select-none">
         <div className="flex gap-2 flex-wrap items-center">
-          <select
+          <Select
             value={statusFilter}
-            onChange={(e) => setFilters({ statusFilter: e.target.value })}
-            className="h-8 rounded-lg border border-border/80 bg-background/50 px-2 text-xs text-foreground focus:outline-none"
-          >
-            <option value="">All Statuses</option>
-            <option value="planning">Planning</option>
-            <option value="design">Design</option>
-            <option value="development">Development</option>
-            <option value="testing">Testing</option>
-            <option value="deployment">Deployment</option>
-            <option value="completed">Completed</option>
-            <option value="on-hold">On Hold</option>
-          </select>
+            onChange={(val) => setFilters({ statusFilter: val })}
+            placeholder="All Statuses"
+            options={[
+              { value: '', label: 'All Statuses' },
+              { value: 'planning', label: 'Planning' },
+              { value: 'design', label: 'Design' },
+              { value: 'development', label: 'Development' },
+              { value: 'testing', label: 'Testing' },
+              { value: 'deployment', label: 'Deployment' },
+              { value: 'completed', label: 'Completed' },
+              { value: 'on-hold', label: 'On Hold' },
+            ]}
+          />
 
-          <select
+          <Select
             value={priorityFilter}
-            onChange={(e) => setFilters({ priorityFilter: e.target.value })}
-            className="h-8 rounded-lg border border-border/80 bg-background/50 px-2 text-xs text-foreground focus:outline-none"
-          >
-            <option value="">All Priorities</option>
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
-            <option value="urgent">Urgent</option>
-          </select>
+            onChange={(val) => setFilters({ priorityFilter: val })}
+            placeholder="All Priorities"
+            options={[
+              { value: '', label: 'All Priorities' },
+              { value: 'low', label: 'Low' },
+              { value: 'medium', label: 'Medium' },
+              { value: 'high', label: 'High' },
+              { value: 'urgent', label: 'Urgent' },
+            ]}
+          />
 
-          <select
+          <Select
             value={billingFilter}
-            onChange={(e) => setFilters({ billingFilter: e.target.value })}
-            className="h-8 rounded-lg border border-border/80 bg-background/50 px-2 text-xs text-foreground focus:outline-none"
-          >
-            <option value="">All Billing</option>
-            <option value="fixed">Fixed</option>
-            <option value="hourly">Hourly</option>
-            <option value="retainer">Retainer</option>
-            <option value="milestone-based">Milestone</option>
-          </select>
+            onChange={(val) => setFilters({ billingFilter: val })}
+            placeholder="All Billing"
+            options={[
+              { value: '', label: 'All Billing' },
+              { value: 'fixed', label: 'Fixed Price' },
+              { value: 'hourly', label: 'Hourly Rate' },
+              { value: 'retainer', label: 'Retainer' },
+              { value: 'milestone-based', label: 'Milestone' },
+            ]}
+          />
 
-          <select
+          <Select
             value={isArchivedFilter ? 'archived' : 'active'}
-            onChange={(e) => setFilters({ isArchivedFilter: e.target.value === 'archived' })}
-            className="h-8 rounded-lg border border-border/80 bg-background/50 px-2 text-xs text-foreground focus:outline-none"
-          >
-            <option value="active">Active Projects</option>
-            <option value="archived">Archived Projects</option>
-          </select>
+            onChange={(val) => setFilters({ isArchivedFilter: val === 'archived' })}
+            options={[
+              { value: 'active', label: 'Active Projects' },
+              { value: 'archived', label: 'Archived Projects' },
+            ]}
+          />
 
           <Button
             onClick={resetFilters}
@@ -372,81 +375,86 @@ export const ProjectTable: React.FC = () => {
 
             <div className="flex items-center gap-2 flex-wrap">
               {/* Status bulk update */}
-              <select
-                onChange={async (e) => {
-                  if (e.target.value) {
-                    await executeBulkAction('status', e.target.value, selectedRows);
+              {/* Status bulk update */}
+              <Select
+                value=""
+                onChange={async (val) => {
+                  if (val) {
+                    await executeBulkAction('status', val, selectedRows);
                     setSelectedRows([]);
-                    e.target.value = '';
                   }
                 }}
-                className="h-7 rounded border border-primary/20 bg-background/80 px-2 text-[10px] text-foreground focus:outline-none cursor-pointer hover:border-primary/50 transition-colors font-bold"
-              >
-                <option value="">Bulk Status...</option>
-                <option value="planning">Planning</option>
-                <option value="design">Design</option>
-                <option value="development">Development</option>
-                <option value="testing">Testing</option>
-                <option value="deployment">Deployment</option>
-                <option value="completed">Completed</option>
-                <option value="on-hold">On Hold</option>
-              </select>
+                placeholder="Bulk Status..."
+                options={[
+                  { value: '', label: 'Bulk Status...' },
+                  { value: 'planning', label: 'Planning' },
+                  { value: 'design', label: 'Design' },
+                  { value: 'development', label: 'Development' },
+                  { value: 'testing', label: 'Testing' },
+                  { value: 'deployment', label: 'Deployment' },
+                  { value: 'completed', label: 'Completed' },
+                  { value: 'on-hold', label: 'On Hold' },
+                ]}
+              />
 
               {/* Priority bulk update */}
-              <select
-                onChange={async (e) => {
-                  if (e.target.value) {
-                    await executeBulkAction('priority', e.target.value, selectedRows);
+              <Select
+                value=""
+                onChange={async (val) => {
+                  if (val) {
+                    await executeBulkAction('priority', val, selectedRows);
                     setSelectedRows([]);
-                    e.target.value = '';
                   }
                 }}
-                className="h-7 rounded border border-primary/20 bg-background/80 px-2 text-[10px] text-foreground focus:outline-none cursor-pointer hover:border-primary/50 transition-colors font-bold"
-              >
-                <option value="">Bulk Priority...</option>
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-                <option value="urgent">Urgent</option>
-              </select>
+                placeholder="Bulk Priority..."
+                options={[
+                  { value: '', label: 'Bulk Priority...' },
+                  { value: 'low', label: 'Low' },
+                  { value: 'medium', label: 'Medium' },
+                  { value: 'high', label: 'High' },
+                  { value: 'urgent', label: 'Urgent' },
+                ]}
+              />
 
               {/* Tag bulk update */}
-              <select
-                onChange={async (e) => {
-                  if (e.target.value) {
-                    await executeBulkAction('tag_add', e.target.value, selectedRows);
+              <Select
+                value=""
+                onChange={async (val) => {
+                  if (val) {
+                    await executeBulkAction('tag_add', val, selectedRows);
                     setSelectedRows([]);
-                    e.target.value = '';
                   }
                 }}
-                className="h-7 rounded border border-primary/20 bg-background/80 px-2 text-[10px] text-foreground focus:outline-none cursor-pointer hover:border-primary/50 transition-colors font-bold"
-              >
-                <option value="">Bulk Add Tag...</option>
-                <option value="Web">Web</option>
-                <option value="Mobile">Mobile</option>
-                <option value="SaaS">SaaS</option>
-                <option value="Design">Design</option>
-                <option value="Marketing">Marketing</option>
-                <option value="React">React</option>
-              </select>
+                placeholder="Bulk Add Tag..."
+                options={[
+                  { value: '', label: 'Bulk Add Tag...' },
+                  { value: 'Web', label: 'Web' },
+                  { value: 'Mobile', label: 'Mobile' },
+                  { value: 'SaaS', label: 'SaaS' },
+                  { value: 'Design', label: 'Design' },
+                  { value: 'Marketing', label: 'Marketing' },
+                  { value: 'React', label: 'React' },
+                ]}
+              />
 
               {/* Manager bulk update */}
-              <select
-                onChange={async (e) => {
-                  if (e.target.value) {
-                    await executeBulkAction('manager', e.target.value, selectedRows);
+              <Select
+                value=""
+                onChange={async (val) => {
+                  if (val) {
+                    await executeBulkAction('manager', val, selectedRows);
                     setSelectedRows([]);
-                    e.target.value = '';
                   }
                 }}
-                className="h-7 rounded border border-primary/20 bg-background/80 px-2 text-[10px] text-foreground focus:outline-none cursor-pointer hover:border-primary/50 transition-colors font-bold"
-              >
-                <option value="">Bulk Reassign PM...</option>
-                <option value="John Doe">John Doe</option>
-                <option value="Sarah Connor">Sarah Connor</option>
-                <option value="Alex Mercer">Alex Mercer</option>
-                <option value="Unassigned">Unassigned</option>
-              </select>
+                placeholder="Bulk Reassign PM..."
+                options={[
+                  { value: '', label: 'Bulk Reassign PM...' },
+                  { value: 'John Doe', label: 'John Doe' },
+                  { value: 'Sarah Connor', label: 'Sarah Connor' },
+                  { value: 'Alex Mercer', label: 'Alex Mercer' },
+                  { value: 'Unassigned', label: 'Unassigned' },
+                ]}
+              />
 
               {/* Archive bulk update */}
               <Button
@@ -734,16 +742,16 @@ export const ProjectTable: React.FC = () => {
             Showing {(currentPage - 1) * pageSize + 1}–
             {Math.min(currentPage * pageSize, sortedProjects.length)} of {sortedProjects.length}
           </span>
-          <select
-            value={pageSize}
-            onChange={(e) => setPageSize(Number(e.target.value))}
-            className="h-7 rounded border border-border bg-background/50 px-1 text-[10px] focus:outline-none"
-          >
-            <option value={5}>5/pg</option>
-            <option value={10}>10/pg</option>
-            <option value={20}>20/pg</option>
-            <option value={50}>50/pg</option>
-          </select>
+          <Select
+            value={String(pageSize)}
+            onChange={(val) => setPageSize(Number(val))}
+            options={[
+              { value: '5', label: '5/pg' },
+              { value: '10', label: '10/pg' },
+              { value: '20', label: '20/pg' },
+              { value: '50', label: '50/pg' },
+            ]}
+          />
         </div>
         <div className="flex items-center gap-1">
           <Button

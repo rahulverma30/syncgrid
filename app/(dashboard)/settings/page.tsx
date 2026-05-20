@@ -28,7 +28,7 @@ import {
   X,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { PageHeader, Button } from '@/components/ui';
+import { PageHeader, Button, Select } from '@/components/ui';
 import { toast } from 'sonner';
 
 type TabType = 'profile' | 'billing' | 'branding' | 'keys' | 'webhooks' | 'security' | 'members';
@@ -1157,21 +1157,20 @@ export default function SettingsPage() {
                           <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80 block">
                             API Request Throttling Rate
                           </label>
-                          <select className="w-full bg-background/85 border border-border/60 px-4 py-2.5 rounded-xl text-xs text-foreground outline-none cursor-pointer">
-                            <option>100 requests / minute (Standard)</option>
-                            <option>500 requests / minute (Pro Upgrade)</option>
-                            <option>Unlimited (Enterprise Custom SLA)</option>
-                          </select>
+                          <Select
+                            className="w-full bg-background/85 border border-border/60 px-4 py-2.5 rounded-xl text-xs text-foreground outline-none cursor-pointer"
+                            options={[]}
+                          />
                         </div>
 
                         <div className="space-y-1.5">
                           <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80 block">
                             Suspicious Login Attempts Limit
                           </label>
-                          <select className="w-full bg-background/85 border border-border/60 px-4 py-2.5 rounded-xl text-xs text-foreground outline-none cursor-pointer">
-                            <option>5 failed attempts (Auto Locked for 15m)</option>
-                            <option>3 failed attempts (MFA mandatory verification prompt)</option>
-                          </select>
+                          <Select
+                            className="w-full bg-background/85 border border-border/60 px-4 py-2.5 rounded-xl text-xs text-foreground outline-none cursor-pointer"
+                            options={[]}
+                          />
                         </div>
                       </div>
 
@@ -1366,19 +1365,12 @@ export default function SettingsPage() {
                                   <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80 block">
                                     RBAC Corporate Role
                                   </label>
-                                  <select
-                                    required
+                                  <Select
                                     value={inviteRole}
-                                    onChange={(e) => setInviteRole(e.target.value)}
+                                    onChange={(val) => setInviteRole(val)}
                                     className="w-full bg-background/80 border border-border/60 px-4 py-2.5 rounded-xl text-xs text-foreground outline-none cursor-pointer focus:border-primary/50"
-                                  >
-                                    <option value="">Select Security Role</option>
-                                    {rolesList.map((role) => (
-                                      <option key={role._id} value={role._id}>
-                                        {role.name}
-                                      </option>
-                                    ))}
-                                  </select>
+                                    options={[{ value: 'role._id', label: '{role.name}' }]}
+                                  />
                                 </div>
 
                                 {/* Department Selection */}
@@ -1386,18 +1378,12 @@ export default function SettingsPage() {
                                   <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80 block">
                                     Assigned Department
                                   </label>
-                                  <select
+                                  <Select
                                     value={inviteDept}
-                                    onChange={(e) => setInviteDept(e.target.value)}
+                                    onChange={(val) => setInviteDept(val)}
                                     className="w-full bg-background/80 border border-border/60 px-4 py-2.5 rounded-xl text-xs text-foreground outline-none cursor-pointer focus:border-primary/50"
-                                  >
-                                    <option value="">Select Corporate Dept</option>
-                                    {departmentsList.map((dept) => (
-                                      <option key={dept._id} value={dept._id}>
-                                        {dept.name}
-                                      </option>
-                                    ))}
-                                  </select>
+                                    options={[{ value: 'dept._id', label: '{dept.name}' }]}
+                                  />
                                 </div>
                               </div>
 

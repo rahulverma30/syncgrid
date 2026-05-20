@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { AlertTriangle, ShieldCheck, CheckSquare, Clock, UserCheck } from 'lucide-react';
 import { useTasksStore } from '@/store/tasksStore';
+import { Select } from '@/components/ui/select';
 
 export function WorkloadBalance() {
   const { fetchTasks } = useTasksStore();
@@ -171,24 +172,17 @@ export function WorkloadBalance() {
                           )}
 
                           {/* Drag rebalancer shortcut select box */}
-                          <select
-                            className="bg-background border border-border rounded text-[9px] px-1 py-0.5 focus:outline-none cursor-pointer"
-                            onChange={(e) => {
-                              if (e.target.value) handleReassign(task._id, e.target.value);
+                          <Select
+                            value=""
+                            placeholder="Move..."
+                            onChange={(val) => {
+                              if (val) handleReassign(task._id, val);
                             }}
-                            defaultValue=""
-                          >
-                            <option value="" disabled>
-                              Move...
-                            </option>
-                            {data
+                            options={data
                               .filter((m) => m.userId !== member.userId)
-                              .map((m) => (
-                                <option key={m.userId} value={m.userId}>
-                                  {m.userName}
-                                </option>
-                              ))}
-                          </select>
+                              .map((m) => ({ value: m.userId, label: m.userName }))}
+                            className="h-7 text-[10px] py-1 px-2 rounded-lg min-w-[80px]"
+                          />
                         </div>
                       </div>
                     ))

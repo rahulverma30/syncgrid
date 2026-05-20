@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Input, Modal } from '@/components/ui';
+import { Button, Input, Modal, Select } from '@/components/ui';
 import { Building } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useClientsStore } from '@/store/clientsStore';
@@ -116,17 +116,18 @@ export const ClientIngestModal: React.FC = () => {
             <label className="text-[9px] font-bold text-muted-foreground uppercase">
               Classification
             </label>
-            <select
+            <Select
               value={formType}
-              onChange={(e) => setFormType(e.target.value as any)}
-              className="w-full h-8.5 rounded-md border border-input bg-background/50 px-2 py-1 text-xs text-foreground focus:outline-none"
-            >
-              <option value="Startup">Startup Account</option>
-              <option value="VIP">VIP Account</option>
-              <option value="Enterprise">Enterprise Account</option>
-              <option value="Retainer">Retainer Contract</option>
-              <option value="High Value">High Value Account</option>
-            </select>
+              onChange={(value) => setFormType(value as any)}
+              options={[
+                { value: 'Startup', label: 'Startup Account' },
+                { value: 'VIP', label: 'VIP Account' },
+                { value: 'Enterprise', label: 'Enterprise Account' },
+                { value: 'Retainer', label: 'Retainer Contract' },
+                { value: 'High Value', label: 'High Value Account' },
+              ]}
+              className="h-8.5 text-xs rounded-lg px-2"
+            />
           </div>
           <div className="space-y-1">
             <label className="text-[9px] font-bold text-muted-foreground uppercase">
@@ -146,31 +147,33 @@ export const ClientIngestModal: React.FC = () => {
             <label className="text-[9px] font-bold text-muted-foreground uppercase">
               Company Size
             </label>
-            <select
+            <Select
               value={formSize}
-              onChange={(e) => setFormSize(e.target.value as any)}
-              className="w-full h-8.5 rounded-md border border-input bg-background/50 px-2 py-1 text-xs text-foreground focus:outline-none"
-            >
-              <option value="1-10">1-10 Employees</option>
-              <option value="11-50">11-50 Employees</option>
-              <option value="51-200">51-200 Employees</option>
-              <option value="201+">201+ Employees</option>
-            </select>
+              onChange={(value) => setFormSize(value as any)}
+              options={[
+                { value: '1-10', label: '1-10 Employees' },
+                { value: '11-50', label: '11-50 Employees' },
+                { value: '51-200', label: '51-200 Employees' },
+                { value: '201+', label: '201+ Employees' },
+              ]}
+              className="h-8.5 text-xs rounded-lg px-2"
+            />
           </div>
           <div className="space-y-1">
             <label className="text-[9px] font-bold text-muted-foreground uppercase">
               Account Owner
             </label>
-            <select
+            <Select
               value={formManager}
-              onChange={(e) => setFormManager(e.target.value)}
-              className="w-full h-8.5 rounded-md border border-input bg-background/50 px-2 py-1 text-xs text-foreground focus:outline-none"
-            >
-              <option value="">Choose Manager...</option>
-              <option value="Pepper Potts">Pepper Potts</option>
-              <option value="Lucius Fox">Lucius Fox</option>
-              <option value="Samantha Vance">Samantha Vance</option>
-            </select>
+              onChange={(value) => setFormManager(value)}
+              options={[
+                { value: '', label: 'Choose Manager...' },
+                { value: 'Pepper Potts', label: 'Pepper Potts' },
+                { value: 'Lucius Fox', label: 'Lucius Fox' },
+                { value: 'Samantha Vance', label: 'Samantha Vance' },
+              ]}
+              className="h-8.5 text-xs rounded-lg px-2"
+            />
           </div>
           <div className="space-y-1">
             <label className="text-[9px] font-bold text-muted-foreground uppercase">Timezone</label>

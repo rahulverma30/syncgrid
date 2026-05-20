@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Button, Input, Badge, CenteredModal } from '@/components/ui';
+import { Button, Input, Badge, CenteredModal, Select } from '@/components/ui';
 import { useLockBodyScroll } from '@/hooks';
 import {
   Users,
@@ -682,15 +682,18 @@ export const ClientDetailDrawer: React.FC = () => {
                   <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
                     Onboarding Checklist
                   </span>
-                  <select
-                    value={selectedClient.onboardingStatus}
-                    onChange={(e) => handleUpdateStatus('onboardingStatus', e.target.value)}
-                    className="h-7 rounded border border-border bg-background px-1.5 text-[10px] font-bold text-foreground focus:outline-none"
-                  >
-                    <option value="pending">Pending</option>
-                    <option value="in-progress">In-progress</option>
-                    <option value="completed">Completed</option>
-                  </select>
+                  <div className="w-36">
+                    <Select
+                      value={selectedClient.onboardingStatus}
+                      onChange={(value) => handleUpdateStatus('onboardingStatus', value)}
+                      options={[
+                        { value: 'pending', label: 'Pending' },
+                        { value: 'in-progress', label: 'In-progress' },
+                        { value: 'completed', label: 'Completed' },
+                      ]}
+                      className="h-8 text-xs rounded-lg px-2"
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-2">
@@ -724,15 +727,18 @@ export const ClientDetailDrawer: React.FC = () => {
                   <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
                     Retention Health
                   </span>
-                  <select
-                    value={selectedClient.retentionStatus}
-                    onChange={(e) => handleUpdateStatus('retentionStatus', e.target.value)}
-                    className="h-7 rounded border border-border bg-background px-1.5 text-[10px] font-bold text-foreground focus:outline-none"
-                  >
-                    <option value="retained">Retained</option>
-                    <option value="churn-risk">Churn Risk</option>
-                    <option value="churned">Churned</option>
-                  </select>
+                  <div className="w-36">
+                    <Select
+                      value={selectedClient.retentionStatus}
+                      onChange={(value) => handleUpdateStatus('retentionStatus', value)}
+                      options={[
+                        { value: 'retained', label: 'Retained' },
+                        { value: 'churn-risk', label: 'Churn Risk' },
+                        { value: 'churned', label: 'Churned' },
+                      ]}
+                      className="h-8 text-xs rounded-lg px-2"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -993,16 +999,17 @@ export const ClientDetailDrawer: React.FC = () => {
                     <label className="text-[9px] font-bold text-muted-foreground uppercase">
                       Log channel
                     </label>
-                    <select
+                    <Select
                       value={commType}
-                      onChange={(e) => setCommType(e.target.value as any)}
-                      className="w-full h-8 rounded-md border border-input bg-background/50 px-2 py-1 text-xs text-foreground focus:outline-none"
-                    >
-                      <option value="email">Email</option>
-                      <option value="call">Phone Call</option>
-                      <option value="meeting">Meeting</option>
-                      <option value="other">Other</option>
-                    </select>
+                      onChange={(value) => setCommType(value as any)}
+                      options={[
+                        { value: 'email', label: 'Email' },
+                        { value: 'call', label: 'Phone Call' },
+                        { value: 'meeting', label: 'Meeting' },
+                        { value: 'other', label: 'Other' },
+                      ]}
+                      className="h-8 text-xs rounded-lg px-2"
+                    />
                   </div>
                   <div className="space-y-1 col-span-2 text-left">
                     <label className="text-[9px] font-bold text-muted-foreground uppercase">
@@ -1079,17 +1086,18 @@ export const ClientDetailDrawer: React.FC = () => {
                     <label className="text-[9px] font-bold text-muted-foreground uppercase">
                       Category
                     </label>
-                    <select
+                    <Select
                       value={fileCat}
-                      onChange={(e) => setFileCat(e.target.value as any)}
-                      className="w-full h-8 rounded-md border border-input bg-background/50 px-2 py-1 text-xs text-foreground focus:outline-none"
-                    >
-                      <option value="NDA">NDA Agreement</option>
-                      <option value="contract">Standard Contract</option>
-                      <option value="proposal">Sales Proposal</option>
-                      <option value="onboarding">Onboarding Checklist</option>
-                      <option value="legal">Legal Counsel</option>
-                    </select>
+                      onChange={(value) => setFileCat(value as any)}
+                      options={[
+                        { value: 'NDA', label: 'NDA Agreement' },
+                        { value: 'contract', label: 'Standard Contract' },
+                        { value: 'proposal', label: 'Sales Proposal' },
+                        { value: 'onboarding', label: 'Onboarding Checklist' },
+                        { value: 'legal', label: 'Legal Counsel' },
+                      ]}
+                      className="h-8 text-xs rounded-lg px-2"
+                    />
                   </div>
                 </div>
 

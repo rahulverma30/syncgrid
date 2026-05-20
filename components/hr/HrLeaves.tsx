@@ -12,6 +12,7 @@ import {
   Badge,
   Input,
   Modal,
+  Select,
 } from '@/components/ui';
 import {
   Clock,
@@ -445,27 +446,17 @@ export function HrLeaves() {
             <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
               Leave Type
             </label>
-            <select
+            <Select
               value={form.leaveType}
-              onChange={(e) => setForm({ ...form, leaveType: e.target.value })}
-              className="w-full bg-card/20 border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary"
-            >
-              <option value="casual" className="bg-card text-foreground">
-                Casual Time Off
-              </option>
-              <option value="sick" className="bg-card text-foreground">
-                Sick Leave
-              </option>
-              <option value="paid" className="bg-card text-foreground">
-                Paid Vacation Leave
-              </option>
-              <option value="unpaid" className="bg-card text-foreground">
-                Unpaid Leave
-              </option>
-              <option value="emergency" className="bg-card text-foreground">
-                Emergency Leave
-              </option>
-            </select>
+              onChange={(val) => setForm({ ...form, leaveType: val })}
+              options={[
+                { value: 'casual', label: 'Casual Time Off' },
+                { value: 'sick', label: 'Sick Leave' },
+                { value: 'paid', label: 'Paid Vacation Leave' },
+                { value: 'unpaid', label: 'Unpaid Leave' },
+                { value: 'emergency', label: 'Emergency Leave' },
+              ]}
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-3">

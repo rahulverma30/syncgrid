@@ -1,7 +1,15 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { PageHeader, Card, CardContent, Button, Input, LoadingSpinner } from '@/components/ui';
+import {
+  PageHeader,
+  Card,
+  CardContent,
+  Button,
+  Input,
+  LoadingSpinner,
+  Select,
+} from '@/components/ui';
 import {
   User,
   Shield,
@@ -451,21 +459,16 @@ export default function AccountSettingsPage() {
                       <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                         Localization Language
                       </label>
-                      <select
+                      <Select
                         value={language}
-                        onChange={(e) => setLanguage(e.target.value)}
+                        onChange={(val) => setLanguage(val)}
                         className="w-full px-3 bg-background/30 border border-border/60 hover:border-primary/20 rounded-xl h-10 text-xs text-slate-300 focus:ring-0 outline-none cursor-pointer"
-                      >
-                        <option value="en" className="bg-slate-950">
-                          English (US)
-                        </option>
-                        <option value="es" className="bg-slate-950">
-                          Español (ES)
-                        </option>
-                        <option value="fr" className="bg-slate-950">
-                          Français (FR)
-                        </option>
-                      </select>
+                        options={[
+                          { value: 'en', label: 'English (US)' },
+                          { value: 'es', label: 'Español (ES)' },
+                          { value: 'fr', label: 'Français (FR)' },
+                        ]}
+                      />
                     </div>
 
                     <div className="flex justify-end pt-4 border-t border-border/40">

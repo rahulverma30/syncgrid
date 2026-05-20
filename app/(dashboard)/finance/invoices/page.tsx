@@ -10,6 +10,7 @@ import {
   Input,
   LoadingSpinner,
   ConfirmationModal,
+  Select,
 } from '@/components/ui';
 import {
   DollarSign,
@@ -310,27 +311,17 @@ export default function FinanceInvoicesPage() {
           <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
             <div className="flex items-center gap-1.5 bg-background/30 px-3 py-1.5 rounded-xl border border-border/40">
               <Filter className="h-3 w-3 text-slate-400" />
-              <select
+              <Select
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
+                onChange={(val) => setStatusFilter(val)}
                 className="bg-transparent border-0 text-[10px] font-bold uppercase tracking-wider text-slate-300 focus:ring-0 outline-none cursor-pointer"
-              >
-                <option value="" className="bg-slate-900">
-                  All Statuses
-                </option>
-                <option value="paid" className="bg-slate-900">
-                  Paid
-                </option>
-                <option value="sent" className="bg-slate-900">
-                  Sent
-                </option>
-                <option value="draft" className="bg-slate-900">
-                  Draft
-                </option>
-                <option value="overdue" className="bg-slate-900">
-                  Overdue
-                </option>
-              </select>
+                options={[
+                  { value: 'paid', label: 'Paid' },
+                  { value: 'sent', label: 'Sent' },
+                  { value: 'draft', label: 'Draft' },
+                  { value: 'overdue', label: 'Overdue' },
+                ]}
+              />
             </div>
           </div>
         </div>

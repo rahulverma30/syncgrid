@@ -12,6 +12,7 @@ import {
   Badge,
   Input,
   Modal,
+  Select,
 } from '@/components/ui';
 import { Trophy, Plus, Target, Star } from 'lucide-react';
 import { toast } from 'sonner';
@@ -236,23 +237,18 @@ export function HrPerformance() {
       >
         <form onSubmit={handleSubmitReview} className="space-y-4 pt-2">
           <div>
-            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
-              Target Employee
-            </label>
-            <select
+            <Select
+              label="Target Employee"
               value={selectedEmployeeId}
-              onChange={(e) => setSelectedEmployeeId(e.target.value)}
-              className="w-full bg-card/20 border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary"
-            >
-              <option value="" className="bg-card text-foreground">
-                Select Staff Member...
-              </option>
-              {employees.map((emp) => (
-                <option key={emp._id} value={emp._id} className="bg-card text-foreground">
-                  {emp.fullName}
-                </option>
-              ))}
-            </select>
+              onChange={(value) => setSelectedEmployeeId(value)}
+              options={[
+                { value: '', label: 'Select Staff Member...' },
+                ...employees.map((emp) => ({
+                  value: emp._id,
+                  label: emp.fullName,
+                })),
+              ]}
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -269,30 +265,18 @@ export function HrPerformance() {
               />
             </div>
             <div>
-              <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
-                Evaluation Score (1-5)
-              </label>
-              <select
+              <Select
+                label="Evaluation Score (1-5)"
                 value={String(form.score)}
-                onChange={(e) => setForm({ ...form, score: Number(e.target.value) })}
-                className="w-full bg-card/20 border border-border rounded-lg p-2 text-xs text-foreground focus:outline-none focus:border-primary"
-              >
-                <option value="5" className="bg-card text-foreground">
-                  5 - Outstanding Excellence
-                </option>
-                <option value="4" className="bg-card text-foreground">
-                  4 - Exceeds Expectations
-                </option>
-                <option value="3" className="bg-card text-foreground">
-                  3 - Meets Expectations
-                </option>
-                <option value="2" className="bg-card text-foreground">
-                  2 - Needs Improvement
-                </option>
-                <option value="1" className="bg-card text-foreground">
-                  1 - Unsatisfactory
-                </option>
-              </select>
+                onChange={(value) => setForm({ ...form, score: Number(value) })}
+                options={[
+                  { value: '5', label: '5 - Outstanding Excellence' },
+                  { value: '4', label: '4 - Exceeds Expectations' },
+                  { value: '3', label: '3 - Meets Expectations' },
+                  { value: '2', label: '2 - Needs Improvement' },
+                  { value: '1', label: '1 - Unsatisfactory' },
+                ]}
+              />
             </div>
           </div>
 

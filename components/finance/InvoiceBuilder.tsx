@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Plus, Trash2, Calculator, Save, X, DollarSign } from 'lucide-react';
-import { Button, Input } from '@/components/ui';
+import { Button, Input, Select } from '@/components/ui';
 import { toast } from 'sonner';
 
 interface InvoiceBuilderProps {
@@ -149,46 +149,35 @@ export const InvoiceBuilder: React.FC<InvoiceBuilderProps> = ({ onClose, onSubmi
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Dropdowns header inputs */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
           <div className="space-y-1">
-            <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
-              Customer Client
-            </label>
-            <select
-              required
+            <Select
+              label="Customer Client"
               value={selectedClient}
-              onChange={(e) => setSelectedClient(e.target.value)}
-              className="w-full h-9 px-3 border border-border bg-background/40 text-xs rounded-md focus:outline-none"
-            >
-              <option value="">Select Customer Client...</option>
-              {clients.map((c) => (
-                <option key={c._id} value={c._id}>
-                  {c.name} ({c.company || 'Private'})
-                </option>
-              ))}
-            </select>
+              onChange={(val) => setSelectedClient(val)}
+              placeholder="Select Customer Client..."
+              options={clients.map((c) => ({
+                value: c._id,
+                label: `${c.name} (${c.company || 'Private'})`,
+              }))}
+            />
           </div>
 
           <div className="space-y-1">
-            <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
-              Linked Project (Optional)
-            </label>
-            <select
+            <Select
+              label="Linked Project (Optional)"
               value={selectedProject}
-              onChange={(e) => setSelectedProject(e.target.value)}
-              className="w-full h-9 px-3 border border-border bg-background/40 text-xs rounded-md focus:outline-none"
-            >
-              <option value="">No Linked Project...</option>
-              {projects.map((p) => (
-                <option key={p._id} value={p._id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
+              onChange={(val) => setSelectedProject(val)}
+              placeholder="No Linked Project..."
+              options={projects.map((p) => ({
+                value: p._id,
+                label: p.name,
+              }))}
+            />
           </div>
 
           <div className="space-y-1">
-            <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+            <label className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
               Due Date
             </label>
             <Input
@@ -196,28 +185,26 @@ export const InvoiceBuilder: React.FC<InvoiceBuilderProps> = ({ onClose, onSubmi
               required
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
-              className="h-9 text-xs"
+              className="h-10 text-xs"
             />
           </div>
 
-          <div className="space-y-1 flex gap-2">
+          <div className="space-y-1 flex gap-2 items-end">
             <div className="flex-1">
-              <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
-                Currency
-              </label>
-              <select
+              <Select
+                label="Currency"
                 value={currency}
-                onChange={(e) => setCurrency(e.target.value)}
-                className="w-full h-9 px-3 border border-border bg-background/40 text-xs rounded-md focus:outline-none"
-              >
-                <option value="USD">USD ($)</option>
-                <option value="EUR">EUR (€)</option>
-                <option value="GBP">GBP (£)</option>
-                <option value="INR">INR (₹)</option>
-              </select>
+                onChange={(val) => setCurrency(val)}
+                options={[
+                  { value: 'USD', label: 'USD ($)' },
+                  { value: 'EUR', label: 'EUR (€)' },
+                  { value: 'GBP', label: 'GBP (£)' },
+                  { value: 'INR', label: 'INR (₹)' },
+                ]}
+              />
             </div>
             <div className="w-20">
-              <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+              <label className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
                 Ex Rate
               </label>
               <Input
@@ -225,7 +212,7 @@ export const InvoiceBuilder: React.FC<InvoiceBuilderProps> = ({ onClose, onSubmi
                 step="0.001"
                 value={exchangeRate}
                 onChange={(e) => setExchangeRate(e.target.value)}
-                className="h-9 text-xs"
+                className="h-10 text-xs"
               />
             </div>
           </div>

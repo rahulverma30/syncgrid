@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { PageHeader, Button } from '@/components/ui';
+import { PageHeader, Button, Select } from '@/components/ui';
 import { useCommandPaletteStore } from '@/store';
 import { Command, Shield, Sliders, RefreshCw } from 'lucide-react';
 import { getAnalyticsData } from '@/lib/services/analytics';
@@ -160,15 +160,19 @@ export default function DashboardPage() {
               <Shield className="h-3.5 w-3.5 text-primary" />
               Role View:
             </span>
-            <select
+            <Select
               value={activeRole}
-              onChange={(e) => handleRoleChange(e.target.value)}
+              onChange={(val) => {
+                const fakeEvent = { target: { value: val } };
+                ((e) => handleRoleChange(e.target.value))(fakeEvent);
+              }}
               className="h-8.5 rounded-lg border border-border/80 bg-background/50 px-2 py-1 text-xs font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              <option value="super-admin">Super Admin Workspace</option>
-              <option value="finance">Finance Specialist Dashboard</option>
-              <option value="developer">Developer Sprint Velocity</option>
-            </select>
+              options={[
+                { value: 'super-admin', label: 'Super Admin Workspace' },
+                { value: 'finance', label: 'Finance Specialist Dashboard' },
+                { value: 'developer', label: 'Developer Sprint Velocity' },
+              ]}
+            />
           </div>
         </div>
 
