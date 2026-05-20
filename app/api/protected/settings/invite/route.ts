@@ -5,6 +5,7 @@ import { connectToDatabase } from '@/lib/db/mongodb';
 import { Invitation, Employee, User, Role, Company, AuditLog } from '@/models';
 import { sendInvitationEmail } from '@/lib/email';
 import { hasRole } from '@/lib/auth/permission-checks';
+import { runBypassingTenant } from '@/lib/db/tenantPlugin';
 
 // 1. GET: List all invitations for the company
 export const GET = withApiAuth(async (request: Request, context: any, session: any) => {
@@ -59,8 +60,8 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
 
     const cleanEmail = email.trim().toLowerCase();
 
-    // A. Check if the user already exists in the system
-    const existingUser = await User.findOne({ email: cleanEmail });
+    // A. Check if the user already exists in the system globally (bypassing tenant plugin)
+    const existingUser = await runBypassingTenant(() => User.findOne({ email: cleanEmail }));
     if (existingUser) {
       return NextResponse.json(
         {
@@ -142,13 +143,29 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     });
     await employee.save();
 
-    // H. Send email
-    await sendInvitationEmail({
-      to: cleanEmail,
-      token,
-      companyName,
-      invitedBy: actorName || session.user.email,
-    });
+    // H. Send email with robust error boundary and dynamic cleanup
+    try {
+      await sendInvitationEmail({
+        to: cleanEmail,
+        token,
+        companyName,
+        invitedBy: actorName || session.user.email,
+      });
+    } catch (emailError: any) {
+      // Rollback database writes to avoid blocking subsequent invites to this email
+      await Invitation.deleteOne({ _id: invitation._id });
+      await Employee.deleteOne({ _id: employee._id });
+
+      console.error('❌ Failed to dispatch invitation email:', emailError);
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'EMAIL_DISPATCH_FAILED',
+          message: `Failed to send invitation email: ${emailError.message}. Database records have been rolled back so you can try again.`,
+        },
+        { status: 502 }
+      );
+    }
 
     // I. Audit log
     await AuditLog.create({
@@ -202,19 +219,41 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
     const company = await Company.findById(companyId);
     const companyName = company ? company.name : 'SyncGrid Workspace';
 
-    // Regenerate token & extend expiration
+    // Revertible token regeneration & expiration extension
+    const originalToken = invite.token;
+    const originalExpiresAt = invite.expiresAt;
+    const originalStatus = invite.status;
+
     const newToken = crypto.randomBytes(32).toString('hex');
     invite.token = newToken;
     invite.expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
     invite.status = 'pending';
     await invite.save();
 
-    await sendInvitationEmail({
-      to: invite.email,
-      token: newToken,
-      companyName,
-      invitedBy: actorName || session.user.email,
-    });
+    try {
+      await sendInvitationEmail({
+        to: invite.email,
+        token: newToken,
+        companyName,
+        invitedBy: actorName || session.user.email,
+      });
+    } catch (emailError: any) {
+      // Revert database writes on failure
+      invite.token = originalToken;
+      invite.expiresAt = originalExpiresAt;
+      invite.status = originalStatus;
+      await invite.save();
+
+      console.error('❌ Failed to resend invitation email:', emailError);
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'EMAIL_DISPATCH_FAILED',
+          message: `Failed to resend invitation email: ${emailError.message}. Database records have been reverted.`,
+        },
+        { status: 502 }
+      );
+    }
 
     await AuditLog.create({
       companyId,

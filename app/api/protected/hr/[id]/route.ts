@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { withApiPermission } from '@/lib/auth/api';
 import { connectToDatabase } from '@/lib/db/mongodb';
-import { Employee, EmployeeActivity, User } from '@/models';
+import { Employee, EmployeeActivity, User, Role } from '@/models';
 import { EmployeeUpdateSchema } from '@/schemas/hr';
 import { hasPermission } from '@/lib/auth/permission-checks';
 
@@ -147,6 +147,17 @@ export const PUT = withApiPermission(
             ? 'disabled'
             : 'active';
         await User.updateOne({ _id: employee.userId }, { $set: { status: userStatus } });
+      }
+
+      // Synchronize User role when roleId is provided
+      if (body.roleId && employee.userId) {
+        const roleExists = await Role.findOne({
+          _id: body.roleId,
+          $or: [{ companyId: null }, { companyId }],
+        });
+        if (roleExists) {
+          await User.updateOne({ _id: employee.userId }, { $set: { roles: [body.roleId] } });
+        }
       }
 
       // Log Activity

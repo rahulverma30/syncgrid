@@ -50,7 +50,11 @@ export const GET = withApiPermission(
         .select('-skills -certifications -emergencyContacts -assets -documents -payrollMetadata')
         .populate({ path: 'departmentId', select: 'name code managerId' })
         .populate({ path: 'teamId', select: 'name leaderId' })
-        .populate({ path: 'userId', select: 'name email image' })
+        .populate({
+          path: 'userId',
+          select: 'name email image roles',
+          populate: { path: 'roles', model: 'Role', select: 'name' },
+        })
         .sort({ createdAt: -1 })
         .lean();
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Select } from '@/components/ui';
 import { PERMISSION_RESOURCES } from '@/constants/rbac';
 
@@ -22,6 +22,7 @@ import {
   Layers,
   Copy,
   ChevronRight,
+  ChevronDown,
   UserCheck,
   Network,
 } from 'lucide-react';
@@ -64,6 +65,325 @@ interface PolicyObj {
   companyId: string | null;
 }
 
+// 8 click-to-fill archetype cards configuration
+const ROLE_TEMPLATES = [
+  {
+    name: 'Super Administrator',
+    description:
+      'Enterprise-grade authorization tier granting full administrative privileges across all tenant modules.',
+    hierarchyLevel: 1,
+    perms: [
+      'crm:read',
+      'crm:create',
+      'crm:update',
+      'crm:delete',
+      'crm:manage',
+      'projects:read',
+      'projects:create',
+      'projects:update',
+      'projects:update:any',
+      'projects:delete',
+      'projects:manage',
+      'hr:read',
+      'hr:create',
+      'hr:update',
+      'hr:delete',
+      'hr:manage',
+      'finance:read',
+      'finance:create',
+      'finance:update',
+      'finance:delete',
+      'finance:manage',
+      'settings:read',
+      'settings:update',
+      'settings:manage',
+      'collaboration:read',
+      'collaboration:create',
+      'collaboration:manage',
+      'analytics:read',
+      'analytics:manage',
+    ],
+    gradient: 'from-rose-500/20 via-pink-500/10 to-transparent',
+    border: 'border-rose-500/35 text-rose-400',
+  },
+  {
+    name: 'Software Developer',
+    description:
+      'Technical clearance role tailored for creating, managing, and resolving development milestone pipelines.',
+    hierarchyLevel: 20,
+    perms: [
+      'projects:read',
+      'projects:create',
+      'projects:update',
+      'collaboration:read',
+      'collaboration:create',
+    ],
+    gradient: 'from-blue-500/20 via-indigo-500/10 to-transparent',
+    border: 'border-blue-500/35 text-blue-400',
+  },
+  {
+    name: 'Project Manager',
+    description:
+      'Supervises team projects, milestone schedules, analytics tracking, and cross-channel collaboration.',
+    hierarchyLevel: 10,
+    perms: [
+      'projects:read',
+      'projects:create',
+      'projects:update',
+      'projects:update:any',
+      'projects:delete',
+      'projects:manage',
+      'collaboration:read',
+      'collaboration:create',
+      'analytics:read',
+    ],
+    gradient: 'from-purple-500/20 via-fuchsia-500/10 to-transparent',
+    border: 'border-purple-500/35 text-purple-400',
+  },
+  {
+    name: 'HR Specialist',
+    description:
+      'Manages enterprise talent onboarding, specialist directory settings, and compensation/leave policies.',
+    hierarchyLevel: 12,
+    perms: ['hr:read', 'hr:create', 'hr:update', 'hr:delete', 'hr:manage', 'collaboration:read'],
+    gradient: 'from-pink-500/20 via-rose-500/10 to-transparent',
+    border: 'border-pink-500/35 text-pink-400',
+  },
+  {
+    name: 'Financial Controller',
+    description:
+      'Clears audit restrictions for ledger logs, invoice processing, billing cycles, and Stripe configurations.',
+    hierarchyLevel: 15,
+    perms: [
+      'finance:read',
+      'finance:create',
+      'finance:update',
+      'finance:delete',
+      'finance:manage',
+      'analytics:read',
+    ],
+    gradient: 'from-emerald-500/20 via-teal-500/10 to-transparent',
+    border: 'border-emerald-500/35 text-emerald-400',
+  },
+  {
+    name: 'Sales Executive',
+    description:
+      'Tailored clearance for CRM leads management, deals negotiation, and transaction logging.',
+    hierarchyLevel: 25,
+    perms: ['crm:read', 'crm:create', 'crm:update', 'collaboration:read', 'collaboration:create'],
+    gradient: 'from-amber-500/20 via-orange-500/10 to-transparent',
+    border: 'border-amber-500/35 text-amber-400',
+  },
+  {
+    name: 'Customer Support',
+    description:
+      'Assigned to client relationship management pipelines, workspace communications, and feedback queues.',
+    hierarchyLevel: 30,
+    perms: ['crm:read', 'crm:update', 'collaboration:read', 'collaboration:create'],
+    gradient: 'from-teal-500/20 via-cyan-500/10 to-transparent',
+    border: 'border-teal-500/35 text-teal-400',
+  },
+  {
+    name: 'Enterprise Client Partner',
+    description:
+      'External clearance permitting read-only access to scoped projects, support channels, and invoices.',
+    hierarchyLevel: 100,
+    perms: ['projects:read', 'collaboration:read', 'finance:read'],
+    gradient: 'from-cyan-500/20 via-sky-500/10 to-transparent',
+    border: 'border-cyan-500/35 text-cyan-400',
+  },
+];
+
+// Progressive disclosure toggles schema
+const BASIC_TOGGLES = [
+  {
+    category: 'CRM',
+    label: 'CRM Operations Clearances',
+    options: [
+      { level: 'none', label: 'No Access', perms: [] },
+      { level: 'read', label: 'Viewer (Read-only leads & pipelines)', perms: ['crm:read'] },
+      {
+        level: 'write',
+        label: 'Manager (Create & edit CRM profiles)',
+        perms: ['crm:read', 'crm:create', 'crm:update', 'crm:delete'],
+      },
+      {
+        level: 'admin',
+        label: 'Administrator (Supervise sales & budgets)',
+        perms: ['crm:read', 'crm:create', 'crm:update', 'crm:delete', 'crm:manage'],
+      },
+    ],
+  },
+  {
+    category: 'Projects',
+    label: 'Project Engineering Clearances',
+    options: [
+      { level: 'none', label: 'No Access', perms: [] },
+      { level: 'read', label: 'Viewer (Read-only projects & boards)', perms: ['projects:read'] },
+      {
+        level: 'write',
+        label: 'Manager (Manage deliverables & milestones)',
+        perms: ['projects:read', 'projects:create', 'projects:update', 'projects:delete'],
+      },
+      {
+        level: 'admin',
+        label: 'Administrator (Full project governance & budgets)',
+        perms: [
+          'projects:read',
+          'projects:create',
+          'projects:update',
+          'projects:update:any',
+          'projects:delete',
+          'projects:manage',
+        ],
+      },
+    ],
+  },
+  {
+    category: 'HR',
+    label: 'Human Resources Clearances',
+    options: [
+      { level: 'none', label: 'No Access', perms: [] },
+      { level: 'read', label: 'Viewer (Read specialists & departments)', perms: ['hr:read'] },
+      {
+        level: 'write',
+        label: 'Manager (Onboard & manage employee statuses)',
+        perms: ['hr:read', 'hr:create', 'hr:update', 'hr:delete'],
+      },
+      {
+        level: 'admin',
+        label: 'Administrator (Full employee compensations & policies)',
+        perms: ['hr:read', 'hr:create', 'hr:update', 'hr:delete', 'hr:manage'],
+      },
+    ],
+  },
+  {
+    category: 'Finance',
+    label: 'Ledgers & Invoice Clearances',
+    options: [
+      { level: 'none', label: 'No Access', perms: [] },
+      {
+        level: 'read',
+        label: 'Viewer (View invoices & transaction logs)',
+        perms: ['finance:read'],
+      },
+      {
+        level: 'write',
+        label: 'Manager (Draft & reconcile billing transactions)',
+        perms: ['finance:read', 'finance:create', 'finance:update', 'finance:delete'],
+      },
+      {
+        level: 'admin',
+        label: 'Administrator (Configure gateway billing overrides)',
+        perms: [
+          'finance:read',
+          'finance:create',
+          'finance:update',
+          'finance:delete',
+          'finance:manage',
+        ],
+      },
+    ],
+  },
+  {
+    category: 'Collaboration',
+    label: 'Workspace Communication Clearances',
+    options: [
+      { level: 'none', label: 'No Access', perms: [] },
+      { level: 'read', label: 'Viewer (Access & chat in channels)', perms: ['collaboration:read'] },
+      {
+        level: 'write',
+        label: 'Manager (Create channels & threads)',
+        perms: ['collaboration:read', 'collaboration:create'],
+      },
+      {
+        level: 'admin',
+        label: 'Administrator (Moderate channels & chat parameters)',
+        perms: ['collaboration:read', 'collaboration:create', 'collaboration:manage'],
+      },
+    ],
+  },
+  {
+    category: 'Analytics',
+    label: 'Intelligence & BI Clearances',
+    options: [
+      { level: 'none', label: 'No Access', perms: [] },
+      { level: 'read', label: 'Viewer (Access standard dashboards)', perms: ['analytics:read'] },
+      {
+        level: 'admin',
+        label: 'Administrator (Configure enterprise BI analytics schemas)',
+        perms: ['analytics:read', 'analytics:manage'],
+      },
+    ],
+  },
+  {
+    category: 'Settings',
+    label: 'System Parameter Clearances',
+    options: [
+      { level: 'none', label: 'No Access', perms: [] },
+      { level: 'read', label: 'Viewer (View system configurations)', perms: ['settings:read'] },
+      {
+        level: 'write',
+        label: 'Manager (Modify standard configs)',
+        perms: ['settings:read', 'settings:update'],
+      },
+      {
+        level: 'admin',
+        label: 'Administrator (Control gateway portals & tenant keys)',
+        perms: ['settings:read', 'settings:update', 'settings:manage'],
+      },
+    ],
+  },
+];
+
+// Business Translation Mapper
+const translatePermissionKey = (key: string, description: string) => {
+  const k = key.toLowerCase();
+  if (k === 'crm:read') return 'View CRM Pipeline & Leads';
+  if (k === 'crm:create') return 'Create CRM Leads & Pipelines';
+  if (k === 'crm:update') return 'Edit CRM Lead & Pipeline Information';
+  if (k === 'crm:delete') return 'Remove CRM Lead & Pipeline Records';
+  if (k === 'crm:manage') return 'Supervise CRM Sales Operations & Assignments';
+
+  if (k === 'projects:read') return 'View Projects & Milestones';
+  if (k === 'projects:create') return 'Create New Projects & Milestones';
+  if (k === 'projects:update') return 'Edit Projects & Milestones';
+  if (k === 'projects:update:any') return 'Modify Any Enterprise Project';
+  if (k === 'projects:delete') return 'Archive Projects & Milestones';
+  if (k === 'projects:manage') return 'Approve Project Budgets & Deliverables';
+
+  if (k === 'hr:read') return 'View Colleagues Profiles & Contacts';
+  if (k === 'hr:create') return 'Onboard New Workspace Specialists';
+  if (k === 'hr:update') return 'Update Employee Profiles & Statuses';
+  if (k === 'hr:delete') return 'Offboard Workspace Specialists';
+  if (k === 'hr:manage') return 'Manage Employee Compensation & Leaves';
+
+  if (k === 'finance:read') return 'View Invoices & Transaction History';
+  if (k === 'finance:create') return 'Draft Invoices & Log Expenditures';
+  if (k === 'finance:update') return 'Reconcile Invoices & Transactions';
+  if (k === 'finance:delete') return 'Revoke Draft Invoices & Transactions';
+  if (k === 'finance:manage') return 'Supervise Stripe Integrations & Billing';
+
+  if (k === 'settings:read') return 'View Workspace Configurations';
+  if (k === 'settings:update') return 'Modify General Tenant System Parameters';
+  if (k === 'settings:manage') return 'Configure System Gateways & Security';
+
+  if (k === 'collaboration:read') return 'Access Channels & Workspace Chats';
+  if (k === 'collaboration:create') return 'Create Channels & Direct Messages';
+  if (k === 'collaboration:manage') return 'Moderate Channels & Chats';
+
+  if (k === 'analytics:read') return 'View Performance Dashboards';
+  if (k === 'analytics:manage') return 'Deploy Custom Business BI Models';
+
+  const parts = key.split(':');
+  if (parts.length >= 2) {
+    const resource = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
+    const action = parts.slice(1).join(' ').toUpperCase();
+    return `${action} Privilege inside ${resource}`;
+  }
+  return description || key;
+};
+
 export default function RolesAndAuthorizationPage() {
   const { data: session } = useSession();
   const currentUserId = session?.user?.id;
@@ -82,6 +402,17 @@ export default function RolesAndAuthorizationPage() {
   const [searchPermissionQuery, setSearchPermissionQuery] = useState('');
   const [isCreatingRole, setIsCreatingRole] = useState(false);
   const [isCreatingPolicy, setIsCreatingPolicy] = useState(false);
+  const [viewMode, setViewMode] = useState<'basic' | 'advanced'>('basic');
+  const [openAccordions, setOpenAccordions] = useState<Record<string, boolean>>({
+    CRM: true,
+    Projects: true,
+    HR: false,
+    Finance: false,
+    Collaboration: false,
+    Analytics: false,
+    Settings: false,
+    General: false,
+  });
 
   // New Custom Role Builder Form State
   const [newRoleName, setNewRoleName] = useState('');
@@ -116,10 +447,10 @@ export default function RolesAndAuthorizationPage() {
       if (polData.success) setPolicies(polData.data);
 
       // 4. Fetch Users (Members list)
-      const uRes = await fetch('/api/protected/settings/invite'); // invite displays colleagues and details
+      const uRes = await fetch('/api/protected/hr');
       const uData = await uRes.json();
       if (uData.success) {
-        setUsers(uData.data?.employees || []);
+        setUsers(uData.data || []);
       }
     } catch (err) {
       toast.error('Failed to resolve enterprise access contexts.');
@@ -128,10 +459,11 @@ export default function RolesAndAuthorizationPage() {
     }
   };
 
+  const fetchFetchedRef = useRef(false);
   useEffect(() => {
-    Promise.resolve().then(() => {
-      fetchCoreData();
-    });
+    if (fetchFetchedRef.current) return;
+    fetchFetchedRef.current = true;
+    fetchCoreData();
   }, []);
 
   // --- ROLE ACTIONS ---
@@ -234,6 +566,65 @@ export default function RolesAndAuthorizationPage() {
     toast.info(`Cloned matrix configuration from "${role.name}".`);
   };
 
+  const handleToggleCategoryPermissions = (
+    categoryName: string,
+    permsList: PermissionObj[],
+    selectAll: boolean
+  ) => {
+    if (!selectedRole || selectedRole.isSystem) return;
+    const currentRolePermIds = (selectedRole.permissions || []).map((p: any) =>
+      typeof p === 'string' ? p : p._id
+    );
+    const categoryPermIds = permsList.map((p) => p._id);
+
+    let nextPermIds: string[];
+    if (selectAll) {
+      nextPermIds = Array.from(new Set([...currentRolePermIds, ...categoryPermIds]));
+    } else {
+      nextPermIds = currentRolePermIds.filter((id) => !categoryPermIds.includes(id));
+    }
+
+    const inheritsIds = (selectedRole.inheritedRoles || []).map((ir: any) =>
+      typeof ir === 'string' ? ir : ir._id
+    );
+
+    handleUpdateRolePermissions(selectedRole._id, nextPermIds, inheritsIds);
+  };
+
+  const handleSelectArchetype = (template: (typeof ROLE_TEMPLATES)[0]) => {
+    setNewRoleName(template.name);
+    setNewRoleDesc(template.description);
+    setNewRoleHierarchy(template.hierarchyLevel);
+
+    const matchedIds = template.perms
+      .map((key) => permissions.find((p) => p.key === key)?._id)
+      .filter(Boolean) as string[];
+
+    setNewRolePermissionIds(matchedIds);
+    toast.success(
+      `Archetype "${template.name}" configured. ${matchedIds.length} permissions mapped!`
+    );
+  };
+
+  const handleUpdateUserRole = async (memberId: string, newRoleId: string) => {
+    try {
+      const res = await fetch(`/api/protected/hr/${memberId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ roleId: newRoleId }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Member clearance role updated successfully.');
+        fetchCoreData();
+      } else {
+        toast.error(data.message || 'Failed to update member clearance.');
+      }
+    } catch (err) {
+      toast.error('Network sync failure.');
+    }
+  };
+
   // --- POLICY ACTIONS ---
   const handleCreatePolicy = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -295,6 +686,58 @@ export default function RolesAndAuthorizationPage() {
     } catch (err) {
       toast.error('Network sync failure');
     }
+  };
+
+  const getBasicLevelForCategory = (categoryName: string, rolePermIds: string[]) => {
+    const categoryLower = categoryName.toLowerCase();
+    const toggleConfig = BASIC_TOGGLES.find((t) => t.category.toLowerCase() === categoryLower);
+    if (!toggleConfig) return 'none';
+
+    const adminPerms = toggleConfig.options.find((o) => o.level === 'admin')?.perms || [];
+    const writePerms = toggleConfig.options.find((o) => o.level === 'write')?.perms || [];
+    const readPerms = toggleConfig.options.find((o) => o.level === 'read')?.perms || [];
+
+    const findIds = (keys: string[]) =>
+      keys.map((k) => permissions.find((p) => p.key === k)?._id).filter(Boolean) as string[];
+
+    const adminIds = findIds(adminPerms);
+    const writeIds = findIds(writePerms);
+    const readIds = findIds(readPerms);
+
+    if (adminIds.length > 0 && adminIds.every((id) => rolePermIds.includes(id))) return 'admin';
+    if (writeIds.length > 0 && writeIds.every((id) => rolePermIds.includes(id))) return 'write';
+    if (readIds.length > 0 && readIds.every((id) => rolePermIds.includes(id))) return 'read';
+    return 'none';
+  };
+
+  const handleUpdateBasicLevel = async (
+    roleId: string,
+    categoryName: string,
+    newLevel: string,
+    currentRolePermIds: string[],
+    inheritedIds: string[]
+  ) => {
+    const categoryLower = categoryName.toLowerCase();
+    const toggleConfig = BASIC_TOGGLES.find((t) => t.category.toLowerCase() === categoryLower);
+    if (!toggleConfig) return;
+
+    const categoryPerms = permissions.filter(
+      (p) =>
+        p.category?.toLowerCase() === categoryLower || p.module?.toLowerCase() === categoryLower
+    );
+    const categoryPermIds = categoryPerms.map((p) => p._id);
+
+    let nextPermIds = currentRolePermIds.filter((id) => !categoryPermIds.includes(id));
+
+    const option = toggleConfig.options.find((o) => o.level === newLevel);
+    if (option && option.perms.length > 0) {
+      const optionPermIds = option.perms
+        .map((k) => permissions.find((p) => p.key === k)?._id)
+        .filter(Boolean) as string[];
+      nextPermIds = [...nextPermIds, ...optionPermIds];
+    }
+
+    handleUpdateRolePermissions(roleId, nextPermIds, inheritedIds);
   };
 
   // Helper: group permissions by Category / Module
@@ -616,84 +1059,273 @@ export default function RolesAndAuthorizationPage() {
                       </div>
                     </div>
 
-                    {/* Permissions search bar */}
-                    <div className="relative mb-6">
-                      <Search className="absolute left-3.5 top-2.5 h-4 w-4 text-muted-foreground/60" />
-                      <input
-                        type="text"
-                        placeholder="Search permissions keys..."
-                        value={searchPermissionQuery}
-                        onChange={(e) => setSearchPermissionQuery(e.target.value)}
-                        className="w-full bg-background border border-border pl-10 pr-4 py-2 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-primary/80"
-                      />
+                    {/* View Mode Pill Switcher */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-muted/20 border border-border/60 p-3 rounded-2xl mb-6 gap-3">
+                      <div>
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">
+                          Clearance Composition Mode
+                        </span>
+                        <span className="text-[9px] text-muted-foreground/80">
+                          Toggle between business levels or custom granular scopes.
+                        </span>
+                      </div>
+                      <div className="flex bg-background border border-border/50 rounded-xl p-0.5 self-stretch sm:self-auto justify-between">
+                        <button
+                          type="button"
+                          onClick={() => setViewMode('basic')}
+                          className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                            viewMode === 'basic'
+                              ? 'bg-primary text-primary-foreground shadow'
+                              : 'text-muted-foreground hover:text-foreground'
+                          }`}
+                        >
+                          <Sparkles className="h-3.5 w-3.5" />
+                          <span>Basic View</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setViewMode('advanced')}
+                          className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                            viewMode === 'advanced'
+                              ? 'bg-primary text-primary-foreground shadow'
+                              : 'text-muted-foreground hover:text-foreground'
+                          }`}
+                        >
+                          <Layers className="h-3.5 w-3.5" />
+                          <span>Advanced Matrix</span>
+                        </button>
+                      </div>
                     </div>
 
-                    {/* Category matrix checklist */}
-                    <div className="space-y-6 max-h-[45vh] overflow-y-auto pr-2">
-                      {Object.entries(groupedPermissions).map(([categoryName, permsList]) => (
-                        <div
-                          key={categoryName}
-                          className="space-y-2 border-b border-border/20 pb-4 last:border-b-0 last:pb-0"
-                        >
-                          <h4 className="text-xs font-bold text-primary flex items-center gap-1.5">
-                            <Plus className="h-3 w-3" />
-                            {categoryName}
-                          </h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                            {permsList.map((perm) => {
-                              const currentRolePermIds = (selectedRole.permissions || []).map(
-                                (p: any) => (typeof p === 'string' ? p : p._id)
-                              );
-                              const hasPerm = currentRolePermIds.includes(perm._id);
+                    {/* Progressive Disclosure Content Area */}
+                    {viewMode === 'basic' ? (
+                      <div className="grid grid-cols-1 gap-4 max-h-[50vh] overflow-y-auto pr-2">
+                        {BASIC_TOGGLES.map((toggle) => {
+                          const currentRolePermIds = (selectedRole.permissions || []).map(
+                            (p: any) => (typeof p === 'string' ? p : p._id)
+                          );
+                          const activeLevel = getBasicLevelForCategory(
+                            toggle.category,
+                            currentRolePermIds
+                          );
+                          const inheritedRoleIds = (selectedRole.inheritedRoles || []).map(
+                            (ir: any) => (typeof ir === 'string' ? ir : ir._id)
+                          );
 
-                              return (
-                                <div
-                                  key={perm._id}
-                                  onClick={() => {
-                                    if (selectedRole.isSystem) return;
-                                    const nextPermIds = hasPerm
-                                      ? currentRolePermIds.filter((id) => id !== perm._id)
-                                      : [...currentRolePermIds, perm._id];
+                          return (
+                            <div
+                              key={toggle.category}
+                              className="p-4 rounded-2xl border border-border/60 bg-muted/5 hover:bg-muted/10/20 transition-all flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4"
+                            >
+                              <div className="space-y-1">
+                                <h4 className="text-xs font-extrabold text-foreground flex items-center gap-2">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                  {toggle.category} Operations
+                                </h4>
+                                <p className="text-[10px] text-muted-foreground max-w-sm leading-relaxed">
+                                  {toggle.label}
+                                </p>
+                              </div>
 
-                                    const inheritsIds = (selectedRole.inheritedRoles || []).map(
-                                      (ir: any) => (typeof ir === 'string' ? ir : ir._id)
-                                    );
-                                    handleUpdateRolePermissions(
-                                      selectedRole._id,
-                                      nextPermIds,
-                                      inheritsIds
-                                    );
-                                  }}
-                                  className={`flex items-start gap-2.5 p-2 rounded-xl border cursor-pointer transition-all ${
-                                    hasPerm
-                                      ? 'border-emerald-500/30 bg-emerald-500/5 text-foreground'
-                                      : 'border-border/60 hover:bg-muted/30 text-muted-foreground hover:text-foreground'
-                                  } ${selectedRole.isSystem && 'cursor-default opacity-85'}`}
-                                >
-                                  <input
-                                    type="checkbox"
-                                    checked={hasPerm}
-                                    disabled={selectedRole.isSystem}
-                                    readOnly
-                                    className="mt-0.5 h-3.5 w-3.5 accent-emerald-500 cursor-pointer"
-                                  />
+                              <div className="flex bg-background border border-border/60 p-0.5 rounded-xl self-start xl:self-auto overflow-hidden">
+                                {toggle.options.map((opt) => {
+                                  const isSelected = activeLevel === opt.level;
+                                  return (
+                                    <button
+                                      key={opt.level}
+                                      type="button"
+                                      disabled={selectedRole.isSystem}
+                                      onClick={() => {
+                                        if (selectedRole.isSystem) return;
+                                        handleUpdateBasicLevel(
+                                          selectedRole._id,
+                                          toggle.category,
+                                          opt.level,
+                                          currentRolePermIds,
+                                          inheritedRoleIds
+                                        );
+                                      }}
+                                      className={`px-3 py-1.5 rounded-lg text-[9px] font-extrabold transition-all whitespace-nowrap ${
+                                        isSelected
+                                          ? 'bg-primary text-primary-foreground shadow'
+                                          : 'text-muted-foreground hover:text-foreground hover:bg-muted/30'
+                                      } ${selectedRole.isSystem && 'cursor-not-allowed opacity-80'}`}
+                                      title={opt.label}
+                                    >
+                                      {opt.level === 'none' && 'No Access'}
+                                      {opt.level === 'read' && 'Viewer'}
+                                      {opt.level === 'write' && 'Manager'}
+                                      {opt.level === 'admin' && 'Admin'}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
+                        {/* Search bar */}
+                        <div className="relative">
+                          <Search className="absolute left-3.5 top-2.5 h-4 w-4 text-muted-foreground/60" />
+                          <input
+                            type="text"
+                            placeholder="Search permissions by name, key, or description..."
+                            value={searchPermissionQuery}
+                            onChange={(e) => setSearchPermissionQuery(e.target.value)}
+                            className="w-full bg-background border border-border pl-10 pr-4 py-2.5 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-primary/80"
+                          />
+                        </div>
+
+                        {Object.entries(groupedPermissions).map(([categoryName, permsList]) => {
+                          const currentRolePermIds = (selectedRole.permissions || []).map(
+                            (p: any) => (typeof p === 'string' ? p : p._id)
+                          );
+                          const categoryPermIds = permsList.map((p) => p._id);
+                          const selectedInCat = permsList.filter((p) =>
+                            currentRolePermIds.includes(p._id)
+                          );
+                          const allSelectedInCat = categoryPermIds.every((id) =>
+                            currentRolePermIds.includes(id)
+                          );
+                          const someSelectedInCat =
+                            permsList.some((p) => currentRolePermIds.includes(p._id)) &&
+                            !allSelectedInCat;
+                          const isOpen = !!openAccordions[categoryName];
+
+                          return (
+                            <div
+                              key={categoryName}
+                              className="border border-border/60 bg-muted/5 hover:bg-muted/10/20 rounded-2xl overflow-hidden transition-all"
+                            >
+                              {/* Accordion Header */}
+                              <div
+                                className="flex items-center justify-between p-4 bg-muted/10 cursor-pointer select-none"
+                                onClick={() => {
+                                  setOpenAccordions((prev) => ({
+                                    ...prev,
+                                    [categoryName]: !prev[categoryName],
+                                  }));
+                                }}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setOpenAccordions((prev) => ({
+                                        ...prev,
+                                        [categoryName]: !prev[categoryName],
+                                      }));
+                                    }}
+                                    className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-all"
+                                  >
+                                    {isOpen ? (
+                                      <ChevronDown className="h-4 w-4" />
+                                    ) : (
+                                      <ChevronRight className="h-4 w-4" />
+                                    )}
+                                  </button>
                                   <div>
-                                    <div className="flex items-center gap-1.5">
-                                      <span className="font-mono text-[10px] font-bold uppercase tracking-wide">
-                                        {perm.key}
+                                    <h4 className="text-xs font-extrabold text-foreground flex items-center gap-2">
+                                      {categoryName} Clearances
+                                      <span className="text-[9px] font-bold bg-primary/10 border border-primary/20 text-primary px-2 py-0.5 rounded-full font-mono">
+                                        {selectedInCat.length}/{permsList.length} Active
                                       </span>
-                                    </div>
-                                    <span className="text-[10px] text-muted-foreground/80 line-clamp-1 block mt-0.5">
-                                      {perm.description}
-                                    </span>
+                                    </h4>
                                   </div>
                                 </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+
+                                {/* Category Level Checkbox */}
+                                <div
+                                  className="flex items-center gap-2 shrink-0"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <label className="text-[10px] font-bold text-muted-foreground uppercase cursor-pointer hover:text-foreground transition-colors flex items-center gap-1.5">
+                                    <input
+                                      type="checkbox"
+                                      checked={allSelectedInCat}
+                                      ref={(el) => {
+                                        if (el) {
+                                          el.indeterminate = someSelectedInCat;
+                                        }
+                                      }}
+                                      disabled={selectedRole.isSystem}
+                                      onChange={() => {
+                                        if (selectedRole.isSystem) return;
+                                        handleToggleCategoryPermissions(
+                                          categoryName,
+                                          permsList,
+                                          !allSelectedInCat
+                                        );
+                                      }}
+                                      className="h-3.5 w-3.5 accent-emerald-500 rounded border-border/80 focus:ring-0 cursor-pointer"
+                                    />
+                                    <span className="hidden sm:inline">Select Category</span>
+                                  </label>
+                                </div>
+                              </div>
+
+                              {/* Accordion Body */}
+                              {isOpen && (
+                                <div className="p-4 border-t border-border/40 bg-background/50 grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                                  {permsList.map((perm) => {
+                                    const hasPerm = currentRolePermIds.includes(perm._id);
+                                    return (
+                                      <div
+                                        key={perm._id}
+                                        onClick={() => {
+                                          if (selectedRole.isSystem) return;
+                                          const nextPermIds = hasPerm
+                                            ? currentRolePermIds.filter((id) => id !== perm._id)
+                                            : [...currentRolePermIds, perm._id];
+
+                                          const inheritsIds = (
+                                            selectedRole.inheritedRoles || []
+                                          ).map((ir: any) =>
+                                            typeof ir === 'string' ? ir : ir._id
+                                          );
+                                          handleUpdateRolePermissions(
+                                            selectedRole._id,
+                                            nextPermIds,
+                                            inheritsIds
+                                          );
+                                        }}
+                                        className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                                          hasPerm
+                                            ? 'border-emerald-500/30 bg-emerald-500/5 text-foreground font-semibold'
+                                            : 'border-border/60 hover:bg-muted/30 text-muted-foreground hover:text-foreground'
+                                        } ${selectedRole.isSystem && 'cursor-default opacity-85'}`}
+                                      >
+                                        <input
+                                          type="checkbox"
+                                          checked={hasPerm}
+                                          disabled={selectedRole.isSystem}
+                                          readOnly
+                                          className="mt-0.5 h-3.5 w-3.5 accent-emerald-500 cursor-pointer"
+                                        />
+                                        <div className="space-y-0.5">
+                                          <div className="text-xs">
+                                            {translatePermissionKey(perm.key, perm.description)}
+                                          </div>
+                                          <div className="font-mono text-[9px] text-muted-foreground/80 tracking-tight">
+                                            {perm.key}
+                                          </div>
+                                          <span className="text-[10px] text-muted-foreground/60 leading-relaxed block">
+                                            {perm.description}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </motion.div>
                 ) : isCreatingRole ? (
                   <motion.div
@@ -710,6 +1342,43 @@ export default function RolesAndAuthorizationPage() {
                       Compose a new granular access group, assign its priority value, and clone
                       configurations easily.
                     </p>
+
+                    {/* Click-to-Fill Archetype Templates */}
+                    <div className="mt-5 space-y-2 border border-border/60 bg-muted/5 p-4 rounded-2xl">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest block">
+                          Click-to-Fill Archetype Card
+                        </span>
+                        <span className="text-[9px] bg-primary/10 border border-primary/20 text-primary px-2 py-0.5 rounded-full font-mono">
+                          8 Templates
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        {ROLE_TEMPLATES.map((tmpl) => (
+                          <button
+                            key={tmpl.name}
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleSelectArchetype(tmpl);
+                            }}
+                            className={`p-2.5 rounded-xl border text-left bg-gradient-to-br ${tmpl.gradient} hover:scale-[1.02] active:scale-[0.98] transition-all flex flex-col justify-between h-28 border-border/60 hover:border-border`}
+                          >
+                            <span
+                              className={`text-[10px] font-extrabold uppercase ${tmpl.border.split(' ')[1]}`}
+                            >
+                              {tmpl.name}
+                            </span>
+                            <span className="text-[9px] text-muted-foreground line-clamp-2 mt-1 leading-snug">
+                              {tmpl.description}
+                            </span>
+                            <span className="text-[8px] bg-background/50 border border-border/40 px-1.5 py-0.5 rounded self-start mt-1 text-foreground/80 font-bold font-mono">
+                              LVL {tmpl.hierarchyLevel}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
 
                     <form onSubmit={handleCreateRole} className="space-y-4 mt-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -965,59 +1634,120 @@ export default function RolesAndAuthorizationPage() {
         {/* TAB 3: ACCESS ASSIGNMENTS */}
         {activeTab === 'assignments' && (
           <div className="rounded-3xl border border-border bg-card shadow-2xl overflow-hidden">
-            <div className="px-6 py-4 border-b border-border/40 bg-background/20 flex items-center justify-between">
+            <div className="px-6 py-5 border-b border-border/40 bg-background/20 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <h3 className="font-bold text-foreground">User Scoping Assignments</h3>
                 <p className="text-[11px] text-muted-foreground">
-                  Review and customize active security roles assigned to each team member.
+                  Review and dynamically adjust granular workspace clearance privileges.
                 </p>
+              </div>
+              <div className="flex bg-muted/30 border border-border/40 p-1.5 rounded-xl text-[10px] text-muted-foreground font-semibold items-center gap-1.5">
+                <Users className="h-3.5 w-3.5 text-primary shrink-0" />
+                <span>{users.length} Active Specialists</span>
               </div>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-border/40 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/80 bg-background/10">
-                    <th className="px-6 py-3">Team Member</th>
-                    <th className="px-6 py-3">Designation</th>
-                    <th className="px-6 py-3">Status</th>
-                    <th className="px-6 py-3">Scoped Security Roles</th>
-                    <th className="px-6 py-3">Access Restrictions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/20 text-xs">
-                  {users.map((member) => (
-                    <tr key={member._id} className="hover:bg-muted/15 transition-all">
-                      <td className="px-6 py-3.5 font-bold text-foreground">{member.fullName}</td>
-                      <td className="px-6 py-3.5 text-muted-foreground">
-                        {member.designation || 'Specialist'}
-                      </td>
-                      <td className="px-6 py-3.5">
-                        <span
-                          className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold border ${
-                            member.status === 'active'
-                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                              : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
-                          }`}
-                        >
-                          {member.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-3.5">
-                        <div className="flex flex-wrap gap-1">
-                          <span className="px-2 py-0.5 rounded-lg bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold">
-                            Default {member.userId?.roles?.[0]?.name || 'Developer'}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-3.5 text-muted-foreground/70">
-                        {member.status === 'suspended' ? 'Disabled Account' : 'Global tenant scope'}
-                      </td>
+            {users.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 text-center">
+                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-4 animate-bounce">
+                  <Users className="h-6 w-6" />
+                </div>
+                <h4 className="font-bold text-sm text-foreground">No Workspace Specialists</h4>
+                <p className="text-xs text-muted-foreground max-w-xs mt-1">
+                  Onboard employees in settings to configure dynamic clearance scopes here.
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-border/40 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/80 bg-background/10">
+                      <th className="px-6 py-4">Team Member</th>
+                      <th className="px-6 py-4">Designation & Dept</th>
+                      <th className="px-6 py-4">Status</th>
+                      <th className="px-6 py-4">Scoped Clearance Role</th>
+                      <th className="px-6 py-4">Access Restrictions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-border/20 text-xs">
+                    {users.map((member) => {
+                      const activeRoleId = member.userId?.roles?.[0]?._id || '';
+                      const initials = member.fullName
+                        ? member.fullName
+                            .split(' ')
+                            .map((n: string) => n[0])
+                            .join('')
+                            .slice(0, 2)
+                            .toUpperCase()
+                        : 'SP';
+
+                      return (
+                        <tr key={member._id} className="hover:bg-muted/15 transition-all group">
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              <div className="h-9 w-9 rounded-full bg-gradient-to-tr from-primary/20 via-primary/5 to-transparent border border-primary/20 flex items-center justify-center text-xs font-bold text-primary shadow-sm shrink-0">
+                                {initials}
+                              </div>
+                              <div className="space-y-0.5">
+                                <div className="font-bold text-foreground group-hover:text-primary transition-colors">
+                                  {member.fullName}
+                                </div>
+                                <div className="text-[10px] text-muted-foreground">
+                                  {member.email}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="space-y-0.5">
+                              <div className="font-semibold text-foreground/90">
+                                {member.designation || 'Specialist'}
+                              </div>
+                              <div className="text-[10px] text-muted-foreground flex items-center gap-1">
+                                <Network className="h-3 w-3 shrink-0" />
+                                <span>{member.departmentId?.name || 'General Operations'}</span>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span
+                              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wide border ${
+                                member.status === 'active'
+                                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_2px_10px_rgba(16,185,129,0.1)]'
+                                  : 'bg-rose-500/10 text-rose-400 border-rose-500/20 shadow-[0_2px_10px_rgba(244,63,94,0.1)]'
+                              }`}
+                            >
+                              {member.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 max-w-[200px]">
+                            <Select
+                              value={activeRoleId}
+                              onChange={(val) => handleUpdateUserRole(member._id, val)}
+                              className="w-full bg-background border border-border px-3.5 py-2 rounded-xl text-xs focus:outline-none hover:border-primary/50 transition-colors"
+                              options={roles.map((r) => ({ value: r._id, label: r.name }))}
+                            />
+                          </td>
+                          <td className="px-6 py-4 text-[11px] text-muted-foreground/80 leading-relaxed">
+                            {member.status === 'suspended' ? (
+                              <span className="text-rose-400 font-bold flex items-center gap-1">
+                                <Lock className="h-3 w-3 shrink-0" />
+                                Suspended - Access Revoked
+                              </span>
+                            ) : (
+                              <span className="flex items-center gap-1">
+                                <CheckCircle className="h-3 w-3 text-emerald-500 shrink-0" />
+                                Global Tenant Access Enabled
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Building,
@@ -64,6 +64,7 @@ export default function SettingsPage() {
   const [invitations, setInvitations] = useState<any[]>([]);
   const [rolesList, setRolesList] = useState<any[]>([]);
   const [departmentsList, setDepartmentsList] = useState<any[]>([]);
+  const [employeesList, setEmployeesList] = useState<any[]>([]);
 
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
@@ -100,20 +101,23 @@ export default function SettingsPage() {
         setDeliveries(hooksData.deliveries);
       }
 
-      // 4. Fetch Invitations, Roles, Departments
-      const [invRes, rolesRes, deptRes] = await Promise.all([
+      // 4. Fetch Invitations, Roles, Departments, and Employees
+      const [invRes, rolesRes, deptRes, hrRes] = await Promise.all([
         fetch('/api/protected/settings/invite'),
         fetch('/api/protected/settings/roles'),
         fetch('/api/protected/hr/departments'),
+        fetch('/api/protected/hr'),
       ]);
-      const [invData, rolesData, deptData] = await Promise.all([
+      const [invData, rolesData, deptData, hrData] = await Promise.all([
         invRes.json(),
         rolesRes.json(),
         deptRes.json(),
+        hrRes.json(),
       ]);
       if (invData.success) setInvitations(invData.data);
       if (rolesData.success) setRolesList(rolesData.data);
       if (deptData.success) setDepartmentsList(deptData.data.list || []);
+      if (hrData.success) setEmployeesList(hrData.data || []);
     } catch (err) {
       toast.error('Failed to load multi-tenant settings configuration.');
     } finally {
@@ -200,11 +204,60 @@ export default function SettingsPage() {
     }
   };
 
+  const handleUpdateUserRole = async (employeeId: string, roleId: string) => {
+    toast.loading('Updating security clearance level...');
+    try {
+      const res = await fetch(`/api/protected/hr/${employeeId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ roleId }),
+      });
+      const data = await res.json();
+      toast.dismiss();
+      if (data.success) {
+        toast.success('Security clearance level synchronized.');
+        fetchConfig();
+      } else {
+        toast.error(data.message || 'Clearance modification rejected.');
+      }
+    } catch (err) {
+      toast.dismiss();
+      toast.error('Network sync failure.');
+    }
+  };
+
+  const handleUpdateEmployeeStatus = async (employeeId: string, currentStatus: string) => {
+    const nextStatus = currentStatus === 'suspended' ? 'active' : 'suspended';
+    toast.loading(
+      nextStatus === 'suspended'
+        ? 'Deactivating corporate access...'
+        : 'Restoring corporate access...'
+    );
+    try {
+      const res = await fetch(`/api/protected/hr/${employeeId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: nextStatus }),
+      });
+      const data = await res.json();
+      toast.dismiss();
+      if (data.success) {
+        toast.success(`Access level updated successfully.`);
+        fetchConfig();
+      } else {
+        toast.error(data.message || 'Status modification rejected.');
+      }
+    } catch (err) {
+      toast.dismiss();
+      toast.error('Network sync failure.');
+    }
+  };
+
+  const fetchConfiguredRef = useRef(false);
   useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchConfig();
-    }, 0);
-    return () => clearTimeout(timer);
+    if (fetchConfiguredRef.current) return;
+    fetchConfiguredRef.current = true;
+    fetchConfig();
   }, []);
 
   const handleUpdatePlan = async (newPlan: 'starter' | 'pro' | 'enterprise') => {
@@ -1192,44 +1245,227 @@ export default function SettingsPage() {
 
                   {/* TAB 7: Team Members */}
                   {activeTab === 'members' && (
-                    <div className="space-y-6">
-                      <div className="flex justify-between items-center">
+                    <div className="space-y-8">
+                      {/* Title block */}
+                      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                         <div className="space-y-1">
-                          <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
-                            <Users className="w-5 h-5 text-primary" />
-                            <span>Team Member Management</span>
+                          <h2 className="text-xl font-bold text-foreground flex items-center gap-2.5">
+                            <Users className="w-5.5 h-5.5 text-primary" />
+                            <span>Team Workspace Directory</span>
                           </h2>
                           <p className="text-xs text-muted-foreground">
-                            Invite specialists to your workspace, adjust preset RBAC clearance
-                            levels, and verify activation status.
+                            Invite workspace specialists, manage granular security roles, and
+                            control active tenant access permissions.
                           </p>
                         </div>
                         <Button
                           onClick={() => setIsInviteModalOpen(true)}
                           variant="default"
-                          className="rounded-xl px-4 py-2 text-xs font-semibold flex items-center gap-1.5"
+                          className="rounded-xl px-4 py-2.5 text-xs font-bold flex items-center gap-1.5 shadow-[0_4px_20px_rgba(var(--primary-rgb),0.15)] hover:scale-[1.02] active:scale-[0.98] transition-all"
                         >
                           <UserPlus className="w-4 h-4" />
-                          Invite Member
+                          Invite Specialist
                         </Button>
                       </div>
 
-                      {/* Invitations Table list */}
+                      {/* SECTION 1: Active Workspace Specialists */}
                       <div className="space-y-3">
-                        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">
-                          Workspace Invitations & Access Logs
-                        </h3>
-                        <div className="bg-background/30 border border-border/60 rounded-xl overflow-hidden">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="text-sm font-bold text-foreground">
+                              Active Specialists
+                            </h3>
+                            <p className="text-[11px] text-muted-foreground">
+                              Currently authenticated workspace users with active clearance
+                              profiles.
+                            </p>
+                          </div>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                            {
+                              employeesList.filter(
+                                (e) => e.status !== 'onboarding' && e.status !== 'terminated'
+                              ).length
+                            }{' '}
+                            Verified
+                          </span>
+                        </div>
+
+                        <div className="bg-background/20 border border-border/60 rounded-2xl overflow-hidden backdrop-blur-md">
                           <table className="w-full text-left text-xs border-collapse">
                             <thead>
-                              <tr className="bg-card/85 text-[10px] uppercase font-bold text-muted-foreground border-b border-border/60">
-                                <th className="p-3">Email Address</th>
-                                <th className="p-3">Assigned Role</th>
-                                <th className="p-3">Department</th>
-                                <th className="p-3">Invited By</th>
-                                <th className="p-3">Expiry Date</th>
-                                <th className="p-3">Status</th>
-                                <th className="p-3 text-right">Actions</th>
+                              <tr className="bg-card/90 text-[10px] uppercase font-bold tracking-wider text-muted-foreground border-b border-border/60">
+                                <th className="p-4 pl-5">Specialist</th>
+                                <th className="p-4">Designation & Department</th>
+                                <th className="p-4">Security Clearance</th>
+                                <th className="p-4">Status</th>
+                                <th className="p-4 pr-5 text-right">Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {employeesList.filter((e) => e.status !== 'terminated').length ===
+                              0 ? (
+                                <tr>
+                                  <td
+                                    colSpan={5}
+                                    className="p-10 text-center text-muted-foreground italic"
+                                  >
+                                    <div className="flex flex-col items-center justify-center space-y-2">
+                                      <Users className="w-8 h-8 text-muted-foreground/45 animate-pulse" />
+                                      <span>No active specialists listed in this workspace.</span>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ) : (
+                                employeesList
+                                  .filter((e) => e.status !== 'terminated')
+                                  .map((member) => {
+                                    const initials = member.fullName
+                                      ? member.fullName
+                                          .split(' ')
+                                          .map((n: string) => n[0])
+                                          .join('')
+                                          .slice(0, 2)
+                                          .toUpperCase()
+                                      : 'SP';
+                                    const currentRoleId =
+                                      member.userId?.roles?.[0]?._id ||
+                                      member.userId?.roles?.[0] ||
+                                      '';
+                                    const currentRoleName =
+                                      member.userId?.roles?.[0]?.name ||
+                                      rolesList.find((r) => r._id === currentRoleId)?.name ||
+                                      'Specialist';
+
+                                    // Generate consistent pastel background colors for initials
+                                    const colors = [
+                                      'from-pink-500 to-rose-500',
+                                      'from-purple-500 to-indigo-500',
+                                      'from-blue-500 to-cyan-500',
+                                      'from-emerald-500 to-teal-500',
+                                      'from-amber-500 to-orange-500',
+                                    ];
+                                    const colorIndex = member.fullName
+                                      ? member.fullName.charCodeAt(0) % colors.length
+                                      : 0;
+                                    const gradient = colors[colorIndex];
+
+                                    return (
+                                      <tr
+                                        key={member._id}
+                                        className="border-b border-border/40 hover:bg-card/25 transition-all"
+                                      >
+                                        <td className="p-4 pl-5">
+                                          <div className="flex items-center gap-3">
+                                            {member.avatar ? (
+                                              <img
+                                                src={member.avatar}
+                                                alt={member.fullName}
+                                                className="w-8.5 h-8.5 rounded-full border border-border/80 object-cover shadow-inner"
+                                              />
+                                            ) : (
+                                              <div
+                                                className={`w-8.5 h-8.5 rounded-full bg-gradient-to-tr ${gradient} flex items-center justify-center text-[10px] font-extrabold text-white shadow-md`}
+                                              >
+                                                {initials}
+                                              </div>
+                                            )}
+                                            <div className="space-y-0.5">
+                                              <span className="font-bold text-foreground text-xs block">
+                                                {member.fullName}
+                                              </span>
+                                              <span className="text-[10px] text-muted-foreground block font-mono">
+                                                {member.email}
+                                              </span>
+                                            </div>
+                                          </div>
+                                        </td>
+                                        <td className="p-4">
+                                          <div className="space-y-0.5">
+                                            <span className="font-medium text-foreground/90 block">
+                                              {member.designation || 'Workspace Specialist'}
+                                            </span>
+                                            <span className="text-[10px] text-muted-foreground block">
+                                              {member.departmentId?.name || 'General Operations'}
+                                            </span>
+                                          </div>
+                                        </td>
+                                        <td className="p-4">
+                                          <div className="w-44">
+                                            <Select
+                                              value={currentRoleId}
+                                              onChange={(newRoleId) =>
+                                                handleUpdateUserRole(member._id, newRoleId)
+                                              }
+                                              className="w-full bg-background/55 border border-border/40 px-3 py-1.5 rounded-xl text-xs text-foreground cursor-pointer outline-none focus:border-primary/45 transition-colors"
+                                              options={rolesList.map((role) => ({
+                                                value: role._id,
+                                                label: role.name,
+                                              }))}
+                                              placeholder="Clearance Level"
+                                            />
+                                          </div>
+                                        </td>
+                                        <td className="p-4">
+                                          <span
+                                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border ${
+                                              member.status === 'active'
+                                                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                                : member.status === 'suspended'
+                                                  ? 'bg-rose-500/10 text-rose-500 border-rose-500/20'
+                                                  : 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                                            }`}
+                                          >
+                                            {member.status}
+                                          </span>
+                                        </td>
+                                        <td className="p-4 pr-5 text-right">
+                                          <button
+                                            onClick={() =>
+                                              handleUpdateEmployeeStatus(member._id, member.status)
+                                            }
+                                            className={`px-2.5 py-1.5 rounded-lg border text-[10px] font-bold tracking-wide transition-all shadow-sm ${
+                                              member.status === 'suspended'
+                                                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/25'
+                                                : 'bg-rose-500/10 border-rose-500/20 text-rose-400 hover:bg-rose-500/25'
+                                            }`}
+                                          >
+                                            {member.status === 'suspended'
+                                              ? 'Reactivate'
+                                              : 'Suspend Access'}
+                                          </button>
+                                        </td>
+                                      </tr>
+                                    );
+                                  })
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+
+                      {/* SECTION 2: Pending Workspace Invites */}
+                      <div className="space-y-3 pt-2">
+                        <div>
+                          <h3 className="text-sm font-bold text-foreground">
+                            Pending Workspace Invites
+                          </h3>
+                          <p className="text-[11px] text-muted-foreground">
+                            Issued invitations awaiting colleague registration and clearance
+                            confirmation.
+                          </p>
+                        </div>
+
+                        <div className="bg-background/20 border border-border/60 rounded-2xl overflow-hidden backdrop-blur-md">
+                          <table className="w-full text-left text-xs border-collapse">
+                            <thead>
+                              <tr className="bg-card/90 text-[10px] uppercase font-bold tracking-wider text-muted-foreground border-b border-border/60">
+                                <th className="p-4 pl-5">Email Address</th>
+                                <th className="p-4">Target Clearance Role</th>
+                                <th className="p-4">Assigned Department</th>
+                                <th className="p-4">Invited By</th>
+                                <th className="p-4">Expiry Date</th>
+                                <th className="p-4">Status</th>
+                                <th className="p-4 pr-5 text-right">Actions</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -1239,7 +1475,7 @@ export default function SettingsPage() {
                                     colSpan={7}
                                     className="p-8 text-center text-muted-foreground italic"
                                   >
-                                    No team invitations dispatched yet.
+                                    No pending workspace invitations active.
                                   </td>
                                 </tr>
                               ) : (
@@ -1248,24 +1484,28 @@ export default function SettingsPage() {
                                   return (
                                     <tr
                                       key={invite._id}
-                                      className="border-b border-border/40 hover:bg-accent/20"
+                                      className="border-b border-border/40 hover:bg-card/25 transition-all"
                                     >
-                                      <td className="p-3 font-semibold text-foreground break-all">
+                                      <td className="p-4 pl-5 font-semibold text-foreground font-mono">
                                         {invite.email}
                                       </td>
-                                      <td className="p-3 text-foreground/85 font-medium">
+                                      <td className="p-4 text-foreground/85 font-medium">
                                         {invite.role?.name || 'Developer'}
                                       </td>
-                                      <td className="p-3 text-muted-foreground">
-                                        {invite.department?.name || 'General'}
+                                      <td className="p-4 text-muted-foreground">
+                                        {invite.department?.name || 'General Operations'}
                                       </td>
-                                      <td className="p-3 text-muted-foreground">
+                                      <td className="p-4 text-muted-foreground">
                                         {invite.invitedBy?.name || 'Super Admin'}
                                       </td>
-                                      <td className="p-3 text-muted-foreground">
-                                        {new Date(invite.expiresAt).toLocaleDateString()}
+                                      <td className="p-4 text-muted-foreground font-mono text-[10px]">
+                                        {new Date(invite.expiresAt).toLocaleDateString(undefined, {
+                                          month: 'short',
+                                          day: 'numeric',
+                                          year: 'numeric',
+                                        })}
                                       </td>
-                                      <td className="p-3">
+                                      <td className="p-4">
                                         <span
                                           className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border ${
                                             invite.status === 'accepted'
@@ -1282,20 +1522,20 @@ export default function SettingsPage() {
                                             : invite.status}
                                         </span>
                                       </td>
-                                      <td className="p-3 text-right">
+                                      <td className="p-4 pr-5 text-right">
                                         <div className="flex justify-end gap-1.5">
                                           {invite.status === 'pending' && !isExpired && (
                                             <>
                                               <button
                                                 onClick={() => handleResendInvite(invite._id)}
-                                                className="p-1 rounded-lg border border-border/60 hover:bg-primary/10 text-muted-foreground hover:text-primary cursor-pointer transition-all"
+                                                className="p-1.5 rounded-lg border border-border/60 hover:bg-primary/10 text-muted-foreground hover:text-primary cursor-pointer transition-all"
                                                 title="Resend Invite & Renew Expiry"
                                               >
                                                 <RefreshCw className="w-3.5 h-3.5" />
                                               </button>
                                               <button
                                                 onClick={() => handleRevokeInvite(invite._id)}
-                                                className="p-1 rounded-lg border border-border/60 hover:bg-destructive/10 text-muted-foreground hover:text-destructive cursor-pointer transition-all"
+                                                className="p-1.5 rounded-lg border border-border/60 hover:bg-destructive/10 text-muted-foreground hover:text-destructive cursor-pointer transition-all"
                                                 title="Revoke Invite Credentials"
                                               >
                                                 <X className="w-3.5 h-3.5" />
@@ -1322,12 +1562,12 @@ export default function SettingsPage() {
 
                       {/* Invite Modal Glassmorphism Overlay */}
                       {isInviteModalOpen && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm transition-all duration-300">
                           <motion.div
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            className="w-full max-w-lg bg-card border border-border/80 p-6 rounded-2xl shadow-2xl relative text-left"
+                            initial={{ opacity: 0, scale: 0.96, y: 10 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.96, y: 10 }}
+                            className="w-full max-w-lg bg-card/95 border border-border/80 p-6 rounded-2xl shadow-2xl relative text-left backdrop-blur-md"
                           >
                             <button
                               onClick={() => setIsInviteModalOpen(false)}
@@ -1336,14 +1576,20 @@ export default function SettingsPage() {
                               <X className="w-4 h-4" />
                             </button>
 
-                            <div className="flex items-center gap-2 mb-4">
-                              <UserPlus className="w-5 h-5 text-primary" />
-                              <h3 className="text-base font-bold text-foreground">
-                                Invite New Team Specialist
-                              </h3>
+                            <div className="flex items-center gap-2.5 mb-5 border-b border-border/40 pb-4">
+                              <UserPlus className="w-5.5 h-5.5 text-primary" />
+                              <div>
+                                <h3 className="text-base font-bold text-foreground">
+                                  Invite Workspace Specialist
+                                </h3>
+                                <p className="text-[11px] text-muted-foreground">
+                                  Dispatches credentials and configures operational security
+                                  clearance tiers.
+                                </p>
+                              </div>
                             </div>
 
-                            <form onSubmit={handleCreateInvite} className="space-y-4">
+                            <form onSubmit={handleCreateInvite} className="space-y-5">
                               {/* Email Input */}
                               <div className="space-y-1.5">
                                 <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80 block">
@@ -1369,7 +1615,11 @@ export default function SettingsPage() {
                                     value={inviteRole}
                                     onChange={(val) => setInviteRole(val)}
                                     className="w-full bg-background/80 border border-border/60 px-4 py-2.5 rounded-xl text-xs text-foreground outline-none cursor-pointer focus:border-primary/50"
-                                    options={[{ value: 'role._id', label: '{role.name}' }]}
+                                    options={rolesList.map((role) => ({
+                                      value: role._id,
+                                      label: role.name,
+                                    }))}
+                                    placeholder="Select Corporate Role"
                                   />
                                 </div>
 
@@ -1382,23 +1632,110 @@ export default function SettingsPage() {
                                     value={inviteDept}
                                     onChange={(val) => setInviteDept(val)}
                                     className="w-full bg-background/80 border border-border/60 px-4 py-2.5 rounded-xl text-xs text-foreground outline-none cursor-pointer focus:border-primary/50"
-                                    options={[{ value: 'dept._id', label: '{dept.name}' }]}
+                                    options={departmentsList.map((dept) => ({
+                                      value: dept._id,
+                                      label: dept.name,
+                                    }))}
+                                    placeholder="Select Department"
                                   />
                                 </div>
                               </div>
 
-                              {/* Permission Presets Summary */}
-                              <div className="bg-background/50 border border-border/60 p-4 rounded-xl space-y-2">
+                              {/* Dynamic Scoped Permissions Preset Badges */}
+                              <div className="bg-background/40 border border-border/50 p-4.5 rounded-xl space-y-3 transition-all duration-300">
                                 <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/80 block">
-                                  Scoped Permissions presets
+                                  Authorized Modules Clearance
                                 </span>
-                                <p className="text-[10px] text-muted-foreground leading-relaxed">
-                                  Invited members will receive full access controls mapped to their
-                                  selected RBAC corporate role upon accepting their invitation.
-                                </p>
+
+                                {inviteRole ? (
+                                  <div className="space-y-2">
+                                    <div className="flex flex-wrap gap-1.5">
+                                      {(() => {
+                                        const modules = new Set<string>();
+                                        const role = rolesList.find((r) => r._id === inviteRole);
+                                        if (role) {
+                                          const perms = role.permissions || [];
+                                          perms.forEach((p: any) => {
+                                            const key = typeof p === 'string' ? p : p.key || '';
+                                            if (key.startsWith('crm:')) modules.add('CRM');
+                                            else if (key.startsWith('projects:'))
+                                              modules.add('Projects');
+                                            else if (key.startsWith('hr:')) modules.add('HR');
+                                            else if (key.startsWith('finance:'))
+                                              modules.add('Finance');
+                                            else if (key.startsWith('analytics:'))
+                                              modules.add('Analytics');
+                                            else if (key.startsWith('settings:'))
+                                              modules.add('Settings');
+                                            else if (key.startsWith('collaboration:'))
+                                              modules.add('Collaboration');
+                                          });
+                                        }
+
+                                        if (modules.size === 0 && role) {
+                                          const name = (role.name || '').toLowerCase();
+                                          if (name.includes('admin') || name.includes('super')) {
+                                            [
+                                              'CRM',
+                                              'Projects',
+                                              'HR',
+                                              'Finance',
+                                              'Analytics',
+                                              'Settings',
+                                              'Collaboration',
+                                            ].forEach((m) => modules.add(m));
+                                          } else if (
+                                            name.includes('developer') ||
+                                            name.includes('engineer')
+                                          ) {
+                                            ['Projects', 'Collaboration'].forEach((m) =>
+                                              modules.add(m)
+                                            );
+                                          } else if (
+                                            name.includes('pm') ||
+                                            name.includes('project manager')
+                                          ) {
+                                            ['Projects', 'Collaboration', 'Analytics'].forEach(
+                                              (m) => modules.add(m)
+                                            );
+                                          } else if (
+                                            name.includes('sales') ||
+                                            name.includes('support')
+                                          ) {
+                                            ['CRM', 'Collaboration'].forEach((m) => modules.add(m));
+                                          } else if (name.includes('finance')) {
+                                            ['Finance', 'Analytics'].forEach((m) => modules.add(m));
+                                          } else if (name.includes('hr')) {
+                                            ['HR', 'Collaboration'].forEach((m) => modules.add(m));
+                                          } else {
+                                            modules.add('Core');
+                                          }
+                                        }
+
+                                        return Array.from(modules).map((mod) => (
+                                          <span
+                                            key={mod}
+                                            className="px-2 py-0.5 rounded-md text-[9px] font-bold tracking-wide bg-primary/10 border border-primary/20 text-primary"
+                                          >
+                                            {mod}
+                                          </span>
+                                        ));
+                                      })()}
+                                    </div>
+                                    <p className="text-[10px] text-muted-foreground leading-normal pt-1 border-t border-border/30">
+                                      {rolesList.find((r) => r._id === inviteRole)?.description ||
+                                        'Full permissions mapped to this operational clearance tier.'}
+                                    </p>
+                                  </div>
+                                ) : (
+                                  <p className="text-[10px] text-muted-foreground leading-relaxed">
+                                    Invited specialists will receive full access controls mapped to
+                                    their selected corporate role upon accepting their invitation.
+                                  </p>
+                                )}
                               </div>
 
-                              <div className="flex justify-end gap-3.5 pt-2">
+                              <div className="flex justify-end gap-3 pt-2 border-t border-border/40">
                                 <Button
                                   type="button"
                                   variant="outline"

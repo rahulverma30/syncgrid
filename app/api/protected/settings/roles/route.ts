@@ -11,9 +11,8 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     // Fetch roles belonging to this company or system-wide roles (companyId = null)
     const roles = await Role.find({
       $or: [{ companyId }, { companyId: null }],
-      isActive: true,
     })
-      .sort({ level: 1 })
+      .sort({ hierarchyLevel: 1 })
       .lean();
 
     return NextResponse.json({ success: true, data: roles });
