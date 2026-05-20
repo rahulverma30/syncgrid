@@ -26,12 +26,45 @@ import {
   FileDown,
   Info,
   X,
+  ChevronDown,
+  Search,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { PageHeader, Button, Select } from '@/components/ui';
 import { toast } from 'sonner';
 
 type TabType = 'profile' | 'billing' | 'branding' | 'keys' | 'webhooks' | 'security' | 'members';
+
+const getModuleAccessSummary = (permissions: any[]) => {
+  const summary: { [key: string]: string } = {};
+  const modules = ['crm', 'projects', 'hr', 'finance', 'collaboration', 'analytics', 'settings'];
+
+  modules.forEach((mod) => {
+    const modPerms = permissions
+      .filter((p) => {
+        const key = typeof p === 'string' ? p : p.key || '';
+        return key.startsWith(`${mod}:`);
+      })
+      .map((p) => (typeof p === 'string' ? p : p.key || ''));
+
+    if (modPerms.length === 0) return;
+
+    const isManage = modPerms.some((k) => k.endsWith(':manage') || k.endsWith(':admin'));
+    const isDelete = modPerms.some((k) => k.endsWith(':delete'));
+    const isUpdate = modPerms.some((k) => k.endsWith(':update') || k.endsWith(':create'));
+    const isRead = modPerms.some((k) => k.endsWith(':read'));
+
+    let level = 'View Only';
+    if (isManage) level = 'Full Access';
+    else if (isDelete) level = 'Manage';
+    else if (isUpdate) level = 'Edit';
+    else if (isRead) level = 'View Only';
+
+    summary[mod] = level;
+  });
+
+  return summary;
+};
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<TabType>('profile');
@@ -72,6 +105,10 @@ export default function SettingsPage() {
   const [inviteDept, setInviteDept] = useState('');
   const [invitePermissions, setInvitePermissions] = useState<string[]>([]);
   const [isSendingInvite, setIsSendingInvite] = useState(false);
+
+  const [isComboboxOpen, setIsComboboxOpen] = useState(false);
+  const [comboboxSearch, setComboboxSearch] = useState('');
+  const roleComboboxRef = useRef<HTMLDivElement>(null);
 
   const fetchConfig = async () => {
     setLoading(true);
@@ -258,6 +295,16 @@ export default function SettingsPage() {
     if (fetchConfiguredRef.current) return;
     fetchConfiguredRef.current = true;
     fetchConfig();
+  }, []);
+
+  useEffect(() => {
+    function handleClickOutsideCombobox(event: MouseEvent) {
+      if (roleComboboxRef.current && !roleComboboxRef.current.contains(event.target as Node)) {
+        setIsComboboxOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutsideCombobox);
+    return () => document.removeEventListener('mousedown', handleClickOutsideCombobox);
   }, []);
 
   const handleUpdatePlan = async (newPlan: 'starter' | 'pro' | 'enterprise') => {
@@ -1290,157 +1337,187 @@ export default function SettingsPage() {
                           </span>
                         </div>
 
-                        <div className="bg-background/20 border border-border/60 rounded-2xl overflow-hidden backdrop-blur-md">
-                          <table className="w-full text-left text-xs border-collapse">
-                            <thead>
-                              <tr className="bg-card/90 text-[10px] uppercase font-bold tracking-wider text-muted-foreground border-b border-border/60">
-                                <th className="p-4 pl-5">Specialist</th>
-                                <th className="p-4">Designation & Department</th>
-                                <th className="p-4">Security Clearance</th>
-                                <th className="p-4">Status</th>
-                                <th className="p-4 pr-5 text-right">Actions</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {employeesList.filter((e) => e.status !== 'terminated').length ===
-                              0 ? (
-                                <tr>
-                                  <td
-                                    colSpan={5}
-                                    className="p-10 text-center text-muted-foreground italic"
+                        {employeesList.filter((e) => e.status !== 'terminated').length === 0 ? (
+                          <div className="bg-background/25 border border-border/40 p-10 rounded-2xl text-center space-y-4 backdrop-blur-md">
+                            <div className="w-12 h-12 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mx-auto animate-pulse">
+                              <Users className="w-5.5 h-5.5" />
+                            </div>
+                            <div className="space-y-1 max-w-sm mx-auto">
+                              <h4 className="font-bold text-foreground text-sm">
+                                No active specialists listed in this workspace
+                              </h4>
+                              <p className="text-xs text-muted-foreground leading-normal">
+                                Every workspace needs its team. Invite specialists and assign
+                                corporate clearance tiers.
+                              </p>
+                            </div>
+                            <Button
+                              onClick={() => setIsInviteModalOpen(true)}
+                              variant="default"
+                              className="rounded-xl px-4 py-2 text-xs font-bold"
+                            >
+                              <UserPlus className="w-3.5 h-3.5 mr-1.5" />
+                              Add Workspace Specialists
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4.5">
+                            {employeesList
+                              .filter((e) => e.status !== 'terminated')
+                              .map((member) => {
+                                const initials = member.fullName
+                                  ? member.fullName
+                                      .split(' ')
+                                      .map((n: string) => n[0])
+                                      .join('')
+                                      .slice(0, 2)
+                                      .toUpperCase()
+                                  : 'SP';
+                                const currentRoleId =
+                                  member.userId?.roles?.[0]?._id || member.userId?.roles?.[0] || '';
+                                const currentRoleName =
+                                  member.userId?.roles?.[0]?.name ||
+                                  rolesList.find((r) => r._id === currentRoleId)?.name ||
+                                  'Specialist';
+
+                                // Generate consistent HSL gradients for initials
+                                const colors = [
+                                  'from-pink-500 to-rose-500',
+                                  'from-purple-500 to-indigo-500',
+                                  'from-blue-500 to-cyan-500',
+                                  'from-emerald-500 to-teal-500',
+                                  'from-amber-500 to-orange-500',
+                                ];
+                                const colorIndex = member.fullName
+                                  ? member.fullName.charCodeAt(0) % colors.length
+                                  : 0;
+                                const gradient = colors[colorIndex];
+
+                                return (
+                                  <div
+                                    key={member._id}
+                                    className="bg-card/25 backdrop-blur-md border border-border/50 hover:border-primary/25 hover:bg-card/45 transition-all duration-300 rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between h-full group"
                                   >
-                                    <div className="flex flex-col items-center justify-center space-y-2">
-                                      <Users className="w-8 h-8 text-muted-foreground/45 animate-pulse" />
-                                      <span>No active specialists listed in this workspace.</span>
-                                    </div>
-                                  </td>
-                                </tr>
-                              ) : (
-                                employeesList
-                                  .filter((e) => e.status !== 'terminated')
-                                  .map((member) => {
-                                    const initials = member.fullName
-                                      ? member.fullName
-                                          .split(' ')
-                                          .map((n: string) => n[0])
-                                          .join('')
-                                          .slice(0, 2)
-                                          .toUpperCase()
-                                      : 'SP';
-                                    const currentRoleId =
-                                      member.userId?.roles?.[0]?._id ||
-                                      member.userId?.roles?.[0] ||
-                                      '';
-                                    const currentRoleName =
-                                      member.userId?.roles?.[0]?.name ||
-                                      rolesList.find((r) => r._id === currentRoleId)?.name ||
-                                      'Specialist';
+                                    {/* Ambient top glowing hover effect */}
+                                    <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-primary/10 via-transparent to-transparent pointer-events-none rounded-bl-full opacity-50 group-hover:opacity-100 transition-opacity" />
 
-                                    // Generate consistent pastel background colors for initials
-                                    const colors = [
-                                      'from-pink-500 to-rose-500',
-                                      'from-purple-500 to-indigo-500',
-                                      'from-blue-500 to-cyan-500',
-                                      'from-emerald-500 to-teal-500',
-                                      'from-amber-500 to-orange-500',
-                                    ];
-                                    const colorIndex = member.fullName
-                                      ? member.fullName.charCodeAt(0) % colors.length
-                                      : 0;
-                                    const gradient = colors[colorIndex];
-
-                                    return (
-                                      <tr
-                                        key={member._id}
-                                        className="border-b border-border/40 hover:bg-card/25 transition-all"
-                                      >
-                                        <td className="p-4 pl-5">
-                                          <div className="flex items-center gap-3">
-                                            {member.avatar ? (
-                                              <img
-                                                src={member.avatar}
-                                                alt={member.fullName}
-                                                className="w-8.5 h-8.5 rounded-full border border-border/80 object-cover shadow-inner"
-                                              />
-                                            ) : (
-                                              <div
-                                                className={`w-8.5 h-8.5 rounded-full bg-gradient-to-tr ${gradient} flex items-center justify-center text-[10px] font-extrabold text-white shadow-md`}
-                                              >
-                                                {initials}
-                                              </div>
-                                            )}
-                                            <div className="space-y-0.5">
-                                              <span className="font-bold text-foreground text-xs block">
-                                                {member.fullName}
-                                              </span>
-                                              <span className="text-[10px] text-muted-foreground block font-mono">
-                                                {member.email}
-                                              </span>
-                                            </div>
-                                          </div>
-                                        </td>
-                                        <td className="p-4">
-                                          <div className="space-y-0.5">
-                                            <span className="font-medium text-foreground/90 block">
-                                              {member.designation || 'Workspace Specialist'}
-                                            </span>
-                                            <span className="text-[10px] text-muted-foreground block">
-                                              {member.departmentId?.name || 'General Operations'}
-                                            </span>
-                                          </div>
-                                        </td>
-                                        <td className="p-4">
-                                          <div className="w-44">
-                                            <Select
-                                              value={currentRoleId}
-                                              onChange={(newRoleId) =>
-                                                handleUpdateUserRole(member._id, newRoleId)
-                                              }
-                                              className="w-full bg-background/55 border border-border/40 px-3 py-1.5 rounded-xl text-xs text-foreground cursor-pointer outline-none focus:border-primary/45 transition-colors"
-                                              options={rolesList.map((role) => ({
-                                                value: role._id,
-                                                label: role.name,
-                                              }))}
-                                              placeholder="Clearance Level"
-                                            />
-                                          </div>
-                                        </td>
-                                        <td className="p-4">
-                                          <span
-                                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border ${
-                                              member.status === 'active'
-                                                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                                                : member.status === 'suspended'
-                                                  ? 'bg-rose-500/10 text-rose-500 border-rose-500/20'
-                                                  : 'bg-blue-500/10 text-blue-400 border-blue-500/20'
-                                            }`}
+                                    <div>
+                                      {/* Top Row: Avatar, Name, Email, Status */}
+                                      <div className="flex items-start gap-3.5 relative">
+                                        {member.avatar ? (
+                                          // eslint-disable-next-line @next/next/no-img-element
+                                          <img
+                                            src={member.avatar}
+                                            alt={member.fullName}
+                                            className="w-12 h-12 rounded-full border border-border/80 object-cover shadow-inner shrink-0"
+                                          />
+                                        ) : (
+                                          <div
+                                            className={`w-12 h-12 rounded-full bg-gradient-to-tr ${gradient} flex items-center justify-center text-[11px] font-extrabold text-white shadow-md border-2 border-white/5 shrink-0`}
                                           >
-                                            {member.status}
+                                            {initials}
+                                          </div>
+                                        )}
+
+                                        <div className="flex-1 min-w-0 pr-4">
+                                          <span className="font-extrabold text-foreground text-sm block truncate group-hover:text-primary transition-colors">
+                                            {member.fullName}
                                           </span>
-                                        </td>
-                                        <td className="p-4 pr-5 text-right">
-                                          <button
-                                            onClick={() =>
-                                              handleUpdateEmployeeStatus(member._id, member.status)
-                                            }
-                                            className={`px-2.5 py-1.5 rounded-lg border text-[10px] font-bold tracking-wide transition-all shadow-sm ${
-                                              member.status === 'suspended'
-                                                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/25'
-                                                : 'bg-rose-500/10 border-rose-500/20 text-rose-400 hover:bg-rose-500/25'
-                                            }`}
+                                          <span
+                                            className="text-[10px] text-muted-foreground/80 font-mono block truncate mt-0.5"
+                                            title={member.email}
                                           >
-                                            {member.status === 'suspended'
-                                              ? 'Reactivate'
-                                              : 'Suspend Access'}
-                                          </button>
-                                        </td>
-                                      </tr>
-                                    );
-                                  })
-                              )}
-                            </tbody>
-                          </table>
-                        </div>
+                                            {member.email}
+                                          </span>
+                                        </div>
+
+                                        <span
+                                          className={`w-2.5 h-2.5 rounded-full absolute top-1 right-0 ring-4 ${
+                                            member.status === 'active'
+                                              ? 'bg-emerald-400 ring-emerald-500/10'
+                                              : member.status === 'suspended'
+                                                ? 'bg-rose-500 ring-rose-500/10'
+                                                : 'bg-blue-400 ring-blue-500/10'
+                                          }`}
+                                          title={member.status}
+                                        />
+                                      </div>
+
+                                      {/* Mid Section: Details */}
+                                      <div className="my-4 pt-3.5 border-t border-border/30 space-y-2 text-xs">
+                                        <div className="flex justify-between items-center">
+                                          <span className="text-muted-foreground font-semibold uppercase tracking-wider text-[9px]">
+                                            Designation
+                                          </span>
+                                          <span className="text-foreground/90 font-bold">
+                                            {member.designation || 'Workspace Specialist'}
+                                          </span>
+                                        </div>
+                                        <div className="flex justify-between items-center">
+                                          <span className="text-muted-foreground font-semibold uppercase tracking-wider text-[9px]">
+                                            Department
+                                          </span>
+                                          <span className="text-foreground/80 font-semibold">
+                                            {member.departmentId?.name || 'General Operations'}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    {/* Bottom Row: Selector and Action Button */}
+                                    <div className="space-y-3.5 pt-3 border-t border-border/30">
+                                      <div className="space-y-1 text-left">
+                                        <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground/60 block">
+                                          Security Clearance Role
+                                        </label>
+                                        <Select
+                                          value={currentRoleId}
+                                          onChange={(newRoleId) =>
+                                            handleUpdateUserRole(member._id, newRoleId)
+                                          }
+                                          className="w-full bg-background/55 border border-border/40 px-3 py-1.5 rounded-xl text-xs text-foreground cursor-pointer outline-none focus:border-primary/45 transition-all"
+                                          options={rolesList.map((role) => ({
+                                            value: role._id,
+                                            label: role.name,
+                                          }))}
+                                          placeholder="Clearance Level"
+                                        />
+                                      </div>
+
+                                      <div className="flex items-center justify-between gap-3">
+                                        <span
+                                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider border ${
+                                            member.status === 'active'
+                                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                              : member.status === 'suspended'
+                                                ? 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                                                : 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                                          }`}
+                                        >
+                                          {member.status}
+                                        </span>
+
+                                        <button
+                                          onClick={() =>
+                                            handleUpdateEmployeeStatus(member._id, member.status)
+                                          }
+                                          className={`px-3 py-1.5 rounded-xl border text-[10px] font-extrabold transition-all ${
+                                            member.status === 'suspended'
+                                              ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 shadow-sm'
+                                              : 'bg-rose-500/5 border-rose-500/20 text-rose-400 hover:bg-rose-500/10 shadow-inner'
+                                          }`}
+                                        >
+                                          {member.status === 'suspended'
+                                            ? 'Reactivate'
+                                            : 'Suspend Access'}
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                          </div>
+                        )}
                       </div>
 
                       {/* SECTION 2: Pending Workspace Invites */}
@@ -1455,109 +1532,138 @@ export default function SettingsPage() {
                           </p>
                         </div>
 
-                        <div className="bg-background/20 border border-border/60 rounded-2xl overflow-hidden backdrop-blur-md">
-                          <table className="w-full text-left text-xs border-collapse">
-                            <thead>
-                              <tr className="bg-card/90 text-[10px] uppercase font-bold tracking-wider text-muted-foreground border-b border-border/60">
-                                <th className="p-4 pl-5">Email Address</th>
-                                <th className="p-4">Target Clearance Role</th>
-                                <th className="p-4">Assigned Department</th>
-                                <th className="p-4">Invited By</th>
-                                <th className="p-4">Expiry Date</th>
-                                <th className="p-4">Status</th>
-                                <th className="p-4 pr-5 text-right">Actions</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {invitations.length === 0 ? (
-                                <tr>
-                                  <td
-                                    colSpan={7}
-                                    className="p-8 text-center text-muted-foreground italic"
-                                  >
-                                    No pending workspace invitations active.
-                                  </td>
-                                </tr>
-                              ) : (
-                                invitations.map((invite) => {
-                                  const isExpired = new Date(invite.expiresAt) < new Date();
-                                  return (
-                                    <tr
-                                      key={invite._id}
-                                      className="border-b border-border/40 hover:bg-card/25 transition-all"
-                                    >
-                                      <td className="p-4 pl-5 font-semibold text-foreground font-mono">
-                                        {invite.email}
-                                      </td>
-                                      <td className="p-4 text-foreground/85 font-medium">
-                                        {invite.role?.name || 'Developer'}
-                                      </td>
-                                      <td className="p-4 text-muted-foreground">
-                                        {invite.department?.name || 'General Operations'}
-                                      </td>
-                                      <td className="p-4 text-muted-foreground">
-                                        {invite.invitedBy?.name || 'Super Admin'}
-                                      </td>
-                                      <td className="p-4 text-muted-foreground font-mono text-[10px]">
-                                        {new Date(invite.expiresAt).toLocaleDateString(undefined, {
-                                          month: 'short',
-                                          day: 'numeric',
-                                          year: 'numeric',
-                                        })}
-                                      </td>
-                                      <td className="p-4">
-                                        <span
-                                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border ${
-                                            invite.status === 'accepted'
-                                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                                              : invite.status === 'revoked'
-                                                ? 'bg-red-500/10 text-red-500 border-red-500/20'
-                                                : isExpired
-                                                  ? 'bg-amber-500/10 text-amber-500 border-amber-500/20'
-                                                  : 'bg-blue-500/10 text-blue-400 border-blue-500/20'
-                                          }`}
-                                        >
-                                          {isExpired && invite.status === 'pending'
-                                            ? 'expired'
-                                            : invite.status}
+                        {invitations.length === 0 ? (
+                          <div className="bg-background/25 border border-border/40 p-10 rounded-2xl text-center space-y-4 backdrop-blur-md">
+                            <div className="w-12 h-12 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mx-auto animate-pulse">
+                              <Mail className="w-5.5 h-5.5" />
+                            </div>
+                            <div className="space-y-1 max-w-sm mx-auto">
+                              <h4 className="font-bold text-foreground text-sm">
+                                No pending invitations active
+                              </h4>
+                              <p className="text-xs text-muted-foreground leading-normal">
+                                No pending invitations. Ready to onboard your team? Invite your
+                                colleagues to collaborate on projects.
+                              </p>
+                            </div>
+                            <Button
+                              onClick={() => setIsInviteModalOpen(true)}
+                              variant="outline"
+                              className="rounded-xl px-4 py-2 text-xs font-bold border-border/60 hover:bg-accent/40"
+                            >
+                              <UserPlus className="w-3.5 h-3.5 mr-1.5" />
+                              Invite Your First Specialist
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4.5">
+                            {invitations.map((invite) => {
+                              const isExpired = new Date(invite.expiresAt) < new Date();
+                              return (
+                                <div
+                                  key={invite._id}
+                                  className="bg-card/15 backdrop-blur-md border border-border/40 rounded-2xl p-5 hover:bg-card/25 transition-all duration-300 relative flex flex-col justify-between h-full group"
+                                >
+                                  <div>
+                                    {/* Top Row: Mail Icon, Email, Status */}
+                                    <div className="flex items-center gap-3">
+                                      <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0 group-hover:scale-105 transition-transform duration-200">
+                                        <Mail className="w-4.5 h-4.5" />
+                                      </div>
+                                      <div className="flex-1 min-w-0 pr-2">
+                                        <span className="font-extrabold text-foreground text-xs block truncate font-mono">
+                                          {invite.email}
                                         </span>
-                                      </td>
-                                      <td className="p-4 pr-5 text-right">
-                                        <div className="flex justify-end gap-1.5">
-                                          {invite.status === 'pending' && !isExpired && (
-                                            <>
-                                              <button
-                                                onClick={() => handleResendInvite(invite._id)}
-                                                className="p-1.5 rounded-lg border border-border/60 hover:bg-primary/10 text-muted-foreground hover:text-primary cursor-pointer transition-all"
-                                                title="Resend Invite & Renew Expiry"
-                                              >
-                                                <RefreshCw className="w-3.5 h-3.5" />
-                                              </button>
-                                              <button
-                                                onClick={() => handleRevokeInvite(invite._id)}
-                                                className="p-1.5 rounded-lg border border-border/60 hover:bg-destructive/10 text-muted-foreground hover:text-destructive cursor-pointer transition-all"
-                                                title="Revoke Invite Credentials"
-                                              >
-                                                <X className="w-3.5 h-3.5" />
-                                              </button>
-                                            </>
+                                        <span className="text-[10px] text-muted-foreground/80 block mt-0.5">
+                                          Invited by: {invite.invitedBy?.name || 'Super Admin'}
+                                        </span>
+                                      </div>
+                                    </div>
+
+                                    {/* Mid Section: Role and Exp Date */}
+                                    <div className="my-4 pt-3.5 border-t border-border/30 space-y-2 text-xs">
+                                      <div className="flex justify-between items-center">
+                                        <span className="text-muted-foreground font-semibold uppercase tracking-wider text-[9px]">
+                                          Role Clearance
+                                        </span>
+                                        <span className="text-foreground/90 font-bold px-2.5 py-0.5 rounded-lg bg-primary/5 border border-primary/10">
+                                          {invite.role?.name || 'Developer'}
+                                        </span>
+                                      </div>
+                                      <div className="flex justify-between items-center">
+                                        <span className="text-muted-foreground font-semibold uppercase tracking-wider text-[9px]">
+                                          Department
+                                        </span>
+                                        <span className="text-foreground/85 font-semibold">
+                                          {invite.department?.name || 'General Operations'}
+                                        </span>
+                                      </div>
+                                      <div className="flex justify-between items-center">
+                                        <span className="text-muted-foreground font-semibold uppercase tracking-wider text-[9px]">
+                                          Expiry Date
+                                        </span>
+                                        <span className="text-muted-foreground/90 font-mono text-[10px]">
+                                          {new Date(invite.expiresAt).toLocaleDateString(
+                                            undefined,
+                                            {
+                                              month: 'short',
+                                              day: 'numeric',
+                                              year: 'numeric',
+                                            }
                                           )}
-                                          {(invite.status === 'accepted' ||
-                                            invite.status === 'revoked' ||
-                                            isExpired) && (
-                                            <span className="text-[10px] text-muted-foreground/60 font-bold uppercase tracking-wide select-none pr-2">
-                                              closed
-                                            </span>
-                                          )}
-                                        </div>
-                                      </td>
-                                    </tr>
-                                  );
-                                })
-                              )}
-                            </tbody>
-                          </table>
-                        </div>
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Bottom Row: Invite Status and Actions */}
+                                  <div className="flex items-center justify-between mt-4 pt-3 border-t border-border/20">
+                                    <span
+                                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider border ${
+                                        invite.status === 'accepted'
+                                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                          : invite.status === 'revoked'
+                                            ? 'bg-red-500/10 text-red-500 border-red-500/20'
+                                            : isExpired
+                                              ? 'bg-amber-500/10 text-amber-500 border-amber-500/20'
+                                              : 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                                      }`}
+                                    >
+                                      {isExpired && invite.status === 'pending'
+                                        ? 'expired'
+                                        : invite.status}
+                                    </span>
+
+                                    <div className="flex gap-2">
+                                      {invite.status === 'pending' && !isExpired ? (
+                                        <>
+                                          <button
+                                            onClick={() => handleResendInvite(invite._id)}
+                                            className="p-2 rounded-xl border border-border/60 hover:bg-primary/10 text-muted-foreground hover:text-primary cursor-pointer transition-all flex items-center justify-center"
+                                            title="Resend Invite & Renew Expiry"
+                                          >
+                                            <RefreshCw className="w-3.5 h-3.5" />
+                                          </button>
+                                          <button
+                                            onClick={() => handleRevokeInvite(invite._id)}
+                                            className="p-2 rounded-xl border border-border/60 hover:bg-destructive/10 text-muted-foreground hover:text-destructive cursor-pointer transition-all flex items-center justify-center"
+                                            title="Revoke Invite Credentials"
+                                          >
+                                            <X className="w-3.5 h-3.5" />
+                                          </button>
+                                        </>
+                                      ) : (
+                                        <span className="text-[9px] text-muted-foreground/60 font-black uppercase tracking-wider select-none pr-1">
+                                          closed
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
 
                       {/* Invite Modal Glassmorphism Overlay */}
@@ -1591,7 +1697,7 @@ export default function SettingsPage() {
 
                             <form onSubmit={handleCreateInvite} className="space-y-5">
                               {/* Email Input */}
-                              <div className="space-y-1.5">
+                              <div className="space-y-1.5 text-left">
                                 <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80 block">
                                   Work Email Address
                                 </label>
@@ -1606,25 +1712,198 @@ export default function SettingsPage() {
                               </div>
 
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {/* Role Selection */}
-                                <div className="space-y-1.5">
+                                {/* Searchable Role Selection Combobox */}
+                                <div className="space-y-1.5 text-left" ref={roleComboboxRef}>
                                   <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80 block">
                                     RBAC Corporate Role
                                   </label>
-                                  <Select
-                                    value={inviteRole}
-                                    onChange={(val) => setInviteRole(val)}
-                                    className="w-full bg-background/80 border border-border/60 px-4 py-2.5 rounded-xl text-xs text-foreground outline-none cursor-pointer focus:border-primary/50"
-                                    options={rolesList.map((role) => ({
-                                      value: role._id,
-                                      label: role.name,
-                                    }))}
-                                    placeholder="Select Corporate Role"
-                                  />
+                                  <div className="relative">
+                                    <button
+                                      type="button"
+                                      onClick={() => setIsComboboxOpen(!isComboboxOpen)}
+                                      className="flex w-full items-center justify-between h-10 rounded-xl border border-border/60 bg-background/80 px-3 py-2.5 text-xs text-foreground transition-all duration-150 hover:bg-accent/40 focus:outline-none focus:ring-2 focus:ring-primary/40"
+                                    >
+                                      <span className="block truncate text-left font-medium">
+                                        {inviteRole
+                                          ? rolesList.find((r) => r._id === inviteRole)?.name ||
+                                            'Custom Role'
+                                          : 'Select Corporate Role'}
+                                      </span>
+                                      <ChevronDown
+                                        className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isComboboxOpen ? 'rotate-180 text-foreground' : ''}`}
+                                      />
+                                    </button>
+
+                                    <AnimatePresence>
+                                      {isComboboxOpen && (
+                                        <motion.div
+                                          initial={{ opacity: 0, y: -4, scale: 0.98 }}
+                                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                                          exit={{ opacity: 0, y: -4, scale: 0.98 }}
+                                          transition={{ duration: 0.12 }}
+                                          className="absolute z-[99] mt-1.5 w-full rounded-xl border border-border bg-popover text-popover-foreground shadow-lg p-1.5 max-h-[250px] overflow-hidden flex flex-col backdrop-blur-md bg-popover/95"
+                                        >
+                                          {/* Search query input */}
+                                          <div className="flex items-center px-2 py-1.5 border-b border-border/60 gap-2 mb-1.5 shrink-0">
+                                            <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                            <input
+                                              type="text"
+                                              placeholder="Search roles..."
+                                              value={comboboxSearch}
+                                              onChange={(e) => setComboboxSearch(e.target.value)}
+                                              onClick={(e) => e.stopPropagation()}
+                                              className="w-full bg-transparent text-xs text-foreground border-0 p-0 focus:ring-0 focus:outline-none outline-none placeholder:text-muted-foreground"
+                                            />
+                                          </div>
+
+                                          {/* Options list */}
+                                          <div className="overflow-y-auto max-h-[180px] custom-scrollbar p-0.5 space-y-1 text-left">
+                                            {rolesList.filter((r) =>
+                                              (r.name || '')
+                                                .toLowerCase()
+                                                .includes(comboboxSearch.toLowerCase())
+                                            ).length > 0 ? (
+                                              rolesList
+                                                .filter((r) =>
+                                                  (r.name || '')
+                                                    .toLowerCase()
+                                                    .includes(comboboxSearch.toLowerCase())
+                                                )
+                                                .map((role) => {
+                                                  const isSelected = role._id === inviteRole;
+
+                                                  // Scoped module preview calculation
+                                                  const previewModules = new Set<string>();
+                                                  const perms = role.permissions || [];
+                                                  perms.forEach((p: any) => {
+                                                    const key =
+                                                      typeof p === 'string' ? p : p.key || '';
+                                                    if (key.startsWith('crm:'))
+                                                      previewModules.add('CRM');
+                                                    else if (key.startsWith('projects:'))
+                                                      previewModules.add('Projects');
+                                                    else if (key.startsWith('hr:'))
+                                                      previewModules.add('HR');
+                                                    else if (key.startsWith('finance:'))
+                                                      previewModules.add('Finance');
+                                                    else if (key.startsWith('analytics:'))
+                                                      previewModules.add('Analytics');
+                                                    else if (key.startsWith('settings:'))
+                                                      previewModules.add('Settings');
+                                                    else if (key.startsWith('collaboration:'))
+                                                      previewModules.add('Collaboration');
+                                                  });
+
+                                                  if (previewModules.size === 0) {
+                                                    const name = (role.name || '').toLowerCase();
+                                                    if (
+                                                      name.includes('admin') ||
+                                                      name.includes('super')
+                                                    ) {
+                                                      [
+                                                        'CRM',
+                                                        'Projects',
+                                                        'HR',
+                                                        'Finance',
+                                                        'Analytics',
+                                                        'Settings',
+                                                        'Collaboration',
+                                                      ].forEach((m) => previewModules.add(m));
+                                                    } else if (
+                                                      name.includes('developer') ||
+                                                      name.includes('engineer')
+                                                    ) {
+                                                      ['Projects', 'Collaboration'].forEach((m) =>
+                                                        previewModules.add(m)
+                                                      );
+                                                    } else if (
+                                                      name.includes('pm') ||
+                                                      name.includes('project')
+                                                    ) {
+                                                      [
+                                                        'Projects',
+                                                        'Collaboration',
+                                                        'Analytics',
+                                                      ].forEach((m) => previewModules.add(m));
+                                                    } else if (
+                                                      name.includes('sales') ||
+                                                      name.includes('support')
+                                                    ) {
+                                                      ['CRM', 'Collaboration'].forEach((m) =>
+                                                        previewModules.add(m)
+                                                      );
+                                                    } else if (name.includes('finance')) {
+                                                      ['Finance', 'Analytics'].forEach((m) =>
+                                                        previewModules.add(m)
+                                                      );
+                                                    } else if (name.includes('hr')) {
+                                                      ['HR', 'Collaboration'].forEach((m) =>
+                                                        previewModules.add(m)
+                                                      );
+                                                    } else {
+                                                      previewModules.add('Core');
+                                                    }
+                                                  }
+
+                                                  return (
+                                                    <div
+                                                      key={role._id}
+                                                      onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setInviteRole(role._id);
+                                                        setIsComboboxOpen(false);
+                                                        setComboboxSearch('');
+                                                      }}
+                                                      className={`flex flex-col text-left px-3 py-2 rounded-lg cursor-pointer transition-all duration-150 gap-0.5 border ${
+                                                        isSelected
+                                                          ? 'bg-primary/10 text-primary border-primary/25 font-semibold'
+                                                          : 'text-foreground hover:bg-accent/40 hover:text-accent-foreground border-transparent'
+                                                      }`}
+                                                    >
+                                                      <div className="flex justify-between items-center">
+                                                        <span className="font-extrabold text-xs">
+                                                          {role.name}
+                                                        </span>
+                                                        {role.isSystem && (
+                                                          <span className="text-[7.5px] font-black uppercase bg-primary/15 text-primary border border-primary/20 px-1 py-0.5 rounded">
+                                                            system
+                                                          </span>
+                                                        )}
+                                                      </div>
+                                                      <p className="text-[9.5px] text-muted-foreground leading-normal line-clamp-1">
+                                                        {role.description ||
+                                                          'Custom corporate role.'}
+                                                      </p>
+
+                                                      <div className="flex items-center gap-1 mt-0.5">
+                                                        {Array.from(previewModules)
+                                                          .slice(0, 4)
+                                                          .map((mod) => (
+                                                            <span
+                                                              key={mod}
+                                                              className="px-1.5 py-0.2 rounded text-[7.5px] font-black bg-background/60 text-muted-foreground border border-border/40 uppercase tracking-wide"
+                                                            >
+                                                              {mod}
+                                                            </span>
+                                                          ))}
+                                                      </div>
+                                                    </div>
+                                                  );
+                                                })
+                                            ) : (
+                                              <div className="py-4 text-center text-xs text-muted-foreground italic">
+                                                No results found
+                                              </div>
+                                            )}
+                                          </div>
+                                        </motion.div>
+                                      )}
+                                    </AnimatePresence>
+                                  </div>
                                 </div>
 
                                 {/* Department Selection */}
-                                <div className="space-y-1.5">
+                                <div className="space-y-1.5 text-left">
                                   <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80 block">
                                     Assigned Department
                                   </label>
@@ -1641,94 +1920,65 @@ export default function SettingsPage() {
                                 </div>
                               </div>
 
-                              {/* Dynamic Scoped Permissions Preset Badges */}
+                              {/* Scoped Permissions Preview Card */}
                               <div className="bg-background/40 border border-border/50 p-4.5 rounded-xl space-y-3 transition-all duration-300">
-                                <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/80 block">
-                                  Authorized Modules Clearance
+                                <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/80 block text-left">
+                                  Authorized Modules Clearance Details
                                 </span>
 
                                 {inviteRole ? (
-                                  <div className="space-y-2">
-                                    <div className="flex flex-wrap gap-1.5">
-                                      {(() => {
-                                        const modules = new Set<string>();
-                                        const role = rolesList.find((r) => r._id === inviteRole);
-                                        if (role) {
-                                          const perms = role.permissions || [];
-                                          perms.forEach((p: any) => {
-                                            const key = typeof p === 'string' ? p : p.key || '';
-                                            if (key.startsWith('crm:')) modules.add('CRM');
-                                            else if (key.startsWith('projects:'))
-                                              modules.add('Projects');
-                                            else if (key.startsWith('hr:')) modules.add('HR');
-                                            else if (key.startsWith('finance:'))
-                                              modules.add('Finance');
-                                            else if (key.startsWith('analytics:'))
-                                              modules.add('Analytics');
-                                            else if (key.startsWith('settings:'))
-                                              modules.add('Settings');
-                                            else if (key.startsWith('collaboration:'))
-                                              modules.add('Collaboration');
-                                          });
-                                        }
+                                  <div className="space-y-3">
+                                    {(() => {
+                                      const selectedRoleObj = rolesList.find(
+                                        (r) => r._id === inviteRole
+                                      );
+                                      const accessSummary = getModuleAccessSummary(
+                                        selectedRoleObj?.permissions || []
+                                      );
 
-                                        if (modules.size === 0 && role) {
-                                          const name = (role.name || '').toLowerCase();
-                                          if (name.includes('admin') || name.includes('super')) {
-                                            [
-                                              'CRM',
-                                              'Projects',
-                                              'HR',
-                                              'Finance',
-                                              'Analytics',
-                                              'Settings',
-                                              'Collaboration',
-                                            ].forEach((m) => modules.add(m));
-                                          } else if (
-                                            name.includes('developer') ||
-                                            name.includes('engineer')
-                                          ) {
-                                            ['Projects', 'Collaboration'].forEach((m) =>
-                                              modules.add(m)
-                                            );
-                                          } else if (
-                                            name.includes('pm') ||
-                                            name.includes('project manager')
-                                          ) {
-                                            ['Projects', 'Collaboration', 'Analytics'].forEach(
-                                              (m) => modules.add(m)
-                                            );
-                                          } else if (
-                                            name.includes('sales') ||
-                                            name.includes('support')
-                                          ) {
-                                            ['CRM', 'Collaboration'].forEach((m) => modules.add(m));
-                                          } else if (name.includes('finance')) {
-                                            ['Finance', 'Analytics'].forEach((m) => modules.add(m));
-                                          } else if (name.includes('hr')) {
-                                            ['HR', 'Collaboration'].forEach((m) => modules.add(m));
-                                          } else {
-                                            modules.add('Core');
-                                          }
-                                        }
+                                      return (
+                                        <>
+                                          <div className="grid grid-cols-2 gap-2 text-left">
+                                            {Object.entries(accessSummary).map(([mod, lvl]) => {
+                                              let lvlColor =
+                                                'text-blue-400 border-blue-500/20 bg-blue-500/5';
+                                              if (lvl === 'Edit')
+                                                lvlColor =
+                                                  'text-purple-400 border-purple-500/20 bg-purple-500/5';
+                                              if (lvl === 'Manage')
+                                                lvlColor =
+                                                  'text-amber-400 border-amber-500/20 bg-amber-500/5';
+                                              if (lvl === 'Full Access')
+                                                lvlColor =
+                                                  'text-rose-400 border-rose-500/20 bg-rose-500/5';
 
-                                        return Array.from(modules).map((mod) => (
-                                          <span
-                                            key={mod}
-                                            className="px-2 py-0.5 rounded-md text-[9px] font-bold tracking-wide bg-primary/10 border border-primary/20 text-primary"
-                                          >
-                                            {mod}
-                                          </span>
-                                        ));
-                                      })()}
-                                    </div>
-                                    <p className="text-[10px] text-muted-foreground leading-normal pt-1 border-t border-border/30">
-                                      {rolesList.find((r) => r._id === inviteRole)?.description ||
-                                        'Full permissions mapped to this operational clearance tier.'}
-                                    </p>
+                                              return (
+                                                <div
+                                                  key={mod}
+                                                  className="flex justify-between items-center p-2 rounded-xl bg-background/60 border border-border/40 text-[10px]"
+                                                >
+                                                  <span className="font-extrabold uppercase text-foreground/80 tracking-wide">
+                                                    {mod}
+                                                  </span>
+                                                  <span
+                                                    className={`px-2 py-0.5 rounded-lg border font-black text-[8px] ${lvlColor}`}
+                                                  >
+                                                    {lvl}
+                                                  </span>
+                                                </div>
+                                              );
+                                            })}
+                                          </div>
+                                          <p className="text-[10px] text-muted-foreground leading-normal pt-2 border-t border-border/30 text-left">
+                                            {selectedRoleObj?.description ||
+                                              'Full permissions mapped to this operational clearance tier.'}
+                                          </p>
+                                        </>
+                                      );
+                                    })()}
                                   </div>
                                 ) : (
-                                  <p className="text-[10px] text-muted-foreground leading-relaxed">
+                                  <p className="text-[10px] text-muted-foreground leading-relaxed text-left">
                                     Invited specialists will receive full access controls mapped to
                                     their selected corporate role upon accepting their invitation.
                                   </p>

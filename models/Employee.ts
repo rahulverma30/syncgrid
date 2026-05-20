@@ -212,7 +212,7 @@ EmployeeSchema.index({ companyId: 1, isArchived: 1, isSoftDeleted: 1 });
 EmployeeSchema.index({ companyId: 1, departmentId: 1, status: 1 });
 
 // Pre-save auto-increment sequential employeeId EMP-1, EMP-2...
-EmployeeSchema.pre('save', async function (this: any, next: any) {
+EmployeeSchema.pre('save', async function (this: any, next?: any) {
   if (!this.employeeId) {
     try {
       const count = await mongoose.model('Employee').countDocuments({
@@ -226,7 +226,9 @@ EmployeeSchema.pre('save', async function (this: any, next: any) {
   if (!this.displayName) {
     this.displayName = this.fullName;
   }
-  next();
+  if (typeof next === 'function') {
+    next();
+  }
 });
 
 export const Employee = ((mongoose.models.Employee as Model<any>) ||

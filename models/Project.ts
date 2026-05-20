@@ -268,8 +268,7 @@ ProjectSchema.index({ companyId: 1, priority: 1 });
 ProjectSchema.index({ companyId: 1, riskLevel: 1 });
 ProjectSchema.index({ companyId: 1, clientId: 1 });
 
-// ─── Auto-generate project code and calculate health score pre-save ───────────
-ProjectSchema.pre('save', function (this: any, next: any) {
+ProjectSchema.pre('save', function (this: any, next?: any) {
   if (!this.code) {
     const prefix = (this.name as string)
       .replace(/[^a-zA-Z]/g, '')
@@ -336,7 +335,9 @@ ProjectSchema.pre('save', function (this: any, next: any) {
     this.riskLevel = 'low';
   }
 
-  next();
+  if (typeof next === 'function') {
+    next();
+  }
 });
 
 export const Project = ((mongoose.models.Project as Model<any>) ||

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Select } from '@/components/ui';
 import { PERMISSION_RESOURCES } from '@/constants/rbac';
 
@@ -25,6 +25,9 @@ import {
   ChevronDown,
   UserCheck,
   Network,
+  ArrowLeft,
+  ArrowRight,
+  Check,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
@@ -418,8 +421,141 @@ export default function RolesAndAuthorizationPage() {
   const [newRoleName, setNewRoleName] = useState('');
   const [newRoleDesc, setNewRoleDesc] = useState('');
   const [newRoleHierarchy, setNewRoleHierarchy] = useState(10);
-  const [newRolePermissionIds, setNewRolePermissionIds] = useState<string[]>([]);
   const [newRoleInherits, setNewRoleInherits] = useState<string[]>([]);
+
+  // Advanced Security Mode & Step Wizard State
+  const [advancedMode, setAdvancedMode] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [selectedArchetype, setSelectedArchetype] = useState<string | null>(null);
+  const [enabledModules, setEnabledModules] = useState<string[]>([]);
+  const [moduleAccessLevels, setModuleAccessLevels] = useState<
+    Record<string, 'none' | 'read' | 'edit' | 'manage' | 'admin'>
+  >({});
+
+  const newRolePermissionIds = useMemo(() => {
+    let allKeys: string[] = [];
+    enabledModules.forEach((modName) => {
+      const level = moduleAccessLevels[modName] || 'read';
+      const keys = getPermissionKeysForLevel(modName, level);
+      allKeys = [...allKeys, ...keys];
+    });
+
+    return allKeys
+      .map((key) => permissions.find((p) => p.key === key)?._id)
+      .filter(Boolean) as string[];
+  }, [enabledModules, moduleAccessLevels, permissions]);
+
+  // Populate wizard selections from permission keys list
+  const populateLevelsFromPerms = (permsList: string[]) => {
+    const modules: string[] = [];
+    const levels: Record<string, 'none' | 'read' | 'edit' | 'manage' | 'admin'> = {};
+    const availableModules = [
+      'CRM',
+      'Projects',
+      'HR',
+      'Finance',
+      'Collaboration',
+      'Analytics',
+      'Settings',
+    ];
+
+    availableModules.forEach((mod) => {
+      const m = mod.toLowerCase();
+      const hasRead = permsList.includes(`${m}:read`);
+      const hasCreate = permsList.includes(`${m}:create`);
+      const hasUpdate = permsList.includes(`${m}:update`);
+      const hasDelete = permsList.includes(`${m}:delete`);
+      const hasManage =
+        permsList.includes(`${m}:manage`) ||
+        permsList.includes(`${m}:admin`) ||
+        (m === 'projects' && permsList.includes('projects:manage'));
+
+      let level: 'none' | 'read' | 'edit' | 'manage' | 'admin' = 'none';
+      if (hasManage) level = 'admin';
+      else if (hasDelete) level = 'manage';
+      else if (hasCreate || hasUpdate) level = 'edit';
+      else if (hasRead) level = 'read';
+
+      if (level !== 'none') {
+        modules.push(mod);
+        levels[mod] = level;
+      }
+    });
+
+    setEnabledModules(modules);
+    setModuleAccessLevels(levels);
+  };
+
+  // Helper mapping access level keys
+  const getPermissionKeysForLevel = (
+    moduleName: string,
+    level: 'none' | 'read' | 'edit' | 'manage' | 'admin'
+  ) => {
+    const m = moduleName.toLowerCase();
+    if (level === 'none') return [];
+    if (m === 'crm') {
+      if (level === 'read') return ['crm:read'];
+      if (level === 'edit') return ['crm:read', 'crm:create', 'crm:update'];
+      if (level === 'manage') return ['crm:read', 'crm:create', 'crm:update', 'crm:delete'];
+      if (level === 'admin')
+        return ['crm:read', 'crm:create', 'crm:update', 'crm:delete', 'crm:manage'];
+    }
+    if (m === 'projects') {
+      if (level === 'read') return ['projects:read'];
+      if (level === 'edit') return ['projects:read', 'projects:create', 'projects:update'];
+      if (level === 'manage')
+        return ['projects:read', 'projects:create', 'projects:update', 'projects:delete'];
+      if (level === 'admin')
+        return [
+          'projects:read',
+          'projects:create',
+          'projects:update',
+          'projects:update:any',
+          'projects:delete',
+          'projects:manage',
+        ];
+    }
+    if (m === 'hr') {
+      if (level === 'read') return ['hr:read'];
+      if (level === 'edit') return ['hr:read', 'hr:create', 'hr:update'];
+      if (level === 'manage') return ['hr:read', 'hr:create', 'hr:update', 'hr:delete'];
+      if (level === 'admin') return ['hr:read', 'hr:create', 'hr:update', 'hr:delete', 'hr:manage'];
+    }
+    if (m === 'finance') {
+      if (level === 'read') return ['finance:read'];
+      if (level === 'edit') return ['finance:read', 'finance:create', 'finance:update'];
+      if (level === 'manage')
+        return ['finance:read', 'finance:create', 'finance:update', 'finance:delete'];
+      if (level === 'admin')
+        return [
+          'finance:read',
+          'finance:create',
+          'finance:update',
+          'finance:delete',
+          'finance:manage',
+        ];
+    }
+    if (m === 'collaboration') {
+      if (level === 'read') return ['collaboration:read'];
+      if (level === 'edit') return ['collaboration:read', 'collaboration:create'];
+      if (level === 'manage') return ['collaboration:read', 'collaboration:create'];
+      if (level === 'admin')
+        return ['collaboration:read', 'collaboration:create', 'collaboration:manage'];
+    }
+    if (m === 'analytics') {
+      if (level === 'read') return ['analytics:read'];
+      if (level === 'edit') return ['analytics:read'];
+      if (level === 'manage') return ['analytics:read'];
+      if (level === 'admin') return ['analytics:read', 'analytics:manage'];
+    }
+    if (m === 'settings') {
+      if (level === 'read') return ['settings:read'];
+      if (level === 'edit') return ['settings:read', 'settings:update'];
+      if (level === 'manage') return ['settings:read', 'settings:update'];
+      if (level === 'admin') return ['settings:read', 'settings:update', 'settings:manage'];
+    }
+    return [`${m}:read`];
+  };
 
   // New Dynamic Policy Form State
   const [newPolicyName, setNewPolicyName] = useState('');
@@ -491,7 +627,8 @@ export default function RolesAndAuthorizationPage() {
         setNewRoleName('');
         setNewRoleDesc('');
         setNewRoleHierarchy(10);
-        setNewRolePermissionIds([]);
+        setEnabledModules([]);
+        setModuleAccessLevels({});
         setNewRoleInherits([]);
         fetchCoreData();
       } else {
@@ -553,15 +690,23 @@ export default function RolesAndAuthorizationPage() {
     setNewRoleDesc(`Clone of ${role.name}. ${role.description}`);
     setNewRoleHierarchy(role.hierarchyLevel + 1);
 
-    const permissionIds = (role.permissions || []).map((p: any) =>
-      typeof p === 'string' ? p : p._id
-    );
     const inheritedIds = (role.inheritedRoles || []).map((ir: any) =>
       typeof ir === 'string' ? ir : ir._id
     );
 
-    setNewRolePermissionIds(permissionIds);
     setNewRoleInherits(inheritedIds);
+
+    const permKeys = (role.permissions || [])
+      .map((p: any) => {
+        if (typeof p === 'string') {
+          const found = permissions.find((perm) => perm._id === p);
+          return found?.key || '';
+        }
+        return p?.key || '';
+      })
+      .filter(Boolean) as string[];
+    populateLevelsFromPerms(permKeys);
+
     setIsCreatingRole(true);
     toast.info(`Cloned matrix configuration from "${role.name}".`);
   };
@@ -600,7 +745,6 @@ export default function RolesAndAuthorizationPage() {
       .map((key) => permissions.find((p) => p.key === key)?._id)
       .filter(Boolean) as string[];
 
-    setNewRolePermissionIds(matchedIds);
     toast.success(
       `Archetype "${template.name}" configured. ${matchedIds.length} permissions mapped!`
     );
@@ -788,17 +932,52 @@ export default function RolesAndAuthorizationPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Advanced Security Mode Toggle */}
+          <div className="flex items-center gap-2 bg-muted/20 border border-border/60 px-3.5 py-1.5 rounded-2xl shadow-inner">
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+              Advanced Security Mode
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                const nextMode = !advancedMode;
+                setAdvancedMode(nextMode);
+                if (!nextMode && activeTab === 'policies') {
+                  setActiveTab('roles');
+                }
+              }}
+              className="text-primary hover:text-primary/95 transition-all focus:outline-none"
+              title="Toggle JSON ABAC configurations & advanced system hierarchy parameters"
+            >
+              {advancedMode ? (
+                <ToggleRight className="h-6 w-6 text-primary" />
+              ) : (
+                <ToggleLeft className="h-6 w-6 text-muted-foreground/60" />
+              )}
+            </button>
+          </div>
+
           {activeTab === 'roles' && (
             <button
-              onClick={() => setIsCreatingRole(true)}
+              onClick={() => {
+                setIsCreatingRole(true);
+                setCurrentStep(1);
+                setSelectedArchetype(null);
+                setEnabledModules([]);
+                setModuleAccessLevels({});
+                setNewRoleName('');
+                setNewRoleDesc('');
+                setNewRoleHierarchy(10);
+                setSelectedRole(null);
+              }}
               className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground hover:bg-primary/90 transition-all shadow-[0_4px_20px_rgba(var(--primary-rgb),0.2)]"
             >
               <Plus className="h-4 w-4" />
               <span>Create Custom Role</span>
             </button>
           )}
-          {activeTab === 'policies' && (
+          {activeTab === 'policies' && advancedMode && (
             <button
               onClick={() => setIsCreatingPolicy(true)}
               className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground hover:bg-primary/90 transition-all shadow-[0_4px_20px_rgba(var(--primary-rgb),0.2)]"
@@ -826,20 +1005,22 @@ export default function RolesAndAuthorizationPage() {
           <Layers className="h-4 w-4" />
           <span>Roles & Matrix</span>
         </button>
-        <button
-          onClick={() => {
-            setActiveTab('policies');
-            setSelectedRole(null);
-          }}
-          className={`flex items-center gap-2 px-6 py-3 border-b-2 text-xs font-bold transition-all ${
-            activeTab === 'policies'
-              ? 'border-primary text-primary font-extrabold'
-              : 'border-transparent text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          <FolderLock className="h-4 w-4" />
-          <span>Dynamic ABAC Policies</span>
-        </button>
+        {advancedMode && (
+          <button
+            onClick={() => {
+              setActiveTab('policies');
+              setSelectedRole(null);
+            }}
+            className={`flex items-center gap-2 px-6 py-3 border-b-2 text-xs font-bold transition-all ${
+              activeTab === 'policies'
+                ? 'border-primary text-primary font-extrabold'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <FolderLock className="h-4 w-4" />
+            <span>Dynamic ABAC Policies</span>
+          </button>
+        )}
         <button
           onClick={() => {
             setActiveTab('assignments');
@@ -979,126 +1160,130 @@ export default function RolesAndAuthorizationPage() {
                     </div>
 
                     {/* Role Hierarchy level editor & Inheritance selection */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 bg-background/20 border border-border/60 p-4 rounded-2xl">
-                      <div>
-                        <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">
-                          Role Hierarchy Level
-                        </label>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="number"
-                            min="0"
-                            disabled={selectedRole.isSystem}
-                            defaultValue={selectedRole.hierarchyLevel}
-                            onChange={async (e) => {
-                              if (selectedRole.isSystem) return;
-                              const val = Number(e.target.value);
-                              try {
-                                await fetch(`/api/protected/roles/${selectedRole._id}`, {
-                                  method: 'PUT',
-                                  headers: { 'Content-Type': 'application/json' },
-                                  body: JSON.stringify({ hierarchyLevel: val }),
-                                });
-                                toast.success(`Hierarchy shifted to level ${val}`);
-                                fetchCoreData();
-                              } catch (err) {
-                                toast.error('Failed hierarchy update.');
-                              }
-                            }}
-                            className="w-20 bg-background border border-border px-3 py-1.5 rounded-lg text-xs focus:outline-none"
-                          />
-                          <span className="text-[10px] text-muted-foreground">
-                            (Lower numbers are superior)
-                          </span>
+                    {advancedMode && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 bg-background/20 border border-border/60 p-4 rounded-2xl">
+                        <div>
+                          <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">
+                            Role Hierarchy Level
+                          </label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="number"
+                              min="0"
+                              disabled={selectedRole.isSystem}
+                              defaultValue={selectedRole.hierarchyLevel}
+                              onChange={async (e) => {
+                                if (selectedRole.isSystem) return;
+                                const val = Number(e.target.value);
+                                try {
+                                  await fetch(`/api/protected/roles/${selectedRole._id}`, {
+                                    method: 'PUT',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ hierarchyLevel: val }),
+                                  });
+                                  toast.success(`Hierarchy shifted to level ${val}`);
+                                  fetchCoreData();
+                                } catch (err) {
+                                  toast.error('Failed hierarchy update.');
+                                }
+                              }}
+                              className="w-20 bg-background border border-border px-3 py-1.5 rounded-lg text-xs focus:outline-none"
+                            />
+                            <span className="text-[10px] text-muted-foreground">
+                              (Lower numbers are superior)
+                            </span>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">
+                            Inherits Permissions From
+                          </label>
+                          <div className="flex flex-wrap gap-1.5">
+                            {roles
+                              .filter((r) => r._id !== selectedRole._id)
+                              .map((r) => {
+                                const currentInheritedIds = (selectedRole.inheritedRoles || []).map(
+                                  (ir: any) => (typeof ir === 'string' ? ir : ir._id)
+                                );
+                                const isInherited = currentInheritedIds.includes(r._id);
+
+                                return (
+                                  <button
+                                    key={r._id}
+                                    disabled={selectedRole.isSystem}
+                                    onClick={() => {
+                                      if (selectedRole.isSystem) return;
+                                      const nextInherits = isInherited
+                                        ? currentInheritedIds.filter((id) => id !== r._id)
+                                        : [...currentInheritedIds, r._id];
+
+                                      const pIds = (selectedRole.permissions || []).map((p: any) =>
+                                        typeof p === 'string' ? p : p._id
+                                      );
+                                      handleUpdateRolePermissions(
+                                        selectedRole._id,
+                                        pIds,
+                                        nextInherits
+                                      );
+                                    }}
+                                    className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-all ${
+                                      isInherited
+                                        ? 'bg-primary/20 border-primary/30 text-primary'
+                                        : 'bg-background border-border text-muted-foreground hover:text-foreground'
+                                    }`}
+                                  >
+                                    {r.name}
+                                  </button>
+                                );
+                              })}
+                          </div>
                         </div>
                       </div>
-
-                      <div>
-                        <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">
-                          Inherits Permissions From
-                        </label>
-                        <div className="flex flex-wrap gap-1.5">
-                          {roles
-                            .filter((r) => r._id !== selectedRole._id)
-                            .map((r) => {
-                              const currentInheritedIds = (selectedRole.inheritedRoles || []).map(
-                                (ir: any) => (typeof ir === 'string' ? ir : ir._id)
-                              );
-                              const isInherited = currentInheritedIds.includes(r._id);
-
-                              return (
-                                <button
-                                  key={r._id}
-                                  disabled={selectedRole.isSystem}
-                                  onClick={() => {
-                                    if (selectedRole.isSystem) return;
-                                    const nextInherits = isInherited
-                                      ? currentInheritedIds.filter((id) => id !== r._id)
-                                      : [...currentInheritedIds, r._id];
-
-                                    const pIds = (selectedRole.permissions || []).map((p: any) =>
-                                      typeof p === 'string' ? p : p._id
-                                    );
-                                    handleUpdateRolePermissions(
-                                      selectedRole._id,
-                                      pIds,
-                                      nextInherits
-                                    );
-                                  }}
-                                  className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-all ${
-                                    isInherited
-                                      ? 'bg-primary/20 border-primary/30 text-primary'
-                                      : 'bg-background border-border text-muted-foreground hover:text-foreground'
-                                  }`}
-                                >
-                                  {r.name}
-                                </button>
-                              );
-                            })}
-                        </div>
-                      </div>
-                    </div>
+                    )}
 
                     {/* View Mode Pill Switcher */}
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-muted/20 border border-border/60 p-3 rounded-2xl mb-6 gap-3">
-                      <div>
-                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">
-                          Clearance Composition Mode
-                        </span>
-                        <span className="text-[9px] text-muted-foreground/80">
-                          Toggle between business levels or custom granular scopes.
-                        </span>
+                    {advancedMode && (
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-muted/20 border border-border/60 p-3 rounded-2xl mb-6 gap-3">
+                        <div>
+                          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">
+                            Clearance Composition Mode
+                          </span>
+                          <span className="text-[9px] text-muted-foreground/80">
+                            Toggle between business levels or custom granular scopes.
+                          </span>
+                        </div>
+                        <div className="flex bg-background border border-border/50 rounded-xl p-0.5 self-stretch sm:self-auto justify-between">
+                          <button
+                            type="button"
+                            onClick={() => setViewMode('basic')}
+                            className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                              viewMode === 'basic'
+                                ? 'bg-primary text-primary-foreground shadow'
+                                : 'text-muted-foreground hover:text-foreground'
+                            }`}
+                          >
+                            <Sparkles className="h-3.5 w-3.5" />
+                            <span>Basic View</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setViewMode('advanced')}
+                            className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                              viewMode === 'advanced'
+                                ? 'bg-primary text-primary-foreground shadow'
+                                : 'text-muted-foreground hover:text-foreground'
+                            }`}
+                          >
+                            <Layers className="h-3.5 w-3.5" />
+                            <span>Advanced Matrix</span>
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex bg-background border border-border/50 rounded-xl p-0.5 self-stretch sm:self-auto justify-between">
-                        <button
-                          type="button"
-                          onClick={() => setViewMode('basic')}
-                          className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                            viewMode === 'basic'
-                              ? 'bg-primary text-primary-foreground shadow'
-                              : 'text-muted-foreground hover:text-foreground'
-                          }`}
-                        >
-                          <Sparkles className="h-3.5 w-3.5" />
-                          <span>Basic View</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setViewMode('advanced')}
-                          className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                            viewMode === 'advanced'
-                              ? 'bg-primary text-primary-foreground shadow'
-                              : 'text-muted-foreground hover:text-foreground'
-                          }`}
-                        >
-                          <Layers className="h-3.5 w-3.5" />
-                          <span>Advanced Matrix</span>
-                        </button>
-                      </div>
-                    </div>
+                    )}
 
                     {/* Progressive Disclosure Content Area */}
-                    {viewMode === 'basic' ? (
+                    {!advancedMode || viewMode === 'basic' ? (
                       <div className="grid grid-cols-1 gap-4 max-h-[50vh] overflow-y-auto pr-2">
                         {BASIC_TOGGLES.map((toggle) => {
                           const currentRolePermIds = (selectedRole.permissions || []).map(
@@ -1332,124 +1517,490 @@ export default function RolesAndAuthorizationPage() {
                     key="create-role-pane"
                     initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="rounded-3xl border border-border bg-card p-6 shadow-2xl"
+                    className="rounded-3xl border border-border bg-card p-6 shadow-2xl space-y-6"
                   >
-                    <h2 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
-                      <Sparkles className="h-5 w-5 text-primary" />
-                      <span>Custom Role Builder</span>
-                    </h2>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Compose a new granular access group, assign its priority value, and clone
-                      configurations easily.
-                    </p>
-
-                    {/* Click-to-Fill Archetype Templates */}
-                    <div className="mt-5 space-y-2 border border-border/60 bg-muted/5 p-4 rounded-2xl">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest block">
-                          Click-to-Fill Archetype Card
-                        </span>
-                        <span className="text-[9px] bg-primary/10 border border-primary/20 text-primary px-2 py-0.5 rounded-full font-mono">
-                          8 Templates
-                        </span>
+                    {/* Stepper Header */}
+                    <div className="flex items-center justify-between border-b border-border/40 pb-4">
+                      <div>
+                        <h2 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
+                          <Sparkles className="h-5 w-5 text-primary" />
+                          <span>Custom Role Builder</span>
+                        </h2>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Create a custom security role using our visual step-by-step assistant.
+                        </p>
                       </div>
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                        {ROLE_TEMPLATES.map((tmpl) => (
-                          <button
-                            key={tmpl.name}
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              handleSelectArchetype(tmpl);
-                            }}
-                            className={`p-2.5 rounded-xl border text-left bg-gradient-to-br ${tmpl.gradient} hover:scale-[1.02] active:scale-[0.98] transition-all flex flex-col justify-between h-28 border-border/60 hover:border-border`}
-                          >
-                            <span
-                              className={`text-[10px] font-extrabold uppercase ${tmpl.border.split(' ')[1]}`}
-                            >
-                              {tmpl.name}
-                            </span>
-                            <span className="text-[9px] text-muted-foreground line-clamp-2 mt-1 leading-snug">
-                              {tmpl.description}
-                            </span>
-                            <span className="text-[8px] bg-background/50 border border-border/40 px-1.5 py-0.5 rounded self-start mt-1 text-foreground/80 font-bold font-mono">
-                              LVL {tmpl.hierarchyLevel}
-                            </span>
-                          </button>
-                        ))}
+
+                      {/* Visual Steps Indicators */}
+                      <div className="flex items-center gap-2">
+                        {[1, 2, 3, 4].map((step) => {
+                          const isDone = currentStep > step;
+                          const isActive = currentStep === step;
+                          return (
+                            <div key={step} className="flex items-center">
+                              <div
+                                className={`h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-all ${
+                                  isDone
+                                    ? 'bg-emerald-500 text-white'
+                                    : isActive
+                                      ? 'bg-primary text-primary-foreground animate-pulse'
+                                      : 'bg-muted border border-border text-muted-foreground'
+                                }`}
+                              >
+                                {isDone ? <Check className="h-3 w-3" /> : step}
+                              </div>
+                              {step < 4 && (
+                                <div
+                                  className={`h-0.5 w-6 transition-all ${
+                                    isDone ? 'bg-emerald-500' : 'bg-muted border-b border-border'
+                                  }`}
+                                />
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
 
-                    <form onSubmit={handleCreateRole} className="space-y-4 mt-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* STEP 1: CHOOSE ARCHETYPE */}
+                    {currentStep === 1 && (
+                      <div className="space-y-4">
                         <div className="space-y-1">
-                          <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">
-                            Role Name
-                          </label>
-                          <input
-                            type="text"
-                            placeholder="e.g. Sales Director, Client Auditor"
-                            value={newRoleName}
-                            onChange={(e) => setNewRoleName(e.target.value)}
-                            className="w-full bg-background border border-border px-3.5 py-2 rounded-xl text-xs focus:outline-none"
-                          />
+                          <h3 className="text-sm font-bold text-foreground">
+                            Step 1: Choose Baseline Archetype
+                          </h3>
+                          <p className="text-xs text-muted-foreground">
+                            Select a standard business archetype as a starting baseline, or choose
+                            &quot;Start from Scratch&quot;.
+                          </p>
                         </div>
 
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[45vh] overflow-y-auto pr-1">
+                          {/* Archetypes list */}
+                          {ROLE_TEMPLATES.map((tmpl) => (
+                            <button
+                              key={tmpl.name}
+                              type="button"
+                              onClick={() => {
+                                handleSelectArchetype(tmpl);
+                                populateLevelsFromPerms(tmpl.perms);
+                                setSelectedArchetype(tmpl.name);
+                                setCurrentStep(2);
+                              }}
+                              className="p-4 rounded-2xl border border-border/60 text-left bg-gradient-to-br from-muted/5 to-muted/10 hover:border-primary/50 hover:bg-primary/5 transition-all flex flex-col justify-between h-32 hover:scale-[1.01] active:scale-[0.99]"
+                            >
+                              <div className="space-y-1">
+                                <span className="text-xs font-bold text-foreground block">
+                                  {tmpl.name}
+                                </span>
+                                <span className="text-[10px] text-muted-foreground line-clamp-2 leading-snug">
+                                  {tmpl.description}
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between w-full border-t border-border/30 pt-2 mt-2">
+                                <span className="text-[8px] bg-background/50 border border-border/40 px-1.5 py-0.5 rounded text-foreground/80 font-bold font-mono">
+                                  LEVEL {tmpl.hierarchyLevel}
+                                </span>
+                                <span className="text-[9px] text-primary font-bold flex items-center gap-0.5">
+                                  Use Baseline <ArrowRight className="h-3 w-3" />
+                                </span>
+                              </div>
+                            </button>
+                          ))}
+
+                          {/* Start from Scratch */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedArchetype('Custom blank canvas');
+                              setNewRoleName('Custom Role');
+                              setNewRoleDesc('Custom workspace clearance role.');
+                              setNewRoleHierarchy(10);
+                              setEnabledModules([]);
+                              setModuleAccessLevels({});
+                              setCurrentStep(2);
+                            }}
+                            className="p-4 rounded-2xl border border-dashed border-primary/40 text-left bg-primary/5 hover:bg-primary/10 hover:border-primary transition-all flex flex-col justify-between h-32 hover:scale-[1.01] active:scale-[0.99]"
+                          >
+                            <div className="space-y-1">
+                              <span className="text-xs font-bold text-primary flex items-center gap-1.5">
+                                <Sparkles className="h-4 w-4" /> Start from Scratch
+                              </span>
+                              <span className="text-[10px] text-muted-foreground leading-snug block mt-1">
+                                Initialize a clean blank canvas with zero default permissions. Build
+                                completely custom rules.
+                              </span>
+                            </div>
+                            <span className="text-[9px] text-primary font-bold flex items-center gap-0.5 self-end">
+                              Create Custom <ArrowRight className="h-3 w-3" />
+                            </span>
+                          </button>
+                        </div>
+
+                        <div className="flex justify-end pt-4 border-t border-border/30">
+                          <button
+                            type="button"
+                            onClick={() => setIsCreatingRole(false)}
+                            className="px-4 py-2 rounded-lg border border-border hover:bg-muted text-xs font-semibold"
+                          >
+                            Cancel Builder
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* STEP 2: CHOOSE MODULES */}
+                    {currentStep === 2 && (
+                      <div className="space-y-4">
                         <div className="space-y-1">
-                          <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">
-                            Hierarchy Level Priority
-                          </label>
-                          <input
-                            type="number"
-                            min="1"
-                            value={newRoleHierarchy}
-                            onChange={(e) => setNewRoleHierarchy(Number(e.target.value))}
-                            className="w-full bg-background border border-border px-3.5 py-2 rounded-xl text-xs focus:outline-none"
-                          />
+                          <h3 className="text-sm font-bold text-foreground">
+                            Step 2: Enable Active Modules
+                          </h3>
+                          <p className="text-xs text-muted-foreground">
+                            Toggle which product modules this custom role is cleared to access.
+                          </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                          {[
+                            {
+                              name: 'CRM',
+                              label: 'Customer Relations',
+                              desc: 'Leads pipelines, accounts and client logs.',
+                              icon: Users,
+                            },
+                            {
+                              name: 'Projects',
+                              label: 'Project Engineering',
+                              desc: 'Task boards, milestone pipelines and deliverables.',
+                              icon: Network,
+                            },
+                            {
+                              name: 'HR',
+                              label: 'Human Resources',
+                              desc: 'Colleague directories, onboarding profiles, compensations.',
+                              icon: UserCheck,
+                            },
+                            {
+                              name: 'Finance',
+                              label: 'Finance & Invoices',
+                              desc: 'Expenditure audits, invoices and Stripe transactions.',
+                              icon: ShieldCheck,
+                            },
+                            {
+                              name: 'Collaboration',
+                              label: 'Workspace Channels',
+                              desc: 'Direct chats, channel threads and team calls.',
+                              icon: Sparkles,
+                            },
+                            {
+                              name: 'Analytics',
+                              label: 'Intelligence & BI',
+                              desc: 'KPI scorecards and dashboard custom graphs.',
+                              icon: Layers,
+                            },
+                            {
+                              name: 'Settings',
+                              label: 'Workspace Settings',
+                              desc: 'Audit logs, billing details and integration configurations.',
+                              icon: FolderLock,
+                            },
+                          ].map((mod) => {
+                            const isChecked = enabledModules.includes(mod.name);
+                            const IconC = mod.icon;
+                            return (
+                              <button
+                                key={mod.name}
+                                type="button"
+                                onClick={() => {
+                                  if (isChecked) {
+                                    setEnabledModules(enabledModules.filter((m) => m !== mod.name));
+                                  } else {
+                                    setEnabledModules([...enabledModules, mod.name]);
+                                    if (!moduleAccessLevels[mod.name]) {
+                                      setModuleAccessLevels((prev) => ({
+                                        ...prev,
+                                        [mod.name]: 'read',
+                                      }));
+                                    }
+                                  }
+                                }}
+                                className={`p-4 rounded-2xl border text-left transition-all flex items-start gap-3 hover:scale-[1.01] active:scale-[0.99] ${
+                                  isChecked
+                                    ? 'bg-primary/5 border-primary shadow-sm'
+                                    : 'bg-muted/5 border-border/60 hover:border-border hover:bg-muted/10'
+                                }`}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={isChecked}
+                                  readOnly
+                                  className="mt-1 h-3.5 w-3.5 accent-primary cursor-pointer shrink-0"
+                                />
+                                <div className="space-y-1">
+                                  <div className="flex items-center gap-1.5">
+                                    <IconC
+                                      className={`h-4 w-4 shrink-0 ${isChecked ? 'text-primary' : 'text-muted-foreground'}`}
+                                    />
+                                    <span className="text-xs font-bold text-foreground">
+                                      {mod.name}
+                                    </span>
+                                  </div>
+                                  <span className="text-[10px] text-muted-foreground block leading-snug">
+                                    {mod.desc}
+                                  </span>
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        <div className="flex items-center justify-between pt-4 border-t border-border/30">
+                          <button
+                            type="button"
+                            onClick={() => setCurrentStep(1)}
+                            className="px-4 py-2 rounded-lg border border-border hover:bg-muted text-xs font-semibold flex items-center gap-1.5"
+                          >
+                            <ArrowLeft className="h-3.5 w-3.5" /> Back to Archetypes
+                          </button>
+                          <button
+                            type="button"
+                            disabled={enabledModules.length === 0}
+                            onClick={() => setCurrentStep(3)}
+                            className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/95 text-xs font-bold shadow flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            Next: Access Levels <ArrowRight className="h-3.5 w-3.5" />
+                          </button>
                         </div>
                       </div>
+                    )}
 
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">
-                          Role Description
-                        </label>
-                        <textarea
-                          placeholder="Provide summary of access limitations and business context."
-                          value={newRoleDesc}
-                          onChange={(e) => setNewRoleDesc(e.target.value)}
-                          className="w-full bg-background border border-border px-3.5 py-2 rounded-xl text-xs focus:outline-none h-20 resize-none"
-                        />
-                      </div>
+                    {/* STEP 3: CONFIGURE LEVELS */}
+                    {currentStep === 3 && (
+                      <div className="space-y-4">
+                        <div className="space-y-1">
+                          <h3 className="text-sm font-bold text-foreground">
+                            Step 3: Define Access Level Scopes
+                          </h3>
+                          <p className="text-xs text-muted-foreground">
+                            Specify the operational clearance level for each of the enabled modules.
+                          </p>
+                        </div>
 
-                      <div className="space-y-2 border-t border-border/30 pt-4">
-                        <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                          Cloned Permissions list ({newRolePermissionIds.length} loaded)
-                        </h4>
-                        <div className="flex items-center gap-1.5 p-2 rounded-xl bg-background text-[10px] text-muted-foreground">
-                          <Info className="h-3.5 w-3.5 text-primary shrink-0" />
-                          <span>
-                            We have populated permission keys dynamically. Click Save Role below to
-                            persist.
-                          </span>
+                        <div className="space-y-3 max-h-[45vh] overflow-y-auto pr-1">
+                          {enabledModules.map((modName) => {
+                            const activeLvl = moduleAccessLevels[modName] || 'read';
+                            return (
+                              <div
+                                key={modName}
+                                className="p-4 rounded-2xl border border-border/60 bg-muted/5 flex flex-col md:flex-row md:items-center justify-between gap-4"
+                              >
+                                <div className="space-y-1 max-w-sm">
+                                  <span className="text-xs font-extrabold text-foreground flex items-center gap-1.5">
+                                    <span className="w-2 h-2 rounded-full bg-primary" /> {modName}{' '}
+                                    Module
+                                  </span>
+                                  <p className="text-[10px] text-muted-foreground leading-normal">
+                                    Configure access restrictions for standard records, databases,
+                                    and administrative keys.
+                                  </p>
+                                </div>
+
+                                <div className="flex bg-background border border-border/60 p-0.5 rounded-xl self-start md:self-auto overflow-hidden">
+                                  {[
+                                    { key: 'read', label: 'View Only', tip: 'Read-only logs' },
+                                    { key: 'edit', label: 'Edit', tip: 'Create & modify entries' },
+                                    {
+                                      key: 'manage',
+                                      label: 'Manage',
+                                      tip: 'Full modify & archive',
+                                    },
+                                    {
+                                      key: 'admin',
+                                      label: 'Full Access',
+                                      tip: 'Gateway administration',
+                                    },
+                                  ].map((lvl) => {
+                                    const isSel = activeLvl === lvl.key;
+                                    return (
+                                      <button
+                                        key={lvl.key}
+                                        type="button"
+                                        onClick={() => {
+                                          setModuleAccessLevels((prev) => ({
+                                            ...prev,
+                                            [modName]: lvl.key as any,
+                                          }));
+                                        }}
+                                        className={`px-3 py-1.5 rounded-lg text-[9px] font-extrabold transition-all whitespace-nowrap ${
+                                          isSel
+                                            ? 'bg-primary text-primary-foreground shadow'
+                                            : 'text-muted-foreground hover:text-foreground hover:bg-muted/30'
+                                        }`}
+                                        title={lvl.tip}
+                                      >
+                                        {lvl.label}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        <div className="flex items-center justify-between pt-4 border-t border-border/30">
+                          <button
+                            type="button"
+                            onClick={() => setCurrentStep(2)}
+                            className="px-4 py-2 rounded-lg border border-border hover:bg-muted text-xs font-semibold flex items-center gap-1.5"
+                          >
+                            <ArrowLeft className="h-3.5 w-3.5" /> Back to Modules
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setCurrentStep(4)}
+                            className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/95 text-xs font-bold shadow flex items-center gap-1.5"
+                          >
+                            Next: Save & Review <ArrowRight className="h-3.5 w-3.5" />
+                          </button>
                         </div>
                       </div>
+                    )}
 
-                      <div className="flex items-center justify-end gap-3 border-t border-border/30 pt-4">
-                        <button
-                          type="button"
-                          onClick={() => setIsCreatingRole(false)}
-                          className="px-4 py-2 rounded-lg border border-border hover:bg-muted text-xs font-semibold"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="submit"
-                          className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/95 text-xs font-bold shadow"
-                        >
-                          Save Custom Role
-                        </button>
+                    {/* STEP 4: SAVE & REVIEW */}
+                    {currentStep === 4 && (
+                      <div className="space-y-4">
+                        <div className="space-y-1">
+                          <h3 className="text-sm font-bold text-foreground">
+                            Step 4: Save & Review Custom Role
+                          </h3>
+                          <p className="text-xs text-muted-foreground">
+                            Specify identity details and review baseline settings before finalizing.
+                          </p>
+                        </div>
+
+                        <form onSubmit={handleCreateRole} className="space-y-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">
+                                Role Name
+                              </label>
+                              <input
+                                type="text"
+                                required
+                                placeholder="e.g. Sales Specialist, Project Partner"
+                                value={newRoleName}
+                                onChange={(e) => setNewRoleName(e.target.value)}
+                                className="w-full bg-background border border-border px-3.5 py-2 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                              />
+                            </div>
+
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">
+                                Hierarchy Priority (1-100)
+                              </label>
+                              <input
+                                type="number"
+                                min="1"
+                                max="100"
+                                value={newRoleHierarchy}
+                                onChange={(e) => setNewRoleHierarchy(Number(e.target.value))}
+                                className="w-full bg-background border border-border px-3.5 py-2 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">
+                              Description
+                            </label>
+                            <textarea
+                              required
+                              placeholder="Describe workspace clearances and context."
+                              value={newRoleDesc}
+                              onChange={(e) => setNewRoleDesc(e.target.value)}
+                              className="w-full bg-background border border-border px-3.5 py-2 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-primary h-16 resize-none"
+                            />
+                          </div>
+
+                          {/* Preview Card */}
+                          <div className="border border-border/60 bg-muted/5 p-4 rounded-2xl space-y-3">
+                            <h4 className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest block">
+                              Role Configuration Review
+                            </h4>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                              <div className="space-y-1">
+                                <span className="text-[10px] text-muted-foreground uppercase block">
+                                  Baseline Preset
+                                </span>
+                                <p className="font-bold text-foreground">
+                                  {selectedArchetype || 'Custom Blank Canvas'}
+                                </p>
+                              </div>
+                              <div className="space-y-1">
+                                <span className="text-[10px] text-muted-foreground uppercase block">
+                                  Under-the-hood Mapping
+                                </span>
+                                <p className="font-bold text-emerald-400">
+                                  {newRolePermissionIds.length} Granular Rules Selected
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="border-t border-border/30 pt-3">
+                              <span className="text-[10px] text-muted-foreground uppercase tracking-wider block mb-1.5">
+                                Active Module Clearances:
+                              </span>
+                              <div className="flex flex-wrap gap-1.5">
+                                {enabledModules.map((modName) => {
+                                  const lvl = moduleAccessLevels[modName] || 'read';
+                                  return (
+                                    <span
+                                      key={modName}
+                                      className="px-2.5 py-1 rounded-lg text-[9px] font-extrabold bg-primary/10 border border-primary/20 text-primary uppercase"
+                                    >
+                                      {modName}:{' '}
+                                      <span className="text-foreground/90 font-bold">{lvl}</span>
+                                    </span>
+                                  );
+                                })}
+                                {enabledModules.length === 0 && (
+                                  <span className="text-[10px] text-muted-foreground italic">
+                                    No modules selected.
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between pt-4 border-t border-border/30">
+                            <button
+                              type="button"
+                              onClick={() => setCurrentStep(3)}
+                              className="px-4 py-2 rounded-lg border border-border hover:bg-muted text-xs font-semibold flex items-center gap-1.5"
+                            >
+                              <ArrowLeft className="h-3.5 w-3.5" /> Back to Clearances
+                            </button>
+                            <div className="flex items-center gap-3">
+                              <button
+                                type="button"
+                                onClick={() => setIsCreatingRole(false)}
+                                className="px-4 py-2 rounded-lg border border-border hover:bg-muted text-xs font-semibold"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                type="submit"
+                                className="px-5 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/95 text-xs font-extrabold shadow-[0_4px_20px_rgba(var(--primary-rgb),0.2)] flex items-center gap-1.5"
+                              >
+                                <Check className="h-4 w-4" /> Save & Deploy Role
+                              </button>
+                            </div>
+                          </div>
+                        </form>
                       </div>
-                    </form>
+                    )}
                   </motion.div>
                 ) : (
                   <motion.div

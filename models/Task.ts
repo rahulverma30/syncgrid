@@ -85,7 +85,6 @@ const TaskSchema = new Schema(
     parentId: {
       type: Schema.Types.ObjectId,
       ref: 'Task',
-      index: true,
       default: null,
     },
     assignees: [
@@ -188,7 +187,7 @@ TaskSchema.index({ companyId: 1, code: 1 }, { unique: true });
 TaskSchema.index({ parentId: 1 });
 
 // Pre-save trigger for sequential keying and dynamic health calculations
-TaskSchema.pre('save', async function (this: any, next: any) {
+TaskSchema.pre('save', async function (this: any, next?: any) {
   // 1. Auto-generate sequential JIRA-style task code (e.g., SYNC-4)
   if (!this.code) {
     try {
@@ -240,7 +239,9 @@ TaskSchema.pre('save', async function (this: any, next: any) {
 
   this.healthScore = Math.max(0, Math.min(100, calculatedScore));
 
-  next();
+  if (typeof next === 'function') {
+    next();
+  }
 });
 
 // Recursive Subtask Rollup Hook

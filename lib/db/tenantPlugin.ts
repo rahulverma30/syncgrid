@@ -39,7 +39,7 @@ export function tenantPlugin(schema: mongoose.Schema) {
     'deleteMany',
   ];
 
-  function applyTenantScoping(this: any) {
+  function applyTenantScoping(this: any, next?: any) {
     const context = getTenantContext();
     if (context && !context.bypass && context.companyId) {
       const currentQuery = this.getQuery();
@@ -60,6 +60,9 @@ export function tenantPlugin(schema: mongoose.Schema) {
         }
       }
     }
+    if (typeof next === 'function') {
+      next();
+    }
   }
 
   queryHooks.forEach((hook) => {
@@ -67,7 +70,7 @@ export function tenantPlugin(schema: mongoose.Schema) {
   });
 
   // Intercept and auto-scope aggregation pipelines
-  schema.pre('aggregate', function (this: mongoose.Aggregate<any>) {
+  schema.pre('aggregate', function (this: mongoose.Aggregate<any>, next?: any) {
     const context = getTenantContext();
     if (context && !context.bypass && context.companyId) {
       const pipeline = this.pipeline();
@@ -91,6 +94,9 @@ export function tenantPlugin(schema: mongoose.Schema) {
           });
         }
       }
+    }
+    if (typeof next === 'function') {
+      next();
     }
   });
 }

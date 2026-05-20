@@ -14,7 +14,6 @@ const RoleSchema = new Schema(
       required: true,
       trim: true,
       lowercase: true,
-      index: true,
     },
     description: {
       type: String,

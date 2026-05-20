@@ -22,7 +22,11 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
 
     return NextResponse.json({ success: true, data: invitations });
   } catch (error: any) {
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    console.error('❌ [GET INVITATIONS API ERROR]:', error);
+    return NextResponse.json(
+      { success: false, error: 'INTERNAL_ERROR', message: error.message },
+      { status: 500 }
+    );
   }
 });
 
@@ -36,7 +40,7 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     const roles = session.user.roles || [];
 
     // RBAC: Only Admins or Super Admins can invite team members
-    const isAuthorized = hasRole(roles, ['super-admin', 'admin', 'hr-manager']);
+    const isAuthorized = hasRole(roles, ['organization-owner', 'super-admin', 'admin', 'hr']);
     if (!isAuthorized) {
       return NextResponse.json(
         {
@@ -53,7 +57,11 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
 
     if (!email || !roleId) {
       return NextResponse.json(
-        { success: false, message: 'Email and Role are required fields' },
+        {
+          success: false,
+          error: 'VALIDATION_ERROR',
+          message: 'Email and Role are required fields',
+        },
         { status: 400 }
       );
     }
@@ -180,7 +188,11 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
 
     return NextResponse.json({ success: true, data: invitation }, { status: 201 });
   } catch (error: any) {
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    console.error('❌ [POST INVITATIONS API ERROR]:', error);
+    return NextResponse.json(
+      { success: false, error: 'INTERNAL_ERROR', message: error.message },
+      { status: 500 }
+    );
   }
 });
 
@@ -193,7 +205,7 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
     const actorName = session.user.name;
     const roles = session.user.roles || [];
 
-    const isAuthorized = hasRole(roles, ['super-admin', 'admin', 'hr-manager']);
+    const isAuthorized = hasRole(roles, ['organization-owner', 'super-admin', 'admin', 'hr']);
     if (!isAuthorized) {
       return NextResponse.json(
         {
@@ -211,7 +223,7 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
     const invite = await Invitation.findOne({ _id: id, companyId });
     if (!invite) {
       return NextResponse.json(
-        { success: false, message: 'Invitation not found' },
+        { success: false, error: 'NOT_FOUND', message: 'Invitation not found' },
         { status: 404 }
       );
     }
@@ -267,7 +279,11 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
 
     return NextResponse.json({ success: true, message: 'Invitation resent successfully' });
   } catch (error: any) {
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    console.error('❌ [PUT INVITATIONS API ERROR]:', error);
+    return NextResponse.json(
+      { success: false, error: 'INTERNAL_ERROR', message: error.message },
+      { status: 500 }
+    );
   }
 });
 
@@ -279,7 +295,7 @@ export const DELETE = withApiAuth(async (request: Request, context: any, session
     const actorId = session.user.id;
     const roles = session.user.roles || [];
 
-    const isAuthorized = hasRole(roles, ['super-admin', 'admin', 'hr-manager']);
+    const isAuthorized = hasRole(roles, ['organization-owner', 'super-admin', 'admin', 'hr']);
     if (!isAuthorized) {
       return NextResponse.json(
         {
@@ -295,13 +311,16 @@ export const DELETE = withApiAuth(async (request: Request, context: any, session
     const id = url.searchParams.get('id');
 
     if (!id) {
-      return NextResponse.json({ success: false, message: 'Invite ID required' }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: 'VALIDATION_ERROR', message: 'Invite ID required' },
+        { status: 400 }
+      );
     }
 
     const invite = await Invitation.findOne({ _id: id, companyId });
     if (!invite) {
       return NextResponse.json(
-        { success: false, message: 'Invitation not found' },
+        { success: false, error: 'NOT_FOUND', message: 'Invitation not found' },
         { status: 404 }
       );
     }
@@ -327,6 +346,10 @@ export const DELETE = withApiAuth(async (request: Request, context: any, session
 
     return NextResponse.json({ success: true, message: 'Invitation successfully revoked' });
   } catch (error: any) {
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    console.error('❌ [DELETE INVITATIONS API ERROR]:', error);
+    return NextResponse.json(
+      { success: false, error: 'INTERNAL_ERROR', message: error.message },
+      { status: 500 }
+    );
   }
 });
