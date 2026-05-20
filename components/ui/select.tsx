@@ -251,7 +251,7 @@ export function Select({
           }}
           onKeyDown={handleKeyDown}
           className={cn(
-            'flex w-full items-center justify-between h-10 rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground transition-all duration-150 hover:bg-accent/40 hover:border-input/80 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50',
+            'flex w-full items-center justify-between h-10 rounded-md border border-input bg-background px-3 py-4 text-sm text-foreground transition-all duration-150 hover:bg-accent/40 hover:border-input/80 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50',
             error && 'border-destructive focus:ring-destructive focus:ring-offset-0',
             isOpen && 'ring-2 ring-ring ring-offset-1 border-input',
             className
