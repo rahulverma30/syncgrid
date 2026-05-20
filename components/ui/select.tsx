@@ -1,11 +1,13 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 /**
  * Premium Select/Dropdown component
- * Reusable searchable custom combobox with keyboard navigation and micro-animations
+ * Reusable searchable custom combobox with React Portal, smart flipping, keyboard navigation, and micro-animations
  */
 
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useId } from 'react';
+import { createPortal } from 'react-dom';
 import { cn } from '@/lib/cn';
 import { ChevronDown, Check, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -46,25 +48,50 @@ export function Select({
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [highlightedIndex, setHighlightedIndex] = useState(0);
+  const [mounted, setMounted] = useState(false);
+
+  // Position coordinates state for Portal dropdown
+  const [coords, setCoords] = useState<{
+    top: number;
+    left: number;
+    width: number;
+    placement: 'bottom' | 'top';
+  }>({ top: 0, left: 0, width: 0, placement: 'bottom' });
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const listId = useId();
+  const triggerId = useId();
 
   const selectedOption = options.find((opt) => opt.value === value);
 
   // Filter options based on search query
-  const filteredOptions = options.filter((opt) =>
-    opt.label.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredOptions = React.useMemo(() => {
+    return options.filter((opt) => opt.label.toLowerCase().includes(searchQuery.toLowerCase()));
+  }, [options, searchQuery]);
 
   // Automatic search enablement: if explicitly passed, or if list is greater than 5 items
   const isSearchEnabled = searchable ?? options.length > 5;
 
-  // Handle click outside to close dropdown
+  // Mount tracking to avoid Next.js hydration issues with Portals
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Handle click outside to close dropdown (handles both trigger container and portal dropdown list)
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(target) &&
+        dropdownRef.current &&
+        !dropdownRef.current.contains(target)
+      ) {
         setIsOpen(false);
       }
     }
@@ -72,9 +99,50 @@ export function Select({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Dynamic dropdown positioning and smart-flipping logic
+  const updateCoords = () => {
+    if (!triggerRef.current) return;
+    const rect = triggerRef.current.getBoundingClientRect();
+    const dropdownHeight = 260; // Estimated height boundary
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+
+    let placement: 'bottom' | 'top' = 'bottom';
+    let top = rect.bottom + window.scrollY + 6;
+
+    // Flip upwards if there is not enough space below, and more space above
+    if (spaceBelow < dropdownHeight && spaceAbove > spaceBelow) {
+      placement = 'top';
+      top = rect.top + window.scrollY - dropdownHeight - 6;
+    }
+
+    setCoords({
+      top,
+      left: rect.left + window.scrollX,
+      width: rect.width,
+      placement,
+    });
+  };
+
+  // Recalculate dropdown boundaries on open, scroll, or resize
+  useEffect(() => {
+    if (!isOpen) return;
+
+    updateCoords();
+
+    // capture: true intercepts scrolling on scrollable child containers as well
+    window.addEventListener('resize', updateCoords);
+    window.addEventListener('scroll', updateCoords, { capture: true });
+
+    return () => {
+      window.removeEventListener('resize', updateCoords);
+      window.removeEventListener('scroll', updateCoords, { capture: true });
+    };
+  }, [isOpen]);
+
   const openDropdown = () => {
     setSearchQuery('');
-    const selectedIdx = options.findIndex((opt) => opt.value === value);
+    const selectedIdx = filteredOptions.findIndex((opt) => opt.value === value);
     setHighlightedIndex(selectedIdx >= 0 ? selectedIdx : 0);
     setIsOpen(true);
   };
@@ -85,12 +153,12 @@ export function Select({
 
     const timeoutId = window.setTimeout(() => {
       searchInputRef.current?.focus();
-    }, 100);
+    }, 60);
 
     return () => window.clearTimeout(timeoutId);
   }, [isOpen, isSearchEnabled]);
 
-  // Adjust scroll when highlighted index changes
+  // Adjust scroll position when highlighted index changes
   useEffect(() => {
     if (isOpen && listRef.current) {
       const activeEl = listRef.current.children[highlightedIndex] as HTMLElement;
@@ -150,6 +218,7 @@ export function Select({
       case 'Escape':
         e.preventDefault();
         setIsOpen(false);
+        triggerRef.current?.focus();
         break;
       case 'Tab':
         setIsOpen(false);
@@ -160,99 +229,141 @@ export function Select({
   return (
     <div className="flex flex-col gap-1.5 w-full relative" ref={containerRef}>
       {label && (
-        <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+        <label id={`${triggerId}-label`} className="text-sm font-medium text-foreground">
           {label}
         </label>
       )}
       <div className="relative">
         {/* Trigger Button */}
         <button
+          id={triggerId}
+          ref={triggerRef}
           type="button"
+          role="combobox"
+          aria-expanded={isOpen}
+          aria-haspopup="listbox"
+          aria-controls={isOpen ? listId : undefined}
+          aria-labelledby={label ? `${triggerId}-label` : undefined}
           disabled={disabled}
-          onClick={() => (isOpen ? setIsOpen(false) : openDropdown())}
+          onClick={(e) => {
+            e.stopPropagation(); // Decouple click propagation for cards/Kanban
+            isOpen ? setIsOpen(false) : openDropdown();
+          }}
           onKeyDown={handleKeyDown}
           className={cn(
-            'flex w-full items-center justify-between h-10 rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2 text-sm text-slate-200 transition-all duration-200 hover:border-slate-700 hover:bg-slate-900/60 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-50',
-            error && 'border-red-500 focus:ring-red-500/20 focus:border-red-500',
-            isOpen && 'border-blue-500 ring-2 ring-blue-500/20',
+            'flex w-full items-center justify-between h-10 rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground transition-all duration-150 hover:bg-accent/40 hover:border-input/80 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50',
+            error && 'border-destructive focus:ring-destructive focus:ring-offset-0',
+            isOpen && 'ring-2 ring-ring ring-offset-1 border-input',
             className
           )}
         >
-          <span className={cn('block truncate', !selectedOption && 'text-slate-500')}>
+          <span
+            className={cn('block truncate text-left', !selectedOption && 'text-muted-foreground')}
+          >
             {selectedOption ? selectedOption.label : placeholder}
           </span>
           <ChevronDown
             className={cn(
-              'h-4 w-4 text-slate-400 transition-transform duration-200 pointer-events-none',
-              isOpen && 'transform rotate-180 text-blue-400'
+              'h-4 w-4 text-muted-foreground transition-transform duration-200 pointer-events-none shrink-0 ml-2',
+              isOpen && 'transform rotate-180 text-foreground'
             )}
           />
         </button>
 
-        {/* Dropdown Portal */}
-        <AnimatePresence>
-          {isOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: -4, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -4, scale: 0.98 }}
-              transition={{ duration: 0.15 }}
-              className="absolute z-50 mt-1.5 w-full rounded-2xl border border-slate-800 bg-slate-950 shadow-2xl p-1.5 max-h-72 overflow-hidden flex flex-col backdrop-blur-md"
-            >
-              {/* Search Box */}
-              {isSearchEnabled && (
-                <div className="flex items-center px-2 py-1.5 border-b border-slate-900 gap-2 mb-1">
-                  <Search className="h-3.5 w-3.5 text-slate-500 shrink-0" />
-                  <input
-                    ref={searchInputRef}
-                    type="text"
-                    placeholder="Search options..."
-                    value={searchQuery}
-                    onChange={(e) => {
-                      setSearchQuery(e.target.value);
-                      setHighlightedIndex(0);
-                    }}
-                    onKeyDown={handleKeyDown}
-                    className="w-full bg-transparent text-xs text-slate-200 border-0 p-0 focus:ring-0 focus:outline-none outline-none placeholder-slate-500"
-                  />
-                </div>
-              )}
-
-              {/* Options List */}
-              <div ref={listRef} className="overflow-y-auto max-h-56 custom-scrollbar space-y-0.5">
-                {filteredOptions.length > 0 ? (
-                  filteredOptions.map((option, index) => {
-                    const isSelected = option.value === value;
-                    const isHighlighted = index === highlightedIndex;
-
-                    return (
-                      <div
-                        key={option.value}
-                        onClick={() => handleSelect(option)}
-                        className={cn(
-                          'flex items-center justify-between px-3 py-2 rounded-xl text-xs cursor-pointer transition-all duration-150',
-                          option.disabled && 'opacity-40 cursor-not-allowed pointer-events-none',
-                          isSelected
-                            ? 'bg-blue-600 text-white font-semibold'
-                            : 'text-slate-300 hover:bg-slate-900',
-                          isHighlighted && !isSelected && 'bg-slate-900 text-slate-100'
-                        )}
-                      >
-                        <span className="block truncate">{option.label}</span>
-                        {isSelected && <Check className="h-3.5 w-3.5 text-white shrink-0" />}
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div className="py-4 text-center text-xs text-slate-500">No results found</div>
+        {/* Dropdown Menu - rendered in a portal */}
+        {mounted &&
+          isOpen &&
+          createPortal(
+            <AnimatePresence mode="wait">
+              <motion.div
+                ref={dropdownRef}
+                onClick={(e) => e.stopPropagation()} // Stop bubbling event triggers
+                initial={{ opacity: 0, y: coords.placement === 'bottom' ? -4 : 4, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: coords.placement === 'bottom' ? -4 : 4, scale: 0.98 }}
+                transition={{ duration: 0.12, ease: 'easeOut' }}
+                style={{
+                  position: 'absolute',
+                  top: coords.top,
+                  left: coords.left,
+                  width: coords.width,
+                }}
+                className="z-[9999] rounded-md border border-border bg-popover text-popover-foreground shadow-lg p-1 max-h-[280px] overflow-hidden flex flex-col backdrop-blur-md bg-popover/95"
+              >
+                {/* Search Box */}
+                {isSearchEnabled && (
+                  <div
+                    className="flex items-center px-2 py-1.5 border-b border-border gap-2 mb-1 shrink-0"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                    <input
+                      ref={searchInputRef}
+                      type="text"
+                      placeholder="Search..."
+                      value={searchQuery}
+                      onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        setHighlightedIndex(0);
+                      }}
+                      onKeyDown={handleKeyDown}
+                      className="w-full bg-transparent text-sm text-foreground border-0 p-0 focus:ring-0 focus:outline-none outline-none placeholder:text-muted-foreground"
+                    />
+                  </div>
                 )}
-              </div>
-            </motion.div>
+
+                {/* Options List */}
+                <div
+                  id={listId}
+                  ref={listRef}
+                  role="listbox"
+                  aria-label={label || placeholder}
+                  className="overflow-y-auto max-h-56 custom-scrollbar p-0.5 space-y-0.5"
+                >
+                  {filteredOptions.length > 0 ? (
+                    filteredOptions.map((option, index) => {
+                      const isSelected = option.value === value;
+                      const isHighlighted = index === highlightedIndex;
+
+                      return (
+                        <div
+                          key={option.value}
+                          role="option"
+                          aria-selected={isSelected}
+                          aria-disabled={option.disabled}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSelect(option);
+                          }}
+                          className={cn(
+                            'flex items-center justify-between px-2.5 py-2 rounded text-sm cursor-pointer transition-all duration-150 select-none md:py-1.5',
+                            option.disabled && 'opacity-40 cursor-not-allowed pointer-events-none',
+                            isSelected
+                              ? 'bg-primary text-primary-foreground font-medium'
+                              : 'text-foreground hover:bg-accent hover:text-accent-foreground',
+                            isHighlighted &&
+                              !isSelected &&
+                              'bg-accent text-accent-foreground text-foreground'
+                          )}
+                        >
+                          <span className="block truncate">{option.label}</span>
+                          {isSelected && <Check className="h-4 w-4 shrink-0 ml-2" />}
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="py-4 text-center text-sm text-muted-foreground">
+                      No results found
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            </AnimatePresence>,
+            document.body
           )}
-        </AnimatePresence>
       </div>
-      {error && <p className="text-xs text-red-400 font-medium mt-0.5">{error}</p>}
-      {hint && <p className="text-xs text-slate-500 mt-0.5">{hint}</p>}
+      {error && <p className="text-xs text-destructive mt-0.5">{error}</p>}
+      {hint && <p className="text-xs text-muted-foreground mt-0.5">{hint}</p>}
     </div>
   );
 }
