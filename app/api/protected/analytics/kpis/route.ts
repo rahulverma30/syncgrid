@@ -12,62 +12,6 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
 
     let kpis = await KPIConfiguration.find({ companyId }).lean();
 
-    // Seed defaults dynamically if empty to remain executive premium immediately
-    if (kpis.length === 0) {
-      const defaults = [
-        {
-          companyId,
-          metricName: 'project_profitability',
-          title: 'Project Profit Margin %',
-          description: 'Net project revenues compared to direct project expenses.',
-          targetValue: 35,
-          currentValue: 28.5,
-          unit: 'percent',
-          warningThreshold: 80, // warning if target completion < 80%
-          criticalThreshold: 60,
-          scoringWeight: 3,
-        },
-        {
-          companyId,
-          metricName: 'employee_utilization',
-          title: 'Workforce Billable Utilization',
-          description: 'Billable time ratios logged by consultants & developers.',
-          targetValue: 80,
-          currentValue: 72.4,
-          unit: 'percent',
-          warningThreshold: 90,
-          criticalThreshold: 75,
-          scoringWeight: 2,
-        },
-        {
-          companyId,
-          metricName: 'revenue_growth',
-          title: 'Quarterly Revenue Growth Rate',
-          description: 'Quarterly income progression speed ratios.',
-          targetValue: 15,
-          currentValue: 18.2, // exceeding target!
-          unit: 'percent',
-          warningThreshold: 75,
-          criticalThreshold: 50,
-          scoringWeight: 2,
-        },
-        {
-          companyId,
-          metricName: 'overdue_invoice_ratio',
-          title: 'Overdue Receivables Ratio',
-          description: 'Ratio of overdue payments to total outstanding billing.',
-          targetValue: 10,
-          currentValue: 14.5, // over limit!
-          unit: 'percent',
-          warningThreshold: 80,
-          criticalThreshold: 50,
-          scoringWeight: 1,
-        },
-      ];
-
-      kpis = await KPIConfiguration.insertMany(defaults);
-    }
-
     return NextResponse.json({ success: true, data: kpis });
   } catch (error: any) {
     return NextResponse.json(

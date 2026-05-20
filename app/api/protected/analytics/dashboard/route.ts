@@ -146,28 +146,7 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
       .limit(3)
       .lean();
 
-    // Fallback Mock insights if empty to look premium
-    let insights = recentInsights;
-    if (insights.length === 0) {
-      insights = [
-        {
-          _id: 'insight_1',
-          title: 'Labor Resource Utilization Optimized',
-          description: `Average workforce billable ratio is currently at ${laborUtilization.toFixed(1)}%, within optimal target parameters.`,
-          severity: 'success',
-          category: 'productivity',
-          detectedAt: new Date(),
-        },
-        {
-          _id: 'insight_2',
-          title: 'Cashflow Performance Outflow Watch',
-          description: `Direct software & consult operational expenses totals ${expenseTotal.toFixed(0)} USD. Calibrate budgets allocations.`,
-          severity: 'info',
-          category: 'financial',
-          detectedAt: new Date(),
-        },
-      ] as any[];
-    }
+    const insights = recentInsights;
 
     // 8. Recent 6-Month Cashflow aggregated timelines (Inflows vs Outflows)
     const cashflowTimelines = await Transaction.aggregate([

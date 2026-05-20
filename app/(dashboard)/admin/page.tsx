@@ -37,71 +37,21 @@ export default function AdminPage() {
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [rolloutRatio, setRolloutRatio] = useState(100);
 
+  const [isPurging, setIsPurging] = useState(false);
+
   const loadAdminStats = async () => {
     setLoading(true);
     try {
-      // Fetch dynamic stats from seeding/billing metrics endpoints if present,
-      // otherwise fallback to safe rich mock baseline for premium simulation
-      const res = await fetch('/api/saas/billing');
-      const data = await res.json();
-
-      // Seed fallback values since it's a super-admin portal viewing ALL organizations
-      setTenants([
-        {
-          _id: 't1',
-          name: 'Stark Industries',
-          slug: 'stark',
-          plan: 'Enterprise',
-          seats: 125,
-          storageGb: 680,
-          apiCalls: 380000,
-          status: 'active',
-        },
-        {
-          _id: 't2',
-          name: 'Acme Corporate',
-          slug: 'acme',
-          plan: 'Pro Premium',
-          seats: 8,
-          storageGb: 42.5,
-          apiCalls: 12500,
-          status: 'active',
-        },
-        {
-          _id: 't3',
-          name: 'Oscorp Biotech',
-          slug: 'oscorp',
-          plan: 'Starter Plan',
-          seats: 3,
-          storageGb: 11.2,
-          apiCalls: 4800,
-          status: 'past_due',
-        },
-      ]);
-
-      setBackups([
-        {
-          id: 'b1',
-          name: 'stark_hourly_snap_0518',
-          size: '2.8 GB',
-          date: 'Today, 8:00 PM',
-          status: 'completed',
-        },
-        {
-          id: 'b2',
-          name: 'acme_daily_snap_0518',
-          size: '142 MB',
-          date: 'Today, 12:00 AM',
-          status: 'completed',
-        },
-        {
-          id: 'b3',
-          name: 'oscorp_manual_snap_0517',
-          size: '72 MB',
-          date: 'Yesterday, 4:30 PM',
-          status: 'completed',
-        },
-      ]);
+      const res = await fetch('/api/saas/stats');
+      const json = await res.json();
+      if (json.success && json.data) {
+        setTenants(json.data.tenants || []);
+        setBackups(json.data.backups || []);
+        setSystemHealth(json.data.systemHealth || 99.9);
+        setMrr(json.data.calculatedMrr || 0);
+      } else {
+        toast.error(json.message || 'Error fetching admin telemetry.');
+      }
     } catch (err) {
       toast.error('Error fetching admin statistics.');
     } finally {
@@ -116,21 +66,29 @@ export default function AdminPage() {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleTriggerSeed = async () => {
-    toast.loading('Resetting SaaS sandbox schemas...');
+  const handleTriggerPurge = async () => {
+    const confirmed = window.confirm(
+      'CRITICAL WARNING: This will completely delete all registered companies, leads, tasks, employees, invoices, transactions, and user records. Your personal super-admin login account and standard system permissions will be securely preserved. Are you sure you want to proceed?'
+    );
+    if (!confirmed) return;
+
+    setIsPurging(true);
+    toast.loading('Purging cluster databases and re-initializing ABAC controls...');
     try {
-      const res = await fetch('/api/saas/seed');
-      const data = await res.json();
-      if (data.success) {
-        toast.dismiss();
-        toast.success('Simulation database sandbox successfully seeded!');
+      const res = await fetch('/api/saas/purge', { method: 'POST' });
+      const json = await res.json();
+      toast.dismiss();
+      if (json.success) {
+        toast.success(json.message);
         loadAdminStats();
       } else {
-        toast.error(data.message);
+        toast.error(json.message || 'Purge failed.');
       }
     } catch (err) {
       toast.dismiss();
-      toast.error('Simulation seeding endpoint offline.');
+      toast.error('Purge endpoint offline.');
+    } finally {
+      setIsPurging(false);
     }
   };
 
@@ -203,11 +161,16 @@ export default function AdminPage() {
 
         <div className="flex gap-2">
           <Button
-            onClick={handleTriggerSeed}
-            className="bg-slate-900 border border-slate-800 hover:bg-slate-850 text-slate-200 text-xs rounded-xl py-2 px-4"
+            onClick={handleTriggerPurge}
+            disabled={isPurging}
+            className="bg-red-950/80 hover:bg-red-900/40 text-red-200 border border-red-800/60 text-xs rounded-xl py-2 px-4 font-semibold"
           >
-            <Sparkles className="w-4 h-4 mr-2 text-blue-500 animate-pulse" />
-            Reset Sandbox Data
+            {isPurging ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <ShieldAlert className="w-4 h-4 mr-2 text-red-500" />
+            )}
+            Purge Cluster Database
           </Button>
           <Button
             onClick={handleCreateSnapshot}

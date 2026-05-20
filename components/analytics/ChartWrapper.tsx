@@ -9,7 +9,7 @@ import {
   LineChartWrapper,
   PieChartWrapper,
 } from '@/components/ui/charts';
-import { TrendingUp, Activity, PieChart, BarChart2 } from 'lucide-react';
+import { TrendingUp, Activity, PieChart, BarChart2, Layers } from 'lucide-react';
 
 interface ChartWrapperProps {
   type: 'line' | 'bar' | 'area' | 'pie' | 'donut' | 'stacked' | 'metric';
@@ -60,6 +60,52 @@ export function ChartWrapper({
       default:
         return <TrendingUp className="h-4 w-4" />;
     }
+  };
+
+  const renderEmptyState = () => {
+    let icon = <Layers className="h-7 w-7 text-muted-foreground/30 mb-2.5 animate-pulse" />;
+    let instruction =
+      'Operational datasets are fully empty. Once real-world transactions flow into your SaaS tenant node, real-time analytics indicators will synchronize automatically.';
+    let categoryTitle = 'Telemetry Stream Offline';
+
+    if (type === 'line' || type === 'area') {
+      icon = <Activity className="h-7 w-7 text-blue-500/30 mb-2.5 animate-pulse" />;
+      categoryTitle = 'Chronological Stream Empty';
+      instruction =
+        'No chronological telemetry streams detected. To visualize real-time trend graphs, dispatch active client invoices or trigger automated integrations.';
+    } else if (type === 'bar' || type === 'stacked') {
+      icon = <BarChart2 className="h-7 w-7 text-emerald-500/30 mb-2.5 animate-pulse" />;
+      categoryTitle = 'Distribution Matrix Empty';
+      instruction =
+        'No categorical metrics registered. Build active CRM Leads, register HR employees, or issue project tasks to populate structural comparison charts.';
+    } else if (type === 'pie' || type === 'donut') {
+      icon = <PieChart className="h-7 w-7 text-purple-500/30 mb-2.5 animate-pulse" />;
+      categoryTitle = 'Segmentation Index Empty';
+      instruction =
+        'Segmentation partition indices are currently empty. Assign distinct categories, configure role permissions, or allocate client seats to activate proportions.';
+    } else if (type === 'metric') {
+      icon = <TrendingUp className="h-7 w-7 text-amber-500/30 mb-2.5 animate-pulse" />;
+      categoryTitle = 'Metric Aggregate Offline';
+      instruction =
+        'SaaS operational KPI indexes are resting at zero. Real-time billing transactions, team updates, and backup schedules will instantly activate this metric.';
+    }
+
+    return (
+      <div
+        style={{ height }}
+        className="flex flex-col items-center justify-center text-center p-6 border border-dashed border-border/40 rounded-lg bg-slate-950/20 backdrop-blur-[2px]"
+      >
+        <div className="flex flex-col items-center max-w-[280px]">
+          {icon}
+          <h5 className="text-[10px] font-bold text-foreground/80 mb-1 uppercase tracking-wider">
+            {categoryTitle}
+          </h5>
+          <p className="text-[10px] text-muted-foreground/80 leading-normal font-medium">
+            {instruction}
+          </p>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -116,14 +162,7 @@ export function ChartWrapper({
             )}
           </div>
         ) : data.length === 0 ? (
-          <div
-            style={{ height }}
-            className="flex flex-col items-center justify-center text-center py-10"
-          >
-            <p className="text-xs text-muted-foreground font-medium">
-              No aggregated parameters retrieved in selected filters.
-            </p>
-          </div>
+          renderEmptyState()
         ) : type === 'area' ? (
           <AreaChartWrapper data={data} xKey={xKey} metrics={metrics} height={height} />
         ) : type === 'bar' ? (

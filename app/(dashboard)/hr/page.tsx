@@ -24,15 +24,8 @@ import { HrPerformance } from '@/components/hr/HrPerformance';
 import { HrSettings } from '@/components/hr/HrSettings';
 
 export default function HRPage() {
-  const {
-    fetchEmployees,
-    fetchDepartments,
-    fetchAttendance,
-    fetchLeaves,
-    fetchAnnouncements,
-    runHrSeeder,
-    loading,
-  } = useHRStore();
+  const { fetchEmployees, fetchDepartments, fetchAttendance, fetchLeaves, fetchAnnouncements } =
+    useHRStore();
 
   const [activeTab, setActiveTab] = useState('dashboard');
 
@@ -47,10 +40,6 @@ export default function HRPage() {
     ]);
   }, [fetchEmployees, fetchDepartments, fetchAttendance, fetchLeaves, fetchAnnouncements]);
 
-  const handleRunSeeder = async () => {
-    await runHrSeeder();
-  };
-
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'directory', label: 'Employee Directory', icon: Users },
@@ -62,29 +51,12 @@ export default function HRPage() {
 
   return (
     <div className="space-y-6 relative min-h-screen pb-12">
-      {loading.seeder && (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background/80 backdrop-blur-md">
-          <div className="animate-spin rounded-full border-4 border-primary/20 border-r-primary h-12 w-12 mb-4" />
-          <p className="text-sm font-bold text-foreground">Seeding premium demo dataset...</p>
-        </div>
-      )}
-
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <PageHeader
           eyebrow="Workforce Operations"
           title="Enterprise HR & Talent Suite"
           description="Manage employees, track attendance clocks, process leaves, evaluate cycles, and structure company hierarchy."
         />
-        <div className="flex items-center gap-3">
-          <Button
-            onClick={handleRunSeeder}
-            variant="outline"
-            className="border-dashed border-primary/30 hover:border-primary text-primary hover:bg-primary/5 gap-2"
-          >
-            <Database className="h-4 w-4" />
-            Seed HR Demo Data
-          </Button>
-        </div>
       </div>
 
       {/* Tab Switcher Navigation */}

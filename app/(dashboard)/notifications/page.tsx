@@ -48,101 +48,8 @@ export default function NotificationsPage() {
   >('all');
   const [expandedLogId, setExpandedLogId] = useState<string | null>(null);
 
-  // Mock enterprise log feed
-  const [logs, setLogs] = useState<AuditLog[]>([
-    {
-      id: 'log1',
-      category: 'security',
-      title: 'New API Access Key Generated',
-      description:
-        'API credential client pair "sg_live_79a2..." was successfully provisioned by Super Admin.',
-      time: '14:24:05',
-      date: 'Today',
-      read: false,
-      meta: {
-        actor: 'Rahul Verma (Super Admin)',
-        ip: '192.168.1.144',
-        payload:
-          '{\n  "name": "Corporate Webhook Sync Key",\n  "scope": "read-write",\n  "expiresAt": "2027-05-01"\n}',
-      },
-    },
-    {
-      id: 'log2',
-      category: 'webhook',
-      title: 'Webhook Event Fired: invoice.paid',
-      description:
-        'Dispatched outbound event receiver payload to https://api.stripe.com/v3/webhooks.',
-      time: '13:02:11',
-      date: 'Today',
-      read: false,
-      meta: {
-        duration: '182ms',
-        payload:
-          '{\n  "event": "invoice.paid",\n  "recipient": "Stripe Receiver",\n  "statusCode": 200,\n  "body": "{\\"received\\": true}"\n}',
-      },
-    },
-    {
-      id: 'log3',
-      category: 'billing',
-      title: 'Subscription Invoice Settled',
-      description:
-        'Payment processed successfully for Enterprise Tier Custom SLA plan. Invoice #INV-2026-9041.',
-      time: '10:45:00',
-      date: 'Today',
-      read: true,
-      meta: {
-        actor: 'Billing Engine',
-        payload:
-          '{\n  "amount": "$4,250.00",\n  "status": "cleared",\n  "method": "ACH Direct Debit"\n}',
-      },
-    },
-    {
-      id: 'log4',
-      category: 'system',
-      title: 'Multi-Tenant Throttling Guard Triggered',
-      description:
-        'Automatic anomaly detection temporarily rate-limited IP block 185.220.101.4 due to high burst activity.',
-      time: '08:12:33',
-      date: 'Today',
-      read: false,
-      meta: {
-        actor: 'Shield Guard AI',
-        ip: '185.220.101.4',
-        payload:
-          '{\n  "reason": "Request rate limit exceeded",\n  "burstRequests": 412,\n  "limit": 100,\n  "window": "60s"\n}',
-      },
-    },
-    {
-      id: 'log5',
-      category: 'security',
-      title: 'Team Specialist Invitation Accepted',
-      description:
-        'Member invitation for engineer.pro@syncgrid.io successfully verified and added to the CRM Operations unit.',
-      time: 'Yesterday at 17:40',
-      date: 'Yesterday',
-      read: true,
-      meta: {
-        actor: 'System Auth',
-        payload:
-          '{\n  "email": "engineer.pro@syncgrid.io",\n  "role": "Project Manager",\n  "status": "active"\n}',
-      },
-    },
-    {
-      id: 'log6',
-      category: 'system',
-      title: 'Automated CRM Sync Pipeline Completed',
-      description:
-        'Sync pipeline executed: 1,480 contact parameters successfully matched across target databases.',
-      time: 'Yesterday at 04:00',
-      date: 'Yesterday',
-      read: true,
-      meta: {
-        duration: '14.2s',
-        payload:
-          '{\n  "syncedRecords": 1480,\n  "duplicatesRemoved": 12,\n  "status": "completed"\n}',
-      },
-    },
-  ]);
+  // Audit log feed (hardened: initialized empty)
+  const [logs, setLogs] = useState<AuditLog[]>([]);
 
   // Preference Settings States
   const [prefBrowserAlerts, setPrefBrowserAlerts] = useState(true);
@@ -279,17 +186,54 @@ export default function NotificationsPage() {
           {/* Audit Logs list */}
           <Card className="bg-card/40 border border-border/60 p-6 rounded-3xl backdrop-blur-md relative overflow-hidden">
             {filteredLogs.length === 0 ? (
-              <div className="py-24 text-center space-y-4 select-none">
-                <div className="h-14 w-14 rounded-full bg-primary/5 flex items-center justify-center text-primary/60 mx-auto border border-border/40">
-                  <Bell className="h-6 w-6" />
+              <div className="py-12 px-6 text-center space-y-6 select-none bg-slate-950/20 border border-dashed border-border/50 rounded-2xl">
+                <div className="h-14 w-14 rounded-full bg-primary/5 flex items-center justify-center text-primary/85 mx-auto border border-primary/20 shadow-inner">
+                  <Bell className="h-6 w-6 animate-pulse" />
                 </div>
-                <div className="space-y-1">
-                  <h3 className="text-base font-bold text-foreground">Zero Incidents Registered</h3>
-                  <p className="text-xs text-muted-foreground max-w-xs mx-auto">
-                    Your real-time sync networks and multi-tenant security layers are fully
-                    operational and uncompromised.
+                <div className="space-y-2 max-w-md mx-auto">
+                  <h3 className="text-base font-extrabold tracking-tight text-white">
+                    Security Timeline Initialized
+                  </h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Welcome to the SyncGrid Audit Logs Console. Your multi-tenant organization is
+                    completely secured, with zero active anomalies detected.
                   </p>
                 </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-lg mx-auto text-left">
+                  <div className="bg-card/60 p-3.5 rounded-xl border border-border/40 space-y-1 hover:border-primary/30 transition-colors">
+                    <span className="text-[9px] font-bold text-primary uppercase tracking-wider block">
+                      Security Signals
+                    </span>
+                    <p className="text-[10px] text-muted-foreground leading-snug">
+                      Provisioning API Keys, role modifications, and admin overrides are
+                      automatically audited.
+                    </p>
+                  </div>
+                  <div className="bg-card/60 p-3.5 rounded-xl border border-border/40 space-y-1 hover:border-primary/30 transition-colors">
+                    <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-wider block">
+                      Webhook Broker
+                    </span>
+                    <p className="text-[10px] text-muted-foreground leading-snug">
+                      Outbound subscription event webhooks and active synchronization pipelines log
+                      every response code.
+                    </p>
+                  </div>
+                  <div className="bg-card/60 p-3.5 rounded-xl border border-border/40 space-y-1 hover:border-primary/30 transition-colors">
+                    <span className="text-[9px] font-bold text-purple-500 uppercase tracking-wider block">
+                      Finance System
+                    </span>
+                    <p className="text-[10px] text-muted-foreground leading-snug">
+                      Real-time payment settlements, plan seat changes, and invoicing milestones
+                      stream here.
+                    </p>
+                  </div>
+                </div>
+
+                <p className="text-[10px] text-slate-500 italic max-w-xs mx-auto">
+                  Audit streams synchronize in real-time. Trigger actions inside the CRM or Finance
+                  panels to stream your first verified records.
+                </p>
               </div>
             ) : (
               <div className="relative border-l-2 border-border/40 pl-5 ml-3 space-y-6">

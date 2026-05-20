@@ -32,7 +32,6 @@ export default function KnowledgeBaseHub() {
     fetchCategories,
     analytics,
     fetchAnalytics,
-    seedSandbox,
     searchQuery,
     searchResults,
     searchDocuments,
@@ -79,10 +78,6 @@ export default function KnowledgeBaseHub() {
     searchDocuments(e.target.value);
   };
 
-  const handleSeed = async () => {
-    await seedSandbox();
-  };
-
   return (
     <div className="flex flex-col gap-6 p-6 md:p-8 max-w-7xl mx-auto min-h-screen text-slate-100 select-none">
       {/* Upper Glassmorphic Welcome Banner */}
@@ -103,22 +98,6 @@ export default function KnowledgeBaseHub() {
             workspace.
           </p>
         </div>
-
-        {/* Sandbox Seeder loader */}
-        {spaces.length === 0 && (
-          <div className="z-10 flex flex-col gap-2 items-start justify-center border border-dashed border-border/40 p-4 rounded-xl bg-slate-950/40 backdrop-blur-md max-w-xs">
-            <span className="text-xs text-slate-400 font-medium">
-              Ready to explore? Populate the sandbox!
-            </span>
-            <button
-              onClick={handleSeed}
-              disabled={loading}
-              className="flex items-center gap-1.5 px-4 py-2 rounded bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs shadow-lg transition-all disabled:opacity-40"
-            >
-              <Sparkles className="h-3.5 w-3.5" /> Seed Sample SOPs & Wikis
-            </button>
-          </div>
-        )}
       </div>
 
       {/* Fuzzy search input container */}
@@ -245,40 +224,53 @@ export default function KnowledgeBaseHub() {
           </form>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {spaces.map((space) => {
-            const iconEmoji =
-              space.icon === 'book-open'
-                ? '📖'
-                : space.icon === 'user-plus'
-                  ? '👥'
-                  : space.icon === 'shield-alert'
-                    ? '🔒'
-                    : '📁';
-            return (
-              <Link
-                key={space._id}
-                href={`/knowledge/spaces/${space._id}`}
-                className="group flex flex-col border border-border/20 bg-slate-950/10 hover:bg-slate-950/20 backdrop-blur-md rounded-xl p-5 shadow hover:shadow-lg transition-all border-l-4 border-l-emerald-500"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl group-hover:scale-110 transition-transform duration-200">
-                    {iconEmoji}
-                  </span>
-                  <span className="text-sm font-semibold text-slate-200 group-hover:text-emerald-400 transition-colors truncate">
-                    {space.name}
-                  </span>
-                </div>
-                <p className="text-xs text-slate-400 mt-2.5 leading-relaxed line-clamp-2">
-                  {space.description || 'Central operational wikis and guidelines.'}
-                </p>
-                <div className="flex items-center gap-2 border-t border-border/10 pt-3 mt-4 text-[9px] font-mono text-slate-500">
-                  <Calendar className="h-3 w-3" /> Updated recently
-                </div>
-              </Link>
-            );
-          })}
-        </div>
+        {spaces.length === 0 ? (
+          <div className="border border-dashed border-border/40 p-8 rounded-xl bg-slate-950/20 backdrop-blur-md flex flex-col items-center justify-center text-center max-w-md mx-auto my-6 select-none">
+            <BookOpen className="h-10 w-10 text-emerald-500/80 mb-3 animate-pulse" />
+            <h3 className="text-sm font-bold uppercase tracking-wider text-slate-200">
+              No Wiki Spaces Created Yet
+            </h3>
+            <p className="text-xs text-slate-400 mt-2 leading-relaxed">
+              Create standard operating procedures (SOPs), company policies, or collaborative wikis.
+              Click the <strong>Create Space</strong> button to define your first wiki space.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {spaces.map((space) => {
+              const iconEmoji =
+                space.icon === 'book-open'
+                  ? '📖'
+                  : space.icon === 'user-plus'
+                    ? '👥'
+                    : space.icon === 'shield-alert'
+                      ? '🔒'
+                      : '📁';
+              return (
+                <Link
+                  key={space._id}
+                  href={`/knowledge/spaces/${space._id}`}
+                  className="group flex flex-col border border-border/20 bg-slate-950/10 hover:bg-slate-950/20 backdrop-blur-md rounded-xl p-5 shadow hover:shadow-lg transition-all border-l-4 border-l-emerald-500"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl group-hover:scale-110 transition-transform duration-200">
+                      {iconEmoji}
+                    </span>
+                    <span className="text-sm font-semibold text-slate-200 group-hover:text-emerald-400 transition-colors truncate">
+                      {space.name}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-2.5 leading-relaxed line-clamp-2">
+                    {space.description || 'Central operational wikis and guidelines.'}
+                  </p>
+                  <div className="flex items-center gap-2 border-t border-border/10 pt-3 mt-4 text-[9px] font-mono text-slate-500">
+                    <Calendar className="h-3 w-3" /> Updated recently
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Analytics Dashboard bottom grid */}

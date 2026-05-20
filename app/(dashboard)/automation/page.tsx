@@ -1,42 +1,17 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAutomationStore } from '@/store/automationStore';
 import { PageHeader } from '@/components/ui/page-header';
-import { Button } from '@/components/ui/button';
 import { WorkflowBuilder } from '@/components/automation/WorkflowBuilder';
 import { ExecutionMonitor } from '@/components/automation/ExecutionMonitor';
 import { ApprovalManager } from '@/components/automation/ApprovalManager';
 import { TemplateGallery } from '@/components/automation/TemplateGallery';
-import { GitCommit, Activity, UserCheck, FolderOpen, Database, Sparkles } from 'lucide-react';
-import { toast } from 'sonner';
+import { GitCommit, Activity, UserCheck, FolderOpen } from 'lucide-react';
 
 export default function AutomationPage() {
   const { activeTab, setActiveTab } = useAutomationStore();
-  const [isSeeding, setIsSeeding] = useState(false);
-
-  const handleSimulateSeeding = async () => {
-    setIsSeeding(true);
-    toast.promise(
-      fetch('/api/protected/automation/seed', {
-        method: 'POST',
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (!data.success) throw new Error(data.message || 'Seeding failed.');
-          setIsSeeding(false);
-          // Reload page state to load seeded entries
-          window.location.reload();
-          return data;
-        }),
-      {
-        loading: 'Populating workflow templates, executions metrics, and approvals logs...',
-        success: 'Sandbox database seeded cleanly! Real-time telemetry is live. 🚀',
-        error: (err) => `Failed to seed sandbox: ${err.message}`,
-      }
-    );
-  };
 
   const tabsConfig = [
     { id: 'builder', label: 'Visual Workflow Builder', icon: <GitCommit className="h-4 w-4" /> },
@@ -47,22 +22,13 @@ export default function AutomationPage() {
 
   return (
     <div className="space-y-6">
-      {/* Premium Header with Sandbox Seeding Action */}
+      {/* Premium Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 select-none">
         <PageHeader
           eyebrow="Orchestration Module"
           title="Business Process Automation Engine"
           description="Design multi-step visual workflows, coordinate sequential manager approvals, automate HR/Finance tasks, and track execution trace logs in real-time."
         />
-
-        <Button
-          onClick={handleSimulateSeeding}
-          disabled={isSeeding}
-          className="text-xs font-bold gap-1.5 h-9 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 self-start md:self-center"
-        >
-          <Database className={`h-4 w-4 ${isSeeding ? 'animate-spin' : ''}`} />
-          Load Sandbox Demo
-        </Button>
       </div>
 
       {/* Tabs Control Switcher Console */}

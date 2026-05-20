@@ -43,36 +43,32 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
       .limit(6)
       .lean();
 
-    const baselineData: any[] = [];
-    let seedRevenue = 32000;
-    let seedHours = 480;
-
-    // Seed mock baseline historical coordinates if snapshot db is still unpopulated
     if (snapshots.length === 0) {
-      const now = new Date();
-      for (let i = 5; i >= 0; i--) {
-        const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        baselineData.push({
-          label: date.toLocaleString('default', { month: 'short', year: 'numeric' }),
-          value: metricName === 'revenue' ? seedRevenue : seedHours,
-          isForecast: false,
-        });
-        seedRevenue += 2000 + Math.floor(Math.random() * 3000);
-        seedHours += 20 + Math.floor(Math.random() * 35);
-      }
-    } else {
-      snapshots.forEach((snap) => {
-        const monthLabel = new Date(snap.snapshotDate).toLocaleString('default', {
-          month: 'short',
-          year: 'numeric',
-        });
-        baselineData.push({
-          label: monthLabel,
-          value: metricName === 'revenue' ? snap.revenueTotal : snap.billableHours,
-          isForecast: false,
-        });
+      return NextResponse.json({
+        success: true,
+        data: [],
+        meta: {
+          metricName,
+          timelineMonths,
+          confidenceInterval,
+          forecastMethod,
+          growthRate: 0,
+        },
       });
     }
+
+    const baselineData: any[] = [];
+    snapshots.forEach((snap) => {
+      const monthLabel = new Date(snap.snapshotDate).toLocaleString('default', {
+        month: 'short',
+        year: 'numeric',
+      });
+      baselineData.push({
+        label: monthLabel,
+        value: metricName === 'revenue' ? snap.revenueTotal : snap.billableHours,
+        isForecast: false,
+      });
+    });
 
     const n = baselineData.length;
 

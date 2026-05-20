@@ -137,25 +137,6 @@ export function AnalyticsDashboard() {
     };
   }, []);
 
-  // Seeding sandbox logs
-  const handleSeedData = async () => {
-    setIsLoading(true);
-    try {
-      const res = await fetch('/api/protected/analytics/seed', { method: 'POST' });
-      const json = await res.json();
-      if (json.success) {
-        toast.success('Historical corporate analytics sandbox data seeded!');
-        fetchDashboardStats();
-      } else {
-        toast.error(`Seeding failed: ${json.message}`);
-      }
-    } catch (err) {
-      toast.error('Failed to trigger database analytics seeder.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   // Layout positions updates
   const saveLayoutOrder = async (newLayout: IDashboardWidget[]) => {
     try {
@@ -446,17 +427,6 @@ export function AnalyticsDashboard() {
           >
             <LayoutGrid className="h-4 w-4" />
             {isLayoutEditable ? 'Save Grid Layout' : 'Customize Layout'}
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleSeedData}
-            disabled={isLoading}
-            className="flex items-center gap-2 border-dashed border-primary/40 hover:border-primary"
-          >
-            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-            Seed Sandbox Data
           </Button>
         </div>
       </div>

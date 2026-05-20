@@ -12,31 +12,21 @@ import {
 
 interface FinanceDashboardProps {
   data: any;
-  onSeed: () => void;
-  isSeeding: boolean;
   role: string;
 }
 
-export const FinanceDashboard: React.FC<FinanceDashboardProps> = ({
-  data,
-  onSeed,
-  isSeeding,
-  role,
-}) => {
-  if (!data) {
+export const FinanceDashboard: React.FC<FinanceDashboardProps> = ({ data, role }) => {
+  if (!data || (!data.kpis && (!data.cashflowTrends || data.cashflowTrends.length === 0))) {
     return (
-      <div className="h-96 flex flex-col items-center justify-center space-y-4 select-none">
-        <ShieldAlert className="h-10 w-10 text-amber-500 animate-pulse" />
-        <p className="text-sm text-muted-foreground font-medium uppercase tracking-wider">
-          No active financial ledger data detected
+      <div className="h-96 flex flex-col items-center justify-center space-y-4 select-none text-center max-w-md mx-auto">
+        <ShieldAlert className="h-10 w-10 text-amber-500/80" />
+        <h4 className="text-sm font-bold uppercase tracking-wider text-foreground">
+          No Active Financial Records Detected
+        </h4>
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          SyncGrid has initialized an empty secure ledger. Go to the Receivables Invoices, Operating
+          Expenses, or Ceilings Budgets tabs to add record entries.
         </p>
-        <button
-          onClick={onSeed}
-          disabled={isSeeding}
-          className="px-5 py-2 bg-primary hover:bg-primary/95 text-primary-foreground font-semibold rounded-lg text-xs uppercase tracking-wider transition-all disabled:opacity-50 cursor-pointer"
-        >
-          {isSeeding ? 'Initializing Ledger...' : 'Seed High-Fidelity Ledger'}
-        </button>
       </div>
     );
   }
@@ -81,22 +71,12 @@ export const FinanceDashboard: React.FC<FinanceDashboardProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Seed helper trigger */}
-      <div className="flex justify-between items-center bg-card/40 border border-border/80 p-4 rounded-xl backdrop-blur-md select-none">
-        <div className="flex items-center gap-3">
-          <div className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
-          <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">
-            Ledger status:{' '}
-            <span className="text-foreground">Live real-time ledger synchronized</span>
-          </p>
-        </div>
-        <button
-          onClick={onSeed}
-          disabled={isSeeding}
-          className="px-4 py-1.5 border border-primary/40 hover:bg-primary/10 text-primary font-bold rounded-lg text-[10px] uppercase tracking-wider transition-all disabled:opacity-50 cursor-pointer"
-        >
-          {isSeeding ? 'Syncing...' : 'Reset & seed datasets'}
-        </button>
+      {/* Ledger Status Indicator */}
+      <div className="flex items-center gap-3 bg-card/40 border border-border/80 p-4 rounded-xl backdrop-blur-md select-none">
+        <div className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
+        <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">
+          Ledger status: <span className="text-foreground">Live active ledger synchronized</span>
+        </p>
       </div>
 
       {/* KPI Card Grids */}

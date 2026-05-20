@@ -62,7 +62,6 @@ export default function FinancePage() {
     saveVendor,
     createPurchaseOrder,
     approvePurchaseOrder,
-    runFinanceSeeder,
     initializeRealtime,
   } = useFinanceStore();
 
@@ -100,10 +99,6 @@ export default function FinancePage() {
     }
   }, [session?.user?.companyId, initializeRealtime]);
 
-  const handleRunSeeder = async () => {
-    await runFinanceSeeder();
-  };
-
   const tabs = [
     { id: 'dashboard', label: 'Overview Dashboard', icon: LayoutDashboard },
     { id: 'invoices', label: 'Receivables Invoices', icon: FileText },
@@ -115,14 +110,6 @@ export default function FinancePage() {
 
   return (
     <div className="space-y-6 relative min-h-screen pb-12 select-none">
-      {/* Seeder status indicator */}
-      {loading.seeder && (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background/85 backdrop-blur-md">
-          <div className="animate-spin rounded-full border-4 border-primary/20 border-r-primary h-12 w-12 mb-4" />
-          <p className="text-sm font-bold text-foreground">Syncing ledger database records...</p>
-        </div>
-      )}
-
       {/* Page header controls */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 select-none">
         <PageHeader
@@ -130,16 +117,6 @@ export default function FinancePage() {
           title="Enterprise Finance & Billing Cockpit"
           description="Track accounts receivable invoices, control budget margins, reimburse employee claims, and verify profitability indices."
         />
-        <div className="flex items-center gap-3">
-          <Button
-            onClick={handleRunSeeder}
-            variant="outline"
-            className="border-dashed border-primary/30 hover:border-primary text-primary hover:bg-primary/5 gap-2 cursor-pointer"
-          >
-            <Database className="h-4 w-4" />
-            Seed High-Fidelity Ledger
-          </Button>
-        </div>
       </div>
 
       {/* Navigation submenus tabs */}
@@ -169,14 +146,7 @@ export default function FinancePage() {
 
       {/* Render active Tab panels */}
       <div className="relative z-0 min-h-[50vh]">
-        {activeTab === 'dashboard' && (
-          <FinanceDashboard
-            data={dashboardData}
-            onSeed={handleRunSeeder}
-            isSeeding={!!loading.seeder}
-            role={role}
-          />
-        )}
+        {activeTab === 'dashboard' && <FinanceDashboard data={dashboardData} role={role} />}
 
         {activeTab === 'invoices' && (
           <>

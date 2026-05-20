@@ -196,136 +196,12 @@ export default function CRMPage() {
       const leadsRes = await fetch('/api/protected/crm/leads');
       const leadsData = await leadsRes.json();
       if (leadsData.success) {
-        if (leadsData.data.length === 0) {
-          // Trigger automatic seed
-          await seedInitialLeads();
-        } else {
-          setLeads(leadsData.data);
-        }
+        setLeads(leadsData.data || []);
       }
     } catch (err: any) {
-      toast.error('Failed to connect to database. Showing offline sandbox.');
+      toast.error('Failed to connect to database.');
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  // Seed 8 realistic, premium enterprise leads
-  const seedInitialLeads = async () => {
-    const seedData = [
-      {
-        name: 'Acme Corp',
-        contactPerson: 'John Carter',
-        email: 'carter@acme.com',
-        phone: '415-555-0190',
-        budget: 45000,
-        status: 'new',
-        priority: 'high',
-        source: 'linkedin',
-        workType: 'Custom ERP Build',
-        techStack: ['React', 'Next.js', 'MongoDB'],
-      },
-      {
-        name: 'Globex Inc',
-        contactPerson: 'Samantha Vance',
-        email: 'vance@globex.co',
-        phone: '650-555-0143',
-        budget: 25000,
-        status: 'contacted',
-        priority: 'medium',
-        source: 'website',
-        workType: 'Corporate Landing',
-        techStack: ['TypeScript', 'Tailwind'],
-      },
-      {
-        name: 'Initech LLC',
-        contactPerson: 'Peter Gibbons',
-        email: 'gibbons@initech.com',
-        phone: '206-555-0182',
-        budget: 60000,
-        status: 'proposal',
-        priority: 'high',
-        source: 'referral',
-        workType: 'E-commerce Redesign',
-        techStack: ['React', 'Next.js', 'PostgreSQL'],
-      },
-      {
-        name: 'Umbrella Corp',
-        contactPerson: 'Albert Wesker',
-        email: 'wesker@umbrella.com',
-        phone: '312-555-0105',
-        budget: 120000,
-        status: 'negotiation',
-        priority: 'high',
-        source: 'ads',
-        workType: 'Bioinformatics Telemetry',
-        techStack: ['Node.js', 'Rust', 'Docker'],
-      },
-      {
-        name: 'Veer Enterprise',
-        contactPerson: 'Raj Verma',
-        email: 'raj@veer.in',
-        phone: '91-98765-43210',
-        budget: 85000,
-        status: 'won',
-        priority: 'high',
-        source: 'referral',
-        workType: 'App Development',
-        techStack: ['React Native', 'Firebase'],
-      },
-      {
-        name: 'Hooli Systems',
-        contactPerson: 'Gavin Belson',
-        email: 'gavin@hooli.xyz',
-        phone: '408-555-0129',
-        budget: 90000,
-        status: 'lost',
-        priority: 'low',
-        source: 'cold-reach',
-        workType: 'Nucleus Cloud Interface',
-        techStack: ['Go', 'Kubernetes'],
-      },
-      {
-        name: 'Stark Industries',
-        contactPerson: 'Pepper Potts',
-        email: 'potts@stark.com',
-        phone: '212-555-0177',
-        budget: 200000,
-        status: 'new',
-        priority: 'high',
-        source: 'website',
-        workType: 'SaaS Dashboard Platform',
-        techStack: ['Next.js', 'AWS', 'TensorFlow'],
-      },
-      {
-        name: 'Wayne Enterprises',
-        contactPerson: 'Lucius Fox',
-        email: 'fox@wayne.co',
-        phone: 'Gotham-555-99',
-        budget: 150000,
-        status: 'proposal',
-        priority: 'high',
-        source: 'linkedin',
-        workType: 'Secured Analytics Portal',
-        techStack: ['Next.js', 'PostgreSQL'],
-      },
-    ];
-
-    try {
-      const createdLeads: Lead[] = [];
-      for (const item of seedData) {
-        const res = await fetch('/api/protected/crm/leads', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(item),
-        });
-        const d = await res.json();
-        if (d.success) createdLeads.push(d.data);
-      }
-      setLeads(createdLeads);
-      toast.success('Successfully auto-seeded CRM database with 8 premium demo leads!');
-    } catch (e) {
-      toast.error('Failed to seed backend leads.');
     }
   };
 
@@ -334,7 +210,6 @@ export default function CRMPage() {
       setMounted(true);
       fetchLeadsAndSettings();
     }, 0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleCreateLead = async (e: React.FormEvent) => {
@@ -719,6 +594,30 @@ export default function CRMPage() {
           <p className="text-xs text-muted-foreground animate-pulse uppercase font-bold tracking-wider">
             Loading active corporate leads database...
           </p>
+        </div>
+      ) : leads.length === 0 ? (
+        <div className="h-96 flex flex-col items-center justify-center border border-dashed border-border/80 rounded-2xl p-8 text-center max-w-md mx-auto bg-card/10 backdrop-blur-md space-y-5">
+          <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary mx-auto">
+            <Users className="h-6 w-6" />
+          </div>
+          <div className="space-y-2">
+            <h3 className="text-sm font-extrabold text-foreground uppercase tracking-wider">
+              No Leads Found
+            </h3>
+            <p className="text-xs text-muted-foreground leading-relaxed max-w-xs mx-auto">
+              Capture your first CRM lead to activate visual sales pipelines, deal values
+              forecasting, and follow-up tracking.
+            </p>
+          </div>
+          <Button
+            onClick={() => setCreateModalOpen(true)}
+            variant="default"
+            size="sm"
+            className="text-xs gap-1.5"
+          >
+            <Plus className="h-4 w-4" />
+            Capture Your First Lead
+          </Button>
         </div>
       ) : (
         <AnimatePresence mode="wait">

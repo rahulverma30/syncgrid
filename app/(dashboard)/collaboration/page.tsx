@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useCommunicationStore } from '@/store';
 import { useSession } from 'next-auth/react';
-import { PageHeader, Button, LoadingSpinner, Modal, Select } from '@/components/ui';
+import { PageHeader, Button, Modal, Select } from '@/components/ui';
 import {
   AnnouncementBanner,
   WorkspaceSidebar,
@@ -12,7 +12,7 @@ import {
   ThreadPanel,
   SharedNotesPanel,
 } from '@/components/collaboration';
-import { MessageSquare, Heart, RefreshCw, Layers, FileText } from 'lucide-react';
+import { MessageSquare, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRealtime } from '@/hooks/useRealtime';
 
@@ -228,25 +228,6 @@ export default function CollaborationDashboard() {
     setActiveConversationId(targetUserId);
   };
 
-  // 7. Seed sandbox console action
-  const handleSeedSandbox = async () => {
-    setIsLoading(true);
-    try {
-      const res = await fetch('/api/protected/collaboration/seed', { method: 'POST' });
-      const data = await res.json();
-      if (data.success) {
-        toast.success('Communication sandbox environment fully loaded!');
-        window.location.reload();
-      } else {
-        toast.error('Failed to seed sandbox.');
-      }
-    } catch (err) {
-      toast.error('Server error seeding sandbox.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   // 8. Create channel action
   const handleCreateChannel = async () => {
     if (!newChanName.trim() || !activeWorkspaceId) return;
@@ -288,27 +269,19 @@ export default function CollaborationDashboard() {
           </div>
           <div className="space-y-2">
             <h3 className="text-lg font-bold text-foreground tracking-wide Outfit">
-              Initialize Collaboration Sandbox
+              Collaboration Channels Not Initialized
             </h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
               Experience a premium Slack-like real-time workspace with nested channel subdivisions,
-              unread notification badges, visual reactions toolbars, collaborative shared guidelines
-              pads, and alert banners.
+              unread notification badges, visual reactions toolbars, and collaborative shared
+              guidelines pads.
+            </p>
+            <p className="text-xs text-emerald-500/80 bg-emerald-500/5 border border-emerald-500/20 rounded-lg p-3 mt-4 text-left leading-relaxed">
+              <strong>Tenant Setup Required:</strong> Ensure your tenant organization is fully
+              registered and active in the system dashboard. Workspaces and collaboration channels
+              will synchronize automatically.
             </p>
           </div>
-          <Button
-            onClick={handleSeedSandbox}
-            className="w-full flex items-center justify-center gap-2 font-bold py-2.5 hover:scale-[1.02] transition-all"
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <LoadingSpinner className="h-4 w-4" />
-            ) : (
-              <>
-                <Layers className="h-4 w-4" /> Load Collaboration Sandbox
-              </>
-            )}
-          </Button>
         </div>
       </div>
     );
