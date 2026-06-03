@@ -4,26 +4,26 @@
 
 @layer base {
   :root {
-    --background: 240 6% 97.5%; /* Soft premium zinc off-white, eliminates cheap bright white glare */
-    --foreground: 240 10% 3.6%; /* Sophisticated deep charcoal instead of jet black */
-    --card: 0 0% 100%; /* Pure white elevated card surfaces for layer contrast */
-    --card-foreground: 240 10% 3.6%;
+    --background: 0 0% 98%; /* Stripe-like soft neutral background #FAFAFA */
+    --foreground: 240 10% 10%; /* High contrast deep charcoal */
+    --card: 0 0% 100%; /* Pure white elevated card */
+    --card-foreground: 240 10% 10%;
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.6%;
-    --muted: 240 5% 94%; /* soft neutral gray layered surfaces */
-    --muted-foreground: 240 4% 45%;
-    --accent: 240 5% 90%; /* Silver hover highlight */
-    --accent-foreground: 240 10% 3.6%;
+    --popover-foreground: 240 10% 10%;
+    --muted: 240 5% 96%; /* Softer neutral gray layered surfaces */
+    --muted-foreground: 240 4% 40%; /* Better WCAG AA contrast for muted text */
+    --accent: 240 5% 92%; /* Silver hover highlight */
+    --accent-foreground: 240 10% 10%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 6% 90%; /* Thin classy borders */
-    --input: 240 6% 90%;
-    --ring: 240 10% 3.6%;
-    --radius: 0.6rem;
-    --primary: 240 10% 6%; /* Deep matte charcoal */
+    --border: 240 6% 86%; /* More refined, visible borders */
+    --input: 240 6% 86%;
+    --ring: 240 10% 10%;
+    --radius: 0.5rem; /* Slightly sharper enterprise radius */
+    --primary: 240 10% 10%; /* Deep matte charcoal */
     --primary-foreground: 0 0% 98%;
-    --secondary: 240 5% 94%;
-    --secondary-foreground: 240 10% 6%;
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 240 10% 10%;
   }
 
   .dark {
@@ -172,6 +172,30 @@
   /* Section separator */
   .section {
     @apply border-b border-border py-8 last:border-0;
+  }
+}
+
+@layer utilities {
+  .z-drawer {
+    z-index: 40;
+  }
+  .z-modal-backdrop {
+    z-index: 45;
+  }
+  .z-modal {
+    z-index: 50;
+  }
+  .z-popover {
+    z-index: 60;
+  }
+  .z-dropdown {
+    z-index: 70;
+  }
+  .z-tooltip {
+    z-index: 80;
+  }
+  .z-toast {
+    z-index: 9999;
   }
 }
 

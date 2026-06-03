@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 let lockCount = 0;
 let originalOverflow = '';
 let originalPaddingRight = '';
+let originalHtmlOverflow = '';
 
 export function useLockBodyScroll(lock: boolean) {
   useEffect(() => {
@@ -13,9 +14,11 @@ export function useLockBodyScroll(lock: boolean) {
       // Capture and store initial styling values
       originalOverflow = document.body.style.overflow || '';
       originalPaddingRight = document.body.style.paddingRight || '';
+      originalHtmlOverflow = document.documentElement.style.overflow || '';
 
-      // Stop scrolling on background document
+      // Stop scrolling on background document and html
       document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
 
       // Avoid layout shifts by compensating for scrollbar widths
       const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
@@ -33,6 +36,7 @@ export function useLockBodyScroll(lock: boolean) {
       if (lockCount === 0) {
         document.body.style.overflow = originalOverflow;
         document.body.style.paddingRight = originalPaddingRight;
+        document.documentElement.style.overflow = originalHtmlOverflow;
       }
     };
   }, [lock]);

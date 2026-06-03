@@ -341,9 +341,7 @@ export function Select({
                             isSelected
                               ? 'bg-primary text-primary-foreground font-medium'
                               : 'text-foreground hover:bg-accent hover:text-accent-foreground',
-                            isHighlighted &&
-                              !isSelected &&
-                              'bg-accent text-accent-foreground text-foreground'
+                            isHighlighted && !isSelected && 'bg-accent text-accent-foreground'
                           )}
                         >
                           <span className="block truncate">{option.label}</span>

@@ -1,6 +1,8 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 'use client';
 
-import React, { ReactNode, useEffect } from 'react';
+import React, { ReactNode, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { cn } from '@/lib/cn';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, AlertTriangle, AlertCircle, Info, CheckCircle } from 'lucide-react';
@@ -22,6 +24,9 @@ interface ModalProps {
 export function CenteredModal({ isOpen, onClose, title, children, className, footer }: ModalProps) {
   useLockBodyScroll(isOpen);
 
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -34,7 +39,9 @@ export function CenteredModal({ isOpen, onClose, title, children, className, foo
     };
   }, [isOpen, onClose]);
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-hidden">
@@ -86,7 +93,8 @@ export function CenteredModal({ isOpen, onClose, title, children, className, foo
           </motion.div>
         </div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }
 
@@ -95,8 +103,12 @@ export function CenteredModal({ isOpen, onClose, title, children, className, foo
  */
 export function DrawerModal({ isOpen, onClose, title, children, className, footer }: ModalProps) {
   useLockBodyScroll(isOpen);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-end justify-center overflow-hidden">
@@ -151,7 +163,8 @@ export function DrawerModal({ isOpen, onClose, title, children, className, foote
           </motion.div>
         </div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }
 
@@ -167,8 +180,12 @@ export function FullscreenModal({
   footer,
 }: ModalProps) {
   useLockBodyScroll(isOpen);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <motion.div
@@ -210,7 +227,8 @@ export function FullscreenModal({
           )}
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }
 

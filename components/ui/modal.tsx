@@ -3,6 +3,7 @@
  * Reusable modal dialog
  */
 
+/* eslint-disable react-hooks/set-state-in-effect */
 'use client';
 
 import React, { ReactNode } from 'react';
@@ -10,6 +11,7 @@ import { X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useLockBodyScroll } from '@/hooks';
 import { motion, AnimatePresence } from 'framer-motion';
+import { createPortal } from 'react-dom';
 
 interface ModalProps {
   isOpen: boolean;
@@ -41,6 +43,9 @@ export function Modal({
     xl: 'max-w-xl',
   };
 
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => setMounted(true), []);
+
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -53,7 +58,9 @@ export function Modal({
     };
   }, [isOpen, onClose]);
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-hidden">
@@ -109,6 +116,7 @@ export function Modal({
           </motion.div>
         </div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }
