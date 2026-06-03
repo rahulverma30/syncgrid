@@ -1171,22 +1171,22 @@ export const ClientDetailDrawer: React.FC = () => {
                     <div className="px-2.5 py-1.5 text-[8.5px] font-mono text-muted-foreground border-b border-border bg-muted/20 select-none">
                       Mention Manager
                     </div>
-                    {AVAILABLE_MANAGERS.filter((m) =>
-                      m.toLowerCase().includes(mentionQuery.toLowerCase())
-                    ).map((m, idx) => (
-                      <button
-                        key={m}
-                        type="button"
-                        onClick={() => insertMention(m)}
-                        className={`w-full px-3 py-1.5 text-xs text-left cursor-pointer transition-colors ${
-                          idx === mentionIndex
-                            ? 'bg-primary/15 text-primary font-bold'
-                            : 'hover:bg-muted text-foreground'
-                        }`}
-                      >
-                        {m}
-                      </button>
-                    ))}
+                    {availableManagers
+                      .filter((m) => m.toLowerCase().includes(mentionQuery.toLowerCase()))
+                      .map((m, idx) => (
+                        <button
+                          key={m}
+                          type="button"
+                          onClick={() => insertMention(m)}
+                          className={`w-full px-3 py-1.5 text-xs text-left cursor-pointer transition-colors ${
+                            idx === mentionIndex
+                              ? 'bg-primary/15 text-primary font-bold'
+                              : 'hover:bg-muted text-foreground'
+                          }`}
+                        >
+                          {m}
+                        </button>
+                      ))}
                   </div>
                 )}
 
