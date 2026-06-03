@@ -176,7 +176,7 @@ export const ProjectTable: React.FC = () => {
     >
       {/* Filters & Export Row */}
       <div className="flex justify-between items-center flex-wrap gap-3 pb-3 border-b border-border/40 select-none">
-        <div className="flex gap-2 flex-wrap items-center">
+        <div className="flex gap-2 flex items-center">
           <Select
             value={statusFilter}
             onChange={(val) => setFilters({ statusFilter: val })}

@@ -109,7 +109,9 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     const projectsList = await Project.find({ companyId }).select('status').lean();
     const totalProjects = projectsList.length;
     const completedProjects = projectsList.filter((p) => p.status === 'completed').length;
-    const activeProjects = projectsList.filter((p) => p.status === 'in_progress').length;
+    const activeProjects = projectsList.filter((p) =>
+      ['planning', 'design', 'development', 'testing', 'deployment'].includes(p.status)
+    ).length;
 
     const projectCompletionRate = totalProjects > 0 ? (completedProjects / totalProjects) * 100 : 0;
 
