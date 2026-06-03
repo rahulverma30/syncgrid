@@ -41,13 +41,12 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
       .lean();
 
     // Fetch all active internal users to cross-reference who hasn't punched in
-    // Internal users meaning not client-portal users. (Checking User model)
     const users = await User.find({
       companyId: new mongoose.Types.ObjectId(companyId),
-      role: { $ne: 'client' }, // assuming we only want staff, this might vary depending on schema
-      isActive: true, // or status: 'active'
+      status: 'active',
     })
-      .select('name email image role')
+      .populate('roles', 'name')
+      .select('name email image roles')
       .lean();
 
     const logsMap = new Map();
@@ -70,7 +69,10 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
       }
 
       return {
-        user,
+        user: {
+          ...user,
+          role: user.roles && user.roles.length > 0 ? user.roles[0].name : 'Employee',
+        },
         log: log || null,
         status,
       };
