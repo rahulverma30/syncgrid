@@ -57,7 +57,7 @@ export const SIDEBAR_GROUPS = [
           'HR',
           'Finance',
         ],
-        permission: { resource: 'attendance', action: 'read' },
+        permission: { resource: 'dashboard', action: 'read' },
       },
     ],
   },
