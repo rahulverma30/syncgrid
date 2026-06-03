@@ -13,6 +13,12 @@ interface CacheEntry {
 const permissionCache = new Map<string, CacheEntry>();
 const CACHE_TTL_MS = 30 * 1000; // 30 seconds
 
+interface PolicyCacheEntry {
+  policies: any[];
+  expiresAt: number;
+}
+const policyCache = new Map<string, PolicyCacheEntry>();
+
 /**
  * Flush authorization cache for a user
  */
@@ -168,9 +174,9 @@ export async function can(
   // 2. DENY OVERRIDES: Check dynamic AuthorizationPolicies for matching deny rules
   const policyCacheKey = `policies:${companyId}:${normalizedResource}`;
   let policies: any[] = [];
-  const cachedPolicies = permissionCache.get(policyCacheKey);
+  const cachedPolicies = policyCache.get(policyCacheKey);
   if (cachedPolicies && Date.now() < cachedPolicies.expiresAt) {
-    policies = cachedPolicies.policies as any[];
+    policies = cachedPolicies.policies;
   } else {
     policies = await AuthorizationPolicy.find({
       $or: [{ companyId: null }, { companyId }],
@@ -179,7 +185,7 @@ export async function can(
     })
       .sort({ priority: 1 })
       .lean(); // Added lean() for performance
-    permissionCache.set(policyCacheKey, { policies, expiresAt: Date.now() + CACHE_TTL_MS } as any);
+    policyCache.set(policyCacheKey, { policies, expiresAt: Date.now() + CACHE_TTL_MS });
   }
 
   for (const policy of policies) {
