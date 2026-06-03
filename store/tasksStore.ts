@@ -102,9 +102,6 @@ interface TasksState {
   stopTimer: (taskId: string, description: string, billable: boolean) => Promise<void>;
   logManualTime: (taskId: string, payload: any) => Promise<void>;
 
-  // Seeder Action
-  seedDemoData: () => Promise<void>;
-
   // Realtime Connector
   connectRealtime: (projectId?: string) => () => void;
 }
@@ -449,25 +446,6 @@ export const useTasksStore = create<TasksState>()(
         }
       } catch (err) {
         console.error('Failed to log manual time:', err);
-      }
-    },
-
-    seedDemoData: async () => {
-      set({ isLoading: true });
-      try {
-        const res = await fetch('/api/protected/tasks/seed', {
-          method: 'POST',
-        });
-        const result = await res.json();
-        if (result.success) {
-          await get().fetchStatuses();
-          await get().fetchLabels();
-          await get().fetchTasks();
-        }
-      } catch (err) {
-        console.error('Failed to seed demo tasks:', err);
-      } finally {
-        set({ isLoading: false });
       }
     },
 

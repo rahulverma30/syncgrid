@@ -26,6 +26,20 @@ export const ProjectCreateModal: React.FC = () => {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTemplate, setActiveTemplate] = useState<string>('blank');
+  const [teamMembers, setTeamMembers] = useState<any[]>([]);
+
+  React.useEffect(() => {
+    if (createModalOpen) {
+      fetch('/api/protected/team/members?limit=100')
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success) {
+            setTeamMembers(data.data);
+          }
+        })
+        .catch(console.error);
+    }
+  }, [createModalOpen]);
 
   const templates = [
     {
@@ -257,10 +271,11 @@ export const ProjectCreateModal: React.FC = () => {
               onChange={(val) => setFormManager(val)}
               placeholder="Choose PM..."
               options={[
-                { value: 'Pepper Potts', label: 'Pepper Potts' },
-                { value: 'Lucius Fox', label: 'Lucius Fox' },
-                { value: 'Samantha Vance', label: 'Samantha Vance' },
-                { value: 'Tony Stark', label: 'Tony Stark' },
+                { value: '', label: 'Choose PM...' },
+                ...teamMembers.map((user) => ({
+                  value: user.name,
+                  label: user.name,
+                })),
               ]}
             />
           </div>

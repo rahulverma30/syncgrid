@@ -36,7 +36,6 @@ export default function TasksPage() {
     filters,
     setFilters,
     resetFilters,
-    seedDemoData,
     isLoading,
     runningTimer,
     stopTimer,
@@ -82,15 +81,6 @@ export default function TasksPage() {
       disconnect();
     };
   }, [fetchStatuses, fetchLabels, fetchTasks, connectRealtime, filters.projectId]);
-
-  const handleSeedWorkspace = async () => {
-    toast.promise(seedDemoData(), {
-      loading: 'Bootstrapping complete agile execution workspace...',
-      success:
-        'Workspace successfully seeded with realistic multi-user tasks, blockers, and timetables!',
-      error: 'Failed to seed workspace.',
-    });
-  };
 
   const handleSelectTask = (code: string) => {
     setSelectedTaskCode(code);
@@ -139,15 +129,6 @@ export default function TasksPage() {
         </div>
 
         <div className="flex items-center gap-2.5">
-          <Button
-            variant="outline"
-            onClick={handleSeedWorkspace}
-            className="text-xs font-bold gap-1.5 text-muted-foreground hover:text-foreground border-dashed"
-            isLoading={isLoading}
-          >
-            <Database className="w-3.5 h-3.5" /> Seed Workspace
-          </Button>
-
           <Button onClick={() => setIsCreateOpen(true)} className="text-xs font-bold gap-1.5">
             <Plus className="w-3.5 h-3.5" /> Create Task
           </Button>

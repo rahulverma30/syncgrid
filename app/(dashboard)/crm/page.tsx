@@ -352,21 +352,7 @@ export default function CRMPage() {
     e.preventDefault();
     if (!attachName.trim() || !selectedLead) return;
 
-    setUploadProgress(0);
-    const interval = setInterval(() => {
-      setUploadProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          completeSimulatedUpload();
-          return 100;
-        }
-        return prev + 25;
-      });
-    }, 150);
-  };
-
-  const completeSimulatedUpload = async () => {
-    if (!selectedLead) return;
+    setUploadProgress(100);
 
     try {
       const res = await fetch(`/api/protected/crm/leads/${selectedLead._id}/attachments`, {
@@ -476,12 +462,29 @@ export default function CRMPage() {
     toast.success('Successfully downloaded Leads report as CSV.');
   };
 
-  // Convert lead to target project simulator
-  const handleConvertToProject = () => {
+  // Convert lead to target project simulator -> Real business logic
+  const handleConvertToProject = async () => {
     if (!selectedLead) return;
-    toast.success(
-      `CRITICAL ACTION SUCCESSFUL: Lead "${selectedLead.name}" converted to standard Workspace Project! Syncing details...`
-    );
+
+    try {
+      const res = await fetch(`/api/protected/crm/leads/${selectedLead._id}/convert`, {
+        method: 'POST',
+      });
+      const d = await res.json();
+
+      if (d.success) {
+        toast.success(
+          `Lead "${selectedLead.name}" converted successfully! Client and Project created.`
+        );
+        // Refresh leads to reflect 'won' status
+        fetchLeadsAndSettings();
+        setDrawerOpen(false);
+      } else {
+        toast.error(d.message || 'Failed to convert lead.');
+      }
+    } catch (e) {
+      toast.error('Network error while converting lead.');
+    }
   };
 
   if (!mounted) return null;

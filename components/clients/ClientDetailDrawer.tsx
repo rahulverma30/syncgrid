@@ -33,15 +33,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useClientsStore, ClientAccount } from '@/store/clientsStore';
 import { toast } from 'sonner';
 
-const AVAILABLE_MANAGERS = [
-  'Pepper Potts',
-  'Tony Stark',
-  'Samantha Vance',
-  'Lucius Fox',
-  'Bruce Wayne',
-  'Peter Parker',
-  'Happy Hogan',
-];
+const DEFAULT_MANAGERS = ['Pepper Potts', 'Tony Stark'];
 
 export const ClientDetailDrawer: React.FC = () => {
   const { selectedClient, setSelectedClient, activeTab, setActiveTab, fetchClients } =
@@ -103,6 +95,19 @@ export const ClientDetailDrawer: React.FC = () => {
 
   // Merge Conflict Overrides state
   const [mergeOverrides, setMergeOverrides] = useState<Record<string, any>>({});
+
+  const [availableManagers, setAvailableManagers] = useState<string[]>(DEFAULT_MANAGERS);
+
+  useEffect(() => {
+    fetch('/api/protected/team/members?limit=100')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          setAvailableManagers(data.data.map((u: any) => u.name));
+        }
+      })
+      .catch(console.error);
+  }, []);
 
   useEffect(() => {
     if (!selectedClient?._id) return;
@@ -381,44 +386,33 @@ export const ClientDetailDrawer: React.FC = () => {
     e.preventDefault();
     if (!fileName.trim()) return;
 
-    setUploadPercentage(0);
+    setUploadPercentage(100);
 
-    const interval = setInterval(() => {
-      setUploadPercentage((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setTimeout(async () => {
-            try {
-              const res = await fetch(`/api/protected/clients/${selectedClient._id}/documents`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  name: fileName,
-                  category: fileCat,
-                  url: `https://syncgrid-vault.s3.amazonaws.com/clients/${selectedClient._id}/${fileName}.pdf`,
-                  size: 2048576,
-                }),
-              });
-              const d = await res.json();
-              if (d.success) {
-                setSelectedClient(d.data);
-                fetchClients();
-                setFileName('');
-                toast.success('Secure PDF document appended to ledger!');
-              } else {
-                toast.error(d.message || 'File validation mismatch.');
-              }
-            } catch (err) {
-              toast.error('Upload sync error.');
-            } finally {
-              setUploadPercentage(-1);
-            }
-          }, 300);
-          return 100;
-        }
-        return prev + 25;
+    try {
+      const res = await fetch(`/api/protected/clients/${selectedClient._id}/documents`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: fileName,
+          category: fileCat,
+          url: `https://syncgrid-vault.s3.amazonaws.com/clients/${selectedClient._id}/${fileName}.pdf`,
+          size: 2048576,
+        }),
       });
-    }, 150);
+      const d = await res.json();
+      if (d.success) {
+        setSelectedClient(d.data);
+        fetchClients();
+        setFileName('');
+        toast.success('Secure PDF document appended to ledger!');
+      } else {
+        toast.error(d.message || 'File validation mismatch.');
+      }
+    } catch (err) {
+      toast.error('Upload sync error.');
+    } finally {
+      setUploadPercentage(-1);
+    }
   };
 
   // Transaction Merge execution
@@ -479,7 +473,7 @@ export const ClientDetailDrawer: React.FC = () => {
   const handleNoteKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (!showMentions) return;
 
-    const filtered = AVAILABLE_MANAGERS.filter((m) =>
+    const filtered = availableManagers.filter((m) =>
       m.toLowerCase().includes(mentionQuery.toLowerCase())
     );
 

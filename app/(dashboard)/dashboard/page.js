@@ -80,25 +80,46 @@ export default function DashboardPage() {
     }
   }, [session]);
 
-  // Load analytics instantly via micro-timeout (eliminating 450ms delay and satisfying ESLint)
+  // Load analytics
   useEffect(() => {
-    const timer = setTimeout(() => {
-      const data = getAnalyticsData(dateFilter.range, dateFilter.startDate, dateFilter.endDate);
-      setAnalyticsData(data);
-      setIsLoading(false);
-    }, 5); // Near-instant 5ms micro-task to satisfy react-hooks/set-state-in-effect
-    return () => clearTimeout(timer);
+    let active = true;
+    const loadData = async () => {
+      try {
+        const data = await getAnalyticsData(
+          dateFilter.range,
+          dateFilter.startDate,
+          dateFilter.endDate
+        );
+        if (active) {
+          setAnalyticsData(data);
+          setIsLoading(false);
+        }
+      } catch (err) {
+        console.error(err);
+        if (active) setIsLoading(false);
+      }
+    };
+    loadData();
+    return () => {
+      active = false;
+    };
   }, [dateFilter]);
 
-  const handleRefreshAll = () => {
+  const handleRefreshAll = async () => {
     setIsLoading(true);
     toast.success('Syncing fresh metrics from server database...');
-    const timer = setTimeout(() => {
-      const data = getAnalyticsData(dateFilter.range, dateFilter.startDate, dateFilter.endDate);
+    try {
+      const data = await getAnalyticsData(
+        dateFilter.range,
+        dateFilter.startDate,
+        dateFilter.endDate
+      );
       setAnalyticsData(data);
+    } catch (error) {
+      toast.error('Failed to sync metrics');
+    } finally {
       setIsLoading(false);
-    }, 30); // Minimal 30ms micro-delay for active visual feedback
-    return () => clearTimeout(timer);
+    }
   };
 
   const handleRoleChange = (role) => {
