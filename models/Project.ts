@@ -264,6 +264,7 @@ const ProjectSchema = new Schema(
 ProjectSchema.index({ companyId: 1, isArchived: 1 });
 ProjectSchema.index({ companyId: 1, status: 1 });
 ProjectSchema.index({ companyId: 1, projectManager: 1 });
+ProjectSchema.index({ companyId: 1, 'teamMembers.userName': 1 }); // Fixes missing index on Tasks API queries
 ProjectSchema.index({ companyId: 1, priority: 1 });
 ProjectSchema.index({ companyId: 1, riskLevel: 1 });
 ProjectSchema.index({ companyId: 1, clientId: 1 });

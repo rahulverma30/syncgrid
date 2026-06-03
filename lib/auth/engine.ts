@@ -166,11 +166,21 @@ export async function can(
   const normalizedAction = action.toLowerCase();
 
   // 2. DENY OVERRIDES: Check dynamic AuthorizationPolicies for matching deny rules
-  const policies = await AuthorizationPolicy.find({
-    $or: [{ companyId: null }, { companyId }],
-    resource: normalizedResource,
-    enabled: true,
-  }).sort({ priority: 1 }); // Evaluate higher priority policies first
+  const policyCacheKey = `policies:${companyId}:${normalizedResource}`;
+  let policies: any[] = [];
+  const cachedPolicies = permissionCache.get(policyCacheKey);
+  if (cachedPolicies && Date.now() < cachedPolicies.expiresAt) {
+    policies = cachedPolicies.policies as any[];
+  } else {
+    policies = await AuthorizationPolicy.find({
+      $or: [{ companyId: null }, { companyId }],
+      resource: normalizedResource,
+      enabled: true,
+    })
+      .sort({ priority: 1 })
+      .lean(); // Added lean() for performance
+    permissionCache.set(policyCacheKey, { policies, expiresAt: Date.now() + CACHE_TTL_MS } as any);
+  }
 
   for (const policy of policies) {
     const isActionMatch = policy.actions.includes('*') || policy.actions.includes(normalizedAction);
@@ -189,11 +199,20 @@ export async function can(
         }
       }
 
+      // Memoize userAssignments to prevent N+1 query loops
+      let userAssignments: any[] | null = null;
+      const getUserAssignments = async () => {
+        if (!userAssignments) {
+          userAssignments = await RoleAssignment.find({ userId, companyId }).lean();
+        }
+        return userAssignments;
+      };
+
       // Department Match check
       if (conditions.departmentMatch) {
         const targetDeptId = contextData.departmentId?.toString();
-        const userAssignments = await RoleAssignment.find({ userId, companyId });
-        const hasDeptAssignment = userAssignments.some(
+        const assignments = await getUserAssignments();
+        const hasDeptAssignment = assignments.some(
           (a) => a.departmentId?.toString() === targetDeptId
         );
         if (!hasDeptAssignment) {
@@ -204,8 +223,8 @@ export async function can(
       // Workspace Match check
       if (conditions.workspaceMatch) {
         const targetWorkspaceId = contextData.workspaceId?.toString();
-        const userAssignments = await RoleAssignment.find({ userId, companyId });
-        const hasWorkspaceAssignment = userAssignments.some(
+        const assignments = await getUserAssignments();
+        const hasWorkspaceAssignment = assignments.some(
           (a) => a.workspaceId?.toString() === targetWorkspaceId
         );
         if (!hasWorkspaceAssignment) {
