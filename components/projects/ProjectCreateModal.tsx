@@ -152,7 +152,7 @@ export const ProjectCreateModal: React.FC = () => {
       onClose={() => setCreateModalOpen(false)}
       title="Initialize Project"
       description="Set up a new project with budget, timeline, and team allocation parameters."
-      size="lg"
+      className="max-w-2xl"
     >
       {/* Visual Templates Selector */}
       <div className="space-y-1.5 border-b border-border/40 pb-3 mb-3 select-none">

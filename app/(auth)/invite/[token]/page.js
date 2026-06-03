@@ -122,19 +122,16 @@ export default function InvitePage({ params }) {
 
   if (errorMsg) {
     return (
-      <Card className="border-red-500/20 bg-slate-950/20">
+      <Card className="border-destructive/20 bg-destructive/5">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-2">
-            <ShieldAlert className="w-12 h-12 text-red-500 animate-pulse" />
+            <ShieldAlert className="w-12 h-12 text-destructive animate-pulse" />
           </div>
-          <CardTitle className="text-red-400">Invitation Invalid</CardTitle>
-          <CardDescription className="text-slate-400 leading-normal">{errorMsg}</CardDescription>
+          <CardTitle className="text-destructive">Invitation Invalid</CardTitle>
+          <CardDescription>{errorMsg}</CardDescription>
         </CardHeader>
         <CardContent className="flex justify-center">
-          <Button
-            onClick={() => router.push('/login')}
-            className="bg-slate-900 border border-slate-800 hover:bg-slate-850 px-6 py-2.5 text-xs text-white"
-          >
+          <Button onClick={() => router.push('/login')} variant="outline" className="px-6 py-2.5">
             Go to Login
           </Button>
         </CardContent>
@@ -143,7 +140,7 @@ export default function InvitePage({ params }) {
   }
 
   return (
-    <Card className="border-slate-800 bg-slate-900/40 backdrop-blur-md">
+    <Card>
       <CardHeader>
         <div className="flex items-center gap-2 mb-1">
           <CheckCircle2 className="w-5 h-5 text-emerald-500" />
@@ -154,67 +151,47 @@ export default function InvitePage({ params }) {
         <CardTitle>Welcome to {inviteData?.companyName}</CardTitle>
         <CardDescription>
           Complete your credentials below to active your corporate account as{' '}
-          <strong className="text-white">{inviteData?.email}</strong>.
+          <strong className="text-foreground">{inviteData?.email}</strong>.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
-              Full Corporate Name
-            </label>
-            <input
-              type="text"
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Your full name"
-              className="w-full bg-slate-950/80 border border-slate-800 px-4 py-2.5 rounded-xl text-xs text-white outline-none focus:border-blue-500/50"
-            />
-          </div>
+          <Input
+            name="name"
+            label="Full Corporate Name"
+            type="text"
+            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Your full name"
+          />
 
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
-              Choose Password
-            </label>
-            <div className="relative">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Minimum 8 characters"
-                className="w-full bg-slate-950/80 border border-slate-800 px-4 py-2.5 pr-10 rounded-xl text-xs text-white outline-none focus:border-blue-500/50"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute top-1/2 right-3 -translate-y-1/2 text-slate-400 hover:text-white"
-              >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
-            </div>
-          </div>
+          <Input
+            name="password"
+            label="Choose Password"
+            type={showPassword ? 'text' : 'password'}
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Minimum 8 characters"
+            icon={showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            iconPosition="right"
+            iconButton
+            iconButtonAriaLabel={showPassword ? 'Hide password' : 'Show password'}
+            onIconClick={() => setShowPassword((visible) => !visible)}
+          />
 
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
-              Confirm Password
-            </label>
-            <input
-              type="password"
-              required
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Repeat your password"
-              className="w-full bg-slate-950/80 border border-slate-800 px-4 py-2.5 rounded-xl text-xs text-white outline-none focus:border-blue-500/50"
-            />
-          </div>
+          <Input
+            name="confirmPassword"
+            label="Confirm Password"
+            type="password"
+            required
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="Repeat your password"
+          />
 
-          <Button
-            type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 mt-2"
-            isLoading={isSubmitting}
-          >
+          <Button type="submit" className="w-full mt-2" isLoading={isSubmitting}>
             Accept & Launch Dashboard
           </Button>
         </form>

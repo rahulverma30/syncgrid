@@ -45,16 +45,16 @@ export function hasPermission(permissions: string[] = [], resource: string, acti
  * Check if user has any of the specified roles
  */
 export function hasRole(roles: string[] = [], allowedRoles: string[]) {
-  const normalizedRoles = roles.map((role) => role.toLowerCase());
-  return allowedRoles.some((role) => normalizedRoles.includes(role.toLowerCase()));
+  const normalizedRoles = roles.map((role) => slugifyRole(role));
+  return allowedRoles.some((role) => normalizedRoles.includes(slugifyRole(role)));
 }
 
 /**
  * Check if user has all of the specified roles
  */
 export function hasAllRoles(roles: string[] = [], requiredRoles: string[]) {
-  const normalizedRoles = roles.map((role) => role.toLowerCase());
-  return requiredRoles.every((role) => normalizedRoles.includes(role.toLowerCase()));
+  const normalizedRoles = roles.map((role) => slugifyRole(role));
+  return requiredRoles.every((role) => normalizedRoles.includes(slugifyRole(role)));
 }
 
 /**
