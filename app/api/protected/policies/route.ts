@@ -20,7 +20,10 @@ export const GET = withApiPermission(
 
       return NextResponse.json({ success: true, data: policies });
     } catch (error: any) {
-      return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+      return NextResponse.json(
+        { success: false, error: 'API_ERROR', message: error.message },
+        { status: 500 }
+      );
     }
   }
 );
@@ -45,14 +48,14 @@ export const POST = withApiPermission(
         const existing = await AuthorizationPolicy.findById(policyId);
         if (!existing) {
           return NextResponse.json(
-            { success: false, message: 'Policy not found' },
+            { success: false, error: 'API_ERROR', message: 'Policy not found' },
             { status: 404 }
           );
         }
 
         if (existing.companyId && existing.companyId.toString() !== companyId.toString()) {
           return NextResponse.json(
-            { success: false, message: 'Unauthorized policy mutation' },
+            { success: false, error: 'API_ERROR', message: 'Unauthorized policy mutation' },
             { status: 403 }
           );
         }
@@ -120,7 +123,11 @@ export const POST = withApiPermission(
       } else {
         if (!name || !resource || !actions || actions.length === 0) {
           return NextResponse.json(
-            { success: false, message: 'name, resource, and actions are required parameters' },
+            {
+              success: false,
+              error: 'API_ERROR',
+              message: 'name, resource, and actions are required parameters',
+            },
             { status: 400 }
           );
         }
@@ -153,7 +160,10 @@ export const POST = withApiPermission(
         return NextResponse.json({ success: true, data: newPolicy }, { status: 201 });
       }
     } catch (error: any) {
-      return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+      return NextResponse.json(
+        { success: false, error: 'API_ERROR', message: error.message },
+        { status: 500 }
+      );
     }
   }
 );

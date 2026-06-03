@@ -37,7 +37,7 @@ export function AutomationRules() {
     fetchRules();
 
     // Fetch team users
-    fetch('/api/protected/team')
+    fetch('/api/protected/team/members')
       .then((res) => res.json())
       .then((result) => {
         if (result.success) setUsers(result.data);

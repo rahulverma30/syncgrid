@@ -74,6 +74,9 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     return NextResponse.json({ success: true, data: rankedResults });
   } catch (error: any) {
     logger.error('Failed to perform search query:', error, { companyId: session?.user?.companyId });
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'API_ERROR', message: error.message },
+      { status: 500 }
+    );
   }
 });

@@ -17,6 +17,9 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
 
     return NextResponse.json({ success: true, data: roles });
   } catch (error: any) {
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'API_ERROR', message: error.message },
+      { status: 500 }
+    );
   }
 });

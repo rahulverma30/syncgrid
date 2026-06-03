@@ -13,7 +13,11 @@ export async function GET(request: Request) {
     const limitResult = await rateLimit(`rate:invite-verify:${ip}`, 10, 15 * 60 * 1000); // 10 verifications / 15 mins
     if (!limitResult.success) {
       return NextResponse.json(
-        { success: false, message: 'Too many verification attempts. Please try again later.' },
+        {
+          success: false,
+          error: 'API_ERROR',
+          message: 'Too many verification attempts. Please try again later.',
+        },
         { status: 429 }
       );
     }
@@ -24,7 +28,7 @@ export async function GET(request: Request) {
 
     if (!token) {
       return NextResponse.json(
-        { success: false, message: 'Invitation token is required' },
+        { success: false, error: 'API_ERROR', message: 'Invitation token is required' },
         { status: 400 }
       );
     }
@@ -33,7 +37,7 @@ export async function GET(request: Request) {
 
     if (!invitation) {
       return NextResponse.json(
-        { success: false, message: 'Invalid or expired invitation token.' },
+        { success: false, error: 'API_ERROR', message: 'Invalid or expired invitation token.' },
         { status: 404 }
       );
     }
@@ -42,7 +46,7 @@ export async function GET(request: Request) {
       invitation.status = 'expired';
       await invitation.save();
       return NextResponse.json(
-        { success: false, message: 'This invitation has expired.' },
+        { success: false, error: 'API_ERROR', message: 'This invitation has expired.' },
         { status: 410 }
       );
     }
@@ -59,7 +63,10 @@ export async function GET(request: Request) {
       },
     });
   } catch (error: any) {
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'API_ERROR', message: error.message },
+      { status: 500 }
+    );
   }
 }
 
@@ -71,7 +78,11 @@ export async function POST(request: Request) {
     const limitResult = await rateLimit(`rate:invite-accept:${ip}`, 5, 15 * 60 * 1000); // 5 attempts / 15 mins
     if (!limitResult.success) {
       return NextResponse.json(
-        { success: false, message: 'Too many onboarding attempts. Please try again later.' },
+        {
+          success: false,
+          error: 'API_ERROR',
+          message: 'Too many onboarding attempts. Please try again later.',
+        },
         { status: 429 }
       );
     }
@@ -82,7 +93,7 @@ export async function POST(request: Request) {
 
     if (!token || !name || !password) {
       return NextResponse.json(
-        { success: false, message: 'All fields are required' },
+        { success: false, error: 'API_ERROR', message: 'All fields are required' },
         { status: 400 }
       );
     }
@@ -91,7 +102,7 @@ export async function POST(request: Request) {
 
     if (!invitation) {
       return NextResponse.json(
-        { success: false, message: 'Invalid or expired invitation token' },
+        { success: false, error: 'API_ERROR', message: 'Invalid or expired invitation token' },
         { status: 404 }
       );
     }
@@ -100,7 +111,7 @@ export async function POST(request: Request) {
       invitation.status = 'expired';
       await invitation.save();
       return NextResponse.json(
-        { success: false, message: 'This invitation has expired' },
+        { success: false, error: 'API_ERROR', message: 'This invitation has expired' },
         { status: 410 }
       );
     }
@@ -109,7 +120,7 @@ export async function POST(request: Request) {
     const existingUser = await User.findOne({ email: invitation.email });
     if (existingUser) {
       return NextResponse.json(
-        { success: false, message: 'A user with this email already exists' },
+        { success: false, error: 'API_ERROR', message: 'A user with this email already exists' },
         { status: 409 }
       );
     }
@@ -172,6 +183,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, message: 'Invitation accepted successfully' });
   } catch (error: any) {
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'API_ERROR', message: error.message },
+      { status: 500 }
+    );
   }
 }

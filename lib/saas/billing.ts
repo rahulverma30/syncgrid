@@ -93,29 +93,8 @@ export class EnterpriseBillingEngine {
     };
   }
 
-  /**
-   * Generates mock invoice lists
-   */
   static getInvoiceLog(companyId: string, planPrice: number, seatsCount: number) {
-    const totalAmount = planPrice + (seatsCount - 1) * 10;
-    return [
-      {
-        id: 'INV-2026-9041',
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30),
-        amount: totalAmount,
-        seats: seatsCount,
-        status: 'paid',
-        downloadUrl: `/api/saas/billing/invoice?id=INV-2026-9041&company=${companyId}`,
-      },
-      {
-        id: 'INV-2026-8794',
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 60),
-        amount: totalAmount,
-        seats: seatsCount,
-        status: 'paid',
-        downloadUrl: `/api/saas/billing/invoice?id=INV-2026-8794&company=${companyId}`,
-      },
-    ];
+    return [];
   }
 
   /**

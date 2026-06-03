@@ -19,12 +19,18 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
 
     const { content, reason } = body;
     if (!content) {
-      return NextResponse.json({ success: false, message: 'Content required' }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: 'API_ERROR', message: 'Content required' },
+        { status: 400 }
+      );
     }
 
     const message = await Message.findOne({ _id: messageId, companyId });
     if (!message) {
-      return NextResponse.json({ success: false, message: 'Message not found' }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: 'API_ERROR', message: 'Message not found' },
+        { status: 404 }
+      );
     }
 
     // Role-Aware Moderation bypass
@@ -32,7 +38,10 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
     const isModerator = hasRole(roles, ['Super Admin', 'Admin']);
 
     if (!isOwner && !isModerator) {
-      return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 });
+      return NextResponse.json(
+        { success: false, error: 'API_ERROR', message: 'Forbidden' },
+        { status: 403 }
+      );
     }
 
     const oldContent = message.content;
@@ -74,7 +83,10 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
     return NextResponse.json({ success: true, data: populated });
   } catch (error: any) {
     logger.error('Failed to update message:', error, { companyId: session?.user?.companyId });
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'API_ERROR', message: error.message },
+      { status: 500 }
+    );
   }
 });
 
@@ -89,7 +101,10 @@ export const DELETE = withApiAuth(async (request: Request, context: any, session
 
     const message = await Message.findOne({ _id: messageId, companyId });
     if (!message) {
-      return NextResponse.json({ success: false, message: 'Message not found' }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: 'API_ERROR', message: 'Message not found' },
+        { status: 404 }
+      );
     }
 
     // Role-Aware Moderation bypass
@@ -97,7 +112,10 @@ export const DELETE = withApiAuth(async (request: Request, context: any, session
     const isModerator = hasRole(roles, ['Super Admin', 'Admin']);
 
     if (!isOwner && !isModerator) {
-      return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 });
+      return NextResponse.json(
+        { success: false, error: 'API_ERROR', message: 'Forbidden' },
+        { status: 403 }
+      );
     }
 
     // Soft delete to protect thread continuity
@@ -137,6 +155,9 @@ export const DELETE = withApiAuth(async (request: Request, context: any, session
     return NextResponse.json({ success: true, message: 'Message deleted successfully' });
   } catch (error: any) {
     logger.error('Failed message deletion:', error, { companyId: session?.user?.companyId });
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'API_ERROR', message: error.message },
+      { status: 500 }
+    );
   }
 });

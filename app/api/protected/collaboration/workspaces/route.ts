@@ -11,7 +11,10 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     const list = await Workspace.find({ companyId, isActive: true }).sort({ name: 1 }).lean();
     return NextResponse.json({ success: true, data: list });
   } catch (error: any) {
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'API_ERROR', message: error.message },
+      { status: 500 }
+    );
   }
 });
 
@@ -24,7 +27,10 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
 
     const { name, description } = body;
     if (!name) {
-      return NextResponse.json({ success: false, message: 'Name is required' }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: 'API_ERROR', message: 'Name is required' },
+        { status: 400 }
+      );
     }
 
     const created = new Workspace({
@@ -37,6 +43,9 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     await created.save();
     return NextResponse.json({ success: true, data: created });
   } catch (error: any) {
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'API_ERROR', message: error.message },
+      { status: 500 }
+    );
   }
 });

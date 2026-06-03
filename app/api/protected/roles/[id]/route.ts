@@ -22,7 +22,11 @@ export const PUT = withApiPermission(
       const role = await Role.findOne({ _id: id, companyId });
       if (!role) {
         return NextResponse.json(
-          { success: false, message: 'Custom role not found or belongs to another organization.' },
+          {
+            success: false,
+            error: 'API_ERROR',
+            message: 'Custom role not found or belongs to another organization.',
+          },
           { status: 404 }
         );
       }
@@ -31,6 +35,7 @@ export const PUT = withApiPermission(
         return NextResponse.json(
           {
             success: false,
+            error: 'API_ERROR',
             message: 'System role parameters are read-only and cannot be mutated.',
           },
           { status: 400 }
@@ -80,7 +85,10 @@ export const PUT = withApiPermission(
 
       return NextResponse.json({ success: true, data: role });
     } catch (error: any) {
-      return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+      return NextResponse.json(
+        { success: false, error: 'API_ERROR', message: error.message },
+        { status: 500 }
+      );
     }
   }
 );
@@ -102,12 +110,19 @@ export const DELETE = withApiPermission(
 
       const role = await Role.findOne({ _id: id, companyId });
       if (!role) {
-        return NextResponse.json({ success: false, message: 'Role not found.' }, { status: 404 });
+        return NextResponse.json(
+          { success: false, error: 'API_ERROR', message: 'Role not found.' },
+          { status: 404 }
+        );
       }
 
       if (role.isSystem || role.isSystemRole) {
         return NextResponse.json(
-          { success: false, message: 'System-wide roles are immutable and cannot be deleted.' },
+          {
+            success: false,
+            error: 'API_ERROR',
+            message: 'System-wide roles are immutable and cannot be deleted.',
+          },
           { status: 400 }
         );
       }
@@ -122,6 +137,7 @@ export const DELETE = withApiPermission(
         return NextResponse.json(
           {
             success: false,
+            error: 'API_ERROR',
             message: `Cannot delete role. It is currently active and assigned to ${assignedUsersCount + assignedAssignmentsCount} team members.`,
           },
           { status: 409 }
@@ -145,7 +161,10 @@ export const DELETE = withApiPermission(
 
       return NextResponse.json({ success: true, message: 'Custom role removed successfully.' });
     } catch (error: any) {
-      return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+      return NextResponse.json(
+        { success: false, error: 'API_ERROR', message: error.message },
+        { status: 500 }
+      );
     }
   }
 );

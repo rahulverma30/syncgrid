@@ -20,7 +20,7 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
 
     if (!channelId && !conversationId) {
       return NextResponse.json(
-        { success: false, message: 'channelId or conversationId required' },
+        { success: false, error: 'API_ERROR', message: 'channelId or conversationId required' },
         { status: 400 }
       );
     }
@@ -105,7 +105,10 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     });
   } catch (error: any) {
     logger.error('Failed messages retrieval:', error, { companyId: session?.user?.companyId });
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'API_ERROR', message: error.message },
+      { status: 500 }
+    );
   }
 });
 
@@ -119,7 +122,10 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
 
     const { channelId, conversationId, contentType, content, attachments } = body;
     if (!content) {
-      return NextResponse.json({ success: false, message: 'Content is required' }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: 'API_ERROR', message: 'Content is required' },
+        { status: 400 }
+      );
     }
 
     const created = new Message({
@@ -186,6 +192,9 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     logger.error('Failed to post collaboration message:', error, {
       companyId: session?.user?.companyId,
     });
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'API_ERROR', message: error.message },
+      { status: 500 }
+    );
   }
 });

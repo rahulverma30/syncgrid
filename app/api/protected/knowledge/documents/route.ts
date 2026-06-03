@@ -64,7 +64,10 @@ export const GET = withApiPermission(
       return NextResponse.json({ success: true, data: docs });
     } catch (error: any) {
       logger.error('Failed to load documents:', error, { companyId: session?.user?.companyId });
-      return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+      return NextResponse.json(
+        { success: false, error: 'API_ERROR', message: error.message },
+        { status: 500 }
+      );
     }
   }
 );
@@ -96,7 +99,11 @@ export const POST = withApiPermission(
 
       if (!spaceId || !title) {
         return NextResponse.json(
-          { success: false, message: 'Space ID and Document Title are required' },
+          {
+            success: false,
+            error: 'API_ERROR',
+            message: 'Space ID and Document Title are required',
+          },
           { status: 400 }
         );
       }
@@ -185,7 +192,10 @@ export const POST = withApiPermission(
       return NextResponse.json({ success: true, data: document });
     } catch (error: any) {
       logger.error('Failed to create document:', error, { companyId: session?.user?.companyId });
-      return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+      return NextResponse.json(
+        { success: false, error: 'API_ERROR', message: error.message },
+        { status: 500 }
+      );
     }
   }
 );

@@ -16,7 +16,10 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
       .select('_id')
       .lean();
     if (!document) {
-      return NextResponse.json({ success: false, message: 'Document not found' }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: 'API_ERROR', message: 'Document not found' },
+        { status: 404 }
+      );
     }
 
     const versions = await DocumentVersion.find({ documentId })
@@ -28,7 +31,10 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     return NextResponse.json({ success: true, data: versions });
   } catch (error: any) {
     logger.error('Failed to get versions:', error, { companyId: session?.user?.companyId });
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'API_ERROR', message: error.message },
+      { status: 500 }
+    );
   }
 });
 
@@ -43,20 +49,23 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     const { versionNumber } = body;
     if (!versionNumber) {
       return NextResponse.json(
-        { success: false, message: 'Version number to restore is required' },
+        { success: false, error: 'API_ERROR', message: 'Version number to restore is required' },
         { status: 400 }
       );
     }
 
     const document = await Document.findOne({ _id: documentId, companyId, deletedAt: null });
     if (!document) {
-      return NextResponse.json({ success: false, message: 'Document not found' }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: 'API_ERROR', message: 'Document not found' },
+        { status: 404 }
+      );
     }
 
     const version = await DocumentVersion.findOne({ documentId, versionNumber });
     if (!version) {
       return NextResponse.json(
-        { success: false, message: 'Specified version log not found' },
+        { success: false, error: 'API_ERROR', message: 'Specified version log not found' },
         { status: 404 }
       );
     }
@@ -110,6 +119,9 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     return NextResponse.json({ success: true, data: updatedDocument, checkpoint: newCheckpoint });
   } catch (error: any) {
     logger.error('Failed to rollback document:', error, { companyId: session?.user?.companyId });
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'API_ERROR', message: error.message },
+      { status: 500 }
+    );
   }
 });

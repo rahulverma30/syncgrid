@@ -33,7 +33,10 @@ export const GET = withApiPermission(
       return NextResponse.json({ success: true, data: spaces });
     } catch (error: any) {
       logger.error('Failed to load wiki spaces:', error, { companyId: session?.user?.companyId });
-      return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+      return NextResponse.json(
+        { success: false, error: 'API_ERROR', message: error.message },
+        { status: 500 }
+      );
     }
   }
 );
@@ -51,7 +54,7 @@ export const POST = withApiPermission(
       const { name, icon, description, visibility, tags } = body;
       if (!name) {
         return NextResponse.json(
-          { success: false, message: 'Space name required' },
+          { success: false, error: 'API_ERROR', message: 'Space name required' },
           { status: 400 }
         );
       }
@@ -65,7 +68,7 @@ export const POST = withApiPermission(
       const existing = await WikiSpace.findOne({ companyId, slug });
       if (existing) {
         return NextResponse.json(
-          { success: false, message: 'Space with similar name already exists' },
+          { success: false, error: 'API_ERROR', message: 'Space with similar name already exists' },
           { status: 400 }
         );
       }
@@ -105,7 +108,10 @@ export const POST = withApiPermission(
       return NextResponse.json({ success: true, data: space });
     } catch (error: any) {
       logger.error('Failed to create wiki space:', error, { companyId: session?.user?.companyId });
-      return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+      return NextResponse.json(
+        { success: false, error: 'API_ERROR', message: error.message },
+        { status: 500 }
+      );
     }
   }
 );

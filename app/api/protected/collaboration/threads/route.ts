@@ -16,7 +16,7 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
 
     if (!parentMessageId) {
       return NextResponse.json(
-        { success: false, message: 'parentMessageId is required' },
+        { success: false, error: 'API_ERROR', message: 'parentMessageId is required' },
         { status: 400 }
       );
     }
@@ -32,7 +32,10 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     return NextResponse.json({ success: true, data: thread.replies });
   } catch (error: any) {
     logger.error('Failed to load thread replies:', error, { companyId: session?.user?.companyId });
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'API_ERROR', message: error.message },
+      { status: 500 }
+    );
   }
 });
 
@@ -45,7 +48,10 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
 
     const { parentMessageId, content, attachments } = body;
     if (!parentMessageId || !content) {
-      return NextResponse.json({ success: false, message: 'Missing parameters' }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: 'API_ERROR', message: 'Missing parameters' },
+        { status: 400 }
+      );
     }
 
     // 1. Locate or create thread definition
@@ -107,6 +113,9 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     return NextResponse.json({ success: true, data: latestReply });
   } catch (error: any) {
     logger.error('Failed to create thread reply:', error, { companyId: session?.user?.companyId });
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'API_ERROR', message: error.message },
+      { status: 500 }
+    );
   }
 });

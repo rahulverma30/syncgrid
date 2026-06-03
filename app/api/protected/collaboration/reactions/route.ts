@@ -15,7 +15,7 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     const { messageId, emoji } = body;
     if (!messageId || !emoji) {
       return NextResponse.json(
-        { success: false, message: 'messageId and emoji are required' },
+        { success: false, error: 'API_ERROR', message: 'messageId and emoji are required' },
         { status: 400 }
       );
     }
@@ -63,6 +63,9 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
 
     return NextResponse.json({ success: true, data: grouped });
   } catch (error: any) {
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'API_ERROR', message: error.message },
+      { status: 500 }
+    );
   }
 });

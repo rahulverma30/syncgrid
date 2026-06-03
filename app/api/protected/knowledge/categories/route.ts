@@ -13,7 +13,10 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     return NextResponse.json({ success: true, data: categories });
   } catch (error: any) {
     logger.error('Failed to load categories:', error, { companyId: session?.user?.companyId });
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'API_ERROR', message: error.message },
+      { status: 500 }
+    );
   }
 });
 
@@ -26,7 +29,7 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     const { name, colorCode } = body;
     if (!name) {
       return NextResponse.json(
-        { success: false, message: 'Category name required' },
+        { success: false, error: 'API_ERROR', message: 'Category name required' },
         { status: 400 }
       );
     }
@@ -39,7 +42,7 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     const existing = await KnowledgeCategory.findOne({ companyId, slug });
     if (existing) {
       return NextResponse.json(
-        { success: false, message: 'Category already exists' },
+        { success: false, error: 'API_ERROR', message: 'Category already exists' },
         { status: 400 }
       );
     }
@@ -58,6 +61,9 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     return NextResponse.json({ success: true, data: category });
   } catch (error: any) {
     logger.error('Failed to create category:', error, { companyId: session?.user?.companyId });
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'API_ERROR', message: error.message },
+      { status: 500 }
+    );
   }
 });

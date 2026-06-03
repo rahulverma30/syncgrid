@@ -22,7 +22,10 @@ export const GET = withApiPermission(
 
       return NextResponse.json({ success: true, data: roles });
     } catch (error: any) {
-      return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+      return NextResponse.json(
+        { success: false, error: 'API_ERROR', message: error.message },
+        { status: 500 }
+      );
     }
   }
 );
@@ -45,7 +48,7 @@ export const POST = withApiPermission(
 
       if (!name) {
         return NextResponse.json(
-          { success: false, message: 'Role name is required' },
+          { success: false, error: 'API_ERROR', message: 'Role name is required' },
           { status: 400 }
         );
       }
@@ -55,7 +58,11 @@ export const POST = withApiPermission(
       const existing = await Role.findOne({ slug, $or: [{ companyId: null }, { companyId }] });
       if (existing) {
         return NextResponse.json(
-          { success: false, message: 'A role with this name or slug already exists.' },
+          {
+            success: false,
+            error: 'API_ERROR',
+            message: 'A role with this name or slug already exists.',
+          },
           { status: 409 }
         );
       }
@@ -89,7 +96,10 @@ export const POST = withApiPermission(
 
       return NextResponse.json({ success: true, data: newRole }, { status: 201 });
     } catch (error: any) {
-      return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+      return NextResponse.json(
+        { success: false, error: 'API_ERROR', message: error.message },
+        { status: 500 }
+      );
     }
   }
 );

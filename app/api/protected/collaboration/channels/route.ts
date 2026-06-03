@@ -16,7 +16,7 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
 
     if (!workspaceId) {
       return NextResponse.json(
-        { success: false, message: 'workspaceId is required' },
+        { success: false, error: 'API_ERROR', message: 'workspaceId is required' },
         { status: 400 }
       );
     }
@@ -37,7 +37,10 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     const list = await Channel.find(query).sort({ name: 1 }).lean();
     return NextResponse.json({ success: true, data: list });
   } catch (error: any) {
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'API_ERROR', message: error.message },
+      { status: 500 }
+    );
   }
 });
 
@@ -50,7 +53,10 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
 
     const { name, type, description, workspaceId, projectId, departmentId } = body;
     if (!name || !type || !workspaceId) {
-      return NextResponse.json({ success: false, message: 'Missing parameters' }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: 'API_ERROR', message: 'Missing parameters' },
+        { status: 400 }
+      );
     }
 
     const created = new Channel({
@@ -67,6 +73,9 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     await created.save();
     return NextResponse.json({ success: true, data: created });
   } catch (error: any) {
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'API_ERROR', message: error.message },
+      { status: 500 }
+    );
   }
 });

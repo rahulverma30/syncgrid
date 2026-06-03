@@ -11,7 +11,8 @@
     "lint": "eslint . --fix",
     "lint:check": "eslint .",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md,css}\"",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "verify-apis": "node scripts/audit_apis.js"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [

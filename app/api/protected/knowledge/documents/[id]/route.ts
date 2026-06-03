@@ -18,7 +18,10 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
       .lean();
 
     if (!document) {
-      return NextResponse.json({ success: false, message: 'Document not found' }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: 'API_ERROR', message: 'Document not found' },
+        { status: 404 }
+      );
     }
 
     // RBAC and visibility checks
@@ -29,7 +32,7 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
 
     if (document.visibility === 'private' && !isOwner && !isAdmin) {
       return NextResponse.json(
-        { success: false, message: 'Access denied to private document' },
+        { success: false, error: 'API_ERROR', message: 'Access denied to private document' },
         { status: 403 }
       );
     }
@@ -37,7 +40,10 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     return NextResponse.json({ success: true, data: document });
   } catch (error: any) {
     logger.error('Failed to get document detail:', error, { companyId: session?.user?.companyId });
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'API_ERROR', message: error.message },
+      { status: 500 }
+    );
   }
 });
 
@@ -51,7 +57,10 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
 
     const document = await Document.findOne({ _id: documentId, companyId, deletedAt: null });
     if (!document) {
-      return NextResponse.json({ success: false, message: 'Document not found' }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: 'API_ERROR', message: 'Document not found' },
+        { status: 404 }
+      );
     }
 
     const {
@@ -76,7 +85,7 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
 
     if (document.visibility === 'private' && !isOwner && !isAdmin) {
       return NextResponse.json(
-        { success: false, message: 'Unauthorized modification' },
+        { success: false, error: 'API_ERROR', message: 'Unauthorized modification' },
         { status: 403 }
       );
     }
@@ -104,7 +113,7 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
     if (parentDocumentId !== undefined) {
       if (parentDocumentId === documentId) {
         return NextResponse.json(
-          { success: false, message: 'A page cannot be its own parent.' },
+          { success: false, error: 'API_ERROR', message: 'A page cannot be its own parent.' },
           { status: 400 }
         );
       }
@@ -114,7 +123,11 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
         while (currentParentId) {
           if (seenIds.has(currentParentId)) {
             return NextResponse.json(
-              { success: false, message: 'Circular parent page reference detected.' },
+              {
+                success: false,
+                error: 'API_ERROR',
+                message: 'Circular parent page reference detected.',
+              },
               { status: 400 }
             );
           }
@@ -185,7 +198,10 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
     return NextResponse.json({ success: true, data: updatedDocument });
   } catch (error: any) {
     logger.error('Failed to update document:', error, { companyId: session?.user?.companyId });
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'API_ERROR', message: error.message },
+      { status: 500 }
+    );
   }
 });
 
@@ -198,7 +214,10 @@ export const DELETE = withApiAuth(async (request: Request, context: any, session
 
     const document = await Document.findOne({ _id: documentId, companyId, deletedAt: null });
     if (!document) {
-      return NextResponse.json({ success: false, message: 'Document not found' }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: 'API_ERROR', message: 'Document not found' },
+        { status: 404 }
+      );
     }
 
     // RBAC delete authorization check
@@ -208,7 +227,7 @@ export const DELETE = withApiAuth(async (request: Request, context: any, session
 
     if (!isOwner && !isAdmin) {
       return NextResponse.json(
-        { success: false, message: 'Delete access denied' },
+        { success: false, error: 'API_ERROR', message: 'Delete access denied' },
         { status: 403 }
       );
     }
@@ -260,6 +279,9 @@ export const DELETE = withApiAuth(async (request: Request, context: any, session
     });
   } catch (error: any) {
     logger.error('Failed to soft delete document:', error, { companyId: session?.user?.companyId });
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'API_ERROR', message: error.message },
+      { status: 500 }
+    );
   }
 });

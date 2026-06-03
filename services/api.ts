@@ -70,6 +70,4 @@ class ApiService {
 
 export const apiService = new ApiService();
 
-// Example usage in components:
-// const { data } = await apiService.get('/api/contacts');
-// const response = await apiService.post('/api/contacts', contactData);
+// End of api.ts

@@ -92,6 +92,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Enforce JSON responses for all /api/ routes if they encounter an error or redirect
+  // Wait, middleware can't intercept the response of the Next.js App router easily, but it can ensure we don't redirect in middleware.
   return NextResponse.next();
 }
 

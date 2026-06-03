@@ -10,7 +10,11 @@ export async function PUT(request: Request) {
 
     if (!token) {
       return NextResponse.json(
-        { success: false, message: 'Token authentication failed: parameters missing' },
+        {
+          success: false,
+          error: 'API_ERROR',
+          message: 'Token authentication failed: parameters missing',
+        },
         { status: 400 }
       );
     }
@@ -23,7 +27,11 @@ export async function PUT(request: Request) {
       const lastDot = decodedStr.lastIndexOf('.');
       if (lastDot === -1) {
         return NextResponse.json(
-          { success: false, message: 'Token authentication failed: signature missing' },
+          {
+            success: false,
+            error: 'API_ERROR',
+            message: 'Token authentication failed: signature missing',
+          },
           { status: 400 }
         );
       }
@@ -51,7 +59,7 @@ export async function PUT(request: Request) {
       tokenData = JSON.parse(payloadStr);
     } catch (err) {
       return NextResponse.json(
-        { success: false, message: 'Token authentication failed: parse error' },
+        { success: false, error: 'API_ERROR', message: 'Token authentication failed: parse error' },
         { status: 400 }
       );
     }
@@ -60,7 +68,11 @@ export async function PUT(request: Request) {
 
     if (!key || !expiresAt) {
       return NextResponse.json(
-        { success: false, message: 'Token authentication failed: corrupt parameters' },
+        {
+          success: false,
+          error: 'API_ERROR',
+          message: 'Token authentication failed: corrupt parameters',
+        },
         { status: 400 }
       );
     }
@@ -105,6 +117,9 @@ export async function PUT(request: Request) {
       message: 'Binary successfully written to disk emulator.',
     });
   } catch (error: any) {
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'API_ERROR', message: error.message },
+      { status: 500 }
+    );
   }
 }

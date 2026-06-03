@@ -59,19 +59,27 @@ export class WebhookDeliveryEngine {
       // 1. Compute secure signature header
       const signature = crypto.createHmac('sha256', secret).update(payload).digest('hex');
 
-      // 2. Execute simulated HTTP POST request
-      // We will perform a mock delivery with random latency (50ms - 250ms) to ensure NextJS sandbox is fully offline-ready and robust
       const startTime = Date.now();
-      await new Promise((resolve) => setTimeout(resolve, Math.floor(Math.random() * 200 + 50)));
+      let isSuccess = false;
+      let mockStatusCode = 500;
+      let mockResponse = '';
 
-      const successRatio = url.includes('invalid') ? 0 : 0.95; // Simulated failures if url contains invalid key
-      const isSuccess = Math.random() < successRatio;
-
-      const latency = Date.now() - startTime;
-      const mockStatusCode = isSuccess ? 200 : 503;
-      const mockResponse = isSuccess
-        ? `{"success":true,"deliveredAt":${Date.now()},"latencyMs":${latency}}`
-        : `{"error":"Service Unavailable","message":"Simulated connection timeout after ${latency}ms"}`;
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-syncgrid-signature': signature,
+          },
+          body: payload,
+        });
+        mockStatusCode = res.status;
+        mockResponse = await res.text();
+        isSuccess = res.ok;
+      } catch (fetchErr: any) {
+        mockStatusCode = 503;
+        mockResponse = fetchErr.message;
+      }
 
       await connectToDatabase();
 

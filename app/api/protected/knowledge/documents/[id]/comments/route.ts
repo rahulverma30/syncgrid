@@ -16,13 +16,19 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
       .lean();
 
     if (!document) {
-      return NextResponse.json({ success: false, message: 'Document not found' }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: 'API_ERROR', message: 'Document not found' },
+        { status: 404 }
+      );
     }
 
     return NextResponse.json({ success: true, data: document.comments || [] });
   } catch (error: any) {
     logger.error('Failed to get comments:', error, { companyId: session?.user?.companyId });
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'API_ERROR', message: error.message },
+      { status: 500 }
+    );
   }
 });
 
@@ -37,14 +43,17 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     const { content } = body;
     if (!content) {
       return NextResponse.json(
-        { success: false, message: 'Comment content is required' },
+        { success: false, error: 'API_ERROR', message: 'Comment content is required' },
         { status: 400 }
       );
     }
 
     const document = await Document.findOne({ _id: documentId, companyId, deletedAt: null });
     if (!document) {
-      return NextResponse.json({ success: false, message: 'Document not found' }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: 'API_ERROR', message: 'Document not found' },
+        { status: 404 }
+      );
     }
 
     const newComment = {
@@ -84,6 +93,9 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     return NextResponse.json({ success: true, data: updatedDocument.comments });
   } catch (error: any) {
     logger.error('Failed to add comment:', error, { companyId: session?.user?.companyId });
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'API_ERROR', message: error.message },
+      { status: 500 }
+    );
   }
 });

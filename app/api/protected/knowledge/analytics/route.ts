@@ -102,6 +102,9 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     });
   } catch (error: any) {
     logger.error('Failed to aggregate analytics:', error, { companyId: session?.user?.companyId });
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'API_ERROR', message: error.message },
+      { status: 500 }
+    );
   }
 });

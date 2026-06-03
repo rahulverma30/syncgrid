@@ -18,7 +18,10 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     // Verify the document exists and belongs to the company (multi-tenant security lock)
     const docExists = await Document.exists({ _id: documentId, companyId, deletedAt: null });
     if (!docExists) {
-      return NextResponse.json({ success: false, message: 'Document not found' }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: 'API_ERROR', message: 'Document not found' },
+        { status: 404 }
+      );
     }
 
     // Broadcast the cursor presence event
@@ -43,6 +46,9 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     logger.error('Failed to broadcast cursor presence:', error, {
       companyId: session?.user?.companyId,
     });
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'API_ERROR', message: error.message },
+      { status: 500 }
+    );
   }
 });

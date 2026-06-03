@@ -78,7 +78,7 @@ export function TaskCreateModal({ isOpen, onClose }: TaskCreateModalProps) {
       setSelectedProjectId(projectIdWatch);
 
       // Load users
-      fetch('/api/protected/team')
+      fetch('/api/protected/team/members')
         .then((res) => res.json())
         .then((result) => {
           if (result.success) {

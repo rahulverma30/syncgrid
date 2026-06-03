@@ -16,7 +16,10 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
 
     return NextResponse.json({ success: true, data: list });
   } catch (error: any) {
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'API_ERROR', message: error.message },
+      { status: 500 }
+    );
   }
 });
 
@@ -29,7 +32,10 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
 
     const { title, content, pinnedUntil } = body;
     if (!title || !content) {
-      return NextResponse.json({ success: false, message: 'Missing parameters' }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: 'API_ERROR', message: 'Missing parameters' },
+        { status: 400 }
+      );
     }
 
     const created = new Announcement({
@@ -67,7 +73,10 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
 
     return NextResponse.json({ success: true, data: populated });
   } catch (error: any) {
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'API_ERROR', message: error.message },
+      { status: 500 }
+    );
   }
 });
 
@@ -82,7 +91,7 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
     const { announcementId } = body;
     if (!announcementId) {
       return NextResponse.json(
-        { success: false, message: 'announcementId is required' },
+        { success: false, error: 'API_ERROR', message: 'announcementId is required' },
         { status: 400 }
       );
     }
@@ -90,7 +99,7 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
     const ann = await Announcement.findOne({ _id: announcementId, companyId });
     if (!ann) {
       return NextResponse.json(
-        { success: false, message: 'Announcement not found' },
+        { success: false, error: 'API_ERROR', message: 'Announcement not found' },
         { status: 404 }
       );
     }
@@ -102,6 +111,9 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
 
     return NextResponse.json({ success: true, data: ann });
   } catch (error: any) {
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'API_ERROR', message: error.message },
+      { status: 500 }
+    );
   }
 });

@@ -16,7 +16,10 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     return NextResponse.json({ success: true, data: progress });
   } catch (error: any) {
     logger.error('Failed to get reading progress:', error, { companyId: session?.user?.companyId });
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'API_ERROR', message: error.message },
+      { status: 500 }
+    );
   }
 });
 
@@ -29,7 +32,10 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
 
     const document = await Document.findOne({ _id: documentId, companyId, deletedAt: null });
     if (!document) {
-      return NextResponse.json({ success: false, message: 'Document not found' }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: 'API_ERROR', message: 'Document not found' },
+        { status: 404 }
+      );
     }
 
     const progress = await ReadingProgress.findOneAndUpdate(
@@ -73,6 +79,9 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     logger.error('Failed to update reading progress:', error, {
       companyId: session?.user?.companyId,
     });
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'API_ERROR', message: error.message },
+      { status: 500 }
+    );
   }
 });

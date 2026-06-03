@@ -14,7 +14,7 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
 
     if (!workspaceId) {
       return NextResponse.json(
-        { success: false, message: 'workspaceId is required' },
+        { success: false, error: 'API_ERROR', message: 'workspaceId is required' },
         { status: 400 }
       );
     }
@@ -26,7 +26,10 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
 
     return NextResponse.json({ success: true, data: list });
   } catch (error: any) {
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'API_ERROR', message: error.message },
+      { status: 500 }
+    );
   }
 });
 
@@ -40,7 +43,7 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     const { workspaceId, title, content, isPinned, noteId } = body;
     if (!workspaceId || !title) {
       return NextResponse.json(
-        { success: false, message: 'workspaceId and title are required' },
+        { success: false, error: 'API_ERROR', message: 'workspaceId and title are required' },
         { status: 400 }
       );
     }
@@ -49,7 +52,10 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     if (noteId) {
       note = await SharedNote.findOne({ _id: noteId, companyId });
       if (!note) {
-        return NextResponse.json({ success: false, message: 'Note not found' }, { status: 404 });
+        return NextResponse.json(
+          { success: false, error: 'API_ERROR', message: 'Note not found' },
+          { status: 404 }
+        );
       }
       note.title = title;
       note.content = content || '';
@@ -79,6 +85,9 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
 
     return NextResponse.json({ success: true, data: populated });
   } catch (error: any) {
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'API_ERROR', message: error.message },
+      { status: 500 }
+    );
   }
 });
