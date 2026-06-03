@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import { connectToDatabase } from '@/lib/db/mongodb';
 import { hashPassword } from '@/lib/security/password';
-import { Invitation, User, Employee, Company, AuditLog } from '@/models';
+import { Invitation, User, Employee, Company, AuditLog, RoleAssignment } from '@/models';
 import { rateLimit } from '@/lib/security/rateLimiter';
 
 // 1. GET: Verify invitation token validity
@@ -160,10 +160,22 @@ export async function POST(request: Request) {
         email: invitation.email,
         status: 'active',
         designation: 'Specialist',
+        departmentId: invitation.department,
         userId: user._id,
       });
       await newEmployee.save();
     }
+
+    // D2. Create Role Assignment for Granular Scoping (Workspace/Department)
+    const roleAssignment = new RoleAssignment({
+      userId: user._id,
+      companyId: invitation.companyId,
+      roleId: invitation.role,
+      assignedBy: invitation.invitedBy,
+      workspaceId: invitation.workspaceId || null,
+      departmentId: invitation.department || null,
+    });
+    await roleAssignment.save();
 
     // E. Accept Invitation
     invitation.status = 'accepted';
