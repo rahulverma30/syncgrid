@@ -1897,21 +1897,23 @@ export default function SettingsPage() {
                 </div>
 
                 {/* Department Selection */}
-                <div className="space-y-1.5 text-left">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80 block">
-                    Assigned Department
-                  </label>
-                  <Select
-                    value={inviteDept}
-                    onChange={(val) => setInviteDept(val)}
-                    className="w-full bg-background/80 border border-border/60 px-4 py-2.5 rounded-xl text-xs text-foreground outline-none cursor-pointer focus:border-primary/50"
-                    options={departmentsList.map((dept) => ({
-                      value: dept._id,
-                      label: dept.name,
-                    }))}
-                    placeholder="Select Department"
-                  />
-                </div>
+                {departmentsList.length > 0 && (
+                  <div className="space-y-1.5 text-left">
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80 block">
+                      Assigned Department
+                    </label>
+                    <Select
+                      value={inviteDept}
+                      onChange={(val) => setInviteDept(val)}
+                      className="w-full bg-background/80 border border-border/60 px-4 py-2.5 rounded-xl text-xs text-foreground outline-none cursor-pointer focus:border-primary/50"
+                      options={departmentsList.map((dept) => ({
+                        value: dept._id,
+                        label: dept.name,
+                      }))}
+                      placeholder="Select Department"
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Scoped Permissions Preview Card */}

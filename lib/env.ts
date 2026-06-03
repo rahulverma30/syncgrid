@@ -17,7 +17,7 @@ const envSchema = z
     AUTH_SECRET: z.string().min(32, 'AUTH_SECRET must be at least 32 characters long').optional(),
     SMTP_HOST: z.string().optional(),
     SMTP_PORT: z.coerce.number().optional(),
-    SMTP_SECURE: z.coerce.boolean().default(false),
+    SMTP_SECURE: z.union([z.boolean(), z.string().transform((v) => v === 'true')]).default(false),
     SMTP_USER: z.string().optional(),
     SMTP_PASSWORD: z.string().optional(),
     EMAIL_FROM: z.string().optional(),
