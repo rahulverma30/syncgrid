@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { Eye, EyeOff, Loader2, User, Lock, CheckCircle2, ShieldAlert } from 'lucide-react';
@@ -9,7 +9,8 @@ import { Card, CardDescription, CardHeader, CardTitle, CardContent } from '@/com
 import { Input, Button } from '@/components/ui';
 
 export default function InvitePage({ params }) {
-  const token = params.token;
+  const unwrappedParams = use(params);
+  const token = unwrappedParams.token;
   const router = useRouter();
 
   const [verifying, setVerifying] = useState(true);
