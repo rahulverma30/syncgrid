@@ -11,6 +11,7 @@ import { QuickActions } from '@/components/dashboard/quick-actions';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import dynamic from 'next/dynamic';
+import { AttendanceWidget } from '@/components/attendance/AttendanceWidget';
 
 // Lazy-load heavy dashboard widgets and views progressively
 const SuperAdminView = dynamic(
@@ -163,6 +164,9 @@ export default function DashboardPage() {
           </div>
         }
       />
+
+      {/* Universal Attendance Widget */}
+      <AttendanceWidget />
 
       {/* Controller Controls Bar */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 rounded-xl border border-border/80 bg-muted/10">

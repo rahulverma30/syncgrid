@@ -17,6 +17,7 @@ import {
   Sparkles,
   Building,
   MessageSquare,
+  Clock,
 } from 'lucide-react';
 
 export const SIDEBAR_GROUPS = [
@@ -41,6 +42,23 @@ export const SIDEBAR_GROUPS = [
         ],
         permission: { resource: 'dashboard', action: 'read' },
       },
+      {
+        id: 'attendance',
+        label: 'My Attendance',
+        icon: Clock,
+        href: '/attendance',
+        badge: null,
+        roles: [
+          'Super Admin',
+          'Admin',
+          'Project Manager',
+          'Team Lead',
+          'Developer',
+          'HR',
+          'Finance',
+        ],
+        permission: { resource: 'clients', action: 'read' },
+      },
     ],
   },
   {
@@ -55,6 +73,7 @@ export const SIDEBAR_GROUPS = [
         badge: null,
         disabled: false,
         roles: ['Super Admin', 'Admin'],
+        permission: { resource: 'crm', action: 'read' },
         submenu: [
           { label: 'Contacts', href: '/crm/contacts' },
           { label: 'Accounts', href: '/crm/accounts' },
@@ -77,6 +96,7 @@ export const SIDEBAR_GROUPS = [
           'HR',
           'Finance',
         ],
+        permission: { resource: 'clients', action: 'read' },
       },
       {
         id: 'projects',
@@ -86,6 +106,7 @@ export const SIDEBAR_GROUPS = [
         badge: null,
         disabled: false,
         roles: ['Super Admin', 'Admin', 'Project Manager'],
+        permission: { resource: 'projects', action: 'read' },
       },
       {
         id: 'tasks',
@@ -95,6 +116,7 @@ export const SIDEBAR_GROUPS = [
         badge: null,
         disabled: false,
         roles: ['Super Admin', 'Admin', 'Project Manager', 'Team Lead', 'Developer'],
+        permission: { resource: 'tasks', action: 'read' },
       },
       {
         id: 'finance',
@@ -104,6 +126,7 @@ export const SIDEBAR_GROUPS = [
         badge: null,
         disabled: false,
         roles: ['Super Admin', 'Admin', 'Finance'],
+        permission: { resource: 'finance', action: 'read' },
         submenu: [
           { label: 'Invoices', href: '/finance/invoices' },
           { label: 'Expenses', href: '/finance/expenses' },
@@ -117,6 +140,7 @@ export const SIDEBAR_GROUPS = [
         badge: null,
         disabled: false,
         roles: ['Super Admin', 'Admin', 'HR'],
+        permission: { resource: 'hr', action: 'read' },
         submenu: [
           { label: 'Employees', href: '/hr/employees' },
           { label: 'Payroll', href: '/hr/payroll' },
@@ -130,6 +154,7 @@ export const SIDEBAR_GROUPS = [
         badge: null,
         disabled: false,
         roles: ['Super Admin', 'Admin'],
+        permission: { resource: 'analytics', action: 'read' },
       },
       {
         id: 'collaboration',
@@ -147,6 +172,7 @@ export const SIDEBAR_GROUPS = [
           'HR',
           'Finance',
         ],
+        permission: { resource: 'clients', action: 'read' },
       },
     ],
   },
@@ -184,23 +210,23 @@ export const SIDEBAR_GROUPS = [
         roles: ['Super Admin', 'Admin'],
         permission: { resource: 'roles', action: 'read' },
       },
-      {
-        id: 'design-system',
-        label: 'Design System',
-        icon: Sparkles,
-        href: '/design-system',
-        badge: 'M3',
-        disabled: false,
-        roles: [
-          'Super Admin',
-          'Admin',
-          'Project Manager',
-          'Team Lead',
-          'Developer',
-          'HR',
-          'Finance',
-        ],
-      },
+      // {
+      //   id: 'design-system',
+      //   label: 'Design System',
+      //   icon: Sparkles,
+      //   href: '/design-system',
+      //   badge: 'M3',
+      //   disabled: false,
+      //   roles: [
+      //     'Super Admin',
+      //     'Admin',
+      //     'Project Manager',
+      //     'Team Lead',
+      //     'Developer',
+      //     'HR',
+      //     'Finance',
+      //   ],
+      // },
     ],
   },
 ];

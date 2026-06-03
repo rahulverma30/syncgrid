@@ -1,6 +1,15 @@
 import mongoose, { Schema } from 'mongoose';
 import type { Model } from 'mongoose';
 
+const BreakSchema = new Schema(
+  {
+    start: { type: Date, required: true },
+    end: { type: Date, default: null },
+    duration: { type: Number, default: 0 }, // in minutes
+  },
+  { _id: false }
+);
+
 const AttendanceLogSchema = new Schema(
   {
     companyId: {
@@ -9,44 +18,49 @@ const AttendanceLogSchema = new Schema(
       required: true,
       index: true,
     },
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+      index: true,
+    },
     employeeId: {
       type: Schema.Types.ObjectId,
       ref: 'Employee',
-      required: true,
-      index: true,
+      required: false,
     },
     date: {
-      type: Date,
+      type: String, // YYYY-MM-DD
       required: true,
       index: true,
     },
-    checkIn: {
+    punchIn: {
       type: Date,
       required: true,
     },
-    checkOut: {
+    punchOut: {
       type: Date,
       default: null,
     },
-    workMode: {
-      type: String,
-      enum: ['remote', 'hybrid', 'office'],
-      default: 'remote',
+    totalWorkedMinutes: {
+      type: Number,
+      default: 0,
     },
-    status: {
-      type: String,
-      enum: ['present', 'late', 'absent', 'half-day'],
-      default: 'present',
-      index: true,
+    breakMinutes: {
+      type: Number,
+      default: 0,
     },
     overtimeMinutes: {
       type: Number,
       default: 0,
     },
-    location: {
+    attendanceStatus: {
       type: String,
-      default: '',
+      enum: ['Present', 'Absent', 'Half Day', 'Leave', 'Weekend', 'Holiday'],
+      default: 'Present',
+      index: true,
     },
+    breaks: [BreakSchema],
     notes: {
       type: String,
       default: '',
@@ -57,8 +71,8 @@ const AttendanceLogSchema = new Schema(
   }
 );
 
-// High-speed index to speed up daily punch queries
-AttendanceLogSchema.index({ companyId: 1, employeeId: 1, date: 1 });
+// High-speed index to speed up daily punch queries per user
+AttendanceLogSchema.index({ companyId: 1, userId: 1, date: 1 }, { unique: true });
 
 export const AttendanceLog = ((mongoose.models.AttendanceLog as Model<any>) ||
   mongoose.model('AttendanceLog', AttendanceLogSchema)) as Model<any>;
