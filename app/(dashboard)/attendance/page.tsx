@@ -16,13 +16,17 @@ export default function AttendancePage() {
   const roles = session?.user?.roles || [];
   const isAdmin = roles.some((role) => ['super-admin', 'admin', 'hr'].includes(role.toLowerCase()));
 
+  const getLocalDateStr = (d: Date) => {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+
   const fetchMyHistory = async () => {
     try {
       const start = new Date();
       start.setDate(start.getDate() - 30); // last 30 days
       const end = new Date();
       const res = await fetch(
-        `/api/protected/attendance/me?startDate=${start.toISOString().split('T')[0]}&endDate=${end.toISOString().split('T')[0]}`
+        `/api/protected/attendance/me?startDate=${getLocalDateStr(start)}&endDate=${getLocalDateStr(end)}`
       );
       const data = await res.json();
       if (data.success) {
@@ -38,7 +42,9 @@ export default function AttendancePage() {
   const fetchTeamStatus = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch('/api/protected/attendance/admin');
+      const today = new Date();
+      const localDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+      const res = await fetch(`/api/protected/attendance/admin?localDate=${localDate}`);
       const data = await res.json();
       if (data.success) {
         setTeamStatus(data.data);

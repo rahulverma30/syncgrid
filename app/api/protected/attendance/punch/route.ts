@@ -14,7 +14,8 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     await connectToDatabase();
     const companyId = session.user.companyId;
     const userId = session.user.id;
-    const today = getTodayString();
+    const body = await request.json().catch(() => ({}));
+    const today = body.localDate || getTodayString();
 
     const existingLog = await AttendanceLog.findOne({
       companyId: new mongoose.Types.ObjectId(companyId),
@@ -66,7 +67,8 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
     await connectToDatabase();
     const companyId = session.user.companyId;
     const userId = session.user.id;
-    const today = getTodayString();
+    const body = await request.json().catch(() => ({}));
+    const today = body.localDate || getTodayString();
 
     const log = await AttendanceLog.findOne({
       companyId: new mongoose.Types.ObjectId(companyId),

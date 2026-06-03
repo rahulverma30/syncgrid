@@ -13,10 +13,11 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     await connectToDatabase();
     const companyId = session.user.companyId;
     const userId = session.user.id;
-    const today = getTodayString();
-
     // Get URL params for date range if providing historical data
     const url = new URL(request.url);
+    const localDate = url.searchParams.get('localDate');
+    const today = localDate || getTodayString();
+
     const startDate = url.searchParams.get('startDate');
     const endDate = url.searchParams.get('endDate');
 

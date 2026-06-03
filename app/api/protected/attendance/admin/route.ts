@@ -30,7 +30,7 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     const today = getTodayString();
 
     const url = new URL(request.url);
-    const date = url.searchParams.get('date') || today;
+    const date = url.searchParams.get('localDate') || url.searchParams.get('date') || today;
 
     // Fetch all logs for the given date, populated with user info
     const logs = await AttendanceLog.find({

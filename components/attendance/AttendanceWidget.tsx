@@ -10,9 +10,14 @@ export const AttendanceWidget = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const getLocalDate = () => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  };
+
   async function fetchTodayLog() {
     try {
-      const res = await fetch('/api/protected/attendance/me');
+      const res = await fetch(`/api/protected/attendance/me?localDate=${getLocalDate()}`);
       const data = await res.json();
       if (data.success) {
         setLog(data.data);
@@ -32,7 +37,11 @@ export const AttendanceWidget = () => {
   async function handlePunchIn() {
     setIsSubmitting(true);
     try {
-      const res = await fetch('/api/protected/attendance/punch', { method: 'POST' });
+      const res = await fetch('/api/protected/attendance/punch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ localDate: getLocalDate() }),
+      });
       const data = await res.json();
       if (data.success) {
         toast.success('Punched In Successfully');
@@ -50,7 +59,11 @@ export const AttendanceWidget = () => {
   async function handlePunchOut() {
     setIsSubmitting(true);
     try {
-      const res = await fetch('/api/protected/attendance/punch', { method: 'PUT' });
+      const res = await fetch('/api/protected/attendance/punch', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ localDate: getLocalDate() }),
+      });
       const data = await res.json();
       if (data.success) {
         toast.success('Punched Out Successfully');
@@ -68,7 +81,11 @@ export const AttendanceWidget = () => {
   async function handleStartBreak() {
     setIsSubmitting(true);
     try {
-      const res = await fetch('/api/protected/attendance/break', { method: 'POST' });
+      const res = await fetch('/api/protected/attendance/break', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ localDate: getLocalDate() }),
+      });
       const data = await res.json();
       if (data.success) {
         toast.success('Break Started');
@@ -86,7 +103,11 @@ export const AttendanceWidget = () => {
   async function handleEndBreak() {
     setIsSubmitting(true);
     try {
-      const res = await fetch('/api/protected/attendance/break', { method: 'PUT' });
+      const res = await fetch('/api/protected/attendance/break', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ localDate: getLocalDate() }),
+      });
       const data = await res.json();
       if (data.success) {
         toast.success('Break Ended');
