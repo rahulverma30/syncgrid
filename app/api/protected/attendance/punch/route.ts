@@ -24,16 +24,27 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     });
 
     if (existingLog) {
-      if (existingLog.punchIn) {
+      if (existingLog.startTime) {
         return NextResponse.json(
           {
             success: false,
-            error: 'ALREADY_PUNCHED_IN',
-            message: 'You have already punched in today.',
+            error: 'ALREADY_STARTED',
+            message: 'You have already started a session today.',
           },
           { status: 400 }
         );
       }
+    }
+
+    if (!body.projectId || !body.description) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'VALIDATION_ERROR',
+          message: 'Project and Description are required to start work.',
+        },
+        { status: 400 }
+      );
     }
 
     const log = await AttendanceLog.findOneAndUpdate(
@@ -44,8 +55,10 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
       },
       {
         $set: {
-          punchIn: new Date(),
-          attendanceStatus: 'Present',
+          startTime: new Date(),
+          status: 'Working',
+          projectId: body.projectId,
+          description: body.description,
         },
       },
       { new: true, upsert: true }
@@ -78,38 +91,39 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
 
     if (!log) {
       return NextResponse.json(
-        { success: false, error: 'NO_PUNCH_IN', message: 'You must punch in first.' },
+        { success: false, error: 'NO_SESSION', message: 'You must start work first.' },
         { status: 400 }
       );
     }
 
-    if (log.punchOut) {
+    if (log.endTime) {
       return NextResponse.json(
         {
           success: false,
-          error: 'ALREADY_PUNCHED_OUT',
-          message: 'You have already punched out today.',
+          error: 'ALREADY_ENDED',
+          message: 'You have already ended work today.',
         },
         { status: 400 }
       );
     }
 
-    // Check if on active break and end it
-    if (log.breaks && log.breaks.length > 0) {
-      const activeBreak = log.breaks[log.breaks.length - 1];
-      if (!activeBreak.end) {
-        activeBreak.end = new Date();
-        activeBreak.duration = Math.round(
-          (activeBreak.end.getTime() - activeBreak.start.getTime()) / 60000
+    // Check if on active pause and end it
+    if (log.pauses && log.pauses.length > 0) {
+      const activePause = log.pauses[log.pauses.length - 1];
+      if (!activePause.end) {
+        activePause.end = new Date();
+        activePause.duration = Math.round(
+          (activePause.end.getTime() - activePause.start.getTime()) / 60000
         );
-        log.breakMinutes += activeBreak.duration;
+        log.breakMinutes += activePause.duration;
       }
     }
 
-    log.punchOut = new Date();
+    log.endTime = new Date();
+    log.status = 'Completed';
 
-    // Calculate total worked minutes (duration between punchIn and punchOut minus breaks)
-    const grossMinutes = Math.round((log.punchOut.getTime() - log.punchIn.getTime()) / 60000);
+    // Calculate total worked minutes (duration between startTime and endTime minus breaks)
+    const grossMinutes = Math.round((log.endTime.getTime() - log.startTime.getTime()) / 60000);
     const netMinutes = Math.max(0, grossMinutes - (log.breakMinutes || 0));
     log.totalWorkedMinutes = netMinutes;
 

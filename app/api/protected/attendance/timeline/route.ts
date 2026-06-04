@@ -70,34 +70,34 @@ export async function GET(req: NextRequest) {
 
     // 1. Process Attendance
     if (attendanceLog) {
-      if (attendanceLog.punchIn) {
+      if (attendanceLog.startTime) {
         timeline.push({
           id: `punch-in-${attendanceLog._id}`,
           type: 'punch_in',
-          title: 'Punched In',
-          description: 'Started the workday',
+          title: 'Started Work',
+          description: attendanceLog.description || 'Started the workday',
           module: 'Attendance',
-          time: new Date(attendanceLog.punchIn),
+          time: new Date(attendanceLog.startTime),
         });
       }
-      if (attendanceLog.punchOut) {
+      if (attendanceLog.endTime) {
         timeline.push({
           id: `punch-out-${attendanceLog._id}`,
           type: 'punch_out',
-          title: 'Punched Out',
+          title: 'Ended Work',
           description: 'Ended the workday',
           module: 'Attendance',
-          time: new Date(attendanceLog.punchOut),
+          time: new Date(attendanceLog.endTime),
         });
       }
-      if (attendanceLog.breaks && Array.isArray(attendanceLog.breaks)) {
-        attendanceLog.breaks.forEach((brk: any, i: number) => {
+      if (attendanceLog.pauses && Array.isArray(attendanceLog.pauses)) {
+        attendanceLog.pauses.forEach((brk: any, i: number) => {
           if (brk.start) {
             timeline.push({
               id: `break-start-${attendanceLog._id}-${i}`,
               type: 'break_start',
-              title: 'Started Break',
-              description: 'Went on break',
+              title: 'Paused Work',
+              description: 'Went on pause',
               module: 'Attendance',
               time: new Date(brk.start),
             });
@@ -106,8 +106,8 @@ export async function GET(req: NextRequest) {
             timeline.push({
               id: `break-end-${attendanceLog._id}-${i}`,
               type: 'break_end',
-              title: 'Ended Break',
-              description: `Returned from break (${brk.duration} min)`,
+              title: 'Resumed Work',
+              description: `Returned from pause (${brk.duration} min)`,
               module: 'Attendance',
               time: new Date(brk.end),
             });
@@ -193,10 +193,11 @@ export async function GET(req: NextRequest) {
       stats.breakTime = attendanceLog.breakMinutes / 60;
       stats.overtime = attendanceLog.overtimeMinutes / 60;
 
-      if (attendanceLog.punchIn && !attendanceLog.punchOut) {
-        // Find if currently on break
-        const openBreak = attendanceLog.breaks?.find((b: any) => !b.end);
-        stats.status = openBreak ? 'On Break' : 'Working';
+      if (attendanceLog.startTime && !attendanceLog.endTime) {
+        const openPause = attendanceLog.pauses?.find((b: any) => !b.end);
+        stats.status = openPause ? 'Paused' : 'Working';
+      } else if (attendanceLog.endTime) {
+        stats.status = 'Completed';
       }
     }
 

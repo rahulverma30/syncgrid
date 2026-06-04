@@ -23,31 +23,32 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
       date: today,
     });
 
-    if (!log || !log.punchIn) {
+    if (!log || !log.startTime) {
       return NextResponse.json(
-        { success: false, error: 'NO_PUNCH_IN', message: 'You must punch in first.' },
+        { success: false, error: 'NO_SESSION', message: 'You must start work first.' },
         { status: 400 }
       );
     }
 
-    if (log.punchOut) {
+    if (log.endTime) {
       return NextResponse.json(
-        { success: false, error: 'ALREADY_PUNCHED_OUT', message: 'You have already punched out.' },
+        { success: false, error: 'ALREADY_ENDED', message: 'You have already ended work.' },
         { status: 400 }
       );
     }
 
-    if (log.breaks && log.breaks.length > 0) {
-      const activeBreak = log.breaks[log.breaks.length - 1];
-      if (!activeBreak.end) {
+    if (log.pauses && log.pauses.length > 0) {
+      const activePause = log.pauses[log.pauses.length - 1];
+      if (!activePause.end) {
         return NextResponse.json(
-          { success: false, error: 'ALREADY_ON_BREAK', message: 'You are already on a break.' },
+          { success: false, error: 'ALREADY_PAUSED', message: 'You are already on a pause.' },
           { status: 400 }
         );
       }
     }
 
-    log.breaks.push({ start: new Date() });
+    log.pauses.push({ start: new Date() });
+    log.status = 'Paused';
     await log.save();
 
     return NextResponse.json({ success: true, data: log });
@@ -75,34 +76,35 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
       date: today,
     });
 
-    if (!log || !log.punchIn) {
+    if (!log || !log.startTime) {
       return NextResponse.json(
-        { success: false, error: 'NO_PUNCH_IN', message: 'You must punch in first.' },
+        { success: false, error: 'NO_SESSION', message: 'You must start work first.' },
         { status: 400 }
       );
     }
 
-    if (!log.breaks || log.breaks.length === 0) {
+    if (!log.pauses || log.pauses.length === 0) {
       return NextResponse.json(
-        { success: false, error: 'NOT_ON_BREAK', message: 'You are not on a break.' },
+        { success: false, error: 'NOT_PAUSED', message: 'You are not paused.' },
         { status: 400 }
       );
     }
 
-    const activeBreak = log.breaks[log.breaks.length - 1];
-    if (activeBreak.end) {
+    const activePause = log.pauses[log.pauses.length - 1];
+    if (activePause.end) {
       return NextResponse.json(
-        { success: false, error: 'NOT_ON_BREAK', message: 'You are not on a break.' },
+        { success: false, error: 'NOT_PAUSED', message: 'You are not paused.' },
         { status: 400 }
       );
     }
 
-    activeBreak.end = new Date();
-    activeBreak.duration = Math.round(
-      (activeBreak.end.getTime() - activeBreak.start.getTime()) / 60000
+    activePause.end = new Date();
+    activePause.duration = Math.round(
+      (activePause.end.getTime() - activePause.start.getTime()) / 60000
     );
 
-    log.breakMinutes = (log.breakMinutes || 0) + activeBreak.duration;
+    log.breakMinutes = (log.breakMinutes || 0) + activePause.duration;
+    log.status = 'Working';
 
     await log.save();
 

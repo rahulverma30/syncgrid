@@ -2,10 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { PageHeader, Card, CardContent, Button } from '@/components/ui';
-import { Clock, Calendar, Users, FileText } from 'lucide-react';
+import { PageHeader, Card, CardContent, Button, Modal, Input } from '@/components/ui';
+import { Clock, Calendar, Users, Edit } from 'lucide-react';
 import { AttendanceWidget } from '@/components/attendance/AttendanceWidget';
 import { EmployeeActivityDrawer } from '@/components/hr/EmployeeActivityDrawer';
+import { toast } from 'sonner';
 
 export default function AttendancePage() {
   const { data: session } = useSession();
@@ -18,9 +19,67 @@ export default function AttendancePage() {
   const [isActivityOpen, setIsActivityOpen] = useState(false);
   const [activityUserId, setActivityUserId] = useState<string | null>(null);
 
+  // Correction Modal States
+  const [isCorrectionOpen, setIsCorrectionOpen] = useState(false);
+  const [correctionLog, setCorrectionLog] = useState<any>(null);
+  const [newStartTime, setNewStartTime] = useState('');
+  const [newEndTime, setNewEndTime] = useState('');
+  const [isSubmittingCorrection, setIsSubmittingCorrection] = useState(false);
+
   const handleOpenActivity = (userId: string) => {
     setActivityUserId(userId);
     setIsActivityOpen(true);
+  };
+
+  const handleOpenCorrection = (record: any) => {
+    setCorrectionLog(record);
+
+    // Format dates for datetime-local input
+    if (record.log?.startTime) {
+      const d = new Date(record.log.startTime);
+      d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+      setNewStartTime(d.toISOString().slice(0, 16));
+    } else {
+      setNewStartTime('');
+    }
+
+    if (record.log?.endTime) {
+      const d = new Date(record.log.endTime);
+      d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+      setNewEndTime(d.toISOString().slice(0, 16));
+    } else {
+      setNewEndTime('');
+    }
+
+    setIsCorrectionOpen(true);
+  };
+
+  const handleSaveCorrection = async () => {
+    if (!correctionLog?.log?._id) return;
+    setIsSubmittingCorrection(true);
+    try {
+      const res = await fetch('/api/protected/attendance/admin/corrections', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          logId: correctionLog.log._id,
+          startTime: newStartTime ? new Date(newStartTime).toISOString() : undefined,
+          endTime: newEndTime ? new Date(newEndTime).toISOString() : undefined,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Attendance record corrected');
+        setIsCorrectionOpen(false);
+        fetchTeamStatus();
+      } else {
+        toast.error(data.message || 'Correction failed');
+      }
+    } catch (err) {
+      toast.error('Network error during correction');
+    } finally {
+      setIsSubmittingCorrection(false);
+    }
   };
 
   const roles = session?.user?.roles || [];
@@ -120,8 +179,8 @@ export default function AttendancePage() {
                     <tr>
                       <th className="px-4 py-3 font-semibold">Date</th>
                       <th className="px-4 py-3 font-semibold">Status</th>
-                      <th className="px-4 py-3 font-semibold">Punch In</th>
-                      <th className="px-4 py-3 font-semibold">Punch Out</th>
+                      <th className="px-4 py-3 font-semibold">Start Time</th>
+                      <th className="px-4 py-3 font-semibold">End Time</th>
                       <th className="px-4 py-3 font-semibold text-right">Worked (hrs)</th>
                     </tr>
                   </thead>
@@ -138,20 +197,20 @@ export default function AttendancePage() {
                         <td className="px-4 py-3 font-mono font-bold">{log.date}</td>
                         <td className="px-4 py-3">
                           <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-500">
-                            {log.attendanceStatus || 'Present'}
+                            {log.status || 'Completed'}
                           </span>
                         </td>
                         <td className="px-4 py-3 font-mono">
-                          {log.punchIn
-                            ? new Date(log.punchIn).toLocaleTimeString([], {
+                          {log.startTime
+                            ? new Date(log.startTime).toLocaleTimeString([], {
                                 hour: '2-digit',
                                 minute: '2-digit',
                               })
                             : '-'}
                         </td>
                         <td className="px-4 py-3 font-mono">
-                          {log.punchOut
-                            ? new Date(log.punchOut).toLocaleTimeString([], {
+                          {log.endTime
+                            ? new Date(log.endTime).toLocaleTimeString([], {
                                 hour: '2-digit',
                                 minute: '2-digit',
                               })
@@ -196,27 +255,28 @@ export default function AttendancePage() {
                     <th className="px-4 py-3 font-semibold">Employee</th>
                     <th className="px-4 py-3 font-semibold">Role</th>
                     <th className="px-4 py-3 font-semibold">Status</th>
-                    <th className="px-4 py-3 font-semibold">Punch In</th>
+                    <th className="px-4 py-3 font-semibold">Start Time</th>
                     <th className="px-4 py-3 font-semibold text-right">Worked (hrs)</th>
+                    <th className="px-4 py-3 font-semibold text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/40">
                   {isLoading && (
                     <tr>
-                      <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
+                      <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
                         Loading team data...
                       </td>
                     </tr>
                   )}
                   {!isLoading && teamStatus.length === 0 && (
                     <tr>
-                      <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
+                      <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
                         No team data found.
                       </td>
                     </tr>
                   )}
                   {teamStatus.map((record: any) => (
-                    <tr key={record.user._id} className="hover:bg-muted/10">
+                    <tr key={record.user._id} className="hover:bg-muted/10 group">
                       <td className="px-4 py-3">
                         <div
                           className="font-bold text-foreground cursor-pointer hover:underline hover:text-primary transition-colors"
@@ -236,9 +296,9 @@ export default function AttendancePage() {
                           className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
                             record.status === 'Working'
                               ? 'bg-emerald-500/10 text-emerald-500'
-                              : record.status === 'On Break'
+                              : record.status === 'Paused'
                                 ? 'bg-amber-500/10 text-amber-500'
-                                : record.status === 'Punched Out'
+                                : record.status === 'Completed'
                                   ? 'bg-slate-500/10 text-slate-500'
                                   : 'bg-rose-500/10 text-rose-500'
                           }`}
@@ -247,8 +307,8 @@ export default function AttendancePage() {
                         </span>
                       </td>
                       <td className="px-4 py-3 font-mono">
-                        {record.log?.punchIn
-                          ? new Date(record.log.punchIn).toLocaleTimeString([], {
+                        {record.log?.startTime
+                          ? new Date(record.log.startTime).toLocaleTimeString([], {
                               hour: '2-digit',
                               minute: '2-digit',
                             })
@@ -259,6 +319,18 @@ export default function AttendancePage() {
                           ? (record.log.totalWorkedMinutes / 60).toFixed(1)
                           : '0.0'}
                       </td>
+                      <td className="px-4 py-3 text-right">
+                        {record.log && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => handleOpenCorrection(record)}
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -267,6 +339,37 @@ export default function AttendancePage() {
           </CardContent>
         </Card>
       )}
+
+      {/* HR Correction Modal */}
+      <Modal
+        isOpen={isCorrectionOpen}
+        onClose={() => setIsCorrectionOpen(false)}
+        title="Correct Attendance Record"
+        description={`Modify session details for ${correctionLog?.user?.name}`}
+      >
+        <div className="space-y-4">
+          <Input
+            label="Start Time"
+            type="datetime-local"
+            value={newStartTime}
+            onChange={(e) => setNewStartTime(e.target.value)}
+          />
+          <Input
+            label="End Time"
+            type="datetime-local"
+            value={newEndTime}
+            onChange={(e) => setNewEndTime(e.target.value)}
+          />
+          <div className="flex justify-end gap-2 pt-4">
+            <Button variant="outline" onClick={() => setIsCorrectionOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveCorrection} isLoading={isSubmittingCorrection}>
+              Save Corrections
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       <EmployeeActivityDrawer
         isOpen={isActivityOpen}

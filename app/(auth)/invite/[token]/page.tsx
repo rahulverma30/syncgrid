@@ -8,13 +8,19 @@ import { toast } from 'sonner';
 import { Card, CardDescription, CardHeader, CardTitle, CardContent } from '@/components/ui';
 import { Input, Button } from '@/components/ui';
 
-export default function InvitePage({ params }) {
+interface InviteData {
+  email: string;
+  companyName: string;
+  companyId: string;
+}
+
+export default function InvitePage({ params }: { params: Promise<{ token: string }> }) {
   const unwrappedParams = use(params);
   const token = unwrappedParams.token;
   const router = useRouter();
 
   const [verifying, setVerifying] = useState(true);
-  const [inviteData, setInviteData] = useState(null);
+  const [inviteData, setInviteData] = useState<InviteData | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
 
   const [name, setName] = useState('');
@@ -49,7 +55,7 @@ export default function InvitePage({ params }) {
   }, [token]);
 
   // 2. Submit form and perform auto-login
-  async function handleSubmit(event) {
+  async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
 
     if (password !== confirmPassword) {

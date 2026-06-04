@@ -57,11 +57,13 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
 
       let status = 'Offline';
       if (log) {
-        if (log.punchOut) {
-          status = 'Punched Out';
-        } else if (log.punchIn) {
-          if (log.breaks && log.breaks.length > 0 && !log.breaks[log.breaks.length - 1].end) {
-            status = 'On Break';
+        if (log.status) {
+          status = log.status;
+        } else if (log.endTime) {
+          status = 'Completed';
+        } else if (log.startTime) {
+          if (log.pauses && log.pauses.length > 0 && !log.pauses[log.pauses.length - 1].end) {
+            status = 'Paused';
           } else {
             status = 'Working';
           }

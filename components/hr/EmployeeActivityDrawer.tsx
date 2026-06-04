@@ -26,7 +26,7 @@ interface TimelineEvent {
 }
 
 interface Stats {
-  status: 'Working' | 'On Break' | 'Offline';
+  status: 'Working' | 'Paused' | 'Completed' | 'Offline';
   todayHours: number;
   breakTime: number;
   overtime: number;
@@ -142,9 +142,11 @@ export function EmployeeActivityDrawer({ isOpen, onClose, userId }: EmployeeActi
                 className={`uppercase tracking-widest text-[9px] font-black ${
                   stats.status === 'Working'
                     ? 'border-green-500/50 text-green-500 bg-green-500/10'
-                    : stats.status === 'On Break'
+                    : stats.status === 'Paused'
                       ? 'border-amber-500/50 text-amber-500 bg-amber-500/10'
-                      : 'border-muted-foreground/50 text-muted-foreground bg-muted'
+                      : stats.status === 'Completed'
+                        ? 'border-slate-500/50 text-slate-500 bg-slate-500/10'
+                        : 'border-muted-foreground/50 text-muted-foreground bg-muted'
                 }`}
               >
                 {stats.status}

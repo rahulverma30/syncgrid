@@ -1,7 +1,7 @@
 import mongoose, { Schema } from 'mongoose';
 import type { Model } from 'mongoose';
 
-const BreakSchema = new Schema(
+const PauseSchema = new Schema(
   {
     start: { type: Date, required: true },
     end: { type: Date, default: null },
@@ -29,16 +29,26 @@ const AttendanceLogSchema = new Schema(
       ref: 'Employee',
       required: false,
     },
+    projectId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Project',
+      required: false, // Initially false to not break existing data, but UI will enforce
+      index: true,
+    },
+    description: {
+      type: String,
+      default: '',
+    },
     date: {
       type: String, // YYYY-MM-DD
       required: true,
       index: true,
     },
-    punchIn: {
+    startTime: {
       type: Date,
       required: true,
     },
-    punchOut: {
+    endTime: {
       type: Date,
       default: null,
     },
@@ -54,13 +64,13 @@ const AttendanceLogSchema = new Schema(
       type: Number,
       default: 0,
     },
-    attendanceStatus: {
+    status: {
       type: String,
-      enum: ['Present', 'Absent', 'Half Day', 'Leave', 'Weekend', 'Holiday'],
-      default: 'Present',
+      enum: ['Working', 'Paused', 'Offline', 'Completed'],
+      default: 'Working',
       index: true,
     },
-    breaks: [BreakSchema],
+    pauses: [PauseSchema],
     notes: {
       type: String,
       default: '',
