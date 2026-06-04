@@ -118,6 +118,13 @@ export interface ProjectAccount {
   }>;
   createdAt: string;
   updatedAt: string;
+  metrics?: {
+    totalTasks: number;
+    completedTasks: number;
+    remainingTasks: number;
+    overdueTasks: number;
+    progressPercentage: number;
+  };
 }
 
 interface ProjectsState {

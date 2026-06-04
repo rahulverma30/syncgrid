@@ -152,10 +152,13 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
 
       await activeTimer.save();
 
-      // Accumulate actual hours onto task
+      // Accumulate actual hours onto task and project
       const loggedHours = durationMinutes / 60;
       task.actualHours = (task.actualHours || 0) + loggedHours;
       await task.save();
+
+      const Project = mongoose.model('Project');
+      await Project.findByIdAndUpdate(task.projectId, { $inc: { actualHours: loggedHours } });
 
       // Log Activity
       const activity = new TaskActivity({
@@ -222,10 +225,13 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
 
       await timeLog.save();
 
-      // Accumulate actual hours onto task
+      // Accumulate actual hours onto task and project
       const loggedHours = validated.durationMinutes / 60;
       task.actualHours = (task.actualHours || 0) + loggedHours;
       await task.save();
+
+      const Project = mongoose.model('Project');
+      await Project.findByIdAndUpdate(task.projectId, { $inc: { actualHours: loggedHours } });
 
       // Log Activity
       const activity = new TaskActivity({

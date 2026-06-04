@@ -570,6 +570,52 @@ export const ProjectDetailDrawer: React.FC = () => {
                 </p>
               </div>
 
+              {/* Task Completion Metrics */}
+              {selectedProject.metrics && (
+                <div className="space-y-2 p-3.5 rounded-lg bg-card/30 border border-border/50">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[9px] font-bold text-muted-foreground uppercase">
+                      Task Progress
+                    </span>
+                    <span className="text-[10px] font-bold text-primary">
+                      {selectedProject.metrics.progressPercentage}% Completed
+                    </span>
+                  </div>
+                  <div className="w-full bg-muted/30 h-1.5 rounded-full overflow-hidden">
+                    <div
+                      className="bg-primary h-full transition-all"
+                      style={{ width: `${selectedProject.metrics.progressPercentage}%` }}
+                    />
+                  </div>
+                  <div className="flex gap-4 pt-1">
+                    <div className="flex-1">
+                      <span className="block text-[9px] font-bold text-muted-foreground uppercase">
+                        Total
+                      </span>
+                      <span className="text-xs font-bold font-mono">
+                        {selectedProject.metrics.totalTasks}
+                      </span>
+                    </div>
+                    <div className="flex-1">
+                      <span className="block text-[9px] font-bold text-muted-foreground uppercase">
+                        Remaining
+                      </span>
+                      <span className="text-xs font-bold font-mono">
+                        {selectedProject.metrics.remainingTasks}
+                      </span>
+                    </div>
+                    <div className="flex-1">
+                      <span className="block text-[9px] font-bold text-muted-foreground uppercase">
+                        Overdue
+                      </span>
+                      <span className="text-xs font-bold font-mono text-rose-500">
+                        {selectedProject.metrics.overdueTasks}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Financial & Time Tracking info grid */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="p-3 rounded-lg bg-card/30 border border-border/50 space-y-1">

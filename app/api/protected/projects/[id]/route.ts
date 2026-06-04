@@ -3,6 +3,7 @@ import { withApiAuth } from '@/lib/auth/api';
 import { connectToDatabase } from '@/lib/db/mongodb';
 import { Project } from '@/models/Project';
 import { ProjectActivity } from '@/models/ProjectActivity';
+import { Task } from '@/models/Task';
 import { ProjectUpdateSchema } from '@/lib/validators/project';
 
 export const GET = withApiAuth(async (request: Request, context: any, session: any) => {
@@ -19,7 +20,41 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
       );
     }
 
-    return NextResponse.json({ success: true, data: project });
+    // Compute metrics
+    const allTasks = await Task.find({ projectId: id, companyId, isSoftDeleted: false })
+      .populate('statusId', 'category')
+      .lean();
+
+    let completedTasks = 0;
+    let remainingTasks = 0;
+    let overdueTasks = 0;
+    const now = new Date();
+
+    allTasks.forEach((t: any) => {
+      const isDone = t.statusId?.category === 'done';
+      if (isDone) completedTasks++;
+      else remainingTasks++;
+
+      if (!isDone && t.dueDate && new Date(t.dueDate) < now) {
+        overdueTasks++;
+      }
+    });
+
+    const totalTasks = allTasks.length;
+    const progressPercentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+    const data = {
+      ...project.toObject(),
+      metrics: {
+        totalTasks,
+        completedTasks,
+        remainingTasks,
+        overdueTasks,
+        progressPercentage,
+      },
+    };
+
+    return NextResponse.json({ success: true, data });
   } catch (error: any) {
     return NextResponse.json(
       { success: false, error: 'QUERY_ERROR', message: error.message },

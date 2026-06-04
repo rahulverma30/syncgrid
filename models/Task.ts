@@ -246,9 +246,10 @@ TaskSchema.pre('save', async function (this: any, next?: any) {
 
 // Recursive Subtask Rollup Hook
 TaskSchema.post('save', async function (doc: any) {
+  const TaskModel = mongoose.model('Task');
+
   if (doc.parentId) {
     try {
-      const TaskModel = mongoose.model('Task');
       const parent = await TaskModel.findById(doc.parentId);
       if (parent) {
         // Retrieve sibling nodes in active states
@@ -273,6 +274,32 @@ TaskSchema.post('save', async function (doc: any) {
       }
     } catch (err) {
       console.error('Failed to run subtask rollup aggregation hook:', err);
+    }
+  }
+
+  // Project Progress Rollup Hook
+  if (doc.projectId) {
+    try {
+      const ProjectModel = mongoose.model('Project');
+      const allTasks = await TaskModel.find({
+        projectId: doc.projectId,
+        isSoftDeleted: false,
+      }).populate('statusId');
+
+      let completedTasks = 0;
+      allTasks.forEach((t: any) => {
+        if (t.statusId?.category === 'done') {
+          completedTasks++;
+        }
+      });
+
+      const totalTasks = allTasks.length;
+      const progressPercentage =
+        totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+      await ProjectModel.findByIdAndUpdate(doc.projectId, { progressPercentage });
+    } catch (err) {
+      console.error('Failed to run project progress rollup hook:', err);
     }
   }
 });

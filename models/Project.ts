@@ -159,16 +159,7 @@ const ProjectSchema = new Schema(
     // Status & Priority
     status: {
       type: String,
-      enum: [
-        'planning',
-        'design',
-        'development',
-        'testing',
-        'deployment',
-        'completed',
-        'on-hold',
-        'cancelled',
-      ],
+      enum: ['planning', 'active', 'on-hold', 'review', 'completed', 'archived'],
       default: 'planning',
       index: true,
     },
@@ -199,7 +190,7 @@ const ProjectSchema = new Schema(
 
     // Dates
     startDate: { type: Date },
-    deadline: { type: Date },
+    dueDate: { type: Date },
     deliveryDate: { type: Date },
 
     // Technical
