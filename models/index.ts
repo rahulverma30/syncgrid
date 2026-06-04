@@ -9,6 +9,10 @@ export { RoleAssignment } from './RoleAssignment';
 export { AuthorizationPolicy } from './AuthorizationPolicy';
 
 export { Lead } from './Lead';
+export { Account } from './Account';
+export { Contact } from './Contact';
+export { Deal } from './Deal';
+export { CRMActivity } from './CRMActivity';
 export { CrmSettings } from './CrmSettings';
 export { Client } from './Client';
 export { ClientActivity } from './ClientActivity';

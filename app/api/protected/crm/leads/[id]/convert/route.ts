@@ -2,8 +2,10 @@ import { NextResponse } from 'next/server';
 import { withApiAuth } from '@/lib/auth/api';
 import { connectToDatabase } from '@/lib/db/mongodb';
 import { Lead } from '@/models/Lead';
-import { Client } from '@/models/Client';
-import { Project } from '@/models/Project';
+import { Account } from '@/models/Account';
+import { Contact } from '@/models/Contact';
+import { Deal } from '@/models/Deal';
+import { CRMActivity } from '@/models/CRMActivity';
 import { hasRole } from '@/lib/auth/permission-checks';
 
 export const POST = withApiAuth(async (request: Request, context: any, session: any) => {
@@ -13,126 +15,108 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     const userId = session.user.id;
     const userName = session.user.name;
     const roles = session.user.roles || [];
-    const leadId = context.params.id;
+    const leadId = await context.params.id;
+    const body = await request.json().catch(() => ({}));
 
     const lead = await Lead.findOne({ _id: leadId, companyId });
 
     if (!lead) {
       return NextResponse.json(
-        { success: false, error: 'NOT_FOUND', message: 'Lead not found or unauthorized.' },
+        { success: false, error: 'NOT_FOUND', message: 'Lead not found.' },
         { status: 404 }
       );
     }
 
-    // RBAC: Sales Executive can only convert assigned leads
     const hasElevatedAccess = hasRole(roles, ['super-admin', 'admin', 'sales-manager', 'manager']);
     if (!hasElevatedAccess && lead.assignedTo?.toString() !== userId) {
       return NextResponse.json(
-        { success: false, error: 'UNAUTHORIZED', message: 'Access denied to convert this lead.' },
+        { success: false, error: 'UNAUTHORIZED', message: 'Access denied.' },
         { status: 403 }
       );
     }
 
-    if (lead.status === 'won') {
-      return NextResponse.json(
-        { success: false, error: 'ALREADY_CONVERTED', message: 'Lead is already converted.' },
-        { status: 400 }
-      );
+    if (lead.status === 'won' || lead.status === 'qualified') {
+      // Allow conversion even if qualified, but typically "won" in old system meant client
     }
 
-    // Update lead status to won
-    lead.status = 'won';
+    // 1. Create Account
+    const account = new Account({
+      companyId,
+      name: body.accountName || lead.name,
+      industry: lead.workType || 'General',
+      ownerId: lead.assignedTo || userId,
+      revenue: lead.budget || 0,
+    });
+    await account.save();
+
+    // 2. Create Contact
+    const nameParts = (lead.contactPerson || 'Unknown Contact').split(' ');
+    const firstName = nameParts[0];
+    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : 'Unknown';
+
+    const contact = new Contact({
+      companyId,
+      accountId: account._id,
+      firstName,
+      lastName,
+      email: lead.email,
+      phone: lead.phone,
+      isPrimary: true,
+      ownerId: lead.assignedTo || userId,
+    });
+    await contact.save();
+
+    // 3. Create Deal
+    let deal = null;
+    if (body.createDeal !== false) {
+      deal = new Deal({
+        companyId,
+        accountId: account._id,
+        contactId: contact._id,
+        name: body.dealName || `${account.name} - Opportunity`,
+        value: lead.budget || body.dealValue || 0,
+        expectedCloseDate:
+          lead.expectedCloseDate ||
+          body.expectedCloseDate ||
+          new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        stage: 'qualified',
+        ownerId: lead.assignedTo || userId,
+      });
+      await deal.save();
+    }
+
+    // 4. Update Lead Status
+    lead.status = 'qualified';
     lead.timeline.push({
       type: 'stage_change',
-      title: 'Lead Converted to Client',
-      description: `Lead converted to Client by ${userName}`,
+      title: 'Lead Converted',
+      description: `Lead converted to Account/Contact/Deal by ${userName}`,
       userId,
       userName,
     });
     await lead.save();
 
-    // Create the Client record
-    const emails = lead.email ? [lead.email] : [];
-    const phones = lead.phone ? [lead.phone] : [];
-
-    // Convert alternate contacts to client contacts
-    const contacts = [
-      {
-        name: lead.contactPerson,
-        email: lead.email,
-        phone: lead.phone,
-        isPrimary: true,
-      },
-    ];
-
-    if (lead.alternateContacts && lead.alternateContacts.length > 0) {
-      lead.alternateContacts.forEach((ac: any) => {
-        contacts.push({
-          name: ac.name,
-          email: ac.email,
-          phone: ac.phone,
-          isPrimary: false,
-        });
-      });
-    }
-
-    const newClient = new Client({
+    // 5. Activity Log
+    const activity = new CRMActivity({
       companyId,
-      name: lead.name,
-      clientType: 'Startup',
-      industry: lead.workType || 'General',
-      emails,
-      phones,
-      website: '', // Assuming not in Lead directly, could be mapped if it existed
-      accountManager: userName, // Or keep assignedTo ID based on what string represents
-      contacts,
-      revenueContribution: lead.budget || 0,
-      tags: lead.techStack || [],
-      timeline: [
-        {
-          type: 'created',
-          title: 'Client Imported',
-          description: `Client generated automatically from Lead conversion by ${userName}`,
-          userName,
-        },
-      ],
-    });
-
-    await newClient.save();
-
-    // Also scaffold a planning Project to represent the Deal, if applicable
-    const newProject = new Project({
-      companyId,
-      name: `Project for ${newClient.name}`,
-      code: `PRJ-${Math.floor(Math.random() * 9000) + 1000}`,
-      description: `Auto-generated project for converted lead ${lead.name}`,
-      clientId: newClient._id,
+      type: 'converted',
+      title: 'Lead Converted',
+      description: `Lead was converted to Account: ${account.name}`,
       leadId: lead._id,
-      status: 'planning',
-      priority: lead.priority,
-      projectManager: userName,
-      budget: lead.budget || 0,
-      billingType: 'fixed',
-      technologies: lead.techStack || [],
-      timeline: [
-        {
-          type: 'created',
-          title: 'Project Initialized',
-          description: `Project auto-generated from Lead conversion by ${userName}`,
-          userName,
-        },
-      ],
+      accountId: account._id,
+      contactId: contact._id,
+      dealId: deal ? deal._id : undefined,
+      userId,
+      userName,
     });
-
-    await newProject.save();
+    await activity.save();
 
     return NextResponse.json({
       success: true,
-      message: 'Lead successfully converted to Client and Project.',
       data: {
-        lead,
-        client: newClient,
-        project: newProject,
+        account,
+        contact,
+        deal,
       },
     });
   } catch (error: any) {

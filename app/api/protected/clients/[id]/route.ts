@@ -4,6 +4,7 @@ import { connectToDatabase } from '@/lib/db/mongodb';
 import { Client } from '@/models/Client';
 import { ClientActivity } from '@/models/ClientActivity';
 import { hasRole } from '@/lib/auth/permission-checks';
+import mongoose from 'mongoose';
 
 export const GET = withApiAuth(async (request: Request, context: any, session: any) => {
   try {
@@ -27,6 +28,17 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
 
     const clientObj = client.toObject();
     clientObj.timeline = activities;
+
+    // Fetch aggregated projects
+    const ProjectModel = mongoose.models.Project;
+    if (ProjectModel) {
+      const projects = await ProjectModel.find({
+        clientId: id,
+        companyId,
+        isArchived: false,
+      }).select('name status progressPercentage actualHours estimatedHours');
+      clientObj.projects = projects;
+    }
 
     return NextResponse.json({
       success: true,

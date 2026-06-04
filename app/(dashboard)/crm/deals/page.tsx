@@ -31,44 +31,42 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 
-interface Lead {
+interface Deal {
   _id: string;
   name: string;
-  contactPerson: string;
-  email: string;
-  phone: string;
-  budget: number;
-  status: string;
+  accountId?: { name: string };
+  contactId?: { firstName: string; lastName: string; email: string };
+  value: number;
+  stage: string;
   priority: string;
-  source: string;
-  expectedCloseDate: string;
+  expectedCloseDate?: string;
   createdAt: string;
 }
 
 export default function CRMDealsPage() {
   const [mounted, setMounted] = useState(false);
-  const [leads, setLeads] = useState<Lead[]>([]);
+  const [deals, setDeals] = useState<Deal[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
 
   // Delete confirm modal states
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
-  const [leadToDeleteId, setLeadToDeleteId] = useState<string | null>(null);
+  const [dealToDeleteId, setDealToDeleteId] = useState<string | null>(null);
   const [isBulkDeleteConfirmOpen, setIsBulkDeleteConfirmOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('');
 
-  const fetchLeads = async () => {
+  const fetchDeals = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch('/api/protected/crm/leads');
+      const res = await fetch('/api/protected/crm/deals');
       const d = await res.json();
       if (d.success) {
-        setLeads(d.data);
+        setDeals(d.data);
       }
     } catch (err) {
-      toast.error('Failed to sync pipeline leads.');
+      toast.error('Failed to sync pipeline deals.');
     } finally {
       setIsLoading(false);
     }
@@ -77,7 +75,7 @@ export default function CRMDealsPage() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
-    fetchLeads();
+    fetchDeals();
   }, []);
 
   const handleRowSelect = (id: string) => {
@@ -87,15 +85,15 @@ export default function CRMDealsPage() {
   };
 
   const handleSelectAll = () => {
-    if (selectedRows.length === filteredLeads.length) {
+    if (selectedRows.length === filteredDeals.length) {
       setSelectedRows([]);
     } else {
-      setSelectedRows(filteredLeads.map((l) => l._id));
+      setSelectedRows(filteredDeals.map((d) => d._id));
     }
   };
 
-  const handleDeleteLead = (id: string) => {
-    setLeadToDeleteId(id);
+  const handleDeleteDeal = (id: string) => {
+    setDealToDeleteId(id);
     setIsDeleteConfirmOpen(true);
   };
 
@@ -112,13 +110,13 @@ export default function CRMDealsPage() {
       'Priority',
       'Expected Close',
     ];
-    const rows = filteredLeads.map((l) => [
-      l.name,
-      l.contactPerson,
-      l.budget,
-      l.status,
-      l.priority,
-      l.expectedCloseDate ? new Date(l.expectedCloseDate).toISOString().slice(0, 10) : 'None',
+    const rows = filteredDeals.map((d) => [
+      d.name,
+      d.contactId ? `${d.contactId.firstName} ${d.contactId.lastName}` : 'N/A',
+      d.value,
+      d.stage,
+      d.priority || 'medium',
+      d.expectedCloseDate ? new Date(d.expectedCloseDate).toISOString().slice(0, 10) : 'None',
     ]);
 
     const csvContent = [
@@ -139,19 +137,19 @@ export default function CRMDealsPage() {
     toast.success('Deals ledger exported successfully.');
   };
 
-  const filteredLeads = leads.filter((l) => {
+  const filteredDeals = deals.filter((d) => {
     const matchesSearch =
-      l.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      l.contactPerson.toLowerCase().includes(searchQuery.toLowerCase());
+      d.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (d.accountId && d.accountId.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
-    const matchesStatus = statusFilter ? l.status === statusFilter : true;
-    const matchesPriority = priorityFilter ? l.priority === priorityFilter : true;
+    const matchesStatus = statusFilter ? d.stage === statusFilter : true;
+    const matchesPriority = priorityFilter ? d.priority === priorityFilter : true;
 
     return matchesSearch && matchesStatus && matchesPriority;
   });
 
-  const totalValue = filteredLeads.reduce((acc, curr) => acc + (curr.budget || 0), 0);
-  const avgBudget = filteredLeads.length > 0 ? Math.round(totalValue / filteredLeads.length) : 0;
+  const totalValue = filteredDeals.reduce((acc, curr) => acc + (curr.value || 0), 0);
+  const avgBudget = filteredDeals.length > 0 ? Math.round(totalValue / filteredDeals.length) : 0;
 
   if (!mounted) return null;
 
@@ -201,7 +199,7 @@ export default function CRMDealsPage() {
             </span>
             <Users className="w-4 h-4 text-blue-500" />
           </div>
-          <h3 className="text-2xl font-black font-mono text-white mt-1.5">{leads.length}</h3>
+          <h3 className="text-2xl font-black font-mono text-white mt-1.5">{deals.length}</h3>
           <p className="text-[10px] text-slate-400 mt-1">Across all pipeline stages</p>
         </Card>
 
@@ -298,7 +296,7 @@ export default function CRMDealsPage() {
                     <input
                       type="checkbox"
                       checked={
-                        selectedRows.length === filteredLeads.length && filteredLeads.length > 0
+                        selectedRows.length === filteredDeals.length && filteredDeals.length > 0
                       }
                       onChange={handleSelectAll}
                       className="rounded border-border/60 text-primary focus:ring-0 cursor-pointer"
@@ -314,78 +312,83 @@ export default function CRMDealsPage() {
               </thead>
               <tbody className="divide-y divide-border/40 text-xs">
                 <AnimatePresence mode="popLayout">
-                  {filteredLeads.map((l) => (
+                  {filteredDeals.map((d) => (
                     <motion.tr
-                      key={l._id}
+                      key={d._id}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
                       className={`hover:bg-slate-900/10 transition-colors ${
-                        selectedRows.includes(l._id) ? 'bg-primary/5' : ''
+                        selectedRows.includes(d._id) ? 'bg-primary/5' : ''
                       }`}
                     >
                       <td className="py-4 px-4">
                         <input
                           type="checkbox"
-                          checked={selectedRows.includes(l._id)}
-                          onChange={() => handleRowSelect(l._id)}
+                          checked={selectedRows.includes(d._id)}
+                          onChange={() => handleRowSelect(d._id)}
                           className="rounded border-border/60 text-primary focus:ring-0 cursor-pointer"
                         />
                       </td>
                       <td className="py-4 px-4">
                         <div className="font-bold text-white text-sm flex items-center gap-1.5">
-                          {l.name}
+                          {d.name}
                         </div>
                         <div className="flex items-center gap-2 mt-1 text-slate-400 text-[10px]">
-                          <span>Opportunity contact: {l.contactPerson}</span>
-                          {l.email && (
+                          <span>
+                            Opportunity contact:{' '}
+                            {d.contactId
+                              ? `${d.contactId.firstName} ${d.contactId.lastName}`
+                              : 'N/A'}
+                          </span>
+                          {d.contactId?.email && (
                             <>
                               <span>•</span>
-                              <span>{l.email}</span>
+                              <span>{d.contactId.email}</span>
                             </>
                           )}
                         </div>
                       </td>
                       <td className="py-4 px-4 font-mono font-bold text-emerald-400">
-                        ${l.budget?.toLocaleString()}
+                        ${d.value?.toLocaleString()}
                       </td>
                       <td className="py-4 px-4 uppercase font-bold tracking-wider text-[10px]">
                         <span
                           className={`inline-flex px-2 py-0.5 rounded-full border ${
-                            l.status === 'won'
+                            d.stage === 'won'
                               ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                              : l.status === 'lost'
+                              : d.stage === 'lost'
                                 ? 'bg-red-500/10 text-red-400 border-red-500/20'
                                 : 'bg-primary/10 text-primary border-primary/20'
                           }`}
                         >
-                          {l.status}
+                          {d.stage}
                         </span>
                       </td>
                       <td className="py-4 px-4">
                         <span
                           className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider ${
-                            l.priority === 'high'
+                            d.priority === 'high'
                               ? 'bg-red-500/10 text-red-400 border border-red-500/20'
-                              : l.priority === 'medium'
+                              : d.priority === 'medium'
                                 ? 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
                                 : 'bg-slate-800 text-slate-300'
                           }`}
                         >
-                          {l.priority}
+                          {d.priority || 'medium'}
                         </span>
                       </td>
                       <td className="py-4 px-4">
                         <span className="flex items-center gap-1 text-[10px] text-slate-400">
                           <Clock className="h-3 w-3" />
-                          {l.expectedCloseDate
-                            ? new Date(l.expectedCloseDate).toLocaleDateString()
+                          {d.expectedCloseDate
+                            ? new Date(d.expectedCloseDate).toLocaleDateString()
                             : 'Unscheduled'}
                         </span>
                       </td>
                       <td className="py-4 px-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
-                          <Link href={`/crm/deals/${l._id}`}>
+                          <Link href={`/crm/deals/${d._id}`}>
                             <button
                               title="View details"
                               className="p-1.5 rounded-lg border border-border/60 hover:bg-primary/10 text-slate-400 hover:text-primary transition-all"
@@ -394,7 +397,7 @@ export default function CRMDealsPage() {
                             </button>
                           </Link>
                           <button
-                            onClick={() => handleDeleteLead(l._id)}
+                            onClick={() => handleDeleteDeal(d._id)}
                             title="Delete opportunity"
                             className="p-1.5 rounded-lg border border-border/60 hover:bg-red-500/10 text-slate-400 hover:text-red-500 transition-all"
                           >
@@ -451,14 +454,14 @@ export default function CRMDealsPage() {
         isOpen={isDeleteConfirmOpen}
         onClose={() => setIsDeleteConfirmOpen(false)}
         onConfirm={async () => {
-          if (leadToDeleteId) {
+          if (dealToDeleteId) {
             try {
-              const res = await fetch(`/api/protected/crm/leads/${leadToDeleteId}`, {
+              const res = await fetch(`/api/protected/crm/deals/${dealToDeleteId}`, {
                 method: 'DELETE',
               });
               const d = await res.json();
               if (d.success) {
-                setLeads(leads.filter((l) => l._id !== leadToDeleteId));
+                setDeals(deals.filter((d) => d._id !== dealToDeleteId));
                 toast.success('Sales opportunity deleted.');
               } else {
                 toast.error('Unauthorized deletion attempt.');
@@ -485,12 +488,12 @@ export default function CRMDealsPage() {
           let deletedCount = 0;
           for (const id of selectedRows) {
             try {
-              const res = await fetch(`/api/protected/crm/leads/${id}`, { method: 'DELETE' });
+              const res = await fetch(`/api/protected/crm/deals/${id}`, { method: 'DELETE' });
               const d = await res.json();
               if (d.success) deletedCount++;
             } catch (e) {}
           }
-          setLeads(leads.filter((l) => !selectedRows.includes(l._id)));
+          setDeals(deals.filter((d) => !selectedRows.includes(d._id)));
           setSelectedRows([]);
           setIsBulkDeleteConfirmOpen(false);
           toast.success(`Successfully deleted ${deletedCount} opportunities.`);

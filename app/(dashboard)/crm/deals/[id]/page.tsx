@@ -65,34 +65,36 @@ export default function DealDetailsPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
     if (!dealId) return;
-    const fetchLeadDetails = async () => {
+    const fetchDealDetails = async () => {
       setIsLoading(true);
       try {
-        const res = await fetch(`/api/protected/crm/leads/${dealId}`);
+        const res = await fetch(`/api/protected/crm/deals/${dealId}`);
         const d = await res.json();
         if (d.success && d.data) {
           const l = d.data;
           setName(l.name);
-          setContactPerson(l.contactPerson);
-          setEmail(l.email || '');
-          setPhone(l.phone || '');
-          setBudget(l.budget || 0);
-          setStatus(l.status);
-          setPriority(l.priority);
-          setSource(l.source);
+          setContactPerson(
+            l.contactId ? `${l.contactId.firstName} ${l.contactId.lastName}` : 'N/A'
+          );
+          setEmail(l.contactId?.email || '');
+          setPhone(l.contactId?.phone || '');
+          setBudget(l.value || 0);
+          setStatus(l.stage || 'qualified');
+          setPriority(l.priority || 'medium');
+          setSource('CRM Deal'); // Deals don't natively have source in our new model
           if (l.expectedCloseDate) {
             setExpectedCloseDate(new Date(l.expectedCloseDate).toISOString().slice(0, 10));
           }
-          setWorkType(l.workType || 'Web Portal Dev');
-          if (l.techStack && l.techStack.length > 0) setTechStack(l.techStack);
-          if (l.notes && l.notes.length > 0) {
-            setNotes(
-              l.notes.map((n: any) => ({
-                content: n.content,
-                createdByName: n.createdByName || 'CRM Specialist',
-                createdAt: n.createdAt ? new Date(n.createdAt).toLocaleDateString() : 'Recent',
-              }))
-            );
+          setWorkType(l.accountId?.industry || 'General');
+          setTechStack([]);
+          if (l.notes) {
+            setNotes([
+              {
+                content: l.notes,
+                createdByName: l.ownerId?.name || 'CRM Specialist',
+                createdAt: new Date(l.createdAt).toLocaleDateString(),
+              },
+            ]);
           }
         }
       } catch (err) {
@@ -101,16 +103,16 @@ export default function DealDetailsPage() {
         setIsLoading(false);
       }
     };
-    fetchLeadDetails();
+    fetchDealDetails();
   }, [dealId]);
 
   const handleUpdateStage = async (newStage: string) => {
     setStatus(newStage);
     try {
-      const res = await fetch(`/api/protected/crm/leads/${dealId}`, {
+      const res = await fetch(`/api/protected/crm/deals/${dealId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStage }),
+        body: JSON.stringify({ stage: newStage }),
       });
       const d = await res.json();
       if (d.success) {
@@ -125,10 +127,10 @@ export default function DealDetailsPage() {
     if (!noteText.trim()) return;
 
     try {
-      const res = await fetch(`/api/protected/crm/leads/${dealId}/notes`, {
-        method: 'POST',
+      const res = await fetch(`/api/protected/crm/deals/${dealId}`, {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: noteText }),
+        body: JSON.stringify({ notes: noteText }),
       });
       const d = await res.json();
       if (d.success) {
@@ -156,11 +158,23 @@ export default function DealDetailsPage() {
     }
   };
 
-  const handleConvertToProject = () => {
-    toast.success(
-      `CRITICAL ACTION COMPLETED: Opportunity "${name}" successfully converted to live Workspace Project! Generating repositories and checklists...`
-    );
-    router.push('/projects');
+  const handleConvertToClient = async () => {
+    try {
+      const res = await fetch(`/api/protected/crm/deals/${dealId}/won`, {
+        method: 'POST',
+      });
+      const d = await res.json();
+      if (d.success) {
+        toast.success(
+          `CRITICAL ACTION COMPLETED: Deal "${name}" won! Client account successfully provisioned.`
+        );
+        router.push('/clients');
+      } else {
+        toast.error(d.message || 'Failed to convert deal to client.');
+      }
+    } catch (e) {
+      toast.error('Network error while provisioning client.');
+    }
   };
 
   if (!mounted) return null;
@@ -187,13 +201,13 @@ export default function DealDetailsPage() {
         </Link>
 
         <Button
-          onClick={handleConvertToProject}
+          onClick={handleConvertToClient}
           variant="default"
           size="sm"
           className="h-8 text-xs gap-1.5"
         >
           <Briefcase className="h-3.5 w-3.5" />
-          Convert to Project
+          Mark Won & Provision Client
         </Button>
       </div>
 

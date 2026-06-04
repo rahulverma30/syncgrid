@@ -475,9 +475,9 @@ export default function CRMPage() {
 
       if (d.success) {
         toast.success(
-          `Lead "${selectedLead.name}" converted successfully! Client and Project created.`
+          `Lead "${selectedLead.name}" converted successfully! Account, Contact, and Deal created.`
         );
-        // Refresh leads to reflect 'won' status
+        // Refresh leads to reflect converted status
         fetchLeadsAndSettings();
         setDrawerOpen(false);
       } else {

@@ -16,13 +16,14 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 
-interface Lead {
+interface Deal {
   _id: string;
   name: string;
-  contactPerson: string;
-  budget: number;
-  status: string;
-  priority: string;
+  accountId?: { name: string };
+  contactId?: { firstName: string; lastName: string };
+  value: number;
+  stage: string;
+  priority: string; // Add if you want to keep priority, though Deal schema doesn't have it unless added. Let's assume standard
   expectedCloseDate?: string;
 }
 
@@ -34,7 +35,7 @@ interface Column {
 
 export default function CRMPipelinePage() {
   const [mounted, setMounted] = useState(false);
-  const [leads, setLeads] = useState<Lead[]>([]);
+  const [deals, setDeals] = useState<Deal[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const columns: Column[] = [
@@ -46,16 +47,16 @@ export default function CRMPipelinePage() {
     { id: 'lost', label: 'Lost', color: 'border-t-red-500' },
   ];
 
-  const fetchLeads = async () => {
+  const fetchDeals = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch('/api/protected/crm/leads');
+      const res = await fetch('/api/protected/crm/deals');
       const d = await res.json();
       if (d.success) {
-        setLeads(d.data);
+        setDeals(d.data);
       }
     } catch (err) {
-      toast.error('Failed to sync pipeline leads.');
+      toast.error('Failed to sync pipeline deals.');
     } finally {
       setIsLoading(false);
     }
@@ -64,30 +65,42 @@ export default function CRMPipelinePage() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
-    fetchLeads();
+    fetchDeals();
   }, []);
 
   const handleMoveStage = async (id: string, newStage: string) => {
-    setLeads(leads.map((l) => (l._id === id ? { ...l, status: newStage } : l)));
+    setDeals(deals.map((d) => (d._id === id ? { ...d, stage: newStage } : d)));
     try {
-      const res = await fetch(`/api/protected/crm/leads/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStage }),
-      });
-      const d = await res.json();
-      if (d.success) {
-        toast.success(`Deal moved to "${newStage}" stage.`);
+      // Check if won
+      if (newStage === 'won') {
+        const res = await fetch(`/api/protected/crm/deals/${id}/won`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        const data = await res.json();
+        if (data.success) {
+          toast.success(`Deal WON! Client provisioned.`);
+        }
+      } else {
+        const res = await fetch(`/api/protected/crm/deals/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ stage: newStage }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          toast.success(`Deal moved to "${newStage}" stage.`);
+        }
       }
     } catch (e) {
-      toast.success(`Sandbox: Deal stage updated.`);
+      toast.error(`Error updating deal stage.`);
     }
   };
 
   const getColumnStats = (stageId: string) => {
-    const stageLeads = leads.filter((l) => l.status === stageId);
-    const totalValue = stageLeads.reduce((acc, curr) => acc + (curr.budget || 0), 0);
-    return { count: stageLeads.length, value: totalValue };
+    const stageDeals = deals.filter((d) => d.stage === stageId);
+    const totalValue = stageDeals.reduce((acc, curr) => acc + (curr.value || 0), 0);
+    return { count: stageDeals.length, value: totalValue };
   };
 
   if (!mounted) return null;
@@ -128,7 +141,7 @@ export default function CRMPipelinePage() {
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 overflow-x-auto pb-4">
           {columns.map((col) => {
             const stats = getColumnStats(col.id);
-            const colLeads = leads.filter((l) => l.status === col.id);
+            const colDeals = deals.filter((d) => d.stage === col.id);
 
             return (
               <div
@@ -150,9 +163,9 @@ export default function CRMPipelinePage() {
                 {/* Deal Cards Container */}
                 <div className="flex-1 space-y-2.5 overflow-y-auto pr-1">
                   <AnimatePresence mode="popLayout">
-                    {colLeads.map((l) => (
+                    {colDeals.map((d) => (
                       <motion.div
-                        key={l._id}
+                        key={d._id}
                         layout
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -161,30 +174,21 @@ export default function CRMPipelinePage() {
                       >
                         <div>
                           <h4 className="font-bold text-white text-xs truncate leading-normal">
-                            {l.name}
+                            {d.name}
                           </h4>
                           <span className="text-[9px] text-slate-400 block mt-0.5">
-                            Contact: {l.contactPerson}
+                            Account: {d.accountId?.name || 'N/A'}
                           </span>
                         </div>
 
                         <div className="flex justify-between items-center text-[10px] select-none">
                           <span className="font-mono font-bold text-emerald-400">
-                            ${l.budget?.toLocaleString()}
-                          </span>
-                          <span
-                            className={`inline-flex px-1.5 py-0.2 rounded text-[7px] font-bold uppercase ${
-                              l.priority === 'high'
-                                ? 'bg-red-500/10 text-red-400 border border-red-500/20'
-                                : 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
-                            }`}
-                          >
-                            {l.priority}
+                            ${d.value?.toLocaleString()}
                           </span>
                         </div>
 
                         <div className="flex items-center justify-between border-t border-border/40 pt-2 select-none">
-                          <Link href={`/crm/deals/${l._id}`}>
+                          <Link href={`/crm/deals/${d._id}`}>
                             <button
                               title="View opportunity details"
                               className="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
@@ -199,7 +203,7 @@ export default function CRMPipelinePage() {
                               .map((targetCol) => (
                                 <button
                                   key={targetCol.id}
-                                  onClick={() => handleMoveStage(l._id, targetCol.id)}
+                                  onClick={() => handleMoveStage(d._id, targetCol.id)}
                                   title={`Move to ${targetCol.label}`}
                                   className="px-1.5 py-0.5 rounded bg-background/40 hover:bg-primary/20 border border-border/40 text-[8px] font-bold text-slate-300 hover:text-white uppercase transition-colors"
                                 >
