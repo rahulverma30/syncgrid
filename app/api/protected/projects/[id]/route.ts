@@ -4,6 +4,7 @@ import { connectToDatabase } from '@/lib/db/mongodb';
 import { Project } from '@/models/Project';
 import { ProjectActivity } from '@/models/ProjectActivity';
 import { Task } from '@/models/Task';
+import { Invoice } from '@/models/Invoice';
 import { ProjectUpdateSchema } from '@/lib/validators/project';
 
 export const GET = withApiAuth(async (request: Request, context: any, session: any) => {
@@ -43,6 +44,23 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     const totalTasks = allTasks.length;
     const progressPercentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
+    // Financial Metrics
+    const projectInvoices = await Invoice.find({
+      companyId,
+      projectId: id,
+      isSoftDeleted: false,
+    }).lean();
+
+    let billedAmount = 0;
+    let outstandingAmount = 0;
+    let paymentsReceived = 0;
+
+    projectInvoices.forEach((inv: any) => {
+      billedAmount += inv.totalAmount || 0;
+      outstandingAmount += inv.outstandingAmount || 0;
+      paymentsReceived += inv.paidAmount || 0;
+    });
+
     const data = {
       ...project.toObject(),
       metrics: {
@@ -51,6 +69,12 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
         remainingTasks,
         overdueTasks,
         progressPercentage,
+      },
+      financials: {
+        budget: project.budget || 0,
+        billedAmount,
+        outstandingAmount,
+        paymentsReceived,
       },
     };
 

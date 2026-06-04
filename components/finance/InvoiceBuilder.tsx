@@ -46,6 +46,32 @@ export const InvoiceBuilder: React.FC<InvoiceBuilderProps> = ({ onClose, onSubmi
     loadDropdowns();
   }, []);
 
+  const handleImportProjectHours = () => {
+    if (!selectedProject) return;
+    const proj = projects.find((p) => p._id === selectedProject);
+    if (!proj) return;
+
+    // The project model has actualHours and billingRate
+    const hours = proj.actualHours || 0;
+    const rate = proj.billingRate || 0;
+
+    if (hours > 0) {
+      setLineItems([
+        ...lineItems,
+        {
+          description: `Project Billing: ${proj.name} (${hours} hours at $${rate}/hr)`,
+          quantity: hours,
+          unitPrice: rate,
+          taxRate: 0,
+          discountAmount: 0,
+        },
+      ]);
+      toast.success('Project unbilled hours imported to invoice line items');
+    } else {
+      toast.info('No billable hours found for this project');
+    }
+  };
+
   // Compute live arithmetic during render
   const totals = useMemo(() => {
     let sub = 0;
@@ -174,6 +200,17 @@ export const InvoiceBuilder: React.FC<InvoiceBuilderProps> = ({ onClose, onSubmi
                 label: p.name,
               }))}
             />
+            {selectedProject && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleImportProjectHours}
+                className="w-full mt-1 h-7 text-[10px] uppercase font-bold"
+              >
+                Import Project Hours
+              </Button>
+            )}
           </div>
 
           <div className="space-y-1">

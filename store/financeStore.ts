@@ -48,7 +48,6 @@ interface FinanceState {
     status: 'approved' | 'rejected',
     comments?: string
   ) => Promise<boolean>;
-  runFinanceSeeder: () => Promise<boolean>;
   initializeRealtime: (companyId: string) => () => void;
 }
 

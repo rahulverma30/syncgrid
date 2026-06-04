@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { withApiAuth } from '@/lib/auth/api';
 import { connectToDatabase } from '@/lib/db/mongodb';
-import { Invoice, Transaction, Expense, Budget, Project, Client } from '@/models';
+import { Invoice, Transaction, Expense, Budget, Project, Client, Employee } from '@/models';
 
 export const GET = withApiAuth(async (request: Request, context: any, session: any) => {
   try {
@@ -131,7 +131,20 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
 
     // 5. Project Margins Analyzer
     // Fetch all active projects
-    const projectsList = await Project.find({ companyId }).select('_id name').lean();
+    const projectsList = await Project.find({ companyId })
+      .select('_id name actualHours teamMembers')
+      .lean();
+
+    // Fetch all employees to map hourly rates
+    const employeesList = await Employee.find({ companyId })
+      .select('firstName lastName hourlyRate')
+      .lean();
+
+    const employeeRateMap = new Map();
+    employeesList.forEach((emp: any) => {
+      const fullName = `${emp.firstName} ${emp.lastName}`.trim().toLowerCase();
+      employeeRateMap.set(fullName, emp.hourlyRate || 45);
+    });
 
     const projectMargins = await Promise.all(
       projectsList.map(async (p: any) => {
@@ -154,7 +167,27 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
         })
           .select('amount')
           .lean();
-        const cost = projectExpensesList.reduce((sum, exp) => sum + exp.amount, 0);
+        const hardCost = projectExpensesList.reduce((sum, exp) => sum + exp.amount, 0);
+
+        // Labor Cost calculation
+        let avgHourlyRate = 45; // Default blended rate
+        if (p.teamMembers && p.teamMembers.length > 0) {
+          let totalRate = 0;
+          let validMembers = 0;
+          p.teamMembers.forEach((m: any) => {
+            const memberName = (m.userName || '').trim().toLowerCase();
+            if (employeeRateMap.has(memberName)) {
+              totalRate += employeeRateMap.get(memberName);
+              validMembers++;
+            }
+          });
+          if (validMembers > 0) {
+            avgHourlyRate = totalRate / validMembers;
+          }
+        }
+
+        const laborCost = (p.actualHours || 0) * avgHourlyRate;
+        const cost = hardCost + laborCost;
 
         const margin = revenue - cost;
         const percent = revenue > 0 ? (margin / revenue) * 100 : 0;

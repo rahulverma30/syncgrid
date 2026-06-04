@@ -96,6 +96,7 @@ export interface ClientAccount {
     userName?: string;
     createdAt: string;
   }>;
+  financials?: any;
   createdAt: string;
   updatedAt: string;
 }

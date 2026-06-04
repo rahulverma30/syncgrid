@@ -632,7 +632,12 @@ export const ClientDetailDrawer: React.FC = () => {
                     Total Revenue ARR
                   </span>
                   <p className="font-black font-mono text-primary text-sm">
-                    ${selectedClient.revenueContribution.toLocaleString()}
+                    $
+                    {(
+                      selectedClient.financials?.totalRevenue ||
+                      selectedClient.revenueContribution ||
+                      0
+                    ).toLocaleString()}
                   </p>
                 </div>
                 <div className="space-y-1">
@@ -669,6 +674,33 @@ export const ClientDetailDrawer: React.FC = () => {
                   </a>
                 </div>
               </div>
+
+              {/* Financial Summary */}
+              {selectedClient.financials && (
+                <div className="space-y-3 border-t border-border/30 pt-4 text-xs">
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Financial Summary
+                  </span>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-3 bg-indigo-500/10 rounded-lg border border-indigo-500/20 text-center">
+                      <div className="text-[9px] text-indigo-400 uppercase tracking-wider font-bold mb-1">
+                        Total Invoiced
+                      </div>
+                      <div className="text-base font-extrabold text-indigo-300">
+                        ${(selectedClient.financials.totalInvoiced || 0).toLocaleString()}
+                      </div>
+                    </div>
+                    <div className="p-3 bg-rose-500/10 rounded-lg border border-rose-500/20 text-center">
+                      <div className="text-[9px] text-rose-400 uppercase tracking-wider font-bold mb-1">
+                        Outstanding Balance
+                      </div>
+                      <div className="text-base font-extrabold text-rose-400">
+                        ${(selectedClient.financials.totalOutstanding || 0).toLocaleString()}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Checklists */}
               <div className="space-y-3 border-t border-border/30 pt-4 text-xs">

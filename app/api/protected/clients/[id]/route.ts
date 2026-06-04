@@ -40,6 +40,30 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
       clientObj.projects = projects;
     }
 
+    const InvoiceModel = mongoose.models.Invoice;
+    if (InvoiceModel) {
+      const invoices = await InvoiceModel.find({
+        clientId: id,
+        companyId,
+        isSoftDeleted: false,
+      }).lean();
+      let totalRevenue = 0;
+      let totalOutstanding = 0;
+      let totalInvoiced = 0;
+
+      invoices.forEach((inv: any) => {
+        totalRevenue += inv.paidAmount || 0;
+        totalOutstanding += inv.outstandingAmount || 0;
+        totalInvoiced += inv.totalAmount || 0;
+      });
+
+      clientObj.financials = {
+        totalRevenue,
+        totalOutstanding,
+        totalInvoiced,
+      };
+    }
+
     return NextResponse.json({
       success: true,
       data: clientObj,

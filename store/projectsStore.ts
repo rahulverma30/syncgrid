@@ -125,6 +125,7 @@ export interface ProjectAccount {
     overdueTasks: number;
     progressPercentage: number;
   };
+  financials?: any;
 }
 
 interface ProjectsState {

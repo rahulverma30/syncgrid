@@ -58,6 +58,7 @@ export const ProjectDetailDrawer: React.FC = () => {
         e.preventDefault();
         const tabs = [
           'overview',
+          'financials',
           'team',
           'milestones',
           'sprints',
@@ -431,8 +432,9 @@ export const ProjectDetailDrawer: React.FC = () => {
     }
   };
 
-  const tabs = [
+  const TABS = [
     { id: 'overview', label: 'Overview', icon: Layers },
+    { id: 'financials', label: 'Financials', icon: DollarSign },
     { id: 'team', label: 'Team', icon: Users },
     { id: 'milestones', label: 'Milestones', icon: CheckSquare },
     { id: 'sprints', label: 'Sprints', icon: Zap },
@@ -475,7 +477,7 @@ export const ProjectDetailDrawer: React.FC = () => {
 
         {/* Navigation Tabs */}
         <div className="flex border-b border-border/20 px-3 bg-muted/20 overflow-x-auto whitespace-nowrap scrollbar-none">
-          {tabs.map((tab) => {
+          {TABS.map((tab) => {
             const Icon = tab.icon;
             const active = activeTab === tab.id;
             return (
@@ -622,9 +624,22 @@ export const ProjectDetailDrawer: React.FC = () => {
                   <span className="text-[9px] font-bold text-muted-foreground uppercase">
                     Budget / Model
                   </span>
-                  <h4 className="text-sm font-bold text-foreground">
-                    ${(selectedProject.budget || 0).toLocaleString()}
-                  </h4>
+                  <div className="flex justify-between items-center pb-2 border-b border-border/50">
+                    <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
+                      Target Budget
+                    </span>
+                    <span className="text-sm font-extrabold text-foreground">
+                      ${(selectedProject.budget || 0).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center pb-2 border-b border-border/50">
+                    <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
+                      Burned Cost (Est)
+                    </span>
+                    <span className="text-sm font-extrabold text-rose-400">
+                      ${((selectedProject.actualHours || 0) * 45).toLocaleString()}
+                    </span>
+                  </div>
                   <p className="text-[10px] text-muted-foreground uppercase font-semibold">
                     {selectedProject.billingType} Billing
                   </p>
@@ -642,6 +657,78 @@ export const ProjectDetailDrawer: React.FC = () => {
                 </div>
               </div>
             </div>
+          )}
+
+          {activeTab === 'financials' && (
+            <motion.div
+              key="financials"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="space-y-6"
+            >
+              <div className="bg-card/30 border border-border/60 rounded-xl p-5">
+                <h4 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-4">
+                  Project Financial Summary
+                </h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="p-4 bg-background/50 rounded-lg border border-border/50 text-center">
+                    <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold mb-1">
+                      Allocated Budget
+                    </div>
+                    <div className="text-lg font-extrabold text-foreground">
+                      $
+                      {(
+                        selectedProject.financials?.budget ||
+                        selectedProject.budget ||
+                        0
+                      ).toLocaleString()}
+                    </div>
+                  </div>
+                  <div className="p-4 bg-indigo-500/10 rounded-lg border border-indigo-500/20 text-center">
+                    <div className="text-[10px] text-indigo-400 uppercase tracking-wider font-bold mb-1">
+                      Billed Amount
+                    </div>
+                    <div className="text-lg font-extrabold text-indigo-300">
+                      ${(selectedProject.financials?.billedAmount || 0).toLocaleString()}
+                    </div>
+                  </div>
+                  <div className="p-4 bg-emerald-500/10 rounded-lg border border-emerald-500/20 text-center">
+                    <div className="text-[10px] text-emerald-400 uppercase tracking-wider font-bold mb-1">
+                      Payments Received
+                    </div>
+                    <div className="text-lg font-extrabold text-emerald-400">
+                      ${(selectedProject.financials?.paymentsReceived || 0).toLocaleString()}
+                    </div>
+                  </div>
+                  <div className="p-4 bg-rose-500/10 rounded-lg border border-rose-500/20 text-center">
+                    <div className="text-[10px] text-rose-400 uppercase tracking-wider font-bold mb-1">
+                      Outstanding Balance
+                    </div>
+                    <div className="text-lg font-extrabold text-rose-400">
+                      ${(selectedProject.financials?.outstandingAmount || 0).toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 flex items-center justify-between p-4 bg-accent/20 rounded-lg border border-border/40">
+                  <div>
+                    <div className="text-sm font-bold text-foreground">Unbilled Hours</div>
+                    <div className="text-[10px] text-muted-foreground uppercase tracking-wider mt-0.5">
+                      Tracked time pending invoicing
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm font-extrabold">
+                      {selectedProject.actualHours || 0} Hours tracked
+                    </div>
+                    <div className="text-[10px] text-muted-foreground uppercase tracking-wider mt-0.5">
+                      Rate: ${(selectedProject.billingRate || 0).toLocaleString()}/hr
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
           )}
 
           {activeTab === 'team' && (
