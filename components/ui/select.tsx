@@ -272,90 +272,92 @@ export function Select({
 
         {/* Dropdown Menu - rendered in a portal */}
         {mounted &&
-          isOpen &&
           createPortal(
             <AnimatePresence mode="wait">
-              <motion.div
-                ref={dropdownRef}
-                onClick={(e) => e.stopPropagation()} // Stop bubbling event triggers
-                initial={{ opacity: 0, y: coords.placement === 'bottom' ? -4 : 4, scale: 0.98 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: coords.placement === 'bottom' ? -4 : 4, scale: 0.98 }}
-                transition={{ duration: 0.12, ease: 'easeOut' }}
-                style={{
-                  position: 'absolute',
-                  top: coords.top,
-                  left: coords.left,
-                  width: coords.width,
-                }}
-                className="z-[9999] rounded-md border border-border bg-popover text-popover-foreground shadow-lg p-1 max-h-[280px] overflow-hidden flex flex-col backdrop-blur-md bg-popover/95"
-              >
-                {/* Search Box */}
-                {isSearchEnabled && (
-                  <div
-                    className="flex items-center px-2 py-1.5 border-b border-border gap-2 mb-1 shrink-0"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                    <input
-                      ref={searchInputRef}
-                      type="text"
-                      placeholder="Search..."
-                      value={searchQuery}
-                      onChange={(e) => {
-                        setSearchQuery(e.target.value);
-                        setHighlightedIndex(0);
-                      }}
-                      onKeyDown={handleKeyDown}
-                      className="w-full bg-transparent text-sm text-foreground border-0 p-0 focus:ring-0 focus:outline-none outline-none placeholder:text-muted-foreground"
-                    />
-                  </div>
-                )}
-
-                {/* Options List */}
-                <div
-                  id={listId}
-                  ref={listRef}
-                  role="listbox"
-                  aria-label={label || placeholder}
-                  className="overflow-y-auto max-h-56 custom-scrollbar p-0.5 space-y-0.5"
+              {isOpen && (
+                <motion.div
+                  ref={dropdownRef}
+                  onClick={(e) => e.stopPropagation()} // Stop bubbling event triggers
+                  initial={{ opacity: 0, y: coords.placement === 'bottom' ? -4 : 4, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: coords.placement === 'bottom' ? -4 : 4, scale: 0.98 }}
+                  transition={{ duration: 0.12, ease: 'easeOut' }}
+                  style={{
+                    position: 'absolute',
+                    top: coords.top,
+                    left: coords.left,
+                    width: coords.width,
+                  }}
+                  className="z-[9999] rounded-md border border-border bg-popover text-popover-foreground shadow-lg p-1 max-h-[280px] overflow-hidden flex flex-col backdrop-blur-md bg-popover/95"
                 >
-                  {filteredOptions.length > 0 ? (
-                    filteredOptions.map((option, index) => {
-                      const isSelected = option.value === value;
-                      const isHighlighted = index === highlightedIndex;
-
-                      return (
-                        <div
-                          key={option.value}
-                          role="option"
-                          aria-selected={isSelected}
-                          aria-disabled={option.disabled}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleSelect(option);
-                          }}
-                          className={cn(
-                            'flex items-center justify-between px-2.5 py-2 rounded text-sm cursor-pointer transition-all duration-150 select-none md:py-1.5',
-                            option.disabled && 'opacity-40 cursor-not-allowed pointer-events-none',
-                            isSelected
-                              ? 'bg-primary text-primary-foreground font-medium'
-                              : 'text-foreground hover:bg-accent hover:text-accent-foreground',
-                            isHighlighted && !isSelected && 'bg-accent text-accent-foreground'
-                          )}
-                        >
-                          <span className="block truncate">{option.label}</span>
-                          {isSelected && <Check className="h-4 w-4 shrink-0 ml-2" />}
-                        </div>
-                      );
-                    })
-                  ) : (
-                    <div className="py-4 text-center text-sm text-muted-foreground">
-                      No results found
+                  {/* Search Box */}
+                  {isSearchEnabled && (
+                    <div
+                      className="flex items-center px-2 py-1.5 border-b border-border gap-2 mb-1 shrink-0"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      <input
+                        ref={searchInputRef}
+                        type="text"
+                        placeholder="Search..."
+                        value={searchQuery}
+                        onChange={(e) => {
+                          setSearchQuery(e.target.value);
+                          setHighlightedIndex(0);
+                        }}
+                        onKeyDown={handleKeyDown}
+                        className="w-full bg-transparent text-sm text-foreground border-0 p-0 focus:ring-0 focus:outline-none outline-none placeholder:text-muted-foreground"
+                      />
                     </div>
                   )}
-                </div>
-              </motion.div>
+
+                  {/* Options List */}
+                  <div
+                    id={listId}
+                    ref={listRef}
+                    role="listbox"
+                    aria-label={label || placeholder}
+                    className="overflow-y-auto max-h-56 custom-scrollbar p-0.5 space-y-0.5"
+                  >
+                    {filteredOptions.length > 0 ? (
+                      filteredOptions.map((option, index) => {
+                        const isSelected = option.value === value;
+                        const isHighlighted = index === highlightedIndex;
+
+                        return (
+                          <div
+                            key={option.value}
+                            role="option"
+                            aria-selected={isSelected}
+                            aria-disabled={option.disabled}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSelect(option);
+                            }}
+                            className={cn(
+                              'flex items-center justify-between px-2.5 py-2 rounded text-sm cursor-pointer transition-all duration-150 select-none md:py-1.5',
+                              option.disabled &&
+                                'opacity-40 cursor-not-allowed pointer-events-none',
+                              isSelected
+                                ? 'bg-primary text-primary-foreground font-medium'
+                                : 'text-foreground hover:bg-accent hover:text-accent-foreground',
+                              isHighlighted && !isSelected && 'bg-accent text-accent-foreground'
+                            )}
+                          >
+                            <span className="block truncate">{option.label}</span>
+                            {isSelected && <Check className="h-4 w-4 shrink-0 ml-2" />}
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div className="py-4 text-center text-sm text-muted-foreground">
+                        No results found
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
             </AnimatePresence>,
             document.body
           )}

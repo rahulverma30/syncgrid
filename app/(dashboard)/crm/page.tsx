@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   PageHeader,
   Card,
@@ -1242,678 +1243,687 @@ export default function CRMPage() {
       )}
 
       {/* LEAD PROFILE DETAIL DRAWER */}
-      <AnimatePresence>
-        {drawerOpen && selectedLead && (
-          <>
-            {/* Backdrop Closer */}
-            <div
-              className="fixed inset-0 z-40 bg-background/40 backdrop-blur-xs"
-              onClick={() => setDrawerOpen(false)}
-            />
+      {mounted &&
+        createPortal(
+          <AnimatePresence>
+            {drawerOpen && selectedLead && (
+              <>
+                {/* Backdrop Closer */}
+                <div
+                  className="fixed inset-0 z-40 bg-background/40 backdrop-blur-xs"
+                  onClick={() => setDrawerOpen(false)}
+                />
 
-            <motion.div
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-              className="fixed top-0 right-0 h-full w-full max-w-lg z-50 border-l border-border bg-popover/95 backdrop-blur-md shadow-2xl flex flex-col overflow-hidden text-left"
-            >
-              {/* Header section */}
-              <div className="p-5 border-b border-border/40 flex items-center justify-between bg-muted/10">
-                <div className="space-y-1">
-                  <span className="text-[10px] font-mono font-black tracking-wide text-primary uppercase">
-                    Lead profile
-                  </span>
-                  <h3 className="text-base font-black text-foreground">{selectedLead.name}</h3>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    onClick={handleConvertToProject}
-                    variant="outline"
-                    size="sm"
-                    className="h-8 text-xs gap-1"
-                  >
-                    <Briefcase className="h-3.5 w-3.5" />
-                    Convert
-                  </Button>
-                  <button
-                    onClick={() => setDrawerOpen(false)}
-                    className="h-8 w-8 rounded-full hover:bg-muted/40 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    ×
-                  </button>
-                </div>
-              </div>
-
-              {/* Sub-tabs Inside Profile Drawer */}
-              <div className="flex border-b border-border/40 px-3 py-1.5 flex-wrap gap-1 bg-card/20 select-none">
-                {['overview', 'notes', 'reminders', 'attachments', 'timeline'].map((t) => (
-                  <button
-                    key={t}
-                    onClick={() => setDrawerTab(t)}
-                    className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider transition-colors ${
-                      drawerTab === t
-                        ? 'bg-primary/10 text-primary'
-                        : 'text-muted-foreground hover:bg-muted/20 hover:text-foreground'
-                    }`}
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
-
-              {/* Dynamic Sub-Tab View Content */}
-              <div className="flex-grow overflow-y-auto p-5 space-y-6">
-                {/* 1. OVERVIEW PROFILE TAB */}
-                {drawerTab === 'overview' && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="space-y-5"
-                  >
-                    {/* Primary Grid details */}
-                    <div className="grid grid-cols-2 gap-4 text-xs">
-                      <div className="space-y-1">
-                        <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
-                          Contact Person
-                        </span>
-                        <p className="font-semibold text-foreground">
-                          {selectedLead.contactPerson}
-                        </p>
-                      </div>
-                      <div className="space-y-1">
-                        <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
-                          Estimated Budget
-                        </span>
-                        <p className="font-semibold font-mono text-primary">
-                          ${selectedLead.budget.toLocaleString()}
-                        </p>
-                      </div>
-                      <div className="space-y-1">
-                        <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
-                          Email Contact
-                        </span>
-                        <p className="font-semibold text-foreground/80 truncate">
-                          {selectedLead.email || 'None'}
-                        </p>
-                      </div>
-                      <div className="space-y-1">
-                        <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
-                          Phone Number
-                        </span>
-                        <p className="font-semibold text-foreground/80">
-                          {selectedLead.phone || 'None'}
-                        </p>
-                      </div>
-                      <div className="space-y-1">
-                        <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
-                          Ingestion Channel
-                        </span>
-                        <p className="font-semibold uppercase tracking-wider text-[10px] text-muted-foreground font-mono">
-                          {selectedLead.source}
-                        </p>
-                      </div>
-                      <div className="space-y-1">
-                        <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
-                          Business Scope
-                        </span>
-                        <p className="font-semibold text-foreground/80">
-                          {selectedLead.workType || 'Standard Services'}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Tech Stack list */}
-                    <div className="space-y-2 border-t border-border/30 pt-4">
-                      <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
-                        Tech Stack Tags
+                <motion.div
+                  initial={{ x: '100%' }}
+                  animate={{ x: 0 }}
+                  exit={{ x: '100%' }}
+                  transition={{ type: 'spring', damping: 25, stiffness: 220 }}
+                  className="fixed top-0 right-0 h-full w-full max-w-lg z-50 border-l border-border bg-popover/95 backdrop-blur-md shadow-2xl flex flex-col overflow-hidden text-left"
+                >
+                  {/* Header section */}
+                  <div className="p-5 border-b border-border/40 flex items-center justify-between bg-muted/10">
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-mono font-black tracking-wide text-primary uppercase">
+                        Lead profile
                       </span>
-                      <div className="flex flex-wrap gap-1.5">
-                        {selectedLead.techStack?.map((tag) => (
-                          <span
-                            key={tag}
-                            className="inline-flex items-center gap-1 rounded bg-muted/60 text-muted-foreground border border-border/30 px-2 py-0.5 text-[10px] font-bold font-mono"
-                          >
-                            <Tag className="h-3 w-3 text-muted-foreground/60" />
-                            {tag}
-                          </span>
-                        ))}
-                        {(!selectedLead.techStack || selectedLead.techStack.length === 0) && (
-                          <p className="text-xs text-muted-foreground italic">
-                            No technology tags assigned.
-                          </p>
-                        )}
-                      </div>
+                      <h3 className="text-base font-black text-foreground">{selectedLead.name}</h3>
                     </div>
-
-                    {/* Social networks & fields */}
-                    <div className="space-y-3 border-t border-border/30 pt-4 text-xs">
-                      <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
-                        Account Clearance
-                      </span>
-                      <div className="flex gap-2">
-                        <span
-                          className={`px-2.5 py-0.5 rounded font-black border uppercase tracking-wider ${
-                            selectedLead.priority === 'high'
-                              ? 'bg-rose-500/10 text-rose-500 border-rose-500/20'
-                              : 'bg-blue-500/10 text-blue-500 border-blue-500/20'
-                          }`}
-                        >
-                          {selectedLead.priority} Priority scale
-                        </span>
-                        <span className="px-2.5 py-0.5 rounded bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 font-black uppercase tracking-wider">
-                          {selectedLead.isArchived ? 'Archived Ledger' : 'Active Intake'}
-                        </span>
-                      </div>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={handleConvertToProject}
+                        variant="outline"
+                        size="sm"
+                        className="h-8 text-xs gap-1"
+                      >
+                        <Briefcase className="h-3.5 w-3.5" />
+                        Convert
+                      </Button>
+                      <button
+                        onClick={() => setDrawerOpen(false)}
+                        className="h-8 w-8 rounded-full hover:bg-muted/40 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        ×
+                      </button>
                     </div>
-                  </motion.div>
-                )}
+                  </div>
 
-                {/* 2. NOTES PROFILE TAB */}
-                {drawerTab === 'notes' && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="space-y-5 text-xs"
-                  >
-                    {/* Add note interface */}
-                    <div className="space-y-2">
-                      <textarea
-                        value={noteInput}
-                        onChange={(e) => setNoteInput(e.target.value)}
-                        placeholder="Type threaded notes, close comments, or meeting minutes..."
-                        className="w-full h-20 p-2.5 rounded-lg border border-border bg-background/50 focus:outline-none focus:ring-2 focus:ring-ring text-xs leading-relaxed"
-                      />
-                      <div className="flex items-center justify-between flex-wrap gap-2 select-none">
-                        <div className="flex gap-3">
-                          <label className="flex items-center gap-1 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={noteIsPinned}
-                              onChange={(e) => setNoteIsPinned(e.target.checked)}
-                            />
-                            <Pin className="h-3.5 w-3.5 text-muted-foreground" />
-                            Pin Note
-                          </label>
-                          <label className="flex items-center gap-1 cursor-pointer text-rose-500/80">
-                            <input
-                              type="checkbox"
-                              checked={noteIsPrivate}
-                              onChange={(e) => setNoteIsPrivate(e.target.checked)}
-                            />
-                            <EyeOff className="h-3.5 w-3.5" />
-                            Private (Internal)
-                          </label>
-                        </div>
-                        <Button onClick={handleAddNote} size="sm" className="h-8 text-xs gap-1">
-                          <Send className="h-3 w-3" />
-                          Log Note
-                        </Button>
-                      </div>
-                    </div>
+                  {/* Sub-tabs Inside Profile Drawer */}
+                  <div className="flex border-b border-border/40 px-3 py-1.5 flex-wrap gap-1 bg-card/20 select-none">
+                    {['overview', 'notes', 'reminders', 'attachments', 'timeline'].map((t) => (
+                      <button
+                        key={t}
+                        onClick={() => setDrawerTab(t)}
+                        className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider transition-colors ${
+                          drawerTab === t
+                            ? 'bg-primary/10 text-primary'
+                            : 'text-muted-foreground hover:bg-muted/20 hover:text-foreground'
+                        }`}
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </div>
 
-                    {/* Notes Feed items */}
-                    <div className="space-y-3 border-t border-border/30 pt-4">
-                      {selectedLead.notes
-                        ?.slice()
-                        .reverse()
-                        .map((note, idx) => (
-                          <div
-                            key={idx}
-                            className="p-3 border border-border/40 bg-card/30 rounded-xl space-y-2 relative text-left"
-                          >
-                            {note.isPinned && (
-                              <span className="absolute top-3 right-3 text-[10px] font-bold text-primary flex items-center gap-0.5">
-                                <Pin className="h-3 w-3 rotate-45" />
-                                Pinned
-                              </span>
-                            )}
-                            <div className="flex items-center gap-1.5">
-                              <span className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center text-primary font-black text-[8px]">
-                                {note.createdByName[0]}
-                              </span>
-                              <span className="font-bold text-foreground">
-                                {note.createdByName}
-                              </span>
-                              <span className="text-[9px] font-mono text-muted-foreground/80">
-                                • {new Date(note.createdAt).toLocaleDateString()}
-                              </span>
-                              {note.isPrivate && (
-                                <span className="text-[8px] font-bold uppercase tracking-wider text-rose-500 font-mono bg-rose-500/10 rounded px-1">
-                                  Internal
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-muted-foreground leading-relaxed pl-1 whitespace-pre-line">
-                              {note.content}
+                  {/* Dynamic Sub-Tab View Content */}
+                  <div className="flex-grow overflow-y-auto p-5 space-y-6">
+                    {/* 1. OVERVIEW PROFILE TAB */}
+                    {drawerTab === 'overview' && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="space-y-5"
+                      >
+                        {/* Primary Grid details */}
+                        <div className="grid grid-cols-2 gap-4 text-xs">
+                          <div className="space-y-1">
+                            <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+                              Contact Person
+                            </span>
+                            <p className="font-semibold text-foreground">
+                              {selectedLead.contactPerson}
                             </p>
                           </div>
-                        ))}
+                          <div className="space-y-1">
+                            <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+                              Estimated Budget
+                            </span>
+                            <p className="font-semibold font-mono text-primary">
+                              ${selectedLead.budget.toLocaleString()}
+                            </p>
+                          </div>
+                          <div className="space-y-1">
+                            <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+                              Email Contact
+                            </span>
+                            <p className="font-semibold text-foreground/80 truncate">
+                              {selectedLead.email || 'None'}
+                            </p>
+                          </div>
+                          <div className="space-y-1">
+                            <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+                              Phone Number
+                            </span>
+                            <p className="font-semibold text-foreground/80">
+                              {selectedLead.phone || 'None'}
+                            </p>
+                          </div>
+                          <div className="space-y-1">
+                            <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+                              Ingestion Channel
+                            </span>
+                            <p className="font-semibold uppercase tracking-wider text-[10px] text-muted-foreground font-mono">
+                              {selectedLead.source}
+                            </p>
+                          </div>
+                          <div className="space-y-1">
+                            <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+                              Business Scope
+                            </span>
+                            <p className="font-semibold text-foreground/80">
+                              {selectedLead.workType || 'Standard Services'}
+                            </p>
+                          </div>
+                        </div>
 
-                      {(!selectedLead.notes || selectedLead.notes.length === 0) && (
-                        <div className="py-10 text-center text-muted-foreground select-none">
-                          No notes have been logged for this lead.
+                        {/* Tech Stack list */}
+                        <div className="space-y-2 border-t border-border/30 pt-4">
+                          <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+                            Tech Stack Tags
+                          </span>
+                          <div className="flex flex-wrap gap-1.5">
+                            {selectedLead.techStack?.map((tag) => (
+                              <span
+                                key={tag}
+                                className="inline-flex items-center gap-1 rounded bg-muted/60 text-muted-foreground border border-border/30 px-2 py-0.5 text-[10px] font-bold font-mono"
+                              >
+                                <Tag className="h-3 w-3 text-muted-foreground/60" />
+                                {tag}
+                              </span>
+                            ))}
+                            {(!selectedLead.techStack || selectedLead.techStack.length === 0) && (
+                              <p className="text-xs text-muted-foreground italic">
+                                No technology tags assigned.
+                              </p>
+                            )}
+                          </div>
                         </div>
-                      )}
-                    </div>
-                  </motion.div>
-                )}
 
-                {/* 3. REMINDERS PROFILE TAB */}
-                {drawerTab === 'reminders' && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="space-y-5 text-xs"
-                  >
-                    {/* Add reminder interface */}
-                    <div className="p-4 border border-border/60 bg-muted/10 rounded-xl space-y-3">
-                      <h4 className="text-xs font-bold text-foreground uppercase tracking-wide">
-                        Schedule Follow-up
-                      </h4>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1">
-                          <label className="text-[9px] font-bold text-muted-foreground uppercase">
-                            Reminder title
-                          </label>
-                          <Input
-                            value={reminderTitle}
-                            onChange={(e) => setReminderTitle(e.target.value)}
-                            placeholder="Follow up on proposal..."
-                            className="h-8.5 text-xs bg-background/50"
-                          />
+                        {/* Social networks & fields */}
+                        <div className="space-y-3 border-t border-border/30 pt-4 text-xs">
+                          <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+                            Account Clearance
+                          </span>
+                          <div className="flex gap-2">
+                            <span
+                              className={`px-2.5 py-0.5 rounded font-black border uppercase tracking-wider ${
+                                selectedLead.priority === 'high'
+                                  ? 'bg-rose-500/10 text-rose-500 border-rose-500/20'
+                                  : 'bg-blue-500/10 text-blue-500 border-blue-500/20'
+                              }`}
+                            >
+                              {selectedLead.priority} Priority scale
+                            </span>
+                            <span className="px-2.5 py-0.5 rounded bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 font-black uppercase tracking-wider">
+                              {selectedLead.isArchived ? 'Archived Ledger' : 'Active Intake'}
+                            </span>
+                          </div>
                         </div>
-                        <div className="space-y-1">
-                          <label className="text-[9px] font-bold text-muted-foreground uppercase">
-                            Activity Type
-                          </label>
-                          <Select
-                            value={reminderType}
-                            onChange={(val) =>
-                              setReminderType(val as 'call' | 'meeting' | 'email' | 'custom')
-                            }
-                            className="w-full h-8.5 rounded-md border border-input bg-background/50 px-2 py-1 text-xs text-foreground focus:outline-none"
-                            options={[
-                              { value: 'custom', label: 'Custom Task' },
-                              { value: 'call', label: 'Phone Call' },
-                              { value: 'meeting', label: 'Sales Meeting' },
-                              { value: 'email', label: 'Send Email' },
-                            ]}
+                      </motion.div>
+                    )}
+
+                    {/* 2. NOTES PROFILE TAB */}
+                    {drawerTab === 'notes' && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="space-y-5 text-xs"
+                      >
+                        {/* Add note interface */}
+                        <div className="space-y-2">
+                          <textarea
+                            value={noteInput}
+                            onChange={(e) => setNoteInput(e.target.value)}
+                            placeholder="Type threaded notes, close comments, or meeting minutes..."
+                            className="w-full h-20 p-2.5 rounded-lg border border-border bg-background/50 focus:outline-none focus:ring-2 focus:ring-ring text-xs leading-relaxed"
                           />
+                          <div className="flex items-center justify-between flex-wrap gap-2 select-none">
+                            <div className="flex gap-3">
+                              <label className="flex items-center gap-1 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={noteIsPinned}
+                                  onChange={(e) => setNoteIsPinned(e.target.checked)}
+                                />
+                                <Pin className="h-3.5 w-3.5 text-muted-foreground" />
+                                Pin Note
+                              </label>
+                              <label className="flex items-center gap-1 cursor-pointer text-rose-500/80">
+                                <input
+                                  type="checkbox"
+                                  checked={noteIsPrivate}
+                                  onChange={(e) => setNoteIsPrivate(e.target.checked)}
+                                />
+                                <EyeOff className="h-3.5 w-3.5" />
+                                Private (Internal)
+                              </label>
+                            </div>
+                            <Button onClick={handleAddNote} size="sm" className="h-8 text-xs gap-1">
+                              <Send className="h-3 w-3" />
+                              Log Note
+                            </Button>
+                          </div>
                         </div>
+
+                        {/* Notes Feed items */}
+                        <div className="space-y-3 border-t border-border/30 pt-4">
+                          {selectedLead.notes
+                            ?.slice()
+                            .reverse()
+                            .map((note, idx) => (
+                              <div
+                                key={idx}
+                                className="p-3 border border-border/40 bg-card/30 rounded-xl space-y-2 relative text-left"
+                              >
+                                {note.isPinned && (
+                                  <span className="absolute top-3 right-3 text-[10px] font-bold text-primary flex items-center gap-0.5">
+                                    <Pin className="h-3 w-3 rotate-45" />
+                                    Pinned
+                                  </span>
+                                )}
+                                <div className="flex items-center gap-1.5">
+                                  <span className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center text-primary font-black text-[8px]">
+                                    {note.createdByName[0]}
+                                  </span>
+                                  <span className="font-bold text-foreground">
+                                    {note.createdByName}
+                                  </span>
+                                  <span className="text-[9px] font-mono text-muted-foreground/80">
+                                    • {new Date(note.createdAt).toLocaleDateString()}
+                                  </span>
+                                  {note.isPrivate && (
+                                    <span className="text-[8px] font-bold uppercase tracking-wider text-rose-500 font-mono bg-rose-500/10 rounded px-1">
+                                      Internal
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-muted-foreground leading-relaxed pl-1 whitespace-pre-line">
+                                  {note.content}
+                                </p>
+                              </div>
+                            ))}
+
+                          {(!selectedLead.notes || selectedLead.notes.length === 0) && (
+                            <div className="py-10 text-center text-muted-foreground select-none">
+                              No notes have been logged for this lead.
+                            </div>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* 3. REMINDERS PROFILE TAB */}
+                    {drawerTab === 'reminders' && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="space-y-5 text-xs"
+                      >
+                        {/* Add reminder interface */}
+                        <div className="p-4 border border-border/60 bg-muted/10 rounded-xl space-y-3">
+                          <h4 className="text-xs font-bold text-foreground uppercase tracking-wide">
+                            Schedule Follow-up
+                          </h4>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                              <label className="text-[9px] font-bold text-muted-foreground uppercase">
+                                Reminder title
+                              </label>
+                              <Input
+                                value={reminderTitle}
+                                onChange={(e) => setReminderTitle(e.target.value)}
+                                placeholder="Follow up on proposal..."
+                                className="h-8.5 text-xs bg-background/50"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-[9px] font-bold text-muted-foreground uppercase">
+                                Activity Type
+                              </label>
+                              <Select
+                                value={reminderType}
+                                onChange={(val) =>
+                                  setReminderType(val as 'call' | 'meeting' | 'email' | 'custom')
+                                }
+                                className="w-full h-8.5 rounded-md border border-input bg-background/50 px-2 py-1 text-xs text-foreground focus:outline-none"
+                                options={[
+                                  { value: 'custom', label: 'Custom Task' },
+                                  { value: 'call', label: 'Phone Call' },
+                                  { value: 'meeting', label: 'Sales Meeting' },
+                                  { value: 'email', label: 'Send Email' },
+                                ]}
+                              />
+                            </div>
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[9px] font-bold text-muted-foreground uppercase">
+                              Deadline date
+                            </label>
+                            <input
+                              type="date"
+                              value={reminderDate}
+                              onChange={(e) => setReminderDate(e.target.value)}
+                              className="w-full h-8.5 rounded-md border border-input bg-background/50 px-2 py-1 text-xs text-foreground focus:outline-none"
+                            />
+                          </div>
+                          <Button
+                            onClick={handleAddReminder}
+                            size="sm"
+                            className="h-8.5 w-full text-xs font-bold gap-1 mt-1"
+                          >
+                            <Plus className="h-4 w-4" />
+                            Schedule Reminder
+                          </Button>
+                        </div>
+
+                        {/* Active checklist reminders */}
+                        <div className="space-y-2 border-t border-border/30 pt-4">
+                          {selectedLead.reminders?.map((rem, idx) => (
+                            <div
+                              key={idx}
+                              className="flex items-center justify-between p-3 rounded-lg border border-border/40 bg-card/35 text-left"
+                            >
+                              <div className="flex items-start gap-3">
+                                <span className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-primary mt-0.5">
+                                  {rem.type === 'call' && '📞'}
+                                  {rem.type === 'meeting' && '🤝'}
+                                  {rem.type === 'email' && '📧'}
+                                  {rem.type === 'custom' && '📝'}
+                                </span>
+                                <div className="space-y-0.5">
+                                  <h5 className="font-semibold text-foreground truncate max-w-[200px]">
+                                    {rem.title}
+                                  </h5>
+                                  <p className="text-[9px] text-muted-foreground font-mono">
+                                    Due: {new Date(rem.dueDate).toLocaleDateString()}
+                                  </p>
+                                </div>
+                              </div>
+                              <Badge
+                                variant="outline"
+                                className="text-[9px] uppercase tracking-wider font-bold"
+                              >
+                                {rem.type}
+                              </Badge>
+                            </div>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* 4. ATTACHMENTS PROFILE TAB */}
+                    {drawerTab === 'attachments' && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="space-y-5 text-xs"
+                      >
+                        {/* Add attachment uploader simulation */}
+                        <form
+                          onSubmit={handleSimulateUpload}
+                          className="p-4 border border-border/60 bg-muted/10 rounded-xl space-y-3 text-left"
+                        >
+                          <h4 className="text-xs font-bold text-foreground uppercase tracking-wide">
+                            Attach proposal or contract
+                          </h4>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                              <label className="text-[9px] font-bold text-muted-foreground uppercase">
+                                File display name
+                              </label>
+                              <Input
+                                value={attachName}
+                                onChange={(e) => setAttachName(e.target.value)}
+                                placeholder="acme_proposal_v1"
+                                className="h-8.5 text-xs bg-background/50"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-[9px] font-bold text-muted-foreground uppercase">
+                                Category
+                              </label>
+                              <Select
+                                value={attachCategory}
+                                onChange={(val) =>
+                                  setAttachCategory(val as 'proposal' | 'contract' | 'other')
+                                }
+                                className="w-full h-8.5 rounded-md border border-input bg-background/50 px-2 py-1 text-xs text-foreground focus:outline-none"
+                                options={[
+                                  { value: 'proposal', label: 'Sales Proposal' },
+                                  { value: 'contract', label: 'Agreement/Contract' },
+                                  { value: 'other', label: 'Other Document' },
+                                ]}
+                              />
+                            </div>
+                          </div>
+
+                          {uploadProgress >= 0 ? (
+                            <div className="space-y-1 pt-2">
+                              <div className="flex justify-between text-[8px] font-bold uppercase tracking-wider text-primary">
+                                <span>Uploading Proposal PDF...</span>
+                                <span>{uploadProgress}%</span>
+                              </div>
+                              <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-primary transition-all duration-150"
+                                  style={{ width: `${uploadProgress}%` }}
+                                />
+                              </div>
+                            </div>
+                          ) : (
+                            <Button
+                              type="submit"
+                              size="sm"
+                              className="h-8.5 w-full text-xs font-bold gap-1 mt-1"
+                            >
+                              <Paperclip className="h-3.5 w-3.5" />
+                              Simulate Secure PDF Attachment
+                            </Button>
+                          )}
+                        </form>
+
+                        {/* Files list */}
+                        <div className="space-y-2 border-t border-border/30 pt-4">
+                          {selectedLead.attachments?.map((file, idx) => (
+                            <div
+                              key={idx}
+                              className="flex items-center justify-between p-3 rounded-lg border border-border/40 bg-card/35 text-left"
+                            >
+                              <div className="flex items-start gap-2.5 min-w-0">
+                                <FileText className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                                <div className="space-y-0.5 min-w-0">
+                                  <h5 className="font-semibold text-foreground truncate max-w-[200px] leading-tight">
+                                    {file.name}
+                                  </h5>
+                                  <p className="text-[9px] text-muted-foreground font-mono">
+                                    Size: {Math.round(file.size / 1024)} KB • category:{' '}
+                                    {file.category}
+                                  </p>
+                                </div>
+                              </div>
+                              <a
+                                href={file.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex h-7 w-7 rounded bg-primary/10 text-primary hover:bg-primary/20 items-center justify-center transition-colors"
+                              >
+                                <Link className="h-3.5 w-3.5" />
+                              </a>
+                            </div>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* 5. TIMELINE PROFILE TAB */}
+                    {drawerTab === 'timeline' && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="space-y-4"
+                      >
+                        <div className="relative border-l border-border/80 ml-3.5 space-y-6 text-left pl-4">
+                          {selectedLead.timeline
+                            ?.slice()
+                            .reverse()
+                            .map((evt, idx) => (
+                              <div key={idx} className="relative space-y-1 text-xs">
+                                {/* Circle dot icon */}
+                                <span className="absolute -left-[25px] top-0.5 rounded-full border border-border bg-background p-1 flex items-center justify-center shadow-sm text-primary">
+                                  <History className="h-3 w-3" />
+                                </span>
+                                <div className="flex items-center gap-2 justify-between flex-wrap">
+                                  <h4 className="font-bold text-foreground">{evt.title}</h4>
+                                  <span className="text-[9px] font-mono text-muted-foreground/80">
+                                    {new Date(evt.createdAt).toLocaleDateString()}
+                                  </span>
+                                </div>
+                                <p className="text-muted-foreground leading-relaxed">
+                                  {evt.description}
+                                </p>
+                                <span className="text-[9px] tracking-wide text-foreground/75 font-semibold">
+                                  User: {evt.userName}
+                                </span>
+                              </div>
+                            ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </div>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>,
+          document.body
+        )}
+
+      {/* CREATE LEAD DIALOG MODAL */}
+      {mounted &&
+        createPortal(
+          <AnimatePresence>
+            {createModalOpen && (
+              <>
+                {/* Backdrop click closer */}
+                <div
+                  className="fixed inset-0 z-50 bg-background/50 backdrop-blur-sm"
+                  onClick={() => setCreateModalOpen(false)}
+                />
+
+                <motion.div
+                  initial={{ scale: 0.95, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.95, opacity: 0 }}
+                  className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md p-6 rounded-xl border border-border bg-popover text-popover-foreground shadow-2xl z-50 text-left space-y-4"
+                >
+                  <div className="space-y-1 border-b border-border/40 pb-3 select-none">
+                    <h4 className="text-sm font-black uppercase tracking-wider text-primary flex items-center gap-1.5">
+                      <Sparkles className="h-4.5 w-4.5 text-primary animate-pulse" />
+                      Capture New Account Lead
+                    </h4>
+                    <p className="text-[10px] text-muted-foreground">
+                      Track dynamic pipeline budgets, currencies, priority tags, and socials.
+                    </p>
+                  </div>
+
+                  <form onSubmit={handleCreateLead} className="space-y-3.5 text-xs">
+                    <div className="grid grid-cols-2 gap-3.5">
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-bold text-muted-foreground uppercase">
+                          Company Name *
+                        </label>
+                        <Input
+                          value={formName}
+                          onChange={(e) => setFormName(e.target.value)}
+                          placeholder="Acme Corp"
+                          className="h-8.5 bg-background/50 focus-visible:ring-1"
+                        />
                       </div>
                       <div className="space-y-1">
                         <label className="text-[9px] font-bold text-muted-foreground uppercase">
-                          Deadline date
+                          Primary Contact *
                         </label>
-                        <input
-                          type="date"
-                          value={reminderDate}
-                          onChange={(e) => setReminderDate(e.target.value)}
-                          className="w-full h-8.5 rounded-md border border-input bg-background/50 px-2 py-1 text-xs text-foreground focus:outline-none"
+                        <Input
+                          value={formContact}
+                          onChange={(e) => setFormContact(e.target.value)}
+                          placeholder="John Carter"
+                          className="h-8.5 bg-background/50 focus-visible:ring-1"
                         />
                       </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3.5">
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-bold text-muted-foreground uppercase">
+                          Email Address
+                        </label>
+                        <Input
+                          type="email"
+                          value={formEmail}
+                          onChange={(e) => setFormEmail(e.target.value)}
+                          placeholder="carter@acme.com"
+                          className="h-8.5 bg-background/50"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-bold text-muted-foreground uppercase">
+                          Phone Number
+                        </label>
+                        <Input
+                          value={formPhone}
+                          onChange={(e) => setFormPhone(e.target.value)}
+                          placeholder="415-555-0190"
+                          className="h-8.5 bg-background/50"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-bold text-muted-foreground uppercase">
+                          Project Budget ($)
+                        </label>
+                        <Input
+                          type="number"
+                          value={formBudget}
+                          onChange={(e) => setFormBudget(parseInt(e.target.value) || 0)}
+                          className="h-8.5 bg-background/50"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-bold text-muted-foreground uppercase">
+                          Priority
+                        </label>
+                        <Select
+                          value={formPriority}
+                          onChange={(val) => setFormPriority(val as 'low' | 'medium' | 'high')}
+                          className="w-full h-8.5 rounded-md border border-input bg-background/50 px-2 py-1 text-xs text-foreground focus:outline-none"
+                          options={[
+                            { value: 'low', label: 'Low' },
+                            { value: 'medium', label: 'Medium' },
+                            { value: 'high', label: 'High' },
+                          ]}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-bold text-muted-foreground uppercase">
+                          Source Channel
+                        </label>
+                        <Select
+                          value={formSource}
+                          onChange={(val) => setFormSource(val)}
+                          className="w-full h-8.5 rounded-md border border-input bg-background/50 px-2 py-1 text-xs text-foreground focus:outline-none"
+                          options={[
+                            { value: 'website', label: 'Website' },
+                            { value: 'linkedin', label: 'LinkedIn' },
+                            { value: 'upwork', label: 'Upwork' },
+                            { value: 'referral', label: 'Referral' },
+                            { value: 'ads', label: 'Ads' },
+                            { value: 'cold-reach', label: 'Outreach' },
+                          ]}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3.5">
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-bold text-muted-foreground uppercase">
+                          Work Category
+                        </label>
+                        <Input
+                          value={formWorkType}
+                          onChange={(e) => setFormWorkType(e.target.value)}
+                          placeholder="e.g. ERP Development"
+                          className="h-8.5 bg-background/50"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-bold text-muted-foreground uppercase">
+                          Tech Stack (comma-split)
+                        </label>
+                        <Input
+                          value={formStack}
+                          onChange={(e) => setFormStack(e.target.value)}
+                          placeholder="React, Next.js, Go"
+                          className="h-8.5 bg-background/50"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end gap-2 pt-4 border-t border-border/40 select-none">
                       <Button
-                        onClick={handleAddReminder}
+                        onClick={() => setCreateModalOpen(false)}
+                        variant="outline"
                         size="sm"
-                        className="h-8.5 w-full text-xs font-bold gap-1 mt-1"
+                        className="h-8 text-xs"
                       >
-                        <Plus className="h-4 w-4" />
-                        Schedule Reminder
+                        Cancel
+                      </Button>
+                      <Button
+                        type="submit"
+                        variant="default"
+                        size="sm"
+                        className="h-8 text-xs font-bold"
+                      >
+                        Ingest Lead
                       </Button>
                     </div>
-
-                    {/* Active checklist reminders */}
-                    <div className="space-y-2 border-t border-border/30 pt-4">
-                      {selectedLead.reminders?.map((rem, idx) => (
-                        <div
-                          key={idx}
-                          className="flex items-center justify-between p-3 rounded-lg border border-border/40 bg-card/35 text-left"
-                        >
-                          <div className="flex items-start gap-3">
-                            <span className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-primary mt-0.5">
-                              {rem.type === 'call' && '📞'}
-                              {rem.type === 'meeting' && '🤝'}
-                              {rem.type === 'email' && '📧'}
-                              {rem.type === 'custom' && '📝'}
-                            </span>
-                            <div className="space-y-0.5">
-                              <h5 className="font-semibold text-foreground truncate max-w-[200px]">
-                                {rem.title}
-                              </h5>
-                              <p className="text-[9px] text-muted-foreground font-mono">
-                                Due: {new Date(rem.dueDate).toLocaleDateString()}
-                              </p>
-                            </div>
-                          </div>
-                          <Badge
-                            variant="outline"
-                            className="text-[9px] uppercase tracking-wider font-bold"
-                          >
-                            {rem.type}
-                          </Badge>
-                        </div>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* 4. ATTACHMENTS PROFILE TAB */}
-                {drawerTab === 'attachments' && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="space-y-5 text-xs"
-                  >
-                    {/* Add attachment uploader simulation */}
-                    <form
-                      onSubmit={handleSimulateUpload}
-                      className="p-4 border border-border/60 bg-muted/10 rounded-xl space-y-3 text-left"
-                    >
-                      <h4 className="text-xs font-bold text-foreground uppercase tracking-wide">
-                        Attach proposal or contract
-                      </h4>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1">
-                          <label className="text-[9px] font-bold text-muted-foreground uppercase">
-                            File display name
-                          </label>
-                          <Input
-                            value={attachName}
-                            onChange={(e) => setAttachName(e.target.value)}
-                            placeholder="acme_proposal_v1"
-                            className="h-8.5 text-xs bg-background/50"
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-[9px] font-bold text-muted-foreground uppercase">
-                            Category
-                          </label>
-                          <Select
-                            value={attachCategory}
-                            onChange={(val) =>
-                              setAttachCategory(val as 'proposal' | 'contract' | 'other')
-                            }
-                            className="w-full h-8.5 rounded-md border border-input bg-background/50 px-2 py-1 text-xs text-foreground focus:outline-none"
-                            options={[
-                              { value: 'proposal', label: 'Sales Proposal' },
-                              { value: 'contract', label: 'Agreement/Contract' },
-                              { value: 'other', label: 'Other Document' },
-                            ]}
-                          />
-                        </div>
-                      </div>
-
-                      {uploadProgress >= 0 ? (
-                        <div className="space-y-1 pt-2">
-                          <div className="flex justify-between text-[8px] font-bold uppercase tracking-wider text-primary">
-                            <span>Uploading Proposal PDF...</span>
-                            <span>{uploadProgress}%</span>
-                          </div>
-                          <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-primary transition-all duration-150"
-                              style={{ width: `${uploadProgress}%` }}
-                            />
-                          </div>
-                        </div>
-                      ) : (
-                        <Button
-                          type="submit"
-                          size="sm"
-                          className="h-8.5 w-full text-xs font-bold gap-1 mt-1"
-                        >
-                          <Paperclip className="h-3.5 w-3.5" />
-                          Simulate Secure PDF Attachment
-                        </Button>
-                      )}
-                    </form>
-
-                    {/* Files list */}
-                    <div className="space-y-2 border-t border-border/30 pt-4">
-                      {selectedLead.attachments?.map((file, idx) => (
-                        <div
-                          key={idx}
-                          className="flex items-center justify-between p-3 rounded-lg border border-border/40 bg-card/35 text-left"
-                        >
-                          <div className="flex items-start gap-2.5 min-w-0">
-                            <FileText className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                            <div className="space-y-0.5 min-w-0">
-                              <h5 className="font-semibold text-foreground truncate max-w-[200px] leading-tight">
-                                {file.name}
-                              </h5>
-                              <p className="text-[9px] text-muted-foreground font-mono">
-                                Size: {Math.round(file.size / 1024)} KB • category: {file.category}
-                              </p>
-                            </div>
-                          </div>
-                          <a
-                            href={file.url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex h-7 w-7 rounded bg-primary/10 text-primary hover:bg-primary/20 items-center justify-center transition-colors"
-                          >
-                            <Link className="h-3.5 w-3.5" />
-                          </a>
-                        </div>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* 5. TIMELINE PROFILE TAB */}
-                {drawerTab === 'timeline' && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="space-y-4"
-                  >
-                    <div className="relative border-l border-border/80 ml-3.5 space-y-6 text-left pl-4">
-                      {selectedLead.timeline
-                        ?.slice()
-                        .reverse()
-                        .map((evt, idx) => (
-                          <div key={idx} className="relative space-y-1 text-xs">
-                            {/* Circle dot icon */}
-                            <span className="absolute -left-[25px] top-0.5 rounded-full border border-border bg-background p-1 flex items-center justify-center shadow-sm text-primary">
-                              <History className="h-3 w-3" />
-                            </span>
-                            <div className="flex items-center gap-2 justify-between flex-wrap">
-                              <h4 className="font-bold text-foreground">{evt.title}</h4>
-                              <span className="text-[9px] font-mono text-muted-foreground/80">
-                                {new Date(evt.createdAt).toLocaleDateString()}
-                              </span>
-                            </div>
-                            <p className="text-muted-foreground leading-relaxed">
-                              {evt.description}
-                            </p>
-                            <span className="text-[9px] tracking-wide text-foreground/75 font-semibold">
-                              User: {evt.userName}
-                            </span>
-                          </div>
-                        ))}
-                    </div>
-                  </motion.div>
-                )}
-              </div>
-            </motion.div>
-          </>
+                  </form>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>,
+          document.body
         )}
-      </AnimatePresence>
-
-      {/* CREATE LEAD DIALOG MODAL */}
-      <AnimatePresence>
-        {createModalOpen && (
-          <>
-            {/* Backdrop click closer */}
-            <div
-              className="fixed inset-0 z-50 bg-background/50 backdrop-blur-sm"
-              onClick={() => setCreateModalOpen(false)}
-            />
-
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md p-6 rounded-xl border border-border bg-popover text-popover-foreground shadow-2xl z-50 text-left space-y-4"
-            >
-              <div className="space-y-1 border-b border-border/40 pb-3 select-none">
-                <h4 className="text-sm font-black uppercase tracking-wider text-primary flex items-center gap-1.5">
-                  <Sparkles className="h-4.5 w-4.5 text-primary animate-pulse" />
-                  Capture New Account Lead
-                </h4>
-                <p className="text-[10px] text-muted-foreground">
-                  Track dynamic pipeline budgets, currencies, priority tags, and socials.
-                </p>
-              </div>
-
-              <form onSubmit={handleCreateLead} className="space-y-3.5 text-xs">
-                <div className="grid grid-cols-2 gap-3.5">
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-bold text-muted-foreground uppercase">
-                      Company Name *
-                    </label>
-                    <Input
-                      value={formName}
-                      onChange={(e) => setFormName(e.target.value)}
-                      placeholder="Acme Corp"
-                      className="h-8.5 bg-background/50 focus-visible:ring-1"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-bold text-muted-foreground uppercase">
-                      Primary Contact *
-                    </label>
-                    <Input
-                      value={formContact}
-                      onChange={(e) => setFormContact(e.target.value)}
-                      placeholder="John Carter"
-                      className="h-8.5 bg-background/50 focus-visible:ring-1"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3.5">
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-bold text-muted-foreground uppercase">
-                      Email Address
-                    </label>
-                    <Input
-                      type="email"
-                      value={formEmail}
-                      onChange={(e) => setFormEmail(e.target.value)}
-                      placeholder="carter@acme.com"
-                      className="h-8.5 bg-background/50"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-bold text-muted-foreground uppercase">
-                      Phone Number
-                    </label>
-                    <Input
-                      value={formPhone}
-                      onChange={(e) => setFormPhone(e.target.value)}
-                      placeholder="415-555-0190"
-                      className="h-8.5 bg-background/50"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-bold text-muted-foreground uppercase">
-                      Project Budget ($)
-                    </label>
-                    <Input
-                      type="number"
-                      value={formBudget}
-                      onChange={(e) => setFormBudget(parseInt(e.target.value) || 0)}
-                      className="h-8.5 bg-background/50"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-bold text-muted-foreground uppercase">
-                      Priority
-                    </label>
-                    <Select
-                      value={formPriority}
-                      onChange={(val) => setFormPriority(val as 'low' | 'medium' | 'high')}
-                      className="w-full h-8.5 rounded-md border border-input bg-background/50 px-2 py-1 text-xs text-foreground focus:outline-none"
-                      options={[
-                        { value: 'low', label: 'Low' },
-                        { value: 'medium', label: 'Medium' },
-                        { value: 'high', label: 'High' },
-                      ]}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-bold text-muted-foreground uppercase">
-                      Source Channel
-                    </label>
-                    <Select
-                      value={formSource}
-                      onChange={(val) => setFormSource(val)}
-                      className="w-full h-8.5 rounded-md border border-input bg-background/50 px-2 py-1 text-xs text-foreground focus:outline-none"
-                      options={[
-                        { value: 'website', label: 'Website' },
-                        { value: 'linkedin', label: 'LinkedIn' },
-                        { value: 'upwork', label: 'Upwork' },
-                        { value: 'referral', label: 'Referral' },
-                        { value: 'ads', label: 'Ads' },
-                        { value: 'cold-reach', label: 'Outreach' },
-                      ]}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3.5">
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-bold text-muted-foreground uppercase">
-                      Work Category
-                    </label>
-                    <Input
-                      value={formWorkType}
-                      onChange={(e) => setFormWorkType(e.target.value)}
-                      placeholder="e.g. ERP Development"
-                      className="h-8.5 bg-background/50"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-bold text-muted-foreground uppercase">
-                      Tech Stack (comma-split)
-                    </label>
-                    <Input
-                      value={formStack}
-                      onChange={(e) => setFormStack(e.target.value)}
-                      placeholder="React, Next.js, Go"
-                      className="h-8.5 bg-background/50"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex justify-end gap-2 pt-4 border-t border-border/40 select-none">
-                  <Button
-                    onClick={() => setCreateModalOpen(false)}
-                    variant="outline"
-                    size="sm"
-                    className="h-8 text-xs"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    variant="default"
-                    size="sm"
-                    className="h-8 text-xs font-bold"
-                  >
-                    Ingest Lead
-                  </Button>
-                </div>
-              </form>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
 
       {/* Single Lead Delete Confirmation Modal */}
       <ConfirmationModal

@@ -108,39 +108,40 @@ export function DropdownMenu({ trigger, items, align = 'right', className }: Dro
       </button>
 
       {mounted &&
-        isOpen &&
         createPortal(
           <AnimatePresence>
-            <motion.div
-              ref={dropdownRef}
-              initial={{ opacity: 0, y: coords.placement === 'bottom' ? -5 : 5, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: coords.placement === 'bottom' ? -5 : 5, scale: 0.98 }}
-              transition={{ duration: 0.15, ease: 'easeOut' }}
-              style={{ top: coords.top, left: coords.left }}
-              className="absolute z-[9999] min-w-[200px] rounded-md border border-border bg-popover text-popover-foreground shadow-lg flex flex-col"
-            >
-              {items.map((item, index) => (
-                <button
-                  key={index}
-                  onClick={() => {
-                    item.onClick();
-                    setIsOpen(false);
-                  }}
-                  disabled={item.disabled}
-                  className={cn(
-                    'w-full flex items-center gap-2 px-4 py-2 text-sm text-left hover:bg-accent hover:text-accent-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed',
-                    index === 0 && 'rounded-t-md',
-                    index === items.length - 1 && 'rounded-b-md',
-                    item.destructive &&
-                      'text-destructive hover:bg-destructive/10 hover:text-destructive'
-                  )}
-                >
-                  {item.icon}
-                  {item.label}
-                </button>
-              ))}
-            </motion.div>
+            {isOpen && (
+              <motion.div
+                ref={dropdownRef}
+                initial={{ opacity: 0, y: coords.placement === 'bottom' ? -5 : 5, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: coords.placement === 'bottom' ? -5 : 5, scale: 0.98 }}
+                transition={{ duration: 0.15, ease: 'easeOut' }}
+                style={{ top: coords.top, left: coords.left }}
+                className="absolute z-[9999] min-w-[200px] rounded-md border border-border bg-popover text-popover-foreground shadow-lg flex flex-col"
+              >
+                {items.map((item, index) => (
+                  <button
+                    key={index}
+                    onClick={() => {
+                      item.onClick();
+                      setIsOpen(false);
+                    }}
+                    disabled={item.disabled}
+                    className={cn(
+                      'w-full flex items-center gap-2 px-4 py-2 text-sm text-left hover:bg-accent hover:text-accent-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed',
+                      index === 0 && 'rounded-t-md',
+                      index === items.length - 1 && 'rounded-b-md',
+                      item.destructive &&
+                        'text-destructive hover:bg-destructive/10 hover:text-destructive'
+                    )}
+                  >
+                    {item.icon}
+                    {item.label}
+                  </button>
+                ))}
+              </motion.div>
+            )}
           </AnimatePresence>,
           document.body
         )}

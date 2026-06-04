@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { PageHeader, Card, CardContent, Button } from '@/components/ui';
 import { Clock, Calendar, Users, FileText } from 'lucide-react';
 import { AttendanceWidget } from '@/components/attendance/AttendanceWidget';
+import { EmployeeActivityDrawer } from '@/components/hr/EmployeeActivityDrawer';
 
 export default function AttendancePage() {
   const { data: session } = useSession();
@@ -12,6 +13,15 @@ export default function AttendancePage() {
   const [myLogs, setMyLogs] = useState([]);
   const [teamStatus, setTeamStatus] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Employee Activity Drawer states
+  const [isActivityOpen, setIsActivityOpen] = useState(false);
+  const [activityUserId, setActivityUserId] = useState<string | null>(null);
+
+  const handleOpenActivity = (userId: string) => {
+    setActivityUserId(userId);
+    setIsActivityOpen(true);
+  };
 
   const roles = session?.user?.roles || [];
   const isAdmin = roles.some((role) => ['super-admin', 'admin', 'hr'].includes(role.toLowerCase()));
@@ -62,6 +72,7 @@ export default function AttendancePage() {
     if (isAdmin && activeTab === 'team') {
       fetchTeamStatus();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, isAdmin]);
 
   return (
@@ -207,7 +218,12 @@ export default function AttendancePage() {
                   {teamStatus.map((record: any) => (
                     <tr key={record.user._id} className="hover:bg-muted/10">
                       <td className="px-4 py-3">
-                        <div className="font-bold text-foreground">{record.user.name}</div>
+                        <div
+                          className="font-bold text-foreground cursor-pointer hover:underline hover:text-primary transition-colors"
+                          onClick={() => handleOpenActivity(record.user._id)}
+                        >
+                          {record.user.name}
+                        </div>
                         <div className="text-[10px] text-muted-foreground">{record.user.email}</div>
                       </td>
                       <td className="px-4 py-3">
@@ -251,6 +267,12 @@ export default function AttendancePage() {
           </CardContent>
         </Card>
       )}
+
+      <EmployeeActivityDrawer
+        isOpen={isActivityOpen}
+        onClose={() => setIsActivityOpen(false)}
+        userId={activityUserId}
+      />
     </div>
   );
 }

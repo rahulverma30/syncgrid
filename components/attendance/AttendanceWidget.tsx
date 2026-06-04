@@ -32,6 +32,7 @@ export const AttendanceWidget = () => {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchTodayLog();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function handlePunchIn() {

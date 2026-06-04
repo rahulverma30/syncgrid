@@ -12,6 +12,7 @@ import {
   ConfirmationModal,
   Select,
 } from '@/components/ui';
+import { EmployeeActivityDrawer } from '@/components/hr/EmployeeActivityDrawer';
 import {
   Users,
   Search,
@@ -26,6 +27,7 @@ import {
   Download,
   Building,
   CheckCircle2,
+  Activity,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
@@ -56,6 +58,15 @@ export default function HREmployeesPage() {
   const [employeeToDeleteId, setEmployeeToDeleteId] = useState<string | null>(null);
   const [isBulkDeleteConfirmOpen, setIsBulkDeleteConfirmOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState('');
+
+  // Employee Activity Drawer states
+  const [isActivityOpen, setIsActivityOpen] = useState(false);
+  const [activityUserId, setActivityUserId] = useState<string | null>(null);
+
+  const handleOpenActivity = (userId: string) => {
+    setActivityUserId(userId);
+    setIsActivityOpen(true);
+  };
 
   const fetchEmployees = async () => {
     setIsLoading(true);
@@ -356,7 +367,12 @@ export default function HREmployeesPage() {
                         />
                       </td>
                       <td className="py-4 px-4">
-                        <div className="font-bold text-white text-sm">{e.name}</div>
+                        <div
+                          className="font-bold text-white text-sm cursor-pointer hover:underline"
+                          onClick={() => handleOpenActivity(e._id)}
+                        >
+                          {e.name}
+                        </div>
                         <div className="flex items-center gap-2 mt-0.5 text-slate-400 text-[10px]">
                           <span>{e.email}</span>
                           <span>•</span>
@@ -386,6 +402,13 @@ export default function HREmployeesPage() {
                       </td>
                       <td className="py-4 px-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            title="View Employee Activity"
+                            onClick={() => handleOpenActivity(e._id)}
+                            className="p-1.5 rounded-lg border border-border/60 hover:bg-green-500/10 text-slate-400 hover:text-green-400 transition-all"
+                          >
+                            <Activity className="h-3.5 w-3.5" />
+                          </button>
                           <Link href={`/hr/employees/${e._id}`}>
                             <button
                               title="View Profile Details"
@@ -488,6 +511,13 @@ export default function HREmployeesPage() {
         confirmLabel="Delete Selected"
         cancelLabel="Cancel"
         type="danger"
+      />
+
+      {/* Employee Activity Drawer */}
+      <EmployeeActivityDrawer
+        isOpen={isActivityOpen}
+        onClose={() => setIsActivityOpen(false)}
+        userId={activityUserId}
       />
     </div>
   );

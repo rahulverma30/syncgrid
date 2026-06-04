@@ -5,7 +5,8 @@ import { useHRStore } from '@/store/hrStore';
 import { Button, Badge, Input, Modal, Select } from '@/components/ui';
 import { Users, Search, Plus, Mail, Phone, ChevronRight } from 'lucide-react';
 import { EmployeeDetailModal } from './EmployeeDetailModal';
-
+import { EmployeeActivityDrawer } from './EmployeeActivityDrawer';
+import { Activity } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function HrDirectory() {
@@ -33,6 +34,9 @@ export function HrDirectory() {
 
   // Selected Employee details drawer state
   const [selectedEmpId, setSelectedEmpId] = useState<string | null>(null);
+
+  // Employee Activity Drawer states
+  const [activityUserId, setActivityUserId] = useState<string | null>(null);
 
   // Filter employees array locally to avoid unnecessary database queries on typing
   const filteredEmployees = employees.filter((emp) => {
@@ -253,7 +257,17 @@ export function HrDirectory() {
               </div>
 
               {/* View Details CTA */}
-              <div className="flex justify-end pt-1 border-t border-border/30 mt-1">
+              <div className="flex justify-between items-center pt-1 border-t border-border/30 mt-1">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActivityUserId(emp._id);
+                  }}
+                  className="p-1.5 rounded-lg hover:bg-green-500/10 text-slate-400 hover:text-green-400 transition-all"
+                  title="View Employee Activity"
+                >
+                  <Activity className="h-3.5 w-3.5" />
+                </button>
                 <span className="text-[10px] font-bold text-primary flex items-center gap-0.5 opacity-80 group-hover:opacity-100 transition-all duration-200">
                   OPEN FILE <ChevronRight className="h-3.5 w-3.5" />
                 </span>
@@ -268,6 +282,12 @@ export function HrDirectory() {
         employeeId={selectedEmpId}
         isOpen={selectedEmpId !== null}
         onClose={() => setSelectedEmpId(null)}
+      />
+
+      <EmployeeActivityDrawer
+        isOpen={activityUserId !== null}
+        onClose={() => setActivityUserId(null)}
+        userId={activityUserId}
       />
 
       {/* Add Employee Form Modal */}
