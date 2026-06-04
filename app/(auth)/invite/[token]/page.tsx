@@ -90,7 +90,7 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
 
         // Auto-login after creation
         const loginResult = await signIn('credentials', {
-          email: inviteData.email,
+          email: inviteData?.email || '',
           password: password,
           redirect: false,
         });
