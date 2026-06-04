@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { withApiAuth } from '@/lib/auth/api';
 import { connectToDatabase } from '@/lib/db/mongodb';
-import { AttendanceLog } from '@/models';
+import { AttendanceLog } from '@/models/AttendanceLog';
+import { Project } from '@/models/Project';
+import { ProjectActivity } from '@/models/ProjectActivity';
 import mongoose from 'mongoose';
 
 const getTodayString = (date = new Date()) => {
@@ -63,6 +65,18 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
       },
       { new: true, upsert: true }
     );
+
+    // Track Project Activity if projectId is provided
+    if (body.projectId) {
+      await ProjectActivity.create({
+        companyId,
+        projectId: body.projectId,
+        type: 'internal',
+        title: 'Work Session Started',
+        description: `Employee started work: ${body.description}`,
+        userName: session.user.name,
+      });
+    }
 
     return NextResponse.json({ success: true, data: log });
   } catch (error: any) {
@@ -133,6 +147,24 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
     }
 
     await log.save();
+
+    // Increment actual hours on the linked project and log activity
+    if (log.projectId) {
+      const loggedHours = netMinutes / 60;
+      await Project.updateOne(
+        { _id: log.projectId, companyId },
+        { $inc: { actualHours: loggedHours } }
+      );
+
+      await ProjectActivity.create({
+        companyId,
+        projectId: log.projectId,
+        type: 'internal',
+        title: 'Work Session Completed',
+        description: `Employee logged ${loggedHours.toFixed(2)} hours.`,
+        userName: session.user.name,
+      });
+    }
 
     return NextResponse.json({ success: true, data: log });
   } catch (error: any) {

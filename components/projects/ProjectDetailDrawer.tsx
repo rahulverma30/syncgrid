@@ -412,6 +412,25 @@ export const ProjectDetailDrawer: React.FC = () => {
     }
   };
 
+  const handleDeleteDocument = async (docId: string) => {
+    if (!window.confirm('Are you sure you want to remove this document?')) return;
+    try {
+      const res = await fetch(`/api/protected/projects/${selectedProject._id}/documents/${docId}`, {
+        method: 'DELETE',
+      });
+      const d = await res.json();
+      if (d.success) {
+        toast.success('Document removed!');
+        setSelectedProject(d.data);
+        fetchProjects();
+      } else {
+        toast.error(d.message || 'Failed to remove document.');
+      }
+    } catch {
+      toast.error('Failed to remove document.');
+    }
+  };
+
   const tabs = [
     { id: 'overview', label: 'Overview', icon: Layers },
     { id: 'team', label: 'Team', icon: Users },
@@ -551,7 +570,7 @@ export const ProjectDetailDrawer: React.FC = () => {
                 </p>
               </div>
 
-              {/* Financial & Delivery Dates info grid */}
+              {/* Financial & Time Tracking info grid */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="p-3 rounded-lg bg-card/30 border border-border/50 space-y-1">
                   <span className="text-[9px] font-bold text-muted-foreground uppercase">
@@ -566,19 +585,14 @@ export const ProjectDetailDrawer: React.FC = () => {
                 </div>
                 <div className="p-3 rounded-lg bg-card/30 border border-border/50 space-y-1">
                   <span className="text-[9px] font-bold text-muted-foreground uppercase">
-                    Timeline Deadline
+                    Time Tracking
                   </span>
-                  <h4 className="text-sm font-bold text-foreground">
-                    {selectedProject.deadline
-                      ? new Date(selectedProject.deadline).toLocaleDateString()
-                      : 'No deadline declared'}
+                  <h4 className="text-sm font-bold text-foreground flex items-center gap-1.5">
+                    <Clock className="h-4 w-4 text-primary" />
+                    {(selectedProject.actualHours || 0).toFixed(1)}h /{' '}
+                    {selectedProject.estimatedHours || 0}h
                   </h4>
-                  <p className="text-[10px] text-muted-foreground">
-                    Started:{' '}
-                    {selectedProject.startDate
-                      ? new Date(selectedProject.startDate).toLocaleDateString()
-                      : 'TBD'}
-                  </p>
+                  <p className="text-[10px] text-muted-foreground">Hours logged vs estimated</p>
                 </div>
               </div>
             </div>
@@ -1054,11 +1068,8 @@ export const ProjectDetailDrawer: React.FC = () => {
                   </div>
                 )}
                 {selectedProject.documents?.map((doc) => (
-                  <a
+                  <div
                     key={doc._id}
-                    href={doc.url}
-                    target="_blank"
-                    rel="noreferrer"
                     className="flex items-center justify-between p-3 rounded-lg border border-border/40 bg-card/25 hover:bg-card transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
@@ -1067,13 +1078,35 @@ export const ProjectDetailDrawer: React.FC = () => {
                       </span>
                       <div className="space-y-0.5 min-w-0">
                         <h5 className="font-bold text-foreground truncate">{doc.name}</h5>
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">
-                          {doc.category}
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium flex items-center gap-2">
+                          <span>{doc.category}</span>
+                          {doc.uploadedBy && <span>• By {doc.uploadedBy}</span>}
                         </p>
                       </div>
                     </div>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground/60 shrink-0" />
-                  </a>
+                    <div className="flex items-center gap-2">
+                      <a
+                        href={doc.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="p-1.5 rounded hover:bg-background transition-colors text-primary"
+                        title="View Document"
+                      >
+                        <ChevronRight className="h-4 w-4 shrink-0" />
+                      </a>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleDeleteDocument(doc._id);
+                        }}
+                        className="p-1.5 rounded hover:bg-rose-500/10 text-muted-foreground hover:text-rose-500 transition-colors"
+                        title="Delete Document"
+                      >
+                        <AlertCircle className="h-4 w-4 shrink-0" />
+                      </button>
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>

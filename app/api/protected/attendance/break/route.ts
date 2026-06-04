@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { withApiAuth } from '@/lib/auth/api';
 import { connectToDatabase } from '@/lib/db/mongodb';
-import { AttendanceLog } from '@/models';
+import { AttendanceLog } from '@/models/AttendanceLog';
+import { ProjectActivity } from '@/models/ProjectActivity';
 import mongoose from 'mongoose';
 
 const getTodayString = (date = new Date()) => {
@@ -50,6 +51,17 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     log.pauses.push({ start: new Date() });
     log.status = 'Paused';
     await log.save();
+
+    if (log.projectId) {
+      await ProjectActivity.create({
+        companyId,
+        projectId: log.projectId,
+        type: 'internal',
+        title: 'Work Session Paused',
+        description: 'Employee paused their work session.',
+        userName: session.user.name,
+      });
+    }
 
     return NextResponse.json({ success: true, data: log });
   } catch (error: any) {
@@ -107,6 +119,17 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
     log.status = 'Working';
 
     await log.save();
+
+    if (log.projectId) {
+      await ProjectActivity.create({
+        companyId,
+        projectId: log.projectId,
+        type: 'internal',
+        title: 'Work Session Resumed',
+        description: `Employee resumed work after a ${activePause.duration} minute break.`,
+        userName: session.user.name,
+      });
+    }
 
     return NextResponse.json({ success: true, data: log });
   } catch (error: any) {
