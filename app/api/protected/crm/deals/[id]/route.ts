@@ -3,6 +3,8 @@ import { withApiAuth } from '@/lib/auth/api';
 import { connectToDatabase } from '@/lib/db/mongodb';
 import { Deal } from '@/models/Deal';
 import { CRMActivity } from '@/models/CRMActivity';
+import { createNotification } from '@/lib/services/notificationService';
+import { executeEvent } from '@/lib/services/automationService';
 
 export const GET = withApiAuth(async (request: Request, context: any, session: any) => {
   try {
@@ -60,6 +62,33 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
         userName: session.user.name,
       });
       await activity.save();
+
+      // Trigger notification if Deal is Won
+      if (deal.stage === 'closed-won') {
+        await createNotification({
+          companyId,
+          userId: deal.ownerId, // Notify the deal owner
+          title: 'Deal Won! 🎉',
+          description: `The deal ${deal.name} was marked as won!`,
+          type: 'deal',
+          priority: 'high',
+        });
+
+        // Also notify the user who won it if different
+        if (deal.ownerId.toString() !== session.user.id.toString()) {
+          await createNotification({
+            companyId,
+            userId: session.user.id,
+            title: 'Deal Won! 🎉',
+            description: `You successfully closed the deal ${deal.name}.`,
+            type: 'deal',
+            priority: 'high',
+          });
+        }
+
+        // Trigger generic workflow automation engine
+        await executeEvent('deal_won', companyId.toString(), deal.toObject());
+      }
     } else {
       const activity = new CRMActivity({
         companyId,

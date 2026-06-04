@@ -50,6 +50,7 @@ function KPIGrid({ kpis }: { kpis: any }) {
                   : -Math.abs(trendValue)
             }
             trendLabel={item.comparisonLabel}
+            description={isNaN(trendValue) ? item.change : undefined}
           />
         );
       })}
@@ -58,14 +59,14 @@ function KPIGrid({ kpis }: { kpis: any }) {
 }
 
 /**
- * 1. SUPER ADMIN WORKSPACE VIEW
+ * 1. EXECUTIVE / CEO VIEW
  */
 export function SuperAdminView({ data, isLoading, onRefresh }: RoleViewProps) {
   const adminKPIs = {
-    totalRevenue: data.kpis.revenue,
-    activeProjects: data.kpis.activeProjects,
-    totalLeads: data.kpis.totalLeads,
-    teamProductivity: data.kpis.teamProductivity,
+    revenueThisMonth: data.kpis.revenueThisMonth,
+    profitability: data.kpis.profitability,
+    pipelineValue: data.kpis.pipelineValue,
+    activeClients: data.kpis.activeClients,
   };
 
   const activityTypes = {
@@ -82,21 +83,18 @@ export function SuperAdminView({ data, isLoading, onRefresh }: RoleViewProps) {
     description: `${act.action} ${act.target}`,
     time: act.time,
     user: { name: act.user.name },
-    type: activityTypes[act.type] || 'user',
+    type: activityTypes[act.type as keyof typeof activityTypes] || 'user',
   }));
 
   return (
     <div className="space-y-6">
-      {/* Dynamic Counters Grid */}
       <KPIGrid kpis={adminKPIs} />
 
-      {/* Main Charts & Timelines Grid */}
       <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
-        {/* Revenue streams */}
         <div className="lg:col-span-2">
           <DashboardWidget
             title="Revenue Overview"
-            description="Gross corporate income compared against monthly target lines"
+            description="Gross corporate income compared against monthly targets"
             isLoading={isLoading}
             onRefresh={onRefresh}
           >
@@ -112,45 +110,10 @@ export function SuperAdminView({ data, isLoading, onRefresh }: RoleViewProps) {
           </DashboardWidget>
         </div>
 
-        {/* Project Status Ratio */}
         <div className="col-span-1">
           <DashboardWidget
-            title="Project Pipeline Distribution"
-            description="Active projects distribution by development status"
-            isLoading={isLoading}
-            onRefresh={onRefresh}
-          >
-            <PieChartWrapper data={data.charts.projectStatusPie} height={260} />
-          </DashboardWidget>
-        </div>
-      </div>
-
-      <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
-        {/* Lead conversions sources */}
-        <div className="lg:col-span-2">
-          <DashboardWidget
-            title="Lead Acquisition & Conversion"
-            description="Acquired leads vs successfully qualified clients"
-            isLoading={isLoading}
-            onRefresh={onRefresh}
-          >
-            <BarChartWrapper
-              data={data.charts.leadConversionBar}
-              xKey="name"
-              metrics={[
-                { key: 'leads', label: 'Total Leads', color: 'hsl(var(--primary) / 0.4)' },
-                { key: 'conversions', label: 'Converted Clients', color: 'hsl(var(--primary))' },
-              ]}
-              height={250}
-            />
-          </DashboardWidget>
-        </div>
-
-        {/* Global Security & Activity Feed */}
-        <div className="col-span-1">
-          <DashboardWidget
-            title="System Activity Log"
-            description="Real-time agency activity feed and system audits"
+            title="System Insights"
+            description="Automated business intelligence feed"
             isLoading={isLoading}
             onRefresh={onRefresh}
             className="h-full"
@@ -162,230 +125,54 @@ export function SuperAdminView({ data, isLoading, onRefresh }: RoleViewProps) {
         </div>
       </div>
 
-      {/* Transactions Widget */}
-      <DashboardWidget
-        title="Recent Client Invoices"
-        description="Overview of latest agency payments, billings, and processing"
-        isLoading={isLoading}
-        onRefresh={onRefresh}
-        colSpan={4}
-      >
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-border/60 text-[10px] font-bold uppercase tracking-wider text-muted-foreground bg-muted/20">
-                <th className="py-2.5 px-4">Invoice ID</th>
-                <th className="py-2.5 px-4">Client Name</th>
-                <th className="py-2.5 px-4">Transaction Amount</th>
-                <th className="py-2.5 px-4">Processing Date</th>
-                <th className="py-2.5 px-4 text-right">Payment Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.transactions.map((tx) => (
-                <tr
-                  key={tx.id}
-                  className="border-b border-border/40 hover:bg-muted/10 text-xs transition-colors"
-                >
-                  <td className="py-3.5 px-4 font-mono font-semibold">{tx.id}</td>
-                  <td className="py-3.5 px-4 font-semibold">{tx.client}</td>
-                  <td className="py-3.5 px-4 font-mono font-bold text-foreground">{tx.amount}</td>
-                  <td className="py-3.5 px-4 text-muted-foreground">{tx.date}</td>
-                  <td className="py-3.5 px-4 text-right">
-                    <span
-                      className={cn(
-                        'inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide',
-                        tx.status === 'paid' && 'bg-emerald-500/10 text-emerald-500',
-                        tx.status === 'pending' && 'bg-amber-500/10 text-amber-500',
-                        tx.status === 'failed' && 'bg-rose-500/10 text-rose-500',
-                        tx.status === 'refunded' && 'bg-blue-500/10 text-blue-500'
-                      )}
-                    >
-                      {tx.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </DashboardWidget>
-    </div>
-  );
-}
-
-/**
- * 2. FINANCE OVERVIEW VIEW
- */
-export function FinanceView({ data, isLoading, onRefresh }: RoleViewProps) {
-  const financeKPIs = {
-    totalRevenue: data.kpis.revenue,
-    pendingInvoices: data.kpis.pendingInvoices,
-    profitability: data.kpis.profitability,
-    monthlyGrowth: data.kpis.monthlyGrowth,
-  };
-
-  return (
-    <div className="space-y-6">
-      {/* Counters Grid */}
-      <KPIGrid kpis={financeKPIs} />
-
-      {/* Corporate Profit & Loss */}
-      <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <DashboardWidget
-            title="Profit & Loss Breakdown"
-            description="Comparison of corporate revenue, expenses, and net profit margins"
-            isLoading={isLoading}
-            onRefresh={onRefresh}
-          >
-            <BarChartWrapper
-              data={data.charts.expensesBar}
-              xKey="name"
-              metrics={[
-                { key: 'revenue', label: 'Gross Revenue', color: '#10b981' },
-                { key: 'expenses', label: 'Total Expenses', color: '#f59e0b' },
-                { key: 'profit', label: 'Net Profit', color: 'hsl(var(--primary))' },
-              ]}
-              height={280}
-            />
-          </DashboardWidget>
-        </div>
-
-        <div className="col-span-1">
-          <DashboardWidget
-            title="Outstanding Revenue Collections"
-            description="Distribution of active billings vs pending invoices"
-            isLoading={isLoading}
-            onRefresh={onRefresh}
-          >
-            <div className="h-full flex flex-col justify-center space-y-5 py-4">
-              <div className="text-center space-y-1">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                  Total Outstanding Balance
-                </span>
-                <h3 className="text-3xl font-black tracking-tight text-rose-500 font-mono">
-                  {data.kpis.pendingInvoices.change}
-                </h3>
-                <p className="text-[10px] text-muted-foreground uppercase font-semibold">
-                  Across {data.kpis.pendingInvoices.value} pending accounts
-                </p>
-              </div>
-
-              <div className="space-y-3.5 border-t border-border/40 pt-4">
-                {data.transactions.map((tx) => (
-                  <div key={tx.id} className="flex items-center justify-between text-xs">
-                    <div className="text-left">
-                      <p className="font-semibold text-foreground truncate max-w-[150px]">
-                        {tx.client}
-                      </p>
-                      <p className="text-[10px] font-mono text-muted-foreground">
-                        {tx.id} • {tx.date}
-                      </p>
-                    </div>
-                    <span className="font-mono font-bold text-foreground">{tx.amount}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </DashboardWidget>
-        </div>
+      {/* Secondary KPI Row */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <MetricCard
+          title="Conversion Rate"
+          value={data.kpis.wonDeals?.change || '0%'}
+          trendLabel="win rate"
+          description={data.kpis.wonDeals?.value + ' won deals'}
+        />
+        <MetricCard
+          title="Total Leads"
+          value={data.kpis.totalLeads?.value || '0'}
+          trendLabel="conversion rate"
+          description={data.kpis.totalLeads?.change + ' converted'}
+        />
+        <MetricCard
+          title="Pending Receivables"
+          value={data.kpis.pendingInvoices?.value || '$0'}
+          trendLabel="amount overdue"
+          description={data.kpis.pendingInvoices?.change + ' overdue'}
+        />
+        <MetricCard
+          title="Labor Utilization"
+          value={data.kpis.teamProductivity?.value || '0%'}
+          trendLabel="logged"
+          description={data.kpis.teamProductivity?.change + ' logged'}
+        />
       </div>
-
-      {/* Transaction Listings */}
-      <DashboardWidget
-        title="Agency Billing Ledger"
-        description="Detailed ledger of recent financial incoming invoices and refunds"
-        isLoading={isLoading}
-        onRefresh={onRefresh}
-        colSpan={4}
-      >
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-border/60 text-[10px] font-bold uppercase tracking-wider text-muted-foreground bg-muted/20">
-                <th className="py-2.5 px-4">Ledger ID</th>
-                <th className="py-2.5 px-4">Associated Entity</th>
-                <th className="py-2.5 px-4">Billing Date</th>
-                <th className="py-2.5 px-4">Transaction Type</th>
-                <th className="py-2.5 px-4 text-right">Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.transactions.map((tx) => (
-                <tr
-                  key={tx.id}
-                  className="border-b border-border/40 hover:bg-muted/10 text-xs transition-colors"
-                >
-                  <td className="py-3.5 px-4 font-mono font-semibold">{tx.id}</td>
-                  <td className="py-3.5 px-4 font-semibold">{tx.client}</td>
-                  <td className="py-3.5 px-4 text-muted-foreground">{tx.date}</td>
-                  <td className="py-3.5 px-4 uppercase font-bold text-[10px] tracking-wide text-muted-foreground">
-                    {tx.type}
-                  </td>
-                  <td className="py-3.5 px-4 text-right font-mono font-black text-foreground">
-                    {tx.amount}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </DashboardWidget>
     </div>
   );
 }
 
 /**
- * 3. DEVELOPER / PRODUCTIVITY VIEW
+ * 2. OPERATIONS / PROJECT MANAGER VIEW
  */
-export function DeveloperView({ data, isLoading, onRefresh }: RoleViewProps) {
-  const devTimelineItems: ActivityTimelineItem[] = data.activities
-    .filter((a) => a.type === 'project' || a.type === 'task')
-    .map((act) => ({
-      id: act.id,
-      title: act.user.name,
-      description: `${act.action} ${act.target}`,
-      time: act.time,
-      user: { name: act.user.name },
-      type: act.type === 'project' ? 'status' : 'user',
-    }));
-
-  const devKPIs = {
+export function OperationsView({ data, isLoading, onRefresh }: RoleViewProps) {
+  const opsKPIs = {
     activeProjects: data.kpis.activeProjects,
-    completedProjects: data.kpis.completedProjects,
+    projectsAtRisk: data.kpis.projectsAtRisk,
+    overdueTasks: data.kpis.overdueTasks,
     teamProductivity: data.kpis.teamProductivity,
-    clientRetention: data.kpis.clientRetention,
   };
 
   return (
     <div className="space-y-6">
-      {/* Counters Grid */}
-      <KPIGrid kpis={devKPIs} />
+      <KPIGrid kpis={opsKPIs} />
 
-      {/* Sprints completion line charts */}
       <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <DashboardWidget
-            title="Sprint Velocity Trends"
-            description="Active tasks versus completed milestones per interval"
-            isLoading={isLoading}
-            onRefresh={onRefresh}
-          >
-            <LineChartWrapper
-              data={data.charts.projectGrowthLine}
-              xKey="name"
-              metrics={[
-                { key: 'active', label: 'Active Milestones', color: 'hsl(var(--primary))' },
-                { key: 'completed', label: 'Completed Deliverables', color: '#10b981' },
-              ]}
-              height={260}
-            />
-          </DashboardWidget>
-        </div>
-
-        {/* Workload allocations list */}
-        <div className="col-span-1">
           <DashboardWidget
             title="Team Allocation Capacities"
             description="Total sprint hours allocated vs remaining maximum capacities"
@@ -393,7 +180,7 @@ export function DeveloperView({ data, isLoading, onRefresh }: RoleViewProps) {
             onRefresh={onRefresh}
           >
             <div className="space-y-4 py-2 text-left">
-              {data.charts.teamWorkload.map((member) => {
+              {data.charts.teamWorkload.map((member: any) => {
                 const percentage = Math.min(
                   100,
                   Math.round((member.allocated / member.capacity) * 100)
@@ -420,51 +207,104 @@ export function DeveloperView({ data, isLoading, onRefresh }: RoleViewProps) {
                   </div>
                 );
               })}
-            </div>
-          </DashboardWidget>
-        </div>
-      </div>
-
-      {/* Competencies radar chart */}
-      <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <DashboardWidget
-            title="Sprint Activity Timeline"
-            description="Latest completed deliverables, commits, and code merges"
-            isLoading={isLoading}
-            onRefresh={onRefresh}
-          >
-            <div className="max-h-[220px] overflow-y-auto pr-1">
-              <ActivityTimeline items={devTimelineItems} />
+              {data.charts.teamWorkload.length === 0 && (
+                <div className="text-center text-muted-foreground py-8 text-sm">
+                  No workload allocations found.
+                </div>
+              )}
             </div>
           </DashboardWidget>
         </div>
 
         <div className="col-span-1">
           <DashboardWidget
-            title="System Alert Notifications"
-            description="Active reminders, mentions, and pending pull requests"
+            title="Project Pipeline Distribution"
+            description="Active projects distribution by development status"
             isLoading={isLoading}
             onRefresh={onRefresh}
           >
-            <div className="space-y-3 text-left">
-              {data.notifications.map((not) => (
-                <div
-                  key={not.id}
-                  className={cn(
-                    'p-2.5 rounded-lg border text-xs space-y-1',
-                    not.read ? 'border-border/40 bg-muted/10' : 'border-primary/20 bg-primary/5'
-                  )}
-                >
-                  <div className="flex items-center justify-between font-bold">
-                    <span className="text-foreground truncate">{not.title}</span>
-                    <span className="font-mono text-[9px] text-muted-foreground flex-shrink-0">
-                      {not.time}
-                    </span>
-                  </div>
-                  <p className="text-[10px] text-muted-foreground">{not.description}</p>
+            {/* Fallback to simple stats if pie data isn't mapped fully yet */}
+            <div className="h-full flex flex-col justify-center space-y-5 py-4">
+              <div className="text-center space-y-1">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                  Completion Rate
+                </span>
+                <h3 className="text-3xl font-black tracking-tight text-primary font-mono">
+                  {data.kpis.activeProjects?.change || '0%'}
+                </h3>
+              </div>
+              <div className="space-y-3.5 border-t border-border/40 pt-4 px-4">
+                <div className="flex items-center justify-between text-xs font-semibold">
+                  <span>Active Sprints</span>
+                  <span>{data.kpis.activeProjects?.value || 0}</span>
                 </div>
-              ))}
+                <div className="flex items-center justify-between text-xs font-semibold text-rose-500">
+                  <span>At Risk</span>
+                  <span>{data.kpis.projectsAtRisk?.value || 0}</span>
+                </div>
+              </div>
+            </div>
+          </DashboardWidget>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * 3. WORKFORCE / HR VIEW
+ */
+export function WorkforceView({ data, isLoading, onRefresh }: RoleViewProps) {
+  const hrKPIs = {
+    activeEmployees: data.kpis.activeEmployees,
+    presentToday: data.kpis.presentToday,
+    absentToday: data.kpis.absentToday,
+    onBreak: data.kpis.onBreak,
+  };
+
+  return (
+    <div className="space-y-6">
+      <KPIGrid kpis={hrKPIs} />
+
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
+        <div className="col-span-1">
+          <DashboardWidget
+            title="Attendance Overview"
+            description="Daily punch-in distribution"
+            isLoading={isLoading}
+            onRefresh={onRefresh}
+          >
+            <div className="flex flex-col justify-center h-full gap-4 text-center py-6">
+              <div className="text-4xl font-black text-emerald-500">
+                {data.kpis.presentToday?.value || 0}
+              </div>
+              <div className="text-sm font-semibold text-muted-foreground uppercase tracking-widest">
+                Present Employees
+              </div>
+              <div className="text-xs font-medium text-rose-500 mt-4">
+                {data.kpis.absentToday?.value || 0} Absent • {data.kpis.presentToday?.change}
+              </div>
+            </div>
+          </DashboardWidget>
+        </div>
+
+        <div className="col-span-1">
+          <DashboardWidget
+            title="Workload Balance"
+            description="Total labor hours logged vs company limits"
+            isLoading={isLoading}
+            onRefresh={onRefresh}
+          >
+            <div className="flex flex-col justify-center h-full gap-4 text-center py-6">
+              <div className="text-4xl font-black text-primary font-mono">
+                {data.kpis.teamProductivity?.change || '0h'}
+              </div>
+              <div className="text-sm font-semibold text-muted-foreground uppercase tracking-widest">
+                Total Hours Logged
+              </div>
+              <div className="text-xs font-medium text-emerald-500 mt-4">
+                {data.kpis.teamProductivity?.value || '0%'} Billable Utilization
+              </div>
             </div>
           </DashboardWidget>
         </div>

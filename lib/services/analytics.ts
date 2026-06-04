@@ -11,51 +11,11 @@ export interface KPIValue {
 }
 
 export interface AnalyticsData {
-  kpis: {
-    revenue: KPIValue;
-    activeProjects: KPIValue;
-    completedProjects: KPIValue;
-    totalLeads: KPIValue;
-    convertedLeads: KPIValue;
-    pendingInvoices: KPIValue;
-    teamProductivity: KPIValue;
-    monthlyGrowth: KPIValue;
-    clientRetention: KPIValue;
-    profitability: KPIValue;
-  };
-  charts: {
-    revenueArea: { name: string; amount: number; target: number }[];
-    leadConversionBar: { name: string; leads: number; conversions: number }[];
-    projectGrowthLine: { name: string; active: number; completed: number }[];
-    teamProductivityRadar: { subject: string; A: number; B: number; fullMark: number }[];
-    expensesBar: { name: string; revenue: number; expenses: number; profit: number }[];
-    projectStatusPie: { name: string; value: number; color: string }[];
-    teamWorkload: { name: string; allocated: number; capacity: number }[];
-  };
-  transactions: {
-    id: string;
-    client: string;
-    amount: string;
-    status: 'paid' | 'pending' | 'failed' | 'refunded';
-    date: string;
-    type: 'invoice' | 'expense' | 'refund';
-  }[];
-  activities: {
-    id: string;
-    user: { name: string; avatar?: string; initials: string };
-    action: string;
-    target: string;
-    time: string;
-    type: 'project' | 'lead' | 'task' | 'finance' | 'security';
-  }[];
-  notifications: {
-    id: string;
-    title: string;
-    description: string;
-    time: string;
-    type: 'reminder' | 'deadline' | 'mention' | 'approval';
-    read: boolean;
-  }[];
+  kpis: any;
+  charts: any;
+  transactions: any[];
+  activities: any[];
+  notifications: any[];
 }
 
 export async function getAnalyticsData(
@@ -69,41 +29,23 @@ export async function getAnalyticsData(
 
     if (!data) throw new Error('No data returned');
 
-    // Map the real aggregation payload into the format expected by our UI components
     const formatCurrency = (val: number) =>
       `$${(val || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
     return {
       kpis: {
-        revenue: {
-          value: formatCurrency(data.kpis.revenueTotal),
-          change: 'Real data',
+        // --- CEO / Finance ---
+        revenueThisMonth: {
+          value: formatCurrency(data.kpis.revenueThisMonth),
+          change: 'This month',
           isPositive: true,
-          comparisonLabel: 'total collected',
+          comparisonLabel: 'collected',
         },
-        activeProjects: {
-          value: `${data.kpis.activeProjects || 0}`,
-          change: 'in progress',
+        revenueThisQuarter: {
+          value: formatCurrency(data.kpis.revenueThisQuarter),
+          change: 'This quarter',
           isPositive: true,
-          comparisonLabel: 'active sprints',
-        },
-        completedProjects: {
-          value: `${data.kpis.projectCompletionRate?.toFixed(1) || 0}%`,
-          change: 'completion',
-          isPositive: true,
-          comparisonLabel: 'completion rate',
-        },
-        totalLeads: {
-          value: '0',
-          change: '0%',
-          isPositive: true,
-          comparisonLabel: 'leads acquired',
-        },
-        convertedLeads: {
-          value: '0',
-          change: '0%',
-          isPositive: true,
-          comparisonLabel: 'conversion',
+          comparisonLabel: 'collected',
         },
         pendingInvoices: {
           value: formatCurrency(data.kpis.totalOutstanding),
@@ -111,18 +53,11 @@ export async function getAnalyticsData(
           isPositive: false,
           comparisonLabel: 'amount overdue',
         },
-        teamProductivity: {
-          value: `${data.kpis.laborUtilization?.toFixed(1) || 0}%`,
-          change: 'billable',
+        activeClients: {
+          value: `${data.kpis.activeClientsCount || 0}`,
+          change: 'active',
           isPositive: true,
-          comparisonLabel: 'billable utilization',
-        },
-        monthlyGrowth: { value: '0%', change: '0%', isPositive: true, comparisonLabel: 'growth' },
-        clientRetention: {
-          value: '0%',
-          change: '0%',
-          isPositive: true,
-          comparisonLabel: 'retention',
+          comparisonLabel: 'total clients',
         },
         profitability: {
           value: `${data.kpis.profitMargin?.toFixed(1) || 0}%`,
@@ -130,33 +65,101 @@ export async function getAnalyticsData(
           isPositive: data.kpis.netProfit >= 0,
           comparisonLabel: 'net profit',
         },
+
+        // --- Sales & Pipeline ---
+        totalLeads: {
+          value: `${data.kpis.totalLeads || 0}`,
+          change: `${data.kpis.leadConversionRate?.toFixed(1) || 0}%`,
+          isPositive: true,
+          comparisonLabel: 'conversion rate',
+        },
+        pipelineValue: {
+          value: formatCurrency(data.kpis.pipelineValue),
+          change: `${data.kpis.totalDeals} deals`,
+          isPositive: true,
+          comparisonLabel: 'in pipeline',
+        },
+        wonDeals: {
+          value: `${data.kpis.wonDeals || 0}`,
+          change: `${data.kpis.dealConversionRate?.toFixed(1) || 0}%`,
+          isPositive: true,
+          comparisonLabel: 'win rate',
+        },
+
+        // --- Delivery & Operations ---
+        activeProjects: {
+          value: `${data.kpis.activeProjects || 0}`,
+          change: `${data.kpis.projectCompletionRate?.toFixed(1) || 0}%`,
+          isPositive: true,
+          comparisonLabel: 'completion rate',
+        },
+        projectsAtRisk: {
+          value: `${data.kpis.atRiskProjects || 0}`,
+          change: 'needs attention',
+          isPositive: false,
+          comparisonLabel: 'at risk',
+        },
+        overdueTasks: {
+          value: `${data.kpis.overdueTasks || 0}`,
+          change: `${data.kpis.blockedTasks || 0} blocked`,
+          isPositive: false,
+          comparisonLabel: 'overdue',
+        },
+        teamProductivity: {
+          value: `${data.kpis.laborUtilization?.toFixed(1) || 0}%`,
+          change: `${data.kpis.hoursLoggedTotal || 0}h`,
+          isPositive: true,
+          comparisonLabel: 'logged',
+        },
+
+        // --- Workforce (HR) ---
+        activeEmployees: {
+          value: `${data.kpis.activeEmployeesCount || 0}`,
+          change: 'Total',
+          isPositive: true,
+          comparisonLabel: 'employees',
+        },
+        presentToday: {
+          value: `${data.kpis.presentToday || 0}`,
+          change: `${data.kpis.lateEmployees || 0} late`,
+          isPositive: true,
+          comparisonLabel: 'present',
+        },
+        absentToday: {
+          value: `${data.kpis.absentToday || 0}`,
+          change: 'absent',
+          isPositive: false,
+          comparisonLabel: 'away',
+        },
+        onBreak: {
+          value: `${data.kpis.onBreakEmployees || 0}`,
+          change: 'on break',
+          isPositive: true,
+          comparisonLabel: 'currently',
+        },
       },
       charts: {
         revenueArea: (data.cashflowTrends || []).map((t: any) => ({
           name: t.month,
           amount: t.income,
-          target: t.income * 1.2, // mock target 20% higher
+          target: t.income * 1.2,
         })),
-        leadConversionBar: [], // No lead data currently in aggregation
-        projectGrowthLine: [], // Requires historical project data not in agg yet
-        teamProductivityRadar: [], // No radar data
         expensesBar: (data.cashflowTrends || []).map((t: any) => ({
           name: t.month,
           revenue: t.income,
           expenses: t.expense,
           profit: t.income - t.expense,
         })),
-        projectStatusPie: [], // Can map this if backend expands
-        teamWorkload: (data.workloadDistribution || []).map((w: any) => ({
+        teamWorkload: (data.teamWorkloadDetailed || []).map((w: any) => ({
           name: w.name,
-          allocated: w.value * 40, // 40h approx per head
-          capacity: w.value * 40, // full capacity used for demo
+          allocated: parseFloat(w.allocated.toFixed(1)),
+          capacity: w.capacity,
         })),
       },
-      transactions: [], // Not returning raw TXs in current dashboard endpoint
+      transactions: [],
       activities: (data.insights || []).map((i: any) => ({
         id: i._id,
-        user: { name: 'System', initials: 'SYS' },
+        user: { name: 'System Insight', initials: 'SYS' },
         action: i.title,
         target: i.category,
         time: 'recent',
@@ -166,27 +169,11 @@ export async function getAnalyticsData(
     };
   } catch (err) {
     console.error('Failed to fetch analytics', err);
-    // Return empty state on failure
     return {
-      kpis: {
-        revenue: { value: '$0', change: '0%', isPositive: true, comparisonLabel: '' },
-        activeProjects: { value: '0', change: '0', isPositive: true, comparisonLabel: '' },
-        completedProjects: { value: '0', change: '0%', isPositive: true, comparisonLabel: '' },
-        totalLeads: { value: '0', change: '0%', isPositive: true, comparisonLabel: '' },
-        convertedLeads: { value: '0', change: '0%', isPositive: true, comparisonLabel: '' },
-        pendingInvoices: { value: '$0', change: '$0', isPositive: false, comparisonLabel: '' },
-        teamProductivity: { value: '0%', change: '0%', isPositive: true, comparisonLabel: '' },
-        monthlyGrowth: { value: '0%', change: '0%', isPositive: true, comparisonLabel: '' },
-        clientRetention: { value: '0%', change: '0%', isPositive: true, comparisonLabel: '' },
-        profitability: { value: '0%', change: '0%', isPositive: true, comparisonLabel: '' },
-      },
+      kpis: {},
       charts: {
         revenueArea: [],
-        leadConversionBar: [],
-        projectGrowthLine: [],
-        teamProductivityRadar: [],
         expensesBar: [],
-        projectStatusPie: [],
         teamWorkload: [],
       },
       transactions: [],

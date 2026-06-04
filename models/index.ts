@@ -90,6 +90,7 @@ export { Announcement } from './Announcement';
 export { PresenceSession } from './PresenceSession';
 export { MessageRead } from './MessageRead';
 export { NotificationPreference } from './NotificationPreference';
+export { Notification } from './Notification';
 export { CollaborationActivity } from './CollaborationActivity';
 export { SharedNote } from './SharedNote';
 

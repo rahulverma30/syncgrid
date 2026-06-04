@@ -6,6 +6,8 @@ import { ProjectActivity } from '@/models/ProjectActivity';
 import { hasPermission } from '@/lib/auth/permission-checks';
 import { ProjectIngestSchema } from '@/lib/validators/project';
 import { rankProjects } from '@/utils/searchRanker';
+import { createNotification } from '@/lib/services/notificationService';
+import mongoose from 'mongoose';
 
 export const GET = withApiPermission(
   'projects',
@@ -116,6 +118,27 @@ export const POST = withApiPermission(
         userName,
       });
       await activity.save();
+
+      // Notify the project manager (if they exist and it's a valid ObjectId)
+      if (validated.projectManager && mongoose.Types.ObjectId.isValid(validated.projectManager)) {
+        await createNotification({
+          companyId,
+          userId: validated.projectManager, // Assumes this is passed as ObjectId string
+          title: 'Project Assigned',
+          description: `You have been assigned as the PM for ${validated.name}.`,
+          type: 'project',
+          priority: 'high',
+        });
+      }
+
+      // We should ideally notify the user creating it if not PM
+      await createNotification({
+        companyId,
+        userId: session.user.id,
+        title: 'Project Created Successfully',
+        description: `Project ${validated.name} was set up.`,
+        type: 'system',
+      });
 
       return NextResponse.json({ success: true, data: newProject }, { status: 201 });
     } catch (error: any) {

@@ -28,6 +28,9 @@ export { PermissionGuard, RoleGuard, PermissionRequirement } from './permission-
 // --- ENTERPRISE DESIGN SYSTEM EXPORTS ---
 export * from './typography';
 export * from './layout-containers';
+export * from './empty-state';
+export * from './error-boundary';
+export * from './notification-bell';
 export * from './advanced-card';
 export * from './advanced-button';
 export * from './advanced-form';

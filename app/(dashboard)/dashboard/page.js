@@ -21,15 +21,15 @@ const SuperAdminView = dynamic(
     loading: () => <DashboardSkeleton />,
   }
 );
-const FinanceView = dynamic(
-  () => import('@/components/dashboard/role-views').then((mod) => mod.FinanceView),
+const OperationsView = dynamic(
+  () => import('@/components/dashboard/role-views').then((mod) => mod.OperationsView),
   {
     ssr: false,
     loading: () => <DashboardSkeleton />,
   }
 );
-const DeveloperView = dynamic(
-  () => import('@/components/dashboard/role-views').then((mod) => mod.DeveloperView),
+const WorkforceView = dynamic(
+  () => import('@/components/dashboard/role-views').then((mod) => mod.WorkforceView),
   {
     ssr: false,
     loading: () => <DashboardSkeleton />,
@@ -60,7 +60,7 @@ export default function DashboardPage() {
   });
 
   // Simulated role state to allow manual previewing of the different widgets
-  const [activeRole, setActiveRole] = useState('super-admin');
+  const [activeRole, setActiveRole] = useState('executive');
   const [isLoading, setIsLoading] = useState(true);
   const [analyticsData, setAnalyticsData] = useState(null);
 
@@ -69,12 +69,12 @@ export default function DashboardPage() {
     if (session?.user?.roles && session.user.roles.length > 0) {
       const primaryRole = session.user.roles[0].toLowerCase();
       const timer = setTimeout(() => {
-        if (['super-admin', 'admin'].includes(primaryRole)) {
-          setActiveRole('super-admin');
-        } else if (primaryRole === 'finance') {
-          setActiveRole('finance');
+        if (['super-admin', 'admin', 'executive', 'ceo'].includes(primaryRole)) {
+          setActiveRole('executive');
+        } else if (['hr', 'admin-hr'].includes(primaryRole)) {
+          setActiveRole('workforce');
         } else {
-          setActiveRole('developer');
+          setActiveRole('operations');
         }
       }, 0);
       return () => clearTimeout(timer);
@@ -193,9 +193,9 @@ export default function DashboardPage() {
               }}
               className="h-8.5 rounded-lg border border-border/80 bg-background/50 px-2 py-1 text-xs font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               options={[
-                { value: 'super-admin', label: 'Super Admin Workspace' },
-                { value: 'finance', label: 'Finance Specialist Dashboard' },
-                { value: 'developer', label: 'Developer Sprint Velocity' },
+                { value: 'executive', label: 'Executive Dashboard (CEO)' },
+                { value: 'operations', label: 'Operations Dashboard (PM)' },
+                { value: 'workforce', label: 'Workforce Dashboard (HR)' },
               ]}
             />
           </div>
@@ -236,22 +236,22 @@ export default function DashboardPage() {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.25 }}
             >
-              {activeRole === 'super-admin' && (
+              {activeRole === 'executive' && (
                 <SuperAdminView
                   data={analyticsData}
                   isLoading={isLoading}
                   onRefresh={handleRefreshAll}
                 />
               )}
-              {activeRole === 'finance' && (
-                <FinanceView
+              {activeRole === 'operations' && (
+                <OperationsView
                   data={analyticsData}
                   isLoading={isLoading}
                   onRefresh={handleRefreshAll}
                 />
               )}
-              {activeRole === 'developer' && (
-                <DeveloperView
+              {activeRole === 'workforce' && (
+                <WorkforceView
                   data={analyticsData}
                   isLoading={isLoading}
                   onRefresh={handleRefreshAll}

@@ -6,6 +6,7 @@ import { ProjectActivity } from '@/models/ProjectActivity';
 import { Task } from '@/models/Task';
 import { Invoice } from '@/models/Invoice';
 import { ProjectUpdateSchema } from '@/lib/validators/project';
+import { executeEvent } from '@/lib/services/automationService';
 
 export const GET = withApiAuth(async (request: Request, context: any, session: any) => {
   try {
@@ -107,6 +108,8 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
       );
     }
 
+    const originalProject = await Project.findOne({ _id: id, companyId });
+
     const project = await Project.findOneAndUpdate(
       { _id: id, companyId },
       { $set: parseResult.data },
@@ -131,6 +134,11 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
       userName,
     });
     await activity.save();
+
+    // Trigger workflow automation if completed
+    if (parseResult.data.status === 'completed' && originalProject?.status !== 'completed') {
+      await executeEvent('project_completed', companyId.toString(), project.toObject());
+    }
 
     return NextResponse.json({ success: true, data: project });
   } catch (error: any) {

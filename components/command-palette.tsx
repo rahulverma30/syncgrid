@@ -11,7 +11,7 @@ import { useRouter } from 'next/navigation';
 import { useCommandPaletteStore } from '@/store';
 import { useDebounce, useLockBodyScroll } from '@/hooks';
 import { cn } from '@/lib/cn';
-import { Home, LayoutDashboard, LogIn, Search, Command } from 'lucide-react';
+import { Home, LayoutDashboard, LogIn, Search, Command, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ROUTES } from '@/constants/routes';
 
@@ -66,22 +66,56 @@ export function CommandPalette() {
 
   const debouncedQuery = useDebounce(searchQuery, 200);
 
+  const [apiResults, setApiResults] = useState<any[]>([]);
+
   useEffect(() => {
     registerActions(defaultActions);
   }, [defaultActions, registerActions]);
 
+  // Fetch search results from API
+  useEffect(() => {
+    async function fetchSearch() {
+      if (!debouncedQuery || debouncedQuery.length < 2) {
+        setApiResults([]);
+        return;
+      }
+      try {
+        const res = await fetch(
+          `/api/protected/analytics/search?q=${encodeURIComponent(debouncedQuery)}`
+        );
+        const data = await res.json();
+        if (data.success) {
+          const dynamicActions = data.data.map((item: any) => ({
+            id: item.id,
+            title: item.title,
+            description: item.subtitle || item.description,
+            category: item.type,
+            icon: <CheckCircle2 className="h-4 w-4" />,
+            action: () => router.push(item.link || item.url),
+          }));
+          setApiResults(dynamicActions);
+        }
+      } catch (err) {
+        console.error('Search error', err);
+      }
+    }
+    fetchSearch();
+  }, [debouncedQuery, router]);
+
   const filteredActions = useMemo(() => {
     if (!debouncedQuery) return actions;
-    return actions.filter(
+    // Combine local matches + remote matches
+    const localMatches = actions.filter(
       (action) =>
         action.title.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
         action.description?.toLowerCase().includes(debouncedQuery.toLowerCase())
     );
-  }, [debouncedQuery, actions]);
+    return [...localMatches, ...apiResults];
+  }, [debouncedQuery, actions, apiResults]);
 
   useEffect(() => {
     setSelectedIndex(0);
-  }, [debouncedQuery, setSelectedIndex]);
+  }, [filteredActions, setSelectedIndex]);
 
   // Handle keyboard shortcuts
   useEffect(() => {
@@ -192,7 +226,7 @@ export function CommandPalette() {
                         </div>
                         {action.shortcut && (
                           <div className="hidden sm:flex gap-1">
-                            {action.shortcut.map((key) => (
+                            {action.shortcut.map((key: string) => (
                               <kbd
                                 key={key}
                                 className="rounded-md border border-border bg-muted px-2 py-1 text-xs font-medium"

@@ -10,6 +10,11 @@ import {
   Budget,
   ExecutiveInsight,
   Employee,
+  Lead,
+  Deal,
+  Client,
+  Task,
+  AttendanceLog,
 } from '@/models';
 import { hasRole } from '@/lib/auth/permission-checks';
 import { analyticsCache } from '@/lib/cache/analyticsCache';
@@ -50,6 +55,13 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
 
     const now = new Date();
     const startOfCurrentYear = new Date(now.getFullYear(), 0, 1);
+    const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfCurrentQuarter = new Date(
+      now.getFullYear(),
+      Math.floor(now.getMonth() / 3) * 3,
+      1
+    );
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
     // 2. Financial Performance Aggregation (Revenue vs Expenses)
     const incomeAgg = await Transaction.aggregate([
@@ -60,7 +72,22 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
           status: 'cleared',
         },
       },
-      { $group: { _id: null, total: { $sum: '$amount' } } },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: '$amount' },
+          thisMonth: {
+            $sum: {
+              $cond: [{ $gte: ['$paymentDate', startOfCurrentMonth] }, '$amount', 0],
+            },
+          },
+          thisQuarter: {
+            $sum: {
+              $cond: [{ $gte: ['$paymentDate', startOfCurrentQuarter] }, '$amount', 0],
+            },
+          },
+        },
+      },
     ]);
 
     const expenseAgg = await Transaction.aggregate([
@@ -75,6 +102,8 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     ]);
 
     const revenueTotal = incomeAgg[0]?.total || 0;
+    const revenueThisMonth = incomeAgg[0]?.thisMonth || 0;
+    const revenueThisQuarter = incomeAgg[0]?.thisQuarter || 0;
     const expenseTotal = expenseAgg[0]?.total || 0;
     const netProfit = revenueTotal - expenseTotal;
     const profitMargin = revenueTotal > 0 ? (netProfit / revenueTotal) * 100 : 0;
@@ -106,11 +135,16 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     const overdueRatio = totalOutstanding > 0 ? (totalOverdue / totalOutstanding) * 100 : 0;
 
     // 4. Project Health & Sprint Completion Rates
-    const projectsList = await Project.find({ companyId }).select('status').lean();
+    const projectsList = await Project.find({ companyId, isArchived: false })
+      .select('status healthScore riskLevel')
+      .lean();
     const totalProjects = projectsList.length;
     const completedProjects = projectsList.filter((p) => p.status === 'completed').length;
     const activeProjects = projectsList.filter((p) =>
       ['planning', 'design', 'development', 'testing', 'deployment'].includes(p.status)
+    ).length;
+    const atRiskProjects = projectsList.filter(
+      (p) => ['medium', 'high', 'critical'].includes(p.riskLevel) || p.healthScore < 50
     ).length;
 
     const projectCompletionRate = totalProjects > 0 ? (completedProjects / totalProjects) * 100 : 0;
@@ -134,23 +168,73 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     const billableMins = utilizationAgg[0]?.totalBillableMinutes || 0;
     const totalMins = utilizationAgg[0]?.totalMinutes || 0;
     const laborUtilization = totalMins > 0 ? (billableMins / totalMins) * 100 : 0;
+    const hoursLoggedTotal = Math.round(totalMins / 60);
 
-    // 6. Active Budget Threshold Alert Fired Trigger Counts
-    const budgetAlertsCount = await Budget.countDocuments({
+    // 6. Sales Overview: Leads & Deals & Clients
+    const activeClientsCount = await Client.countDocuments({ companyId, isArchived: false });
+
+    const leadsList = await Lead.find({ companyId }).select('status').lean();
+    const totalLeads = leadsList.length;
+    const convertedLeads = leadsList.filter(
+      (l) => l.status === 'qualified' || l.status === 'converted'
+    ).length;
+    const leadConversionRate = totalLeads > 0 ? (convertedLeads / totalLeads) * 100 : 0;
+
+    const dealsList = await Deal.find({ companyId }).select('stage amount').lean();
+    const totalDeals = dealsList.length;
+    const wonDeals = dealsList.filter((d) => d.stage === 'closed-won').length;
+    const lostDeals = dealsList.filter((d) => d.stage === 'closed-lost').length;
+    const pipelineDeals = dealsList.filter((d) => !['closed-won', 'closed-lost'].includes(d.stage));
+    const pipelineValue = pipelineDeals.reduce((sum, d) => sum + (d.amount || 0), 0);
+    const dealConversionRate = totalDeals > 0 ? (wonDeals / totalDeals) * 100 : 0;
+
+    // 7. Tasks & Operations
+    const tasksAgg = await Task.aggregate([
+      { $match: { companyId: new mongoose.Types.ObjectId(companyId) } },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: 1 },
+          overdue: {
+            $sum: {
+              $cond: [
+                { $and: [{ $lt: ['$dueDate', now] }, { $ne: ['$status', 'completed'] }] },
+                1,
+                0,
+              ],
+            },
+          },
+          completed: {
+            $sum: { $cond: [{ $eq: ['$status', 'completed'] }, 1, 0] },
+          },
+          blocked: {
+            $sum: { $cond: [{ $eq: ['$status', 'blocked'] }, 1, 0] },
+          },
+        },
+      },
+    ]);
+
+    const totalTasks = tasksAgg[0]?.total || 0;
+    const overdueTasks = tasksAgg[0]?.overdue || 0;
+    const blockedTasks = tasksAgg[0]?.blocked || 0;
+    const taskCompletionRate = totalTasks > 0 ? (tasksAgg[0]?.completed / totalTasks) * 100 : 0;
+
+    // 8. HR / Workforce Present Today
+    const activeEmployeesCount = await Employee.countDocuments({ companyId, isActive: true });
+
+    const todaysAttendance = await AttendanceLog.find({
       companyId,
-      alertFired: true,
-      status: 'active',
-    });
+      date: startOfToday,
+    }).lean();
 
-    // 7. Recent Executive Intelligence Trends Insights
-    const recentInsights = await ExecutiveInsight.find({ companyId })
-      .sort({ detectedAt: -1 })
-      .limit(3)
-      .lean();
+    const presentToday = todaysAttendance.filter((a) =>
+      ['present', 'late', 'half-day'].includes(a.status)
+    ).length;
+    const absentToday = activeEmployeesCount - presentToday;
+    const onBreakEmployees = todaysAttendance.filter((a) => a.breakStart && !a.breakEnd).length;
+    const lateEmployees = todaysAttendance.filter((a) => a.status === 'late').length;
 
-    const insights = recentInsights;
-
-    // 8. Recent 6-Month Cashflow aggregated timelines (Inflows vs Outflows)
+    // 9. Recent 6-Month Cashflow aggregated timelines (Inflows vs Outflows)
     const cashflowTimelines = await Transaction.aggregate([
       {
         $match: {
@@ -204,28 +288,50 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
 
     const cashflowTrends = Object.values(monthlyCashflowMap);
 
-    // 9. Dynamic Workload distribution metrics per department
+    // 10. Dynamic Workload distribution metrics per department
     const employeeList = await Employee.find({ companyId })
-      .select('departmentId')
+      .select('departmentId name')
       .populate({
         path: 'departmentId',
         select: 'name',
       })
       .lean();
-    const departmentWorkload: Record<string, number> = {};
+
+    // Detailed Workload Distribution (Assign Tasks -> Employees)
+    const employeeWorkload: Record<string, { allocated: number; capacity: number; name: string }> =
+      {};
     employeeList.forEach((emp: any) => {
-      const deptName = emp.departmentId?.name || 'General';
-      departmentWorkload[deptName] = (departmentWorkload[deptName] || 0) + 1;
+      employeeWorkload[emp._id.toString()] = { allocated: 0, capacity: 40, name: emp.name }; // Baseline 40h
     });
 
-    const workloadDistribution = Object.entries(departmentWorkload).map(([name, value]) => ({
-      name,
-      value,
-    }));
+    const activeTasksList = await Task.find({
+      companyId,
+      status: { $nin: ['completed', 'cancelled'] },
+      assignees: { $exists: true, $not: { $size: 0 } },
+    })
+      .select('assignees estimatedHours')
+      .lean();
+
+    activeTasksList.forEach((t) => {
+      if (t.estimatedHours && t.assignees) {
+        const perPerson = t.estimatedHours / t.assignees.length;
+        t.assignees.forEach((a: any) => {
+          if (employeeWorkload[a.toString()]) {
+            employeeWorkload[a.toString()].allocated += perPerson;
+          }
+        });
+      }
+    });
+
+    const teamWorkloadDetailed = Object.values(employeeWorkload)
+      .sort((a, b) => b.allocated - a.allocated)
+      .slice(0, 10); // Top 10 loaded members
 
     const responseData = {
       kpis: {
         revenueTotal,
+        revenueThisMonth,
+        revenueThisQuarter,
         expenseTotal,
         netProfit,
         profitMargin,
@@ -233,13 +339,39 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
         totalOverdue,
         overdueRatio,
         laborUtilization,
+        hoursLoggedTotal,
+
         activeProjects,
+        completedProjects,
         projectCompletionRate,
-        budgetAlertsCount,
+        atRiskProjects,
+
+        activeClientsCount,
+
+        totalLeads,
+        convertedLeads,
+        leadConversionRate,
+
+        totalDeals,
+        wonDeals,
+        lostDeals,
+        pipelineValue,
+        dealConversionRate,
+
+        totalTasks,
+        overdueTasks,
+        blockedTasks,
+        taskCompletionRate,
+
+        activeEmployeesCount,
+        presentToday,
+        absentToday,
+        onBreakEmployees,
+        lateEmployees,
       },
-      insights,
+      insights: await ExecutiveInsight.find({ companyId }).sort({ detectedAt: -1 }).limit(3).lean(),
       cashflowTrends,
-      workloadDistribution,
+      teamWorkloadDetailed,
       role: isAuthorized ? 'admin' : 'employee',
     };
 

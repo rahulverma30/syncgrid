@@ -81,6 +81,7 @@ interface MetricCardProps extends AdvancedCardProps {
   value: string | number;
   trend?: number; // e.g. 12.5 (positive) or -4.2 (negative)
   trendLabel?: string; // e.g. "vs last month"
+  description?: string;
   icon?: ReactNode;
   progress?: number; // percentage value between 0 and 100 for progress indicators
   isLoading?: boolean;
@@ -94,6 +95,7 @@ export function MetricCard({
   icon,
   progress,
   className,
+  description,
   isLoading = false,
   onClick,
 }: MetricCardProps) {
@@ -148,6 +150,9 @@ export function MetricCard({
                   )}
                   {trendLabel && <span className="text-muted-foreground/80">{trendLabel}</span>}
                 </div>
+              )}
+              {description && (
+                <div className="text-xs text-muted-foreground/80 pt-0.5">{description}</div>
               )}
             </div>
 

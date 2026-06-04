@@ -13,6 +13,7 @@ import { useMounted } from '@/hooks';
 import { APP_NAME } from '@/constants';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu } from '@/components/ui/dropdown-menu';
+import { NotificationBellWidget } from '@/components/ui/notification-bell';
 import { useCommandPaletteStore, useSidebarStore } from '@/store';
 
 export function Header() {
@@ -58,9 +59,7 @@ export function Header() {
             </kbd>
           </Button>
 
-          <Button variant="ghost" size="icon">
-            <Bell className="h-5 w-5" />
-          </Button>
+          <NotificationBellWidget />
 
           <Button variant="ghost" size="icon" onClick={() => setTheme(isDark ? 'light' : 'dark')}>
             {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
