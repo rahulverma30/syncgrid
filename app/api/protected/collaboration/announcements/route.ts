@@ -10,7 +10,8 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     const companyId = session.user.companyId;
 
     const list = await Announcement.find({ companyId })
-      .populate('authorId', '_id name')
+      .populate('authorId', '_id name image')
+      .populate('comments.authorId', '_id name image')
       .sort({ createdAt: -1 })
       .lean();
 
@@ -50,7 +51,8 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     await created.save();
 
     const populated = await Announcement.findById(created._id)
-      .populate('authorId', '_id name')
+      .populate('authorId', '_id name image')
+      .populate('comments.authorId', '_id name image')
       .lean();
 
     // Broadcast new announcement

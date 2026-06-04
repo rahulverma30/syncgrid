@@ -23,6 +23,21 @@ export function Sidebar() {
   const { data: session } = useSession();
   const { isCollapsed, isOpen, toggleCollapse, setIsOpen } = useSidebarStore();
 
+  const [companyName, setCompanyName] = useState('SyncGrid');
+
+  useEffect(() => {
+    if (session?.user) {
+      fetch('/api/protected/settings/company')
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && data.data?.name) {
+            setCompanyName(data.data.name);
+          }
+        })
+        .catch(console.error);
+    }
+  }, [session?.user]);
+
   useLockBodyScroll(isOpen);
 
   const [expandedGroups, setExpandedGroups] = useState<Set<unknown>>(
@@ -199,9 +214,9 @@ export function Sidebar() {
               <div className="flex h-16 items-center justify-between border-b border-border px-4">
                 <div className="flex items-center gap-2">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
-                    SG
+                    {companyName.substring(0, 2).toUpperCase()}
                   </div>
-                  <span className="font-semibold">SyncGrid</span>
+                  <span className="font-semibold">{companyName}</span>
                 </div>
                 <button
                   onClick={() => setIsOpen(false)}

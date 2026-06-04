@@ -173,6 +173,10 @@ export const SIDEBAR_GROUPS = [
           'Finance',
         ],
         permission: { resource: 'clients', action: 'read' },
+        submenu: [
+          { label: 'Chat & Workspaces', href: '/collaboration' },
+          { label: 'Announcements Hub', href: '/announcements' },
+        ],
       },
     ],
   },

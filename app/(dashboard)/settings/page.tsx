@@ -119,8 +119,7 @@ export default function SettingsPage() {
       if (billData.success) {
         setQuotas(billData.quotas);
         setInvoices(billData.invoices);
-        setOrgName(billData.quotas.planName ? 'Acme Corporate' : '');
-        setOrgSlug(billData.quotas.planSlug ? 'acme' : '');
+        // Org details are fetched below directly from the Company document
       }
 
       // 2. Fetch Keys
@@ -138,23 +137,29 @@ export default function SettingsPage() {
         setDeliveries(hooksData.deliveries);
       }
 
-      // 4. Fetch Invitations, Roles, Departments, and Employees
-      const [invRes, rolesRes, deptRes, hrRes] = await Promise.all([
+      // 4. Fetch Invitations, Roles, Departments, Employees, and Company Profile
+      const [invRes, rolesRes, deptRes, hrRes, companyRes] = await Promise.all([
         fetch('/api/protected/settings/invite'),
         fetch('/api/protected/settings/roles'),
         fetch('/api/protected/hr/departments'),
         fetch('/api/protected/hr'),
+        fetch('/api/protected/settings/company'),
       ]);
-      const [invData, rolesData, deptData, hrData] = await Promise.all([
+      const [invData, rolesData, deptData, hrData, companyData] = await Promise.all([
         invRes.json(),
         rolesRes.json(),
         deptRes.json(),
         hrRes.json(),
+        companyRes.json(),
       ]);
       if (invData.success) setInvitations(invData.data);
       if (rolesData.success) setRolesList(rolesData.data);
       if (deptData.success) setDepartmentsList(deptData.data.list || []);
       if (hrData.success) setEmployeesList(hrData.data || []);
+      if (companyData.success) {
+        setOrgName(companyData.data.name);
+        setOrgSlug(companyData.data.slug);
+      }
     } catch (err) {
       toast.error('Failed to load multi-tenant settings configuration.');
     } finally {
@@ -539,7 +544,27 @@ export default function SettingsPage() {
                         </div>
 
                         <Button
-                          onClick={() => toast.success('Profile settings updated successfully!')}
+                          onClick={async () => {
+                            toast.loading('Saving company settings...');
+                            try {
+                              const res = await fetch('/api/protected/settings/company', {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ name: orgName }),
+                              });
+                              const data = await res.json();
+                              toast.dismiss();
+                              if (data.success) {
+                                toast.success('Profile settings updated successfully!');
+                                setTimeout(() => window.location.reload(), 1000); // hard refresh to update context/navbars
+                              } else {
+                                toast.error(data.message || 'Failed to update company settings');
+                              }
+                            } catch (e) {
+                              toast.dismiss();
+                              toast.error('Network error updating company');
+                            }
+                          }}
                           variant="default"
                           className="rounded-xl px-5 py-2.5 text-xs font-semibold"
                         >

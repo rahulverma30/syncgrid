@@ -32,6 +32,19 @@ const AnnouncementSchema = new Schema(
       ref: 'User',
       required: true,
     },
+    reactions: [
+      {
+        emoji: String,
+        userId: { type: Schema.Types.ObjectId, ref: 'User' },
+      },
+    ],
+    comments: [
+      {
+        content: String,
+        authorId: { type: Schema.Types.ObjectId, ref: 'User' },
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
   },
   {
     timestamps: true,

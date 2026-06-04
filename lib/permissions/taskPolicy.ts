@@ -61,6 +61,7 @@ export function canEditTaskField(user: PolicyUser, task: PolicyTask, field: stri
     'checklistItems',
     'watchers',
     'actualHours', // Logging active clocks
+    'statusId', // Kanban transitions
   ];
 
   // Restrict critical estimation or scoping fields to Managers/Admins
@@ -105,12 +106,10 @@ export function canTransitionWorkflow(
 
   if (!isLinkedToTask) return false;
 
-  // Developer transition boundaries:
-  // Developers can start backlog tasks or submit them for review, but CANNOT directly push them to 'done' (Requires QA or manager approval)
+  // Developers can transition workflows across boundaries. The global api routes check for tasks:update or tasks:create permission anyway.
   if (role === 'developer') {
-    if (toCategory === 'done') {
-      return false; // Blocks moving directly to Completed column
-    }
+    // Allows developers, assignees, and standard members to move items into the completed category
+    return true;
   }
 
   // QA transition boundaries:

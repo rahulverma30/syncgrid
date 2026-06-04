@@ -5,6 +5,7 @@
 
 'use client';
 
+import React, { useState, useEffect } from 'react';
 import { useTheme } from 'next-themes';
 import { signOut, useSession } from 'next-auth/react';
 import { Moon, Sun, Bell, Menu, X, Settings, LogOut, Search } from 'lucide-react';
@@ -22,6 +23,20 @@ export function Header() {
   const { data: session } = useSession();
   const { isOpen, setIsOpen } = useSidebarStore();
   const { togglePalette } = useCommandPaletteStore();
+  const [companyName, setCompanyName] = useState(APP_NAME);
+
+  useEffect(() => {
+    if (session?.user) {
+      fetch('/api/protected/settings/company')
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && data.data?.name) {
+            setCompanyName(data.data.name);
+          }
+        })
+        .catch(console.error);
+    }
+  }, [session?.user]);
 
   if (!isMounted) return null;
 
@@ -39,9 +54,9 @@ export function Header() {
           </button>
           <div className="flex items-center gap-2">
             <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
-              SG
+              {companyName.substring(0, 2).toUpperCase()}
             </div>
-            <span className="hidden sm:inline font-bold text-lg">{APP_NAME}</span>
+            <span className="hidden sm:inline font-bold text-lg">{companyName}</span>
           </div>
         </div>
 
