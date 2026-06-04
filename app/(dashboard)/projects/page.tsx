@@ -35,11 +35,9 @@ export default function ProjectsPage() {
 
   if (!mounted) {
     return (
-      <div className="h-96 flex flex-col items-center justify-center space-y-4">
-        <LoadingSpinner className="h-10 w-10 text-primary" />
-        <p className="text-xs text-muted-foreground animate-pulse uppercase font-bold tracking-wider">
-          Initializing Projects Intelligence...
-        </p>
+      <div className="h-96 flex flex-col items-center justify-center space-y-3">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-primary" />
+        <p className="text-sm text-muted-foreground">Loading projects...</p>
       </div>
     );
   }
@@ -48,30 +46,30 @@ export default function ProjectsPage() {
     <div className="space-y-6">
       {/* Premium Page Header */}
       <PageHeader
-        eyebrow="Portfolio & Delivery System"
-        title="Project delivery vault"
-        description="Monitor active milestone schedules, agile sprint velocity metrics, team resource allocations, and stage risk alerts."
+        eyebrow="Projects"
+        title="All Projects"
+        description="Monitor project progress, track milestones, manage team allocations, and stay on top of delivery timelines."
         actions={
-          <div className="flex items-center gap-2 select-none">
+          <div className="flex items-center gap-2">
             <Button
               onClick={fetchProjects}
               variant="outline"
               size="sm"
-              className="h-9 hover:bg-accent/40 text-xs gap-1.5 cursor-pointer"
-              aria-label="Refresh project accounts"
+              className="gap-1.5"
+              aria-label="Refresh projects"
             >
               <RefreshCw className="h-3.5 w-3.5" />
-              Tally ledger
+              Refresh
             </Button>
             <Button
               onClick={() => setCreateModalOpen(true)}
               variant="default"
               size="sm"
-              className="h-9 text-xs gap-1.5 cursor-pointer"
-              aria-label="Initialize new client project"
+              className="gap-1.5"
+              aria-label="Create new project"
             >
               <Plus className="h-4 w-4" />
-              Onboard Project
+              New Project
             </Button>
           </div>
         }
@@ -79,18 +77,18 @@ export default function ProjectsPage() {
 
       {/* Tabs selectors & search query */}
       <div className="border-b border-border/85 pb-0 flex justify-between items-center gap-4 flex-wrap select-none">
-        <div className="flex gap-2">
+        <div className="flex gap-1">
           {(['analytics', 'ledger'] as const).map((t) => (
             <button
               key={t}
               onClick={() => setActiveSection(t)}
-              className={`pb-2.5 px-4 text-xs font-bold uppercase tracking-wider transition-colors border-b-2 relative cursor-pointer ${
+              className={`pb-2.5 px-4 text-sm font-medium transition-colors border-b-2 relative cursor-pointer ${
                 activeSection === t
                   ? 'border-primary text-foreground'
                   : 'border-transparent text-muted-foreground hover:text-foreground'
               }`}
             >
-              {t === 'analytics' ? 'Portfolio Analytics' : 'Project Registry Ledger'}
+              {t === 'analytics' ? 'Overview' : 'All Projects'}
             </button>
           ))}
         </div>
@@ -108,11 +106,9 @@ export default function ProjectsPage() {
       </div>
 
       {isLoading ? (
-        <div className="h-96 flex flex-col items-center justify-center space-y-4">
-          <LoadingSpinner className="h-10 w-10 text-primary" />
-          <p className="text-xs text-muted-foreground animate-pulse uppercase font-bold tracking-wider">
-            Loading dynamic project portfolio vault...
-          </p>
+        <div className="h-96 flex flex-col items-center justify-center space-y-3">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-primary" />
+          <p className="text-sm text-muted-foreground">Loading projects...</p>
         </div>
       ) : (
         <AnimatePresence mode="wait">

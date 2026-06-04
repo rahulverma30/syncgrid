@@ -3,11 +3,19 @@
  */
 
 export { Button, type ButtonProps } from './button';
-export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './card';
+export {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+  CardStat,
+} from './card';
 export { Badge } from './badge';
 export { Input, type InputProps } from './input';
 export { Textarea, type TextareaProps } from './textarea';
-export { Skeleton, SkeletonText, SkeletonCard } from './skeleton';
+export { Skeleton, SkeletonText, SkeletonCard, SkeletonTable, SkeletonPage } from './skeleton';
 export { EmptyState } from './empty-state';
 export { BadgeWithClose } from './badge-with-close';
 export { Breadcrumb } from './breadcrumb';

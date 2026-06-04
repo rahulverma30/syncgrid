@@ -1,39 +1,71 @@
 /**
- * Input component
- * Reusable form input
+ * Input component — enhanced with required indicator, success state,
+ * character counter, size variants, and proper label association.
  */
 
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, useId } from 'react';
 import { cn } from '@/lib/cn';
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
   hint?: string;
+  success?: string;
   icon?: ReactNode;
   iconPosition?: 'left' | 'right';
   iconButton?: boolean;
   iconButtonAriaLabel?: string;
   onIconClick?: React.MouseEventHandler<HTMLButtonElement>;
+  inputSize?: 'sm' | 'md' | 'lg';
+  showCount?: boolean;
 }
+
+const sizeClasses = {
+  sm: 'h-8 text-xs px-2.5',
+  md: 'h-10 text-sm px-3',
+  lg: 'h-12 text-base px-4',
+};
 
 export function Input({
   className,
   label,
   error,
   hint,
+  success,
   icon,
   iconPosition = 'left',
   iconButton,
   iconButtonAriaLabel,
   onIconClick,
+  inputSize = 'md',
+  showCount,
+  required,
+  maxLength,
+  value,
+  id,
   ...props
 }: InputProps) {
+  const generatedId = useId();
+  const inputId = id ?? generatedId;
+  const currentLength = typeof value === 'string' ? value.length : 0;
+
   return (
-    <div className="flex flex-col gap-1.5">
-      {label && <label className="text-sm font-medium text-foreground">{label}</label>}
+    <div className="flex flex-col gap-1.5 w-full">
+      {label && (
+        <label
+          htmlFor={inputId}
+          className="text-sm font-medium text-foreground flex items-center gap-1"
+        >
+          {label}
+          {required && (
+            <span className="text-destructive text-xs leading-none" aria-hidden="true">
+              *
+            </span>
+          )}
+        </label>
+      )}
       <div className="relative flex items-center">
         {icon && iconPosition === 'left' && (
           <div className="absolute left-3 flex items-center text-muted-foreground pointer-events-none">
@@ -41,11 +73,23 @@ export function Input({
           </div>
         )}
         <input
+          id={inputId}
+          required={required}
+          maxLength={maxLength}
+          value={value}
           className={cn(
-            'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50',
+            'flex w-full rounded-lg border bg-background py-2 text-foreground',
+            'placeholder:text-muted-foreground',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
+            'disabled:cursor-not-allowed disabled:opacity-50 transition-shadow',
+            sizeClasses[inputSize],
             icon && iconPosition === 'left' && 'pl-10',
             icon && iconPosition === 'right' && 'pr-10',
-            error && 'border-destructive focus-visible:ring-destructive',
+            error
+              ? 'border-destructive focus-visible:ring-destructive/50'
+              : success
+                ? 'border-green-500 focus-visible:ring-green-500/50'
+                : 'border-input',
             className
           )}
           {...props}
@@ -57,7 +101,7 @@ export function Input({
               type="button"
               onClick={onIconClick}
               aria-label={iconButtonAriaLabel}
-              className="absolute right-3 flex items-center text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring rounded"
+              className="absolute right-3 flex items-center text-muted-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
             >
               {icon}
             </button>
@@ -67,8 +111,25 @@ export function Input({
             </div>
           ))}
       </div>
-      {error && <p className="text-xs text-destructive">{error}</p>}
-      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex-1">
+          {error && <p className="text-xs text-destructive">{error}</p>}
+          {success && !error && (
+            <p className="text-xs text-green-600 dark:text-green-400">{success}</p>
+          )}
+          {hint && !error && !success && <p className="text-xs text-muted-foreground">{hint}</p>}
+        </div>
+        {showCount && maxLength && (
+          <p
+            className={cn(
+              'text-xs shrink-0 tabular-nums',
+              currentLength >= maxLength ? 'text-destructive' : 'text-muted-foreground'
+            )}
+          >
+            {currentLength}/{maxLength}
+          </p>
+        )}
+      </div>
     </div>
   );
 }

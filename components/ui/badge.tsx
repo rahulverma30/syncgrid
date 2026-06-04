@@ -1,6 +1,6 @@
 /**
- * Badge component
- * Reusable badge with variants
+ * Badge component — enhanced with status dot, size variants,
+ * semantic variants (pending/active/inactive), and improved dark mode support.
  */
 
 'use client';
@@ -10,35 +10,79 @@ import { ReactNode } from 'react';
 import { cn } from '@/lib/cn';
 
 const badgeVariants = cva(
-  'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors',
+  'inline-flex items-center gap-1.5 rounded-full border font-medium transition-colors whitespace-nowrap',
   {
     variants: {
       variant: {
-        default: 'border-transparent bg-primary text-primary-foreground',
+        default: 'border-transparent bg-primary/10 text-primary dark:bg-primary/20',
         secondary: 'border-transparent bg-secondary text-secondary-foreground',
-        destructive: 'border-transparent bg-destructive text-destructive-foreground',
-        outline: 'text-foreground',
+        destructive:
+          'border-transparent bg-red-100 text-red-800 dark:bg-red-500/15 dark:text-red-400',
         success:
-          'border-transparent bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+          'border-transparent bg-green-100 text-green-800 dark:bg-green-500/15 dark:text-green-400',
         warning:
-          'border-transparent bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-        info: 'border-transparent bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+          'border-transparent bg-yellow-100 text-yellow-800 dark:bg-yellow-500/15 dark:text-yellow-400',
+        info: 'border-transparent bg-blue-100 text-blue-800 dark:bg-blue-500/15 dark:text-blue-400',
+        outline: 'border-border text-foreground bg-transparent',
+        muted: 'border-transparent bg-muted text-muted-foreground',
+        // Semantic status variants
+        active:
+          'border-transparent bg-green-100 text-green-800 dark:bg-green-500/15 dark:text-green-400',
+        inactive: 'border-transparent bg-muted text-muted-foreground',
+        pending:
+          'border-transparent bg-yellow-100 text-yellow-800 dark:bg-yellow-500/15 dark:text-yellow-400',
+        blocked: 'border-transparent bg-red-100 text-red-800 dark:bg-red-500/15 dark:text-red-400',
+      },
+      size: {
+        sm: 'px-2 py-0 text-[10px]',
+        md: 'px-2.5 py-0.5 text-xs',
+        lg: 'px-3 py-1 text-sm',
       },
     },
     defaultVariants: {
       variant: 'default',
+      size: 'md',
     },
   }
 );
 
+const dotColors: Record<string, string> = {
+  default: 'bg-primary',
+  secondary: 'bg-secondary-foreground',
+  destructive: 'bg-red-500',
+  success: 'bg-green-500',
+  warning: 'bg-yellow-500',
+  info: 'bg-blue-500',
+  outline: 'bg-foreground',
+  muted: 'bg-muted-foreground',
+  active: 'bg-green-500',
+  inactive: 'bg-muted-foreground',
+  pending: 'bg-yellow-500',
+  blocked: 'bg-red-500',
+};
+
 interface BadgeProps
   extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof badgeVariants> {
   children: ReactNode;
+  dot?: boolean;
 }
 
-export function Badge({ className, variant, children, ...props }: BadgeProps) {
+export function Badge({
+  className,
+  variant = 'default',
+  size,
+  children,
+  dot,
+  ...props
+}: BadgeProps) {
   return (
-    <div className={cn(badgeVariants({ variant }), className)} {...props}>
+    <div className={cn(badgeVariants({ variant, size }), className)} {...props}>
+      {dot && (
+        <span
+          className={cn('h-1.5 w-1.5 rounded-full shrink-0', dotColors[variant ?? 'default'])}
+          aria-hidden="true"
+        />
+      )}
       {children}
     </div>
   );
