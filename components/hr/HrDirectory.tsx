@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useHRStore } from '@/store/hrStore';
-import { Button, Badge, Input, Modal, Select } from '@/components/ui';
+import { Button, Badge, Input, Modal, Select, EmptyState } from '@/components/ui';
 import { Users, Search, Plus, Mail, Phone, ChevronRight } from 'lucide-react';
 import { EmployeeDetailModal } from './EmployeeDetailModal';
 import { EmployeeActivityDrawer } from './EmployeeActivityDrawer';
@@ -175,14 +175,12 @@ export function HrDirectory() {
 
       {/* Directory Grid Employee Cards */}
       {filteredEmployees.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center space-y-4 border border-dashed border-border/40 rounded-2xl bg-card/10">
-          <Users className="h-12 w-12 text-muted-foreground/40" />
-          <div className="space-y-1">
-            <h3 className="text-base font-bold tracking-tight">No Employees Found</h3>
-            <p className="text-xs text-muted-foreground max-w-sm">
-              Adjust your search keywords or filter options to discover matching team profiles.
-            </p>
-          </div>
+        <div className="py-12">
+          <EmptyState
+            title="No Employees Found"
+            description="Adjust your search keywords or filter options to discover matching team profiles."
+            variant="search"
+          />
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

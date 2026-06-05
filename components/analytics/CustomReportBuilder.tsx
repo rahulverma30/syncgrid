@@ -6,7 +6,7 @@ import { ChartWrapper } from './ChartWrapper';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select } from '@/components/ui';
+import { Select, DateInput } from '@/components/ui';
 import { toast } from 'sonner';
 import { FileSpreadsheet, Download, Filter, Calendar, Send, Printer } from 'lucide-react';
 import { ICustomReportQuery } from '@/types/analytics';
@@ -299,11 +299,10 @@ export function CustomReportBuilder() {
                   <Calendar className="h-3 w-3" />
                   Date Range Start
                 </label>
-                <Input
-                  type="date"
+                <DateInput
                   value={dateRange.start}
                   onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-                  className="text-xs h-9"
+                  className="text-xs w-full"
                 />
               </div>
               <div className="space-y-1">
@@ -311,11 +310,10 @@ export function CustomReportBuilder() {
                   <Calendar className="h-3 w-3" />
                   Date Range End
                 </label>
-                <Input
-                  type="date"
+                <DateInput
                   value={dateRange.end}
                   onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
-                  className="text-xs h-9"
+                  className="text-xs w-full"
                 />
               </div>
             </div>

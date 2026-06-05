@@ -48,3 +48,4 @@ export * from './notification-center';
 export * from './skeletons-and-states';
 export * from './widgets';
 export * from './charts';
+export { DateInput } from './date-input';

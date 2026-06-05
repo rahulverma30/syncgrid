@@ -179,8 +179,28 @@ export function TaskBoard({ onSelectTask }: TaskBoardProps) {
             {/* Cards container */}
             <div className="space-y-3 overflow-y-auto pr-1 flex-1 min-h-[450px]">
               {columnTasks.length === 0 ? (
-                <div className="h-28 border border-dashed border-border/45 rounded-lg flex items-center justify-center text-xs text-muted-foreground/60 italic">
-                  Drag tasks here
+                <div className="h-32 border border-dashed border-border/45 rounded-lg bg-card/10 flex flex-col items-center justify-center space-y-2 select-none group/empty">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted/40 ring-1 ring-border/50 group-hover/empty:bg-muted/80 transition-colors">
+                    <CheckSquare className="h-3.5 w-3.5 text-muted-foreground opacity-50" />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                      Empty Column
+                    </p>
+                    <p className="text-[9px] text-muted-foreground/60 mt-0.5">
+                      Drop or create task
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      toast.info(
+                        `Click "New Task" at the top to create a task in the ${status.name} column.`
+                      );
+                    }}
+                    className="text-[9px] font-bold text-primary/80 hover:text-primary transition-colors hover:underline underline-offset-2"
+                  >
+                    + Add New Task
+                  </button>
                 </div>
               ) : (
                 columnTasks.map((task) => {

@@ -40,9 +40,17 @@ export function Sidebar() {
 
   useLockBodyScroll(isOpen);
 
-  const [expandedGroups, setExpandedGroups] = useState<Set<unknown>>(
-    new Set([SIDEBAR_GROUPS[0].id])
-  );
+  // Default all groups expanded; persist per-group in localStorage
+  const [expandedGroups, setExpandedGroups] = useState<Set<unknown>>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('sg_sidebar_expanded');
+        if (saved) return new Set(JSON.parse(saved));
+      } catch {}
+    }
+    // Default: all groups expanded so users discover all modules immediately
+    return new Set(SIDEBAR_GROUPS.map((g) => g.id));
+  });
 
   useEffect(() => {
     setIsOpen(false);
@@ -56,6 +64,10 @@ export function Sidebar() {
       newExpanded.add(groupId);
     }
     setExpandedGroups(newExpanded);
+    // Persist state so it survives page refresh
+    try {
+      localStorage.setItem('sg_sidebar_expanded', JSON.stringify([...newExpanded]));
+    } catch {}
   };
 
   const isItemActive = (href: string) =>

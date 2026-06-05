@@ -131,7 +131,7 @@ export default function FinancePage() {
                 setActiveTab(tab.id);
                 setBuilderOpen(false);
               }}
-              className={`flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all duration-200 whitespace-nowrap focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer ${
+              className={`flex items-center gap-2 px-4 py-2 text-[13px] font-bold rounded-lg transition-all duration-200 whitespace-nowrap focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer ${
                 isActive
                   ? 'bg-primary text-primary-foreground shadow-[0_0_15px_rgba(var(--primary-rgb),0.15)] font-bold'
                   : 'hover:bg-accent/40 text-muted-foreground hover:text-foreground'

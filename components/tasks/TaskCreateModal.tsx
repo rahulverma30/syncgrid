@@ -7,6 +7,7 @@ import { useTasksStore } from '@/store/tasksStore';
 import { CenteredModal } from '@/components/ui/modal-system';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { DateInput } from '@/components/ui/date-input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { Select } from '@/components/ui/select';
@@ -287,8 +288,7 @@ export function TaskCreateModal({ isOpen, onClose }: TaskCreateModalProps) {
             <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               Start Date
             </label>
-            <Input
-              type="date"
+            <DateInput
               onChange={(e) =>
                 setValue('startDate', e.target.value ? new Date(e.target.value) : null)
               }
@@ -299,8 +299,7 @@ export function TaskCreateModal({ isOpen, onClose }: TaskCreateModalProps) {
             <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               Due Date
             </label>
-            <Input
-              type="date"
+            <DateInput
               onChange={(e) =>
                 setValue('dueDate', e.target.value ? new Date(e.target.value) : null)
               }

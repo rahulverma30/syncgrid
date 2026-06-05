@@ -179,8 +179,8 @@ export default function AttendancePage() {
                     <tr>
                       <th className="px-4 py-3 font-semibold">Date</th>
                       <th className="px-4 py-3 font-semibold">Status</th>
-                      <th className="px-4 py-3 font-semibold">Start Time</th>
-                      <th className="px-4 py-3 font-semibold">End Time</th>
+                      <th className="px-4 py-3 font-semibold text-right">Start Time</th>
+                      <th className="px-4 py-3 font-semibold text-right">End Time</th>
                       <th className="px-4 py-3 font-semibold text-right">Worked (hrs)</th>
                     </tr>
                   </thead>
@@ -200,7 +200,7 @@ export default function AttendancePage() {
                             {log.status || 'Completed'}
                           </span>
                         </td>
-                        <td className="px-4 py-3 font-mono">
+                        <td className="px-4 py-3 font-mono text-right">
                           {log.startTime
                             ? new Date(log.startTime).toLocaleTimeString([], {
                                 hour: '2-digit',
@@ -208,7 +208,7 @@ export default function AttendancePage() {
                               })
                             : '-'}
                         </td>
-                        <td className="px-4 py-3 font-mono">
+                        <td className="px-4 py-3 font-mono text-right">
                           {log.endTime
                             ? new Date(log.endTime).toLocaleTimeString([], {
                                 hour: '2-digit',
@@ -255,7 +255,7 @@ export default function AttendancePage() {
                     <th className="px-4 py-3 font-semibold">Employee</th>
                     <th className="px-4 py-3 font-semibold">Role</th>
                     <th className="px-4 py-3 font-semibold">Status</th>
-                    <th className="px-4 py-3 font-semibold">Start Time</th>
+                    <th className="px-4 py-3 font-semibold text-right">Start Time</th>
                     <th className="px-4 py-3 font-semibold text-right">Worked (hrs)</th>
                     <th className="px-4 py-3 font-semibold text-right">Actions</th>
                   </tr>
@@ -306,7 +306,7 @@ export default function AttendancePage() {
                           {record.status}
                         </span>
                       </td>
-                      <td className="px-4 py-3 font-mono">
+                      <td className="px-4 py-3 font-mono text-right">
                         {record.log?.startTime
                           ? new Date(record.log.startTime).toLocaleTimeString([], {
                               hour: '2-digit',

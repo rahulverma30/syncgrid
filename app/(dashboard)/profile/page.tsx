@@ -12,6 +12,7 @@ import {
   Button,
   Badge,
   Select,
+  DateInput,
 } from '@/components/ui';
 import {
   User,
@@ -731,22 +732,20 @@ export default function ProfilePage() {
                             <label className="text-xs font-bold text-muted-foreground uppercase">
                               Start Date
                             </label>
-                            <input
-                              type="date"
+                            <DateInput
                               value={startDate}
                               onChange={(e) => setStartDate(e.target.value)}
-                              className="bg-card text-foreground border border-border rounded-lg w-full px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-primary shadow-inner"
+                              className="w-full text-xs"
                             />
                           </div>
                           <div className="space-y-1.5">
                             <label className="text-xs font-bold text-muted-foreground uppercase">
                               End Date
                             </label>
-                            <input
-                              type="date"
+                            <DateInput
                               value={endDate}
                               onChange={(e) => setEndDate(e.target.value)}
-                              className="bg-card text-foreground border border-border rounded-lg w-full px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-primary shadow-inner"
+                              className="w-full text-xs"
                             />
                           </div>
                         </div>

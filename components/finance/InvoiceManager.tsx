@@ -15,7 +15,7 @@ import {
   Clock,
   AlertCircle,
 } from 'lucide-react';
-import { Button, Input, Select, Modal } from '@/components/ui';
+import { Button, Input, Select, Modal, EmptyState } from '@/components/ui';
 
 interface InvoiceManagerProps {
   invoices: any[];
@@ -160,8 +160,23 @@ export const InvoiceManager: React.FC<InvoiceManagerProps> = ({
           <tbody>
             {filteredInvoices.length === 0 ? (
               <tr>
-                <td colSpan={8} className="p-8 text-center text-muted-foreground">
-                  No invoices matched your filter terms.
+                <td colSpan={8} className="p-0 border-none">
+                  <div className="py-12">
+                    <EmptyState
+                      title="No invoices found"
+                      description="There are no invoices matching your current filter criteria."
+                      action={
+                        isFinance
+                          ? {
+                              label: 'Create Invoice',
+                              onClick: onOpenCreate,
+                              icon: <Plus className="w-4 h-4" />,
+                            }
+                          : undefined
+                      }
+                      variant="search"
+                    />
+                  </div>
                 </td>
               </tr>
             ) : (

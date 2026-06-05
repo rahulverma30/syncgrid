@@ -19,16 +19,40 @@ import {
   Tooltip,
   Legend,
 } from 'recharts';
+import { Database } from 'lucide-react';
 
 // Global Chart Palette synchronized to standard theme HSL rules
 const CHART_THEME_COLORS = [
   'hsl(var(--primary))',
-  '#3b82f6', // blue
-  '#10b981', // emerald
-  '#f59e0b', // amber
-  '#ec4899', // pink
-  '#8b5cf6', // violet
+  'hsl(var(--info))',
+  'hsl(var(--success))',
+  'hsl(var(--warning))',
+  'hsl(var(--destructive))',
 ];
+
+/**
+ * Reusable Empty Chart State
+ */
+function EmptyChartState({ height }: { height: number }) {
+  return (
+    <div
+      style={{ height }}
+      className="w-full flex flex-col items-center justify-center border border-dashed border-border/50 rounded-lg bg-card/10 select-none space-y-3"
+    >
+      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted/40 ring-1 ring-border/50">
+        <Database className="h-4 w-4 text-muted-foreground opacity-50" />
+      </div>
+      <div className="text-center">
+        <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+          No Data Available
+        </p>
+        <p className="text-[10px] text-muted-foreground/60 mt-0.5">
+          Insufficient records for this period
+        </p>
+      </div>
+    </div>
+  );
+}
 
 interface BaseChartProps {
   data: any[];
@@ -77,6 +101,8 @@ interface AreaChartProps extends BaseChartProps {
 }
 
 export function AreaChartWrapper({ data, xKey, metrics, height = 300, className }: AreaChartProps) {
+  if (!data || data.length === 0) return <EmptyChartState height={height} />;
+
   return (
     <div
       style={{ width: '100%', height }}
@@ -152,6 +178,8 @@ interface BarChartProps extends BaseChartProps {
 }
 
 export function BarChartWrapper({ data, xKey, metrics, height = 300, className }: BarChartProps) {
+  if (!data || data.length === 0) return <EmptyChartState height={height} />;
+
   return (
     <div
       style={{ width: '100%', height }}
@@ -214,6 +242,8 @@ interface LineChartProps extends BaseChartProps {
 }
 
 export function LineChartWrapper({ data, xKey, metrics, height = 300, className }: LineChartProps) {
+  if (!data || data.length === 0) return <EmptyChartState height={height} />;
+
   return (
     <div
       style={{ width: '100%', height }}
@@ -280,6 +310,8 @@ interface PieChartProps {
 }
 
 export function PieChartWrapper({ data, height = 300, className }: PieChartProps) {
+  if (!data || data.length === 0) return <EmptyChartState height={height} />;
+
   return (
     <div
       style={{ width: '100%', height }}

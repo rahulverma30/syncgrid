@@ -1,5 +1,15 @@
 import React, { useState } from 'react';
-import { Button, Input, Badge, CenteredModal, ConfirmationModal, Select } from '@/components/ui';
+import {
+  Button,
+  Input,
+  Badge,
+  CenteredModal,
+  ConfirmationModal,
+  Select,
+  EmptyState,
+  SkeletonTable,
+  SkeletonCard,
+} from '@/components/ui';
 import {
   Search,
   Download,
@@ -575,211 +585,234 @@ export const ClientTable: React.FC = () => {
 
       {/* RENDER MODE 1: DESKTOP TABLE VIEW */}
       <div className="hidden sm:block overflow-x-auto rounded-xl border border-border/80 bg-card/25 backdrop-blur-md">
-        <table className="table-container">
-          <thead>
-            <tr className="table-header-row">
-              <th className="table-header-cell w-10">
-                <input
-                  type="checkbox"
-                  checked={
-                    paginatedClients.length > 0 &&
-                    paginatedClients.every((c) => selectedRows.includes(c._id))
-                  }
-                  onChange={(e) => toggleSelectAll(e.target.checked)}
-                  className="rounded border-border focus:ring-ring accent-primary"
-                />
-              </th>
-              {columnVisibility['Client Company'] && (
-                <th
-                  onClick={() => setSort('name')}
-                  className="table-header-cell cursor-pointer hover:text-foreground transition-colors"
-                >
-                  Client Company {renderSortIndicator('name')}
+        {isLoading ? (
+          <div className="p-4">
+            <SkeletonTable rows={5} cols={8} />
+          </div>
+        ) : (
+          <table className="table-container">
+            <thead>
+              <tr className="table-header-row">
+                <th className="table-header-cell w-10">
+                  <input
+                    type="checkbox"
+                    checked={
+                      paginatedClients.length > 0 &&
+                      paginatedClients.every((c) => selectedRows.includes(c._id))
+                    }
+                    onChange={(e) => toggleSelectAll(e.target.checked)}
+                    className="rounded border-border focus:ring-ring accent-primary"
+                  />
                 </th>
-              )}
-              {columnVisibility['Classification'] && (
-                <th
-                  onClick={() => setSort('clientType')}
-                  className="table-header-cell cursor-pointer hover:text-foreground transition-colors"
-                >
-                  Classification {renderSortIndicator('clientType')}
-                </th>
-              )}
-              {columnVisibility['Industry'] && (
-                <th
-                  onClick={() => setSort('industry')}
-                  className="table-header-cell cursor-pointer hover:text-foreground transition-colors"
-                >
-                  Industry {renderSortIndicator('industry')}
-                </th>
-              )}
-              {columnVisibility['Account Owner'] && (
-                <th
-                  onClick={() => setSort('accountManager')}
-                  className="table-header-cell cursor-pointer hover:text-foreground transition-colors"
-                >
-                  Account Owner {renderSortIndicator('accountManager')}
-                </th>
-              )}
-              {columnVisibility['Health Index'] && (
-                <th
-                  onClick={() => setSort('healthScore')}
-                  className="table-header-cell cursor-pointer hover:text-foreground transition-colors"
-                >
-                  Health Index {renderSortIndicator('healthScore')}
-                </th>
-              )}
-              {columnVisibility['ARR Yield'] && (
-                <th
-                  onClick={() => setSort('revenueContribution')}
-                  className="table-header-cell cursor-pointer hover:text-foreground transition-colors"
-                >
-                  ARR Yield {renderSortIndicator('revenueContribution')}
-                </th>
-              )}
-              {columnVisibility['Tags'] && <th className="table-header-cell">Tags</th>}
-              <th className="table-header-cell text-right w-16">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border/40">
-            {paginatedClients.map((acc) => (
-              <ClientRow
-                key={acc._id}
-                acc={acc}
-                isSelected={selectedRows.includes(acc._id)}
-                columnVisibility={columnVisibility}
-                setSelectedClient={setSelectedClient}
-                handleRowSelect={handleRowSelect}
-                archiveClient={archiveClient}
-                setClientToDelete={setClientToDelete}
-                setIsDeleteConfirmOpen={setIsDeleteConfirmOpen}
-              />
-            ))}
-            {paginatedClients.length === 0 && (
-              <tr>
-                <td
-                  colSpan={9}
-                  className="py-12 text-center text-xs text-muted-foreground font-semibold"
-                >
-                  Zero registered customer accounts match active search filters.
-                </td>
+                {columnVisibility['Client Company'] && (
+                  <th
+                    onClick={() => setSort('name')}
+                    className="table-header-cell cursor-pointer hover:text-foreground transition-colors"
+                  >
+                    Client Company {renderSortIndicator('name')}
+                  </th>
+                )}
+                {columnVisibility['Classification'] && (
+                  <th
+                    onClick={() => setSort('clientType')}
+                    className="table-header-cell cursor-pointer hover:text-foreground transition-colors"
+                  >
+                    Classification {renderSortIndicator('clientType')}
+                  </th>
+                )}
+                {columnVisibility['Industry'] && (
+                  <th
+                    onClick={() => setSort('industry')}
+                    className="table-header-cell cursor-pointer hover:text-foreground transition-colors"
+                  >
+                    Industry {renderSortIndicator('industry')}
+                  </th>
+                )}
+                {columnVisibility['Account Owner'] && (
+                  <th
+                    onClick={() => setSort('accountManager')}
+                    className="table-header-cell cursor-pointer hover:text-foreground transition-colors"
+                  >
+                    Account Owner {renderSortIndicator('accountManager')}
+                  </th>
+                )}
+                {columnVisibility['Health Index'] && (
+                  <th
+                    onClick={() => setSort('healthScore')}
+                    className="table-header-cell cursor-pointer hover:text-foreground transition-colors"
+                  >
+                    Health Index {renderSortIndicator('healthScore')}
+                  </th>
+                )}
+                {columnVisibility['ARR Yield'] && (
+                  <th
+                    onClick={() => setSort('revenueContribution')}
+                    className="table-header-cell cursor-pointer hover:text-foreground transition-colors"
+                  >
+                    ARR Yield {renderSortIndicator('revenueContribution')}
+                  </th>
+                )}
+                {columnVisibility['Tags'] && <th className="table-header-cell">Tags</th>}
+                <th className="table-header-cell text-right w-16">Actions</th>
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-border/40">
+              {paginatedClients.map((acc) => (
+                <ClientRow
+                  key={acc._id}
+                  acc={acc}
+                  isSelected={selectedRows.includes(acc._id)}
+                  columnVisibility={columnVisibility}
+                  setSelectedClient={setSelectedClient}
+                  handleRowSelect={handleRowSelect}
+                  archiveClient={archiveClient}
+                  setClientToDelete={setClientToDelete}
+                  setIsDeleteConfirmOpen={setIsDeleteConfirmOpen}
+                />
+              ))}
+              {paginatedClients.length === 0 && (
+                <tr>
+                  <td colSpan={9} className="p-0 border-none">
+                    <div className="py-12">
+                      <EmptyState
+                        title="No clients found"
+                        description="Zero registered customer accounts match active search filters."
+                        variant="search"
+                      />
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        )}
       </div>
 
       {/* RENDER MODE 2: MOBILE STACK CARDS RENDER */}
       <div className="block sm:hidden space-y-3">
-        {paginatedClients.map((acc) => (
-          <div
-            key={acc._id}
-            onClick={() => setSelectedClient(acc)}
-            className={`p-4 rounded-xl border border-border/80 bg-card/40 backdrop-blur-md space-y-3 hover:border-primary/40 cursor-pointer transition-all ${
-              selectedRows.includes(acc._id) ? 'ring-1 ring-primary bg-primary/5' : ''
-            }`}
-          >
-            <div className="flex justify-between items-start">
-              <div className="space-y-1">
-                <h4 className="font-bold text-foreground text-sm">{acc.name}</h4>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
-                  {acc.industry} • Owner: {acc.accountManager}
-                </p>
+        {isLoading ? (
+          <>
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+          </>
+        ) : (
+          <>
+            {paginatedClients.map((acc) => (
+              <div
+                key={acc._id}
+                onClick={() => setSelectedClient(acc)}
+                className={`p-4 rounded-xl border border-border/80 bg-card/40 backdrop-blur-md space-y-3 hover:border-primary/40 cursor-pointer transition-all ${
+                  selectedRows.includes(acc._id) ? 'ring-1 ring-primary bg-primary/5' : ''
+                }`}
+              >
+                <div className="flex justify-between items-start">
+                  <div className="space-y-1">
+                    <h4 className="font-bold text-foreground text-sm">{acc.name}</h4>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                      {acc.industry} • Owner: {acc.accountManager}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                    <input
+                      type="checkbox"
+                      checked={selectedRows.includes(acc._id)}
+                      onChange={(e) => handleRowSelect(acc._id, e.target.checked)}
+                      className="rounded border-border focus:ring-ring"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 text-center text-[10px] bg-muted/20 p-2 rounded-lg">
+                  <div>
+                    <span className="block text-muted-foreground text-[8px] uppercase font-bold">
+                      Class
+                    </span>
+                    <span className="font-bold text-foreground">{acc.clientType}</span>
+                  </div>
+                  <div>
+                    <span className="block text-muted-foreground text-[8px] uppercase font-bold">
+                      ARR Yield
+                    </span>
+                    <span className="font-bold text-primary">
+                      ${acc.revenueContribution.toLocaleString()}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="block text-muted-foreground text-[8px] uppercase font-bold">
+                      Health
+                    </span>
+                    <span
+                      className={`font-bold ${
+                        acc.healthScore >= 90
+                          ? 'text-emerald-500'
+                          : acc.healthScore >= 75
+                            ? 'text-amber-500'
+                            : 'text-rose-500'
+                      }`}
+                    >
+                      {acc.healthScore}%
+                    </span>
+                  </div>
+                </div>
+
+                {acc.tags?.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {acc.tags.map((t) => (
+                      <TagPill key={t} tag={t} />
+                    ))}
+                  </div>
+                )}
+
+                <div
+                  className="flex justify-end gap-2 border-t border-border/30 pt-2"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {acc.isArchived ? (
+                    <Button
+                      onClick={() => archiveClient(acc._id, false)}
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-xs text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/10 flex items-center gap-1 font-bold"
+                    >
+                      <RotateCcw className="h-3 w-3" /> Restore Profile
+                    </Button>
+                  ) : (
+                    <>
+                      <Button
+                        onClick={() => archiveClient(acc._id, true)}
+                        variant="outline"
+                        size="sm"
+                        className="h-7 text-xs text-amber-500 border-amber-500/20 hover:bg-amber-500/10 flex items-center gap-1 font-bold"
+                      >
+                        <Archive className="h-3 w-3" /> Archive
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          setClientToDelete(acc);
+                          setIsDeleteConfirmOpen(true);
+                        }}
+                        variant="outline"
+                        size="sm"
+                        className="h-7 text-xs text-rose-500 border-rose-500/20 hover:bg-rose-500/10 flex items-center gap-1 font-bold"
+                      >
+                        <Trash2 className="h-3 w-3" /> Delete
+                      </Button>
+                    </>
+                  )}
+                </div>
               </div>
-              <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                <input
-                  type="checkbox"
-                  checked={selectedRows.includes(acc._id)}
-                  onChange={(e) => handleRowSelect(acc._id, e.target.checked)}
-                  className="rounded border-border focus:ring-ring"
+            ))}
+            {paginatedClients.length === 0 && (
+              <div className="py-12">
+                <EmptyState
+                  title="No clients found"
+                  description="Zero registered customer accounts match active search filters."
+                  variant="search"
                 />
               </div>
-            </div>
-
-            <div className="grid grid-cols-3 gap-2 text-center text-[10px] bg-muted/20 p-2 rounded-lg">
-              <div>
-                <span className="block text-muted-foreground text-[8px] uppercase font-bold">
-                  Class
-                </span>
-                <span className="font-bold text-foreground">{acc.clientType}</span>
-              </div>
-              <div>
-                <span className="block text-muted-foreground text-[8px] uppercase font-bold">
-                  ARR Yield
-                </span>
-                <span className="font-bold text-primary">
-                  ${acc.revenueContribution.toLocaleString()}
-                </span>
-              </div>
-              <div>
-                <span className="block text-muted-foreground text-[8px] uppercase font-bold">
-                  Health
-                </span>
-                <span
-                  className={`font-bold ${
-                    acc.healthScore >= 90
-                      ? 'text-emerald-500'
-                      : acc.healthScore >= 75
-                        ? 'text-amber-500'
-                        : 'text-rose-500'
-                  }`}
-                >
-                  {acc.healthScore}%
-                </span>
-              </div>
-            </div>
-
-            {acc.tags?.length > 0 && (
-              <div className="flex flex-wrap gap-1">
-                {acc.tags.map((t) => (
-                  <TagPill key={t} tag={t} />
-                ))}
-              </div>
             )}
-
-            <div
-              className="flex justify-end gap-2 border-t border-border/30 pt-2"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {acc.isArchived ? (
-                <Button
-                  onClick={() => archiveClient(acc._id, false)}
-                  variant="outline"
-                  size="sm"
-                  className="h-7 text-xs text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/10 flex items-center gap-1 font-bold"
-                >
-                  <RotateCcw className="h-3 w-3" /> Restore Profile
-                </Button>
-              ) : (
-                <>
-                  <Button
-                    onClick={() => archiveClient(acc._id, true)}
-                    variant="outline"
-                    size="sm"
-                    className="h-7 text-xs text-amber-500 border-amber-500/20 hover:bg-amber-500/10 flex items-center gap-1 font-bold"
-                  >
-                    <Archive className="h-3 w-3" /> Archive
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      setClientToDelete(acc);
-                      setIsDeleteConfirmOpen(true);
-                    }}
-                    variant="outline"
-                    size="sm"
-                    className="h-7 text-xs text-rose-500 border-rose-500/20 hover:bg-rose-500/10 flex items-center gap-1 font-bold"
-                  >
-                    <Trash2 className="h-3 w-3" /> Delete
-                  </Button>
-                </>
-              )}
-            </div>
-          </div>
-        ))}
-        {paginatedClients.length === 0 && (
-          <div className="py-12 text-center text-xs text-muted-foreground font-semibold">
-            Zero registered customer accounts match active search filters.
-          </div>
+          </>
         )}
       </div>
 

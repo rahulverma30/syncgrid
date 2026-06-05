@@ -114,6 +114,38 @@
   display: none;
 }
 
+/* ── Date / Time Inputs — Force Dark Mode ──────────────────────── */
+/* Prevents native browser light-mode chrome from bleeding into dark UI */
+input[type='date'],
+input[type='time'],
+input[type='datetime-local'],
+input[type='month'],
+input[type='week'] {
+  color-scheme: dark;
+  background-color: hsl(var(--input));
+  color: hsl(var(--foreground));
+  border-color: hsl(var(--border));
+}
+
+/* Style the calendar/clock icon in Chromium */
+input[type='date']::-webkit-calendar-picker-indicator,
+input[type='time']::-webkit-calendar-picker-indicator,
+input[type='datetime-local']::-webkit-calendar-picker-indicator {
+  filter: invert(0.7) brightness(1.2);
+  cursor: pointer;
+  opacity: 0.6;
+}
+input[type='date']::-webkit-calendar-picker-indicator:hover,
+input[type='time']::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+/* Firefox: inner date/time text colour */
+input[type='date']::-moz-datetime-edit,
+input[type='time']::-moz-datetime-edit {
+  color: hsl(var(--foreground));
+}
+
 /* ── Status Dots ─────────────────────────────────────────────── */
 .status-dot {
   @apply inline-block h-2 w-2 rounded-full shrink-0;

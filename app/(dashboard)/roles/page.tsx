@@ -197,6 +197,22 @@ const ROLE_TEMPLATES = [
   },
 ];
 
+const SYSTEM_ROLE_DESCRIPTIONS: Record<string, string> = {
+  'Super Admin':
+    'Enterprise-grade authorization tier granting full administrative privileges across all tenant modules.',
+  Admin:
+    'Tenant administrative clearance for workspace settings, directory management, and high-level overrides.',
+  'Project Manager':
+    'Supervises team projects, milestone schedules, analytics tracking, and cross-channel collaboration.',
+  'Team Lead':
+    'Operational oversight for team deliverables, code reviews, task assignments, and progress synchronization.',
+  Developer:
+    'Technical clearance tailored for executing tasks, pushing code milestones, and resolving system issues.',
+  HR: 'Manages enterprise talent onboarding, specialist directory settings, and compensation/leave policies.',
+  Finance:
+    'Clears audit restrictions for ledger logs, invoice processing, billing cycles, and payment integrations.',
+};
+
 // Progressive disclosure toggles schema
 const BASIC_TOGGLES = [
   {
@@ -1078,7 +1094,9 @@ export default function RolesAndAuthorizationPage() {
                             )}
                           </div>
                           <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                            {role.description || 'No description provided.'}
+                            {SYSTEM_ROLE_DESCRIPTIONS[role.name] ||
+                              role.description ||
+                              'No description provided.'}
                           </p>
                         </div>
                         <ChevronRight

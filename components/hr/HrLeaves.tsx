@@ -13,6 +13,7 @@ import {
   Input,
   Modal,
   Select,
+  DateInput,
 } from '@/components/ui';
 import {
   Clock,
@@ -464,8 +465,7 @@ export function HrLeaves() {
               <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
                 Start Date
               </label>
-              <Input
-                type="date"
+              <DateInput
                 value={form.startDate}
                 onChange={(e) => setForm({ ...form, startDate: e.target.value })}
                 required
@@ -476,8 +476,7 @@ export function HrLeaves() {
               <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
                 End Date
               </label>
-              <Input
-                type="date"
+              <DateInput
                 value={form.endDate}
                 onChange={(e) => setForm({ ...form, endDate: e.target.value })}
                 required

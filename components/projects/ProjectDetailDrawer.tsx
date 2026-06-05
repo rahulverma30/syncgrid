@@ -459,7 +459,7 @@ export const ProjectDetailDrawer: React.FC = () => {
         className="w-full max-w-xl h-full bg-popover border-l border-border/80 flex flex-col shadow-2xl relative"
       >
         {/* Close & Header */}
-        <div className="p-4 border-b border-border/40 flex items-center justify-between">
+        <div className="p-3 border-b border-border/40 flex items-center justify-between">
           <div className="space-y-0.5">
             <h4 className="text-sm font-black text-foreground uppercase tracking-wide flex items-center gap-1.5">
               <Layers className="h-4 w-4 text-primary" />
@@ -484,7 +484,7 @@ export const ProjectDetailDrawer: React.FC = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-1.5 px-3.5 py-2.5 text-[10px] font-black uppercase tracking-wider border-b-2 cursor-pointer transition-all ${
+                className={`flex items-center gap-1.5 px-3 py-2 text-[10px] font-black uppercase tracking-wider border-b-2 cursor-pointer transition-all ${
                   active
                     ? 'border-primary text-primary bg-primary/5'
                     : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -498,9 +498,9 @@ export const ProjectDetailDrawer: React.FC = () => {
         </div>
 
         {/* Tab Content Area */}
-        <div className="flex-1 overflow-y-auto p-5 text-left text-xs leading-relaxed space-y-5 select-text">
+        <div className="flex-1 overflow-y-auto p-4 text-left text-xs leading-tight space-y-4 select-text">
           {activeTab === 'overview' && (
-            <div className="space-y-5">
+            <div className="space-y-4">
               {/* Dynamic Status / Priority Controllers */}
               <div className="grid grid-cols-2 gap-4 items-end">
                 <div className="space-y-1">
@@ -541,7 +541,7 @@ export const ProjectDetailDrawer: React.FC = () => {
               </div>
 
               {/* Health Slider */}
-              <div className="space-y-2 p-3.5 rounded-lg bg-card/30 border border-border/50">
+              <div className="space-y-1.5 p-2.5 rounded-lg bg-card/30 border border-border/50">
                 <div className="flex items-center justify-between">
                   <span className="text-[9px] font-bold text-muted-foreground uppercase">
                     Project Health Index
@@ -567,14 +567,14 @@ export const ProjectDetailDrawer: React.FC = () => {
                 <span className="text-[9px] font-bold text-muted-foreground uppercase">
                   Project Scope / Summary
                 </span>
-                <p className="p-3 rounded-lg border border-border/40 bg-card/20 leading-relaxed whitespace-pre-wrap">
+                <p className="p-2.5 rounded-lg border border-border/40 bg-card/20 leading-snug whitespace-pre-wrap">
                   {selectedProject.description || 'No project description declared.'}
                 </p>
               </div>
 
               {/* Task Completion Metrics */}
               {selectedProject.metrics && (
-                <div className="space-y-2 p-3.5 rounded-lg bg-card/30 border border-border/50">
+                <div className="space-y-1.5 p-2.5 rounded-lg bg-card/30 border border-border/50">
                   <div className="flex items-center justify-between">
                     <span className="text-[9px] font-bold text-muted-foreground uppercase">
                       Task Progress
@@ -620,7 +620,7 @@ export const ProjectDetailDrawer: React.FC = () => {
 
               {/* Financial & Time Tracking info grid */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="p-3 rounded-lg bg-card/30 border border-border/50 space-y-1">
+                <div className="p-2.5 rounded-lg bg-card/30 border border-border/50 space-y-1">
                   <span className="text-[9px] font-bold text-muted-foreground uppercase">
                     Budget / Model
                   </span>
@@ -644,7 +644,7 @@ export const ProjectDetailDrawer: React.FC = () => {
                     {selectedProject.billingType} Billing
                   </p>
                 </div>
-                <div className="p-3 rounded-lg bg-card/30 border border-border/50 space-y-1">
+                <div className="p-2.5 rounded-lg bg-card/30 border border-border/50 space-y-1">
                   <span className="text-[9px] font-bold text-muted-foreground uppercase">
                     Time Tracking
                   </span>

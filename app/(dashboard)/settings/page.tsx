@@ -479,10 +479,10 @@ export default function SettingsPage() {
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id as TabType)}
-                  className={`flex items-center space-x-3 w-full px-4 py-3 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
+                  className={`flex items-center space-x-3 w-full px-4 py-3 text-xs font-semibold rounded-lg transition-all cursor-pointer border-l-2 ${
                     activeTab === item.id
-                      ? 'bg-primary/10 text-primary border border-primary/25 shadow-sm'
-                      : 'text-muted-foreground hover:bg-accent/40 hover:text-foreground border border-transparent'
+                      ? 'bg-primary/10 text-primary border-primary shadow-sm'
+                      : 'text-muted-foreground hover:bg-accent/40 hover:text-foreground border-transparent'
                   }`}
                 >
                   <Icon className="w-4 h-4" />

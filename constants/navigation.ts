@@ -96,7 +96,7 @@ export const SIDEBAR_GROUPS = [
           'HR',
           'Finance',
         ],
-        permission: { resource: 'clients', action: 'read' },
+        permission: { resource: 'dashboard', action: 'read' },
       },
       {
         id: 'projects',

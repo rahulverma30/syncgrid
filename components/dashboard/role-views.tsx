@@ -118,7 +118,7 @@ export function SuperAdminView({ data, isLoading, onRefresh }: RoleViewProps) {
             onRefresh={onRefresh}
             className="h-full"
           >
-            <div className="max-h-[250px] overflow-y-auto pr-1">
+            <div className="max-h-[250px] overflow-y-auto overflow-x-hidden pr-1">
               <ActivityTimeline items={timelineItems} />
             </div>
           </DashboardWidget>

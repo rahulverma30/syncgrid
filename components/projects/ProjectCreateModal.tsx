@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Button, Input, Modal, Select } from '@/components/ui';
+import { DateInput } from '@/components/ui/date-input';
 import { Layers, Plus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useProjectsStore } from '@/store/projectsStore';
@@ -286,8 +287,7 @@ export const ProjectCreateModal: React.FC = () => {
             <label className="text-[9px] font-bold text-muted-foreground uppercase">
               Start Date
             </label>
-            <Input
-              type="date"
+            <DateInput
               value={formStartDate}
               onChange={(e) => setFormStartDate(e.target.value)}
               className="h-8.5 bg-background/50"
@@ -295,8 +295,7 @@ export const ProjectCreateModal: React.FC = () => {
           </div>
           <div className="space-y-1">
             <label className="text-[9px] font-bold text-muted-foreground uppercase">Deadline</label>
-            <Input
-              type="date"
+            <DateInput
               value={formDeadline}
               onChange={(e) => setFormDeadline(e.target.value)}
               className="h-8.5 bg-background/50"

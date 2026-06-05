@@ -4,8 +4,8 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAnalyticsStore } from '@/store/analyticsStore';
 import { PageHeader } from '@/components/ui/page-header';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { DateInput } from '@/components/ui/date-input';
 import { AnalyticsDashboard } from '@/components/analytics/AnalyticsDashboard';
 import { CustomReportBuilder } from '@/components/analytics/CustomReportBuilder';
 import { KPIManager } from '@/components/analytics/KPIManager';
@@ -19,7 +19,6 @@ import {
   Brain,
   Zap,
   Calendar,
-  Sparkles,
 } from 'lucide-react';
 
 export default function AnalyticsPage() {
@@ -57,9 +56,8 @@ export default function AnalyticsPage() {
             <span className="text-muted-foreground font-bold uppercase tracking-wider text-[9px]">
               From:
             </span>
-            <Input
-              type="date"
-              value={filters.dateRange.start}
+            <DateInput
+              value={filters?.dateRange?.start ?? ''}
               onChange={(e) =>
                 setFilters({
                   dateRange: { ...filters.dateRange, start: e.target.value },
@@ -72,9 +70,8 @@ export default function AnalyticsPage() {
             <span className="text-muted-foreground font-bold uppercase tracking-wider text-[9px]">
               To:
             </span>
-            <Input
-              type="date"
-              value={filters.dateRange.end}
+            <DateInput
+              value={filters?.dateRange?.end ?? ''}
               onChange={(e) =>
                 setFilters({
                   dateRange: { ...filters.dateRange, end: e.target.value },
@@ -113,7 +110,7 @@ export default function AnalyticsPage() {
         })}
       </div>
 
-      {/* Tab Panels */}
+      {/* Tab Panels — each wrapped in ErrorBoundary to prevent cascade failures */}
       <div className="min-h-[400px]">
         <AnimatePresence mode="wait">
           {activeTab === 'cockpit' && (
@@ -124,7 +121,9 @@ export default function AnalyticsPage() {
               exit={{ opacity: 0, y: -15 }}
               transition={{ duration: 0.3 }}
             >
-              <AnalyticsDashboard />
+              <ErrorBoundary moduleName="Executive Cockpit">
+                <AnalyticsDashboard />
+              </ErrorBoundary>
             </motion.div>
           )}
 
@@ -136,7 +135,9 @@ export default function AnalyticsPage() {
               exit={{ opacity: 0, y: -15 }}
               transition={{ duration: 0.3 }}
             >
-              <CustomReportBuilder />
+              <ErrorBoundary moduleName="Custom Report Builder">
+                <CustomReportBuilder />
+              </ErrorBoundary>
             </motion.div>
           )}
 
@@ -148,7 +149,9 @@ export default function AnalyticsPage() {
               exit={{ opacity: 0, y: -15 }}
               transition={{ duration: 0.3 }}
             >
-              <KPIManager />
+              <ErrorBoundary moduleName="KPI Definitions Vault">
+                <KPIManager />
+              </ErrorBoundary>
             </motion.div>
           )}
 
@@ -160,7 +163,9 @@ export default function AnalyticsPage() {
               exit={{ opacity: 0, y: -15 }}
               transition={{ duration: 0.3 }}
             >
-              <ProfitabilityForecaster />
+              <ErrorBoundary moduleName="Predictive Forecaster">
+                <ProfitabilityForecaster />
+              </ErrorBoundary>
             </motion.div>
           )}
 
@@ -172,7 +177,9 @@ export default function AnalyticsPage() {
               exit={{ opacity: 0, y: -15 }}
               transition={{ duration: 0.3 }}
             >
-              <OperationalDrilldown />
+              <ErrorBoundary moduleName="Operational Drilldowns">
+                <OperationalDrilldown />
+              </ErrorBoundary>
             </motion.div>
           )}
         </AnimatePresence>

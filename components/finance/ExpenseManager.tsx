@@ -13,7 +13,7 @@ import {
   ClipboardCheck,
   ArrowUpRight,
 } from 'lucide-react';
-import { Button, Input, Select, Modal } from '@/components/ui';
+import { Button, Input, Select, Modal, EmptyState } from '@/components/ui';
 import { toast } from 'sonner';
 
 interface ExpenseManagerProps {
@@ -185,8 +185,23 @@ export const ExpenseManager: React.FC<ExpenseManagerProps> = ({
           <tbody>
             {filteredExpenses.length === 0 ? (
               <tr>
-                <td colSpan={8} className="p-8 text-center text-muted-foreground">
-                  No expense records matching filter parameters.
+                <td colSpan={8} className="p-0 border-none">
+                  <div className="py-12">
+                    <EmptyState
+                      title="No expenses found"
+                      description="There are no expense records matching your current filter parameters."
+                      action={
+                        isFinance
+                          ? {
+                              label: 'File Expense',
+                              onClick: () => setClaimDrawerOpen(true),
+                              icon: <Plus className="w-4 h-4" />,
+                            }
+                          : undefined
+                      }
+                      variant="search"
+                    />
+                  </div>
                 </td>
               </tr>
             ) : (

@@ -567,7 +567,7 @@ export default function CRMPage() {
             <button
               key={t}
               onClick={() => setActiveTab(t)}
-              className={`pb-2.5 px-4 text-xs font-bold uppercase tracking-wider transition-colors border-b-2 relative ${
+              className={`pb-2.5 px-4 text-[13px] font-bold transition-colors border-b-2 relative ${
                 activeTab === t
                   ? 'border-primary text-foreground'
                   : 'border-transparent text-muted-foreground hover:text-foreground'
