@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 
 interface Contact {
   _id: string;
@@ -48,6 +49,8 @@ interface Contact {
 }
 
 export default function CRMContactsPage() {
+  const router = useRouter();
+
   const [mounted, setMounted] = useState(false);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -300,7 +303,7 @@ export default function CRMContactsPage() {
             action={{
               label: 'Add First Contact',
               onClick: () => {
-                window.location.href = '/crm/contacts/create';
+                router.push('/crm/contacts/create');
               },
             }}
           />

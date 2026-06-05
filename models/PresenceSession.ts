@@ -35,7 +35,5 @@ const PresenceSessionSchema = new Schema(
   }
 );
 
-PresenceSessionSchema.index({ companyId: 1, status: 1 });
-
 export const PresenceSession = ((mongoose.models.PresenceSession as Model<any>) ||
   mongoose.model('PresenceSession', PresenceSessionSchema)) as Model<any>;

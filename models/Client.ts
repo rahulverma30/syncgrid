@@ -200,7 +200,7 @@ const ClientSchema = new Schema(
 );
 
 // Indexes for high performance dynamic queries
-ClientSchema.index({ companyId: 1, isArchived: 1 });
+
 ClientSchema.index({ companyId: 1, clientType: 1 });
 ClientSchema.index({ companyId: 1, retentionStatus: 1 });
 ClientSchema.index({ companyId: 1, healthScore: 1 });

@@ -43,6 +43,12 @@ interface Document {
   createdAt: string;
 }
 
+interface Note {
+  content: string;
+  createdByName: string;
+  createdAt: string;
+}
+
 export default function AccountDetailsPage() {
   const params = useParams();
   const accountId = params?.id ? (Array.isArray(params.id) ? params.id[0] : params.id) : '';
@@ -62,41 +68,20 @@ export default function AccountDetailsPage() {
   const [accountManager, setAccountManager] = useState('Jane Doe');
   const [address, setAddress] = useState('123 Silicon Tower, SF CA');
 
-  const [contacts, setContacts] = useState<Contact[]>([
-    { _id: 'co1', name: 'John Carter', role: 'CTO', email: 'carter@acme.com' },
-    { _id: 'co2', name: 'Alice Smith', role: 'Product Manager', email: 'alice@acme.com' },
-  ]);
+  const [contacts, setContacts] = useState<Contact[]>([]);
 
-  const [meetings, setMeetings] = useState<Meeting[]>([
-    {
-      _id: 'm1',
-      title: 'Onboarding Alignment Call',
-      dueDate: 'Tomorrow at 10 AM',
-      isCompleted: false,
-    },
-    { _id: 'm2', title: 'Technical Scoping Meeting', dueDate: 'May 20, 2026', isCompleted: true },
-  ]);
+  const [meetings, setMeetings] = useState<Meeting[]>([]);
 
-  const [documents, setDocuments] = useState<Document[]>([
-    {
-      _id: 'd1',
-      name: 'Master Services Agreement.pdf',
-      category: 'contract',
-      createdAt: 'May 10, 2026',
-    },
-    {
-      _id: 'd2',
-      name: 'Technical Architecture Proposal.pdf',
-      category: 'proposal',
-      createdAt: 'Yesterday',
-    },
-  ]);
+  const [documents, setDocuments] = useState<Document[]>([]);
 
   const [noteText, setNoteText] = useState('');
-  const [notes, setNotes] = useState<string[]>([
-    'Looking to double their engineering team size and upgrade to SyncGrid Premium Enterprise.',
-    'Exhibited very positive feedback during initial technical alignment call.',
-  ]);
+  const [notes, setNotes] = useState<Note[]>([]);
+
+  const [meetingTitle, setMeetingTitle] = useState('');
+  const [meetingDate, setMeetingDate] = useState('');
+
+  const [docName, setDocName] = useState('');
+  const [docCat, setDocCat] = useState('contract');
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -105,8 +90,23 @@ export default function AccountDetailsPage() {
     const fetchAccountDetails = async () => {
       setIsLoading(true);
       try {
-        const res = await fetch(`/api/protected/clients/${accountId}`);
+        const [res, contactsRes] = await Promise.all([
+          fetch(`/api/protected/clients/${accountId}`),
+          fetch(`/api/protected/crm/contacts?accountId=${accountId}`),
+        ]);
         const d = await res.json();
+        const cd = await contactsRes.json();
+
+        const extraContacts =
+          cd.success && cd.data
+            ? cd.data.map((c: any) => ({
+                _id: c._id,
+                name: `${c.firstName} ${c.lastName}`,
+                role: c.title || 'Stakeholder',
+                email: c.email || '',
+              }))
+            : [];
+
         if (d.success && d.data) {
           const a = d.data;
           setName(a.name);
@@ -120,7 +120,20 @@ export default function AccountDetailsPage() {
           setAccountManager(a.accountManager);
           setAddress(a.address || 'No address');
 
-          if (a.contacts && a.contacts.length > 0) setContacts(a.contacts);
+          const mergedContacts = [...(a.contacts || []), ...extraContacts];
+          setContacts(mergedContacts);
+
+          setMeetings(a.meetings || []);
+          setDocuments(a.documents || []);
+
+          const formattedNotes = (a.notes || [])
+            .map((n: any) => ({
+              content: n.content || n,
+              createdByName: n.createdByName || 'System',
+              createdAt: new Date(n.createdAt || Date.now()).toLocaleDateString(),
+            }))
+            .reverse();
+          setNotes(formattedNotes);
         }
       } catch (err) {
         toast.error('Failed to sync details from server. Rendering fallback data sandbox.');
@@ -131,16 +144,92 @@ export default function AccountDetailsPage() {
     fetchAccountDetails();
   }, [accountId]);
 
-  const handleAddNote = () => {
+  const handleAddNote = async () => {
     if (!noteText.trim()) return;
-    setNotes([noteText, ...notes]);
-    setNoteText('');
-    toast.success('Note logged to account feed.');
+    try {
+      const res = await fetch(`/api/protected/clients/${accountId}/notes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: noteText, isPinned: false, isPrivate: false }),
+      });
+      const d = await res.json();
+      if (d.success) {
+        setNotes([
+          { content: noteText, createdByName: 'Current User', createdAt: 'Just now' },
+          ...notes,
+        ]);
+        setNoteText('');
+        toast.success('Note logged to account feed.');
+      } else {
+        toast.error(d.message || 'Failed to log note');
+      }
+    } catch (e) {
+      toast.error('Network error.');
+    }
   };
 
   const handleToggleMeeting = (id: string) => {
     setMeetings(meetings.map((m) => (m._id === id ? { ...m, isCompleted: !m.isCompleted } : m)));
     toast.success('Meeting status updated successfully.');
+  };
+
+  const handleAddMeeting = async () => {
+    if (!meetingTitle.trim() || !meetingDate) return;
+    try {
+      const res = await fetch(`/api/protected/clients/${accountId}/meetings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: meetingTitle, dueDate: meetingDate }),
+      });
+      const d = await res.json();
+      if (d.success) {
+        setMeetings([
+          ...meetings,
+          {
+            _id: Date.now().toString(),
+            title: meetingTitle,
+            dueDate: meetingDate,
+            isCompleted: false,
+          },
+        ]);
+        setMeetingTitle('');
+        setMeetingDate('');
+        toast.success('Meeting scheduled.');
+      } else {
+        toast.error(d.message);
+      }
+    } catch {
+      toast.error('Error scheduling meeting.');
+    }
+  };
+
+  const handleAddDoc = async () => {
+    if (!docName.trim()) return;
+    const finalName = docName.includes('.') ? docName : `${docName}.pdf`;
+    try {
+      const res = await fetch(`/api/protected/clients/${accountId}/documents`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: finalName,
+          category: docCat,
+          url: `https://syncgrid-vault.s3.amazonaws.com/clients/${accountId}/${finalName}`,
+        }),
+      });
+      const d = await res.json();
+      if (d.success) {
+        setDocuments([
+          ...documents,
+          { _id: Date.now().toString(), name: finalName, category: docCat, createdAt: 'Just now' },
+        ]);
+        setDocName('');
+        toast.success('Document uploaded.');
+      } else {
+        toast.error(d.message);
+      }
+    } catch {
+      toast.error('Error uploading document.');
+    }
   };
 
   if (!mounted) return null;
@@ -266,6 +355,24 @@ export default function AccountDetailsPage() {
               Calendar Meetings schedule
             </h2>
 
+            <div className="flex gap-2 mb-4">
+              <Input
+                value={meetingTitle}
+                onChange={(e) => setMeetingTitle(e.target.value)}
+                placeholder="Meeting Title"
+                className="bg-background/40 h-8 text-xs flex-1"
+              />
+              <Input
+                type="date"
+                value={meetingDate}
+                onChange={(e) => setMeetingDate(e.target.value)}
+                className="bg-background/40 h-8 text-xs w-32"
+              />
+              <Button onClick={handleAddMeeting} size="sm" className="h-8 text-xs px-3">
+                <Plus className="h-3 w-3" />
+              </Button>
+            </div>
+
             <div className="space-y-3">
               {meetings.map((m) => (
                 <div
@@ -300,6 +407,27 @@ export default function AccountDetailsPage() {
               <FileText className="h-4 w-4 text-slate-400" />
               Shared Enterprise Documents folder
             </h2>
+
+            <div className="flex gap-2 mb-4">
+              <Input
+                value={docName}
+                onChange={(e) => setDocName(e.target.value)}
+                placeholder="Filename (e.g. contract.pdf)"
+                className="bg-background/40 h-8 text-xs flex-1"
+              />
+              <select
+                value={docCat}
+                onChange={(e) => setDocCat(e.target.value)}
+                className="bg-background/40 border border-input rounded-md h-8 text-xs w-28 px-2 text-foreground"
+              >
+                <option value="contract">Contract</option>
+                <option value="proposal">Proposal</option>
+                <option value="NDA">NDA</option>
+              </select>
+              <Button onClick={handleAddDoc} size="sm" className="h-8 text-xs px-3">
+                <Plus className="h-3 w-3" />
+              </Button>
+            </div>
 
             <div className="space-y-3">
               {documents.map((d) => (
@@ -385,12 +513,15 @@ export default function AccountDetailsPage() {
 
               <div className="space-y-2.5 pt-1">
                 {notes.map((n, i) => (
-                  <p
+                  <div
                     key={i}
-                    className="bg-background/20 p-3 rounded-xl border border-border/40 text-[11px] leading-relaxed text-slate-300"
+                    className="bg-background/20 p-3 rounded-xl border border-border/40 text-[11px] leading-relaxed text-slate-300 space-y-1"
                   >
-                    {n}
-                  </p>
+                    <p>{n.content}</p>
+                    <span className="text-[9px] text-slate-500 block">
+                      {n.createdAt} • logged by {n.createdByName}
+                    </span>
+                  </div>
                 ))}
               </div>
             </div>

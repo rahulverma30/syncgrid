@@ -68,7 +68,6 @@ ContactSchema.virtual('name').get(function () {
   return `${this.firstName} ${this.lastName}`;
 });
 
-ContactSchema.index({ companyId: 1, isArchived: 1 });
 ContactSchema.index({ companyId: 1, accountId: 1 });
 ContactSchema.index({ companyId: 1, email: 1 });
 

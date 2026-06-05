@@ -56,8 +56,6 @@ const FinancialActivitySchema = new Schema<IFinancialActivity>(
   { timestamps: true }
 );
 
-FinancialActivitySchema.index({ companyId: 1, createdAt: -1 });
-
 export const FinancialActivity =
   mongoose.models.FinancialActivity ||
   mongoose.model<IFinancialActivity>('FinancialActivity', FinancialActivitySchema);

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { PageHeader, Card, CardContent, Button, Input, LoadingSpinner } from '@/components/ui';
+import { useSession } from 'next-auth/react';
 import {
   TrendingUp,
   Mail,
@@ -33,6 +34,10 @@ export default function DealDetailsPage() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const { data: session } = useSession();
+  const currentUserName = session?.user?.name
+    ? `${session.user.name} (${session.user.roles?.[0] || 'User'})`
+    : 'Sales Specialist';
 
   // States
   const [name, setName] = useState('Acme Corp');
@@ -87,7 +92,17 @@ export default function DealDetailsPage() {
           }
           setWorkType(l.accountId?.industry || 'General');
           setTechStack([]);
-          if (l.notes) {
+          if (l.notes && Array.isArray(l.notes)) {
+            setNotes(
+              l.notes
+                .map((n: any) => ({
+                  content: n.content,
+                  createdByName: n.createdByName || 'System',
+                  createdAt: new Date(n.createdAt).toLocaleDateString(),
+                }))
+                .reverse()
+            );
+          } else if (l.notes && typeof l.notes === 'string') {
             setNotes([
               {
                 content: l.notes,
@@ -135,14 +150,14 @@ export default function DealDetailsPage() {
       const d = await res.json();
       if (d.success) {
         setNotes([
-          { content: noteText, createdByName: 'Sales Specialist', createdAt: 'Just now' },
+          { content: noteText, createdByName: currentUserName, createdAt: 'Just now' },
           ...notes,
         ]);
         setNoteText('');
         toast.success('Sales notes appended.');
       } else {
         setNotes([
-          { content: noteText, createdByName: 'Sales Specialist', createdAt: 'Just now' },
+          { content: noteText, createdByName: currentUserName, createdAt: 'Just now' },
           ...notes,
         ]);
         setNoteText('');
@@ -150,7 +165,7 @@ export default function DealDetailsPage() {
       }
     } catch (e) {
       setNotes([
-        { content: noteText, createdByName: 'Sales Specialist', createdAt: 'Just now' },
+        { content: noteText, createdByName: currentUserName, createdAt: 'Just now' },
         ...notes,
       ]);
       setNoteText('');

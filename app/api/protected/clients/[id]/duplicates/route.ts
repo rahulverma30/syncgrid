@@ -8,7 +8,8 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
   try {
     await connectToDatabase();
     const companyId = session.user.companyId;
-    const { id } = context.params;
+    const params = await context.params;
+    const { id } = params;
 
     const currentClient = await Client.findOne({ _id: id, companyId });
     if (!currentClient) {

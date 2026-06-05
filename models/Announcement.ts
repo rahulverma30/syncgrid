@@ -51,7 +51,5 @@ const AnnouncementSchema = new Schema(
   }
 );
 
-AnnouncementSchema.index({ companyId: 1, createdAt: -1 });
-
 export const Announcement = ((mongoose.models.Announcement as Model<any>) ||
   mongoose.model('Announcement', AnnouncementSchema)) as Model<any>;

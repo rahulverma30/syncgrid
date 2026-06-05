@@ -9,7 +9,7 @@ import { AUTH_PUBLIC_ROUTES } from '@/constants/rbac';
  * Protects routes and enforces authentication/authorization at the gateway layer.
  * Uses NextAuth JWT tokens for secure validation.
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Allow public routes

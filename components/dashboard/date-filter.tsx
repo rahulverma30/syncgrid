@@ -3,7 +3,7 @@
 import React from 'react';
 import { Calendar, ChevronDown, Check } from 'lucide-react';
 import { cn } from '@/lib/cn';
-import { DatePicker } from '@/components/ui/advanced-form';
+import { DateInput } from '@/components/ui';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export interface DateFilterValue {
@@ -88,7 +88,7 @@ export function DateFilter({ value, onChange }: DateFilterProps) {
             className="flex items-center gap-2"
           >
             <div className="w-32">
-              <DatePicker
+              <DateInput
                 aria-label="Start date"
                 value={value.startDate}
                 onChange={(e) =>
@@ -97,14 +97,14 @@ export function DateFilter({ value, onChange }: DateFilterProps) {
                     startDate: e.target.value,
                   })
                 }
-                className="h-9 py-1 px-2.5 text-xs bg-background/40"
+                className="h-9 py-1 px-2.5 text-xs bg-background/40 border-border/80"
               />
             </div>
             <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
               to
             </span>
             <div className="w-32">
-              <DatePicker
+              <DateInput
                 aria-label="End date"
                 value={value.endDate}
                 onChange={(e) =>
@@ -113,7 +113,7 @@ export function DateFilter({ value, onChange }: DateFilterProps) {
                     endDate: e.target.value,
                   })
                 }
-                className="h-9 py-1 px-2.5 text-xs bg-background/40"
+                className="h-9 py-1 px-2.5 text-xs bg-background/40 border-border/80"
               />
             </div>
           </motion.div>

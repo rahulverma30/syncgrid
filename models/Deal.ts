@@ -50,9 +50,13 @@ const DealSchema = new Schema(
       ref: 'User',
       index: true,
     },
-    notes: {
-      type: String,
-    },
+    notes: [
+      {
+        content: { type: String },
+        createdByName: { type: String },
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
     isArchived: {
       type: Boolean,
       default: false,
@@ -64,7 +68,6 @@ const DealSchema = new Schema(
   }
 );
 
-DealSchema.index({ companyId: 1, isArchived: 1 });
 DealSchema.index({ companyId: 1, stage: 1 });
 DealSchema.index({ companyId: 1, expectedCloseDate: 1 });
 

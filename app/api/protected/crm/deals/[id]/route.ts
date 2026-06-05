@@ -48,7 +48,19 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
       );
     }
 
-    const deal = await Deal.findOneAndUpdate({ _id: id, companyId }, { $set: body }, { new: true });
+    const updateQuery: any = { $set: { ...body } };
+    if (body.notes) {
+      delete updateQuery.$set.notes;
+      updateQuery.$push = {
+        notes: {
+          content: body.notes,
+          createdByName: session.user.name,
+          createdAt: new Date(),
+        },
+      };
+    }
+
+    const deal = await Deal.findOneAndUpdate({ _id: id, companyId }, updateQuery, { new: true });
 
     if (body.stage && originalDeal.stage !== body.stage) {
       const activity = new CRMActivity({

@@ -90,7 +90,6 @@ const ClientApprovalRequestSchema = new Schema(
   }
 );
 
-ClientApprovalRequestSchema.index({ companyId: 1, status: 1 });
 ClientApprovalRequestSchema.index({ clientId: 1, type: 1 });
 
 export const ClientApprovalRequest = ((mongoose.models.ClientApprovalRequest as Model<any>) ||

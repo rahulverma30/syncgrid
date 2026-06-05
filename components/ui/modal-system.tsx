@@ -12,16 +12,27 @@ import { useLockBodyScroll } from '@/hooks';
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
-  title: string;
+  title?: string;
+  description?: string;
   children: ReactNode;
   className?: string;
   footer?: ReactNode;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
 /**
  * CenteredModal with glassmorphism, backdrop blurs, quick Esc closing, and nested-safe body scroll locking
  */
-export function CenteredModal({ isOpen, onClose, title, children, className, footer }: ModalProps) {
+export function CenteredModal({
+  isOpen,
+  onClose,
+  title,
+  description,
+  children,
+  className,
+  footer,
+  size = 'md',
+}: ModalProps) {
   useLockBodyScroll(isOpen);
 
   const [mounted, setMounted] = useState(false);
@@ -40,6 +51,13 @@ export function CenteredModal({ isOpen, onClose, title, children, className, foo
   }, [isOpen, onClose]);
 
   if (!mounted) return null;
+
+  const sizeClasses = {
+    sm: 'max-w-sm',
+    md: 'max-w-lg',
+    lg: 'max-w-2xl',
+    xl: 'max-w-4xl',
+  };
 
   return createPortal(
     <AnimatePresence>
@@ -63,13 +81,19 @@ export function CenteredModal({ isOpen, onClose, title, children, className, foo
             role="dialog"
             aria-modal="true"
             className={cn(
-              'relative z-50 w-full max-w-lg rounded-xl border border-border bg-card shadow-2xl p-6 flex flex-col max-h-[90vh] overflow-hidden select-none',
+              'relative z-50 w-full rounded-xl border border-border bg-card shadow-2xl p-6 flex flex-col max-h-[90vh] overflow-hidden select-none',
+              sizeClasses[size],
               className
             )}
           >
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-border/40 pb-4 mb-4 select-none flex-shrink-0">
-              <h3 className="text-lg font-bold tracking-tight text-foreground">{title}</h3>
+            <div className="flex items-start justify-between border-b border-border/40 pb-4 mb-4 select-none flex-shrink-0">
+              <div className="space-y-0.5">
+                {title && (
+                  <h3 className="text-lg font-bold tracking-tight text-foreground">{title}</h3>
+                )}
+                {description && <p className="text-xs text-muted-foreground">{description}</p>}
+              </div>
               <button
                 onClick={onClose}
                 className="rounded-full p-1.5 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"

@@ -75,14 +75,46 @@ export default function CreateContactPage() {
       return;
     }
 
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast.error('Please enter a valid email address.');
+      return;
+    }
+
+    if (phone && phone.replace(/\D/g, '').length < 10) {
+      toast.error('Please enter a valid phone number with at least 10 digits.');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      // Simulate adding contact to target client subdocument
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      toast.success(`Contact for "${name}" registered successfully!`);
-      router.push('/crm/contacts');
+      const [firstName, ...rest] = name.trim().split(' ');
+      const lastName = rest.join(' ');
+
+      const res = await fetch('/api/protected/crm/contacts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          firstName,
+          lastName,
+          email,
+          phone,
+          accountId: companyId,
+          role,
+          status: 'active',
+          preferredChannel: communicationPref,
+          isPrimaryContact: isPrimary,
+        }),
+      });
+      const d = await res.json();
+
+      if (d.success) {
+        toast.success(`Contact for "${name}" registered successfully!`);
+        router.push('/crm/contacts');
+      } else {
+        toast.error(d.message || 'Could not save contact record.');
+      }
     } catch (err) {
-      toast.error('Could not save contact record.');
+      toast.error('Connection error saving contact.');
     } finally {
       setIsSubmitting(false);
     }
@@ -159,7 +191,10 @@ export default function CreateContactPage() {
                       value={companyId}
                       onChange={(val) => setCompanyId(val)}
                       className="w-full pl-10 pr-4 bg-background/30 border border-border/60 hover:border-primary/20 rounded-xl h-10 text-xs text-slate-300 focus:ring-0 outline-none cursor-pointer"
-                      options={[{ value: 'c._id', label: '{c.name}' }]}
+                      options={[
+                        { value: '', label: 'Select Corporate Account...' },
+                        ...companies.map((c) => ({ value: c._id, label: c.name })),
+                      ]}
                     />
                   </div>
                 )}
@@ -222,7 +257,7 @@ export default function CreateContactPage() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 bg-background/20 p-4 rounded-xl border border-border/40 select-none mt-5">
+              <div className="flex items-center gap-3 bg-background/20 py-0 px-4 rounded-xl border border-border/40 select-none mt-8">
                 <input
                   type="checkbox"
                   id="primaryContact"

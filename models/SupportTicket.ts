@@ -71,7 +71,6 @@ const SupportTicketSchema = new Schema(
   }
 );
 
-SupportTicketSchema.index({ companyId: 1, status: 1 });
 SupportTicketSchema.index({ clientId: 1, priority: 1 });
 
 export const SupportTicket = ((mongoose.models.SupportTicket as Model<any>) ||

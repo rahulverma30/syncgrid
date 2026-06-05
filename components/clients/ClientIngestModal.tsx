@@ -81,70 +81,73 @@ export const ClientIngestModal: React.FC = () => {
       isOpen={createModalOpen}
       onClose={() => setCreateModalOpen(false)}
       title="Onboard Customer Account"
-      description="Log signed contract ARR sums, categories, timezones, and owners."
-      size="md"
+      description="Register new corporate entities and establish foundational ARR terms, category structures, and ownership."
+      size="lg"
     >
-      <form onSubmit={handleCreateClient} className="space-y-4 text-xs">
-        <div className="grid grid-cols-2 gap-3.5">
-          <div className="space-y-1">
-            <label className="text-[9px] font-bold text-muted-foreground uppercase">
+      <form onSubmit={handleCreateClient} className="space-y-6 text-sm py-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">
               Client Company *
             </label>
-            <Input
-              value={formName}
-              onChange={(e) => setFormName(e.target.value)}
-              placeholder="Stark Industries"
-              className="h-8.5 bg-background/50 focus-visible:ring-1"
-              required
-            />
+            <div className="relative">
+              <Building className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+              <Input
+                value={formName}
+                onChange={(e) => setFormName(e.target.value)}
+                placeholder="Stark Industries"
+                className="pl-10 h-10 bg-background/30 border border-border/60 hover:border-primary/30 transition-colors text-xs rounded-xl"
+                required
+              />
+            </div>
           </div>
-          <div className="space-y-1">
-            <label className="text-[9px] font-bold text-muted-foreground uppercase">
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">
               Industry Sector
             </label>
             <Input
               value={formIndustry}
               onChange={(e) => setFormIndustry(e.target.value)}
-              placeholder="Energy / High Tech"
-              className="h-8.5 bg-background/50 focus-visible:ring-1"
+              placeholder="e.g. Defense / High Tech"
+              className="h-10 px-3 bg-background/30 border border-border/60 hover:border-primary/30 transition-colors text-xs rounded-xl"
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3.5">
-          <div className="space-y-1">
-            <label className="text-[9px] font-bold text-muted-foreground uppercase">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">
               Classification
             </label>
             <Select
               value={formType}
               onChange={(value) => setFormType(value as any)}
               options={[
-                { value: 'Startup', label: 'Startup Account' },
-                { value: 'VIP', label: 'VIP Account' },
-                { value: 'Enterprise', label: 'Enterprise Account' },
-                { value: 'Retainer', label: 'Retainer Contract' },
-                { value: 'High Value', label: 'High Value Account' },
+                { value: 'Startup', label: 'Startup Tier' },
+                { value: 'VIP', label: 'VIP Priority' },
+                { value: 'Enterprise', label: 'Enterprise Contract' },
+                { value: 'Retainer', label: 'Ongoing Retainer' },
+                { value: 'High Value', label: 'Strategic Account' },
               ]}
-              className="h-8.5 text-xs rounded-lg px-2"
+              className="h-10 text-xs rounded-xl bg-background/30 border border-border/60 px-3 hover:border-primary/30 transition-colors text-slate-300 outline-none w-full"
             />
           </div>
-          <div className="space-y-1">
-            <label className="text-[9px] font-bold text-muted-foreground uppercase">
-              Starting Contract ARR ($)
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">
+              Starting ARR Forecast ($)
             </label>
             <Input
               type="number"
               value={formRevenue}
               onChange={(e) => setFormRevenue(parseInt(e.target.value) || 0)}
-              className="h-8.5 bg-background/50"
+              className="h-10 px-3 bg-background/30 border border-border/60 hover:border-primary/30 transition-colors text-xs rounded-xl font-mono text-emerald-400"
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-3 select-none">
-          <div className="space-y-1">
-            <label className="text-[9px] font-bold text-muted-foreground uppercase">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 select-none">
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">
               Company Size
             </label>
             <Select
@@ -156,69 +159,75 @@ export const ClientIngestModal: React.FC = () => {
                 { value: '51-200', label: '51-200 Employees' },
                 { value: '201+', label: '201+ Employees' },
               ]}
-              className="h-8.5 text-xs rounded-lg px-2"
+              className="h-10 text-xs rounded-xl bg-background/30 border border-border/60 px-3 hover:border-primary/30 transition-colors text-slate-300 outline-none w-full"
             />
           </div>
-          <div className="space-y-1">
-            <label className="text-[9px] font-bold text-muted-foreground uppercase">
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">
               Account Owner
             </label>
             <Select
               value={formManager}
               onChange={(value) => setFormManager(value)}
               options={[
-                { value: '', label: 'Choose Manager...' },
+                { value: '', label: 'Auto-assign...' },
                 { value: 'Pepper Potts', label: 'Pepper Potts' },
                 { value: 'Lucius Fox', label: 'Lucius Fox' },
                 { value: 'Samantha Vance', label: 'Samantha Vance' },
               ]}
-              className="h-8.5 text-xs rounded-lg px-2"
+              className="h-10 text-xs rounded-xl bg-background/30 border border-border/60 px-3 hover:border-primary/30 transition-colors text-slate-300 outline-none w-full"
             />
           </div>
-          <div className="space-y-1">
-            <label className="text-[9px] font-bold text-muted-foreground uppercase">Timezone</label>
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">
+              Timezone Target
+            </label>
             <Input
               value={formTimezone}
               onChange={(e) => setFormTimezone(e.target.value)}
-              placeholder="EST / PST"
-              className="h-8.5 bg-background/50"
+              placeholder="e.g. EST / UTC"
+              className="h-10 px-3 bg-background/30 border border-border/60 hover:border-primary/30 transition-colors text-xs rounded-xl"
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3.5">
-          <div className="space-y-1">
-            <label className="text-[9px] font-bold text-muted-foreground uppercase">Email</label>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">
+              Primary Point Email
+            </label>
             <Input
               value={formEmail}
               onChange={(e) => setFormEmail(e.target.value)}
-              placeholder="point@company.com"
-              className="h-8.5 bg-background/50"
+              placeholder="billing@company.com"
+              className="h-10 px-3 bg-background/30 border border-border/60 hover:border-primary/30 transition-colors text-xs rounded-xl"
             />
           </div>
-          <div className="space-y-1">
-            <label className="text-[9px] font-bold text-muted-foreground uppercase">
-              Website Slug
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">
+              Corporate Website
             </label>
             <Input
               value={formWebsite}
               onChange={(e) => setFormWebsite(e.target.value)}
-              placeholder="company.com"
-              className="h-8.5 bg-background/50"
+              placeholder="www.company.com"
+              className="h-10 px-3 bg-background/30 border border-border/60 hover:border-primary/30 transition-colors text-xs rounded-xl"
             />
           </div>
         </div>
 
         {/* Tag Selector Integration */}
-        <ClientTagSelector selectedTags={selectedTags} onChange={setSelectedTags} />
+        <div className="pt-2">
+          <ClientTagSelector selectedTags={selectedTags} onChange={setSelectedTags} />
+        </div>
 
-        <div className="flex justify-end gap-2 pt-4 border-t border-border/40 select-none">
+        <div className="flex justify-end gap-3 pt-6 border-t border-border/40 select-none mt-4">
           <Button
             type="button"
             onClick={() => setCreateModalOpen(false)}
             variant="outline"
             size="sm"
-            className="h-8 text-xs"
+            className="h-9 text-xs px-4 rounded-lg hover:bg-slate-800"
           >
             Cancel
           </Button>
@@ -226,10 +235,10 @@ export const ClientIngestModal: React.FC = () => {
             type="submit"
             variant="default"
             size="sm"
-            className="h-8 text-xs font-bold"
+            className="h-9 text-xs font-bold px-6 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white border-0 shadow-lg shadow-emerald-900/20"
             disabled={isSubmitting}
           >
-            {isSubmitting ? 'Onboarding...' : 'Ingest Account'}
+            {isSubmitting ? 'Provisioning Vault...' : 'Ingest Corporate Account'}
           </Button>
         </div>
       </form>

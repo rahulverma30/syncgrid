@@ -4,9 +4,11 @@ import { PieChartWrapper, BarChartWrapper } from '@/components/ui/charts';
 import { useProjectsStore } from '@/store/projectsStore';
 import { Layers, TrendingUp, DollarSign, Heart, Zap, AlertTriangle, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 
 export const ProjectAnalytics: React.FC = () => {
-  const { projects, setSelectedProject } = useProjectsStore();
+  const router = useRouter();
+  const { projects } = useProjectsStore();
 
   // ── KPI Calculations ──────────────────────────────────────────────────────
   const activeProjects = projects.filter(
@@ -247,7 +249,7 @@ export const ProjectAnalytics: React.FC = () => {
               {atRiskProjects.map((p) => (
                 <div
                   key={p._id}
-                  onClick={() => setSelectedProject(p)}
+                  onClick={() => router.push(`/projects/${p._id}`)}
                   className="flex items-center justify-between p-3 rounded-lg border border-border/40 bg-card/45 hover:bg-card hover:border-border transition-colors cursor-pointer"
                 >
                   <div className="flex items-start gap-2.5 min-w-0">

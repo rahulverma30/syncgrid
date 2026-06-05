@@ -46,7 +46,6 @@ const ProjectActivitySchema = new Schema(
 
 // High-performance compound indexes for paginating timeline feeds
 ProjectActivitySchema.index({ projectId: 1, createdAt: -1 });
-ProjectActivitySchema.index({ companyId: 1, createdAt: -1 });
 
 export const ProjectActivity = ((mongoose.models.ProjectActivity as Model<any>) ||
   mongoose.model('ProjectActivity', ProjectActivitySchema)) as Model<any>;

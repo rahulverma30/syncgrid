@@ -14,6 +14,7 @@ import {
   Badge,
   ConfirmationModal,
   Select,
+  Modal,
 } from '@/components/ui';
 import {
   Users,
@@ -147,6 +148,54 @@ export default function CRMPage() {
   // Multi-select bulk actions
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
 
+  // Drag and Drop State
+  const [dragOverColumnId, setDragOverColumnId] = useState<string | null>(null);
+
+  const handleDragStart = (e: React.DragEvent, leadId: string) => {
+    e.dataTransfer.setData('text/plain', leadId);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent, stageId: string) => {
+    e.preventDefault();
+    setDragOverColumnId(stageId);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverColumnId(null);
+  };
+
+  const handleDrop = async (e: React.DragEvent, stageId: string) => {
+    e.preventDefault();
+    setDragOverColumnId(null);
+
+    const leadId = e.dataTransfer.getData('text/plain');
+    if (!leadId) return;
+
+    // Optimistic update
+    const previousLeads = [...leads];
+    setLeads(leads.map((l) => (l._id === leadId ? { ...l, status: stageId } : l)));
+
+    try {
+      const res = await fetch(`/api/protected/crm/leads/${leadId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: stageId }),
+      });
+      const d = await res.json();
+      if (d.success) {
+        toast.success('Lead moved successfully');
+        setLeads((prev) => prev.map((l) => (l._id === leadId ? d.data : l)));
+      } else {
+        setLeads(previousLeads);
+        toast.error('Failed to move lead. Reverted changes.');
+      }
+    } catch (err) {
+      setLeads(previousLeads);
+      toast.error('Connection error. Reverted changes.');
+    }
+  };
+
   // Create lead modal state
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [formName, setFormName] = useState('');
@@ -258,9 +307,12 @@ export default function CRMPage() {
   };
 
   const handleMoveStage = async (leadId: string, newStage: string) => {
-    const originalLeads = [...leads];
+    const prevLead = leads.find((l) => l._id === leadId);
+    if (!prevLead) return;
+    const prevStatus = prevLead.status;
+
     // Optimistic UI Update
-    setLeads(leads.map((l) => (l._id === leadId ? { ...l, status: newStage } : l)));
+    setLeads((prev) => prev.map((l) => (l._id === leadId ? { ...l, status: newStage } : l)));
     if (selectedLead?._id === leadId) {
       setSelectedLead({ ...selectedLead, status: newStage });
     }
@@ -274,15 +326,17 @@ export default function CRMPage() {
       const d = await res.json();
       if (d.success) {
         // Sync full item timeline updates
-        setLeads(leads.map((l) => (l._id === leadId ? d.data : l)));
+        setLeads((prev) => prev.map((l) => (l._id === leadId ? d.data : l)));
         if (selectedLead?._id === leadId) setSelectedLead(d.data);
         toast.success(`Lead moved to "${stages.find((s) => s.id === newStage)?.label}"`);
       } else {
-        setLeads(originalLeads);
+        // Revert on API failure
+        setLeads((prev) => prev.map((l) => (l._id === leadId ? { ...l, status: prevStatus } : l)));
         toast.error('Failed to update stage.');
       }
     } catch (e) {
-      setLeads(originalLeads);
+      // Revert on network error
+      setLeads((prev) => prev.map((l) => (l._id === leadId ? { ...l, status: prevStatus } : l)));
       toast.error('Network error updating stage.');
     }
   };
@@ -314,6 +368,28 @@ export default function CRMPage() {
       }
     } catch (e) {
       toast.error('Connection error adding note.');
+    }
+  };
+
+  const handleDeleteNote = async (noteId: string) => {
+    if (!selectedLead) return;
+    try {
+      const res = await fetch(
+        `/api/protected/crm/leads/${selectedLead._id}/notes?noteId=${noteId}`,
+        {
+          method: 'DELETE',
+        }
+      );
+      const d = await res.json();
+      if (d.success) {
+        setSelectedLead(d.data);
+        setLeads(leads.map((l) => (l._id === d.data._id ? d.data : l)));
+        toast.success('Note deleted.');
+      } else {
+        toast.error('Failed to delete note.');
+      }
+    } catch (e) {
+      toast.error('Error deleting note.');
     }
   };
 
@@ -561,7 +637,7 @@ export default function CRMPage() {
       />
 
       {/* Main Tabs Navigation */}
-      <div className="border-b border-border/80 pb-0 flex justify-between items-center gap-4 flex-wrap">
+      <div className="border-b border-border/80 pb-0 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 flex-wrap">
         <div className="flex gap-2">
           {['dashboard', 'pipeline', 'table'].map((t) => (
             <button
@@ -580,15 +656,47 @@ export default function CRMPage() {
           ))}
         </div>
 
-        {/* Quick Search across views */}
-        <div className="relative w-full max-w-[200px] mb-2 sm:mb-0">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/60" />
-          <Input
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search company..."
-            className="pl-8 h-8 text-xs bg-background/30"
-          />
+        {/* Global Filter Toolbar */}
+        <div className="flex items-center flex-row gap-2 w-full md:w-auto mb-2 md:mb-0">
+          <div className="w-full max-w-[200px]">
+            <Select
+              value={priorityFilter}
+              onChange={(val) => setPriorityFilter(val)}
+              className="h-8.5 min-w-[140px] rounded-[calc(var(--radius)-2px)] border border-border/80 bg-background/50 px-2 py-1 text-xs text-foreground focus:outline-none"
+              placeholder="All Priorities"
+              options={[
+                { value: '', label: 'All Priorities' },
+                { value: 'low', label: 'Low' },
+                { value: 'medium', label: 'Medium' },
+                { value: 'high', label: 'High' },
+              ]}
+            />
+          </div>
+          <div className="w-full max-w-[200px]">
+            <Select
+              value={sourceFilter}
+              onChange={(val) => setSourceFilter(val)}
+              className="h-8.5 min-w-[140px] rounded-[calc(var(--radius)-2px)] border border-border/80 bg-background/50 px-2 py-1 text-xs text-foreground focus:outline-none"
+              placeholder="All Sources"
+              options={[
+                { value: '', label: 'All Sources' },
+                { value: 'linkedin', label: 'LinkedIn' },
+                { value: 'website', label: 'Website' },
+                { value: 'referral', label: 'Referral' },
+                { value: 'ads', label: 'Ads' },
+                { value: 'cold-reach', label: 'Outreach' },
+              ]}
+            />
+          </div>
+          <div className="relative w-full max-w-[200px]">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/60" />
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search company..."
+              className="pl-8 h-8.5 text-xs bg-background/30"
+            />
+          </div>
         </div>
       </div>
 
@@ -868,37 +976,6 @@ export default function CRMPage() {
               exit={{ opacity: 0, y: -15 }}
               className="space-y-4 text-left"
             >
-              {/* Kanban filter options */}
-              <div className="flex gap-2 flex-wrap pb-2 border-b border-border/40">
-                <Select
-                  value={priorityFilter}
-                  onChange={(val) => setPriorityFilter(val)}
-                  className="h-8.5 rounded-lg border border-border/80 bg-background/50 px-2 py-1 text-xs text-foreground focus:outline-none"
-                  placeholder="All Priorities"
-                  options={[
-                    { value: '', label: 'All Priorities' },
-                    { value: 'low', label: 'Low' },
-                    { value: 'medium', label: 'Medium' },
-                    { value: 'high', label: 'High' },
-                  ]}
-                />
-                <Select
-                  value={sourceFilter}
-                  onChange={(val) => setSourceFilter(val)}
-                  className="h-8.5 rounded-lg border border-border/80 bg-background/50 px-2 py-1 text-xs text-foreground focus:outline-none"
-                  placeholder="All Sources"
-                  options={[
-                    { value: '', label: 'All Sources' },
-                    ...stages.map((st) => ({ value: st.id, label: st.label })),
-                    { value: 'linkedin', label: 'LinkedIn' },
-                    { value: 'website', label: 'Website' },
-                    { value: 'referral', label: 'Referral' },
-                    { value: 'ads', label: 'Ads' },
-                    { value: 'cold-reach', label: 'Outreach' },
-                  ]}
-                />
-              </div>
-
               {/* Horizontal columns container */}
               <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin select-none items-start min-h-[500px]">
                 {stages.map((stage) => {
@@ -911,7 +988,12 @@ export default function CRMPage() {
                   return (
                     <div
                       key={stage.id}
-                      className="w-72 flex-shrink-0 bg-muted/10 border border-border/80 rounded-xl p-3.5 space-y-4 self-stretch flex flex-col min-h-[480px]"
+                      onDragOver={(e) => handleDragOver(e, stage.id)}
+                      onDrop={(e) => handleDrop(e, stage.id)}
+                      onDragLeave={handleDragLeave}
+                      className={`w-72 flex-shrink-0 bg-muted/10 border border-border/80 rounded-xl p-3.5 space-y-4 self-stretch flex flex-col min-h-[480px] transition-all duration-200 ${
+                        dragOverColumnId === stage.id ? 'border-primary/40 bg-primary/5' : ''
+                      }`}
                     >
                       {/* Column Header */}
                       <div className="flex items-center justify-between border-b border-border/60 pb-2">
@@ -936,11 +1018,13 @@ export default function CRMPage() {
                           <motion.div
                             key={lead._id}
                             layoutId={lead._id}
+                            draggable
+                            onDragStart={(e: any) => handleDragStart(e, lead._id)}
                             onClick={() => {
                               setSelectedLead(lead);
                               setDrawerOpen(true);
                             }}
-                            className="bg-card/75 border border-border/80 rounded-lg p-3.5 space-y-3 shadow-sm hover:border-primary/30 transition-all duration-300 hover:shadow-md cursor-pointer text-left relative overflow-hidden group"
+                            className="bg-card/75 border border-border/80 rounded-lg p-3.5 space-y-3 shadow-sm hover:border-primary/30 transition-all duration-300 hover:shadow-md cursor-grab active:cursor-grabbing text-left relative overflow-hidden group"
                           >
                             {/* Budget Badge */}
                             <div className="flex justify-between items-start">
@@ -1030,46 +1114,8 @@ export default function CRMPage() {
               className="space-y-4 text-left"
             >
               {/* Ledger filters & Export header */}
-              <div className="flex justify-between items-center flex-wrap gap-2 pb-2 border-b border-border/40">
-                <div className="flex gap-2 flex-wrap items-center">
-                  <Select
-                    value={statusFilter}
-                    onChange={(val) => setStatusFilter(val)}
-                    className="h-8 rounded-lg border border-border/80 bg-background/50 px-2 text-xs text-foreground focus:outline-none"
-                    placeholder="All Pipeline Stages"
-                    options={[
-                      { value: '', label: 'All Pipeline Stages' },
-                      ...stages.map((s) => ({ value: s.id, label: s.label })),
-                    ]}
-                  />
-                  <Select
-                    value={priorityFilter}
-                    onChange={(val) => setPriorityFilter(val)}
-                    className="h-8 rounded-lg border border-border/80 bg-background/50 px-2 text-xs text-foreground focus:outline-none"
-                    placeholder="All Priorities"
-                    options={[
-                      { value: '', label: 'All Priorities' },
-                      { value: 'low', label: 'Low' },
-                      { value: 'medium', label: 'Medium' },
-                      { value: 'high', label: 'High' },
-                    ]}
-                  />
-                  <Select
-                    value={sourceFilter}
-                    onChange={(val) => setSourceFilter(val)}
-                    className="h-8 rounded-lg border border-border/80 bg-background/50 px-2 text-xs text-foreground focus:outline-none"
-                    placeholder="All Sources"
-                    options={[
-                      { value: '', label: 'All Sources' },
-                      { value: 'linkedin', label: 'LinkedIn' },
-                      { value: 'website', label: 'Website' },
-                      { value: 'referral', label: 'Referral' },
-                      { value: 'ads', label: 'Ads' },
-                      { value: 'cold-reach', label: 'Outreach' },
-                    ]}
-                  />
-                </div>
-
+              <div className="flex justify-end mb-4">
+                {' '}
                 <Button
                   onClick={handleExportCSV}
                   variant="outline"
@@ -1259,15 +1305,18 @@ export default function CRMPage() {
                   animate={{ x: 0 }}
                   exit={{ x: '100%' }}
                   transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-                  className="fixed top-0 right-0 h-full w-full max-w-lg z-50 border-l border-border bg-popover/95 backdrop-blur-md shadow-2xl flex flex-col overflow-hidden text-left"
+                  className="fixed top-0 right-0 h-full w-full max-w-xl z-50 border-l border-border/50 bg-background/95 backdrop-blur-xl shadow-2xl flex flex-col overflow-hidden text-left"
                 >
                   {/* Header section */}
-                  <div className="p-5 border-b border-border/40 flex items-center justify-between bg-muted/10">
-                    <div className="space-y-1">
-                      <span className="text-[10px] font-mono font-black tracking-wide text-primary uppercase">
-                        Lead profile
+                  <div className="px-6 py-5 border-b border-border/40 flex items-center justify-between bg-muted/5 relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent pointer-events-none" />
+                    <div className="space-y-1.5 relative z-10">
+                      <span className="text-[10px] font-mono font-black tracking-widest text-primary/80 uppercase">
+                        Lead Intelligence Profile
                       </span>
-                      <h3 className="text-base font-black text-foreground">{selectedLead.name}</h3>
+                      <h3 className="text-xl font-black text-foreground tracking-tight">
+                        {selectedLead.name}
+                      </h3>
                     </div>
                     <div className="flex gap-2">
                       <Button
@@ -1289,15 +1338,15 @@ export default function CRMPage() {
                   </div>
 
                   {/* Sub-tabs Inside Profile Drawer */}
-                  <div className="flex border-b border-border/40 px-3 py-1.5 flex-wrap gap-1 bg-card/20 select-none">
+                  <div className="flex border-b border-border/40 px-4 py-2 flex-wrap gap-2 bg-muted/10 select-none">
                     {['overview', 'notes', 'reminders', 'attachments', 'timeline'].map((t) => (
                       <button
                         key={t}
                         onClick={() => setDrawerTab(t)}
-                        className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider transition-colors ${
+                        className={`px-3.5 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider transition-all duration-200 ${
                           drawerTab === t
-                            ? 'bg-primary/10 text-primary'
-                            : 'text-muted-foreground hover:bg-muted/20 hover:text-foreground'
+                            ? 'bg-primary/15 text-primary shadow-sm shadow-primary/10'
+                            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                         }`}
                       >
                         {t}
@@ -1306,7 +1355,7 @@ export default function CRMPage() {
                   </div>
 
                   {/* Dynamic Sub-Tab View Content */}
-                  <div className="flex-grow overflow-y-auto p-5 space-y-6">
+                  <div className="flex-grow overflow-y-auto p-6 space-y-8 scrollbar-thin">
                     {/* 1. OVERVIEW PROFILE TAB */}
                     {drawerTab === 'overview' && (
                       <motion.div
@@ -1420,82 +1469,106 @@ export default function CRMPage() {
                         className="space-y-5 text-xs"
                       >
                         {/* Add note interface */}
-                        <div className="space-y-2">
+                        <div className="space-y-3 p-4 rounded-xl border border-border/60 bg-muted/5 shadow-inner">
                           <textarea
                             value={noteInput}
                             onChange={(e) => setNoteInput(e.target.value)}
-                            placeholder="Type threaded notes, close comments, or meeting minutes..."
-                            className="w-full h-20 p-2.5 rounded-lg border border-border bg-background/50 focus:outline-none focus:ring-2 focus:ring-ring text-xs leading-relaxed"
+                            placeholder="Draft strategic notes, executive summaries, or meeting minutes..."
+                            className="w-full h-24 p-3 rounded-lg border border-border/50 bg-background focus:outline-none focus:ring-1 focus:ring-primary/50 text-sm leading-relaxed transition-all resize-none"
                           />
-                          <div className="flex items-center justify-between flex-wrap gap-2 select-none">
-                            <div className="flex gap-3">
-                              <label className="flex items-center gap-1 cursor-pointer">
+                          <div className="flex items-center justify-between flex-wrap gap-3 select-none border-t border-border/30 pt-3">
+                            <div className="flex gap-4 text-xs font-semibold">
+                              <label className="flex items-center gap-1.5 cursor-pointer text-muted-foreground hover:text-foreground transition-colors">
                                 <input
                                   type="checkbox"
                                   checked={noteIsPinned}
                                   onChange={(e) => setNoteIsPinned(e.target.checked)}
+                                  className="rounded border-border bg-background accent-primary"
                                 />
-                                <Pin className="h-3.5 w-3.5 text-muted-foreground" />
-                                Pin Note
+                                <Pin className="h-4 w-4" />
+                                Pin to Top
                               </label>
-                              <label className="flex items-center gap-1 cursor-pointer text-rose-500/80">
+                              <label className="flex items-center gap-1.5 cursor-pointer text-rose-500/80 hover:text-rose-500 transition-colors">
                                 <input
                                   type="checkbox"
                                   checked={noteIsPrivate}
                                   onChange={(e) => setNoteIsPrivate(e.target.checked)}
+                                  className="rounded border-border bg-background accent-rose-500"
                                 />
-                                <EyeOff className="h-3.5 w-3.5" />
-                                Private (Internal)
+                                <EyeOff className="h-4 w-4" />
+                                Internal Only
                               </label>
                             </div>
-                            <Button onClick={handleAddNote} size="sm" className="h-8 text-xs gap-1">
-                              <Send className="h-3 w-3" />
-                              Log Note
+                            <Button
+                              onClick={handleAddNote}
+                              size="sm"
+                              className="h-9 px-4 text-xs font-bold gap-2 shadow-md shadow-primary/20"
+                            >
+                              <Send className="h-3.5 w-3.5" />
+                              Publish Note
                             </Button>
                           </div>
                         </div>
-
                         {/* Notes Feed items */}
-                        <div className="space-y-3 border-t border-border/30 pt-4">
+                        <div className="space-y-4 pt-2">
                           {selectedLead.notes
                             ?.slice()
                             .reverse()
                             .map((note, idx) => (
                               <div
                                 key={idx}
-                                className="p-3 border border-border/40 bg-card/30 rounded-xl space-y-2 relative text-left"
+                                className="group relative p-4 border border-border/40 bg-card rounded-xl space-y-3 shadow-sm hover:shadow-md transition-shadow text-left"
                               >
                                 {note.isPinned && (
-                                  <span className="absolute top-3 right-3 text-[10px] font-bold text-primary flex items-center gap-0.5">
-                                    <Pin className="h-3 w-3 rotate-45" />
-                                    Pinned
-                                  </span>
+                                  <div className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-primary flex items-center justify-center shadow-md border-2 border-background">
+                                    <Pin className="h-3 w-3 text-primary-foreground rotate-45" />
+                                  </div>
                                 )}
-                                <div className="flex items-center gap-1.5">
-                                  <span className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center text-primary font-black text-[8px]">
-                                    {note.createdByName[0]}
-                                  </span>
-                                  <span className="font-bold text-foreground">
-                                    {note.createdByName}
-                                  </span>
-                                  <span className="text-[9px] font-mono text-muted-foreground/80">
-                                    • {new Date(note.createdAt).toLocaleDateString()}
-                                  </span>
-                                  {note.isPrivate && (
-                                    <span className="text-[8px] font-bold uppercase tracking-wider text-rose-500 font-mono bg-rose-500/10 rounded px-1">
-                                      Internal
+                                <div className="flex items-center justify-between gap-4">
+                                  <div className="flex items-center gap-2.5">
+                                    <span className="h-8 w-8 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-primary font-black text-xs border border-primary/10">
+                                      {note.createdByName[0]}
                                     </span>
-                                  )}
+                                    <div>
+                                      <div className="font-bold text-foreground text-[13px] leading-tight">
+                                        {note.createdByName}
+                                      </div>
+                                      <div className="text-[10px] font-mono text-muted-foreground/80">
+                                        {new Date(note.createdAt).toLocaleString()}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    {note.isPrivate && (
+                                      <span className="text-[9px] font-bold uppercase tracking-widest text-rose-500 font-mono bg-rose-500/10 rounded-md px-2 py-0.5 border border-rose-500/20">
+                                        Internal
+                                      </span>
+                                    )}
+                                    <button
+                                      onClick={() => note._id && handleDeleteNote(note._id)}
+                                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-md hover:bg-rose-500/10 text-muted-foreground hover:text-rose-500"
+                                      title="Delete Note"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </button>
+                                  </div>
                                 </div>
-                                <p className="text-muted-foreground leading-relaxed pl-1 whitespace-pre-line">
-                                  {note.content}
-                                </p>
+                                <div className="pl-10">
+                                  <p className="text-muted-foreground text-[13px] leading-relaxed whitespace-pre-line border-l-2 border-border/50 pl-3">
+                                    {note.content}
+                                  </p>
+                                </div>
                               </div>
                             ))}
 
                           {(!selectedLead.notes || selectedLead.notes.length === 0) && (
-                            <div className="py-10 text-center text-muted-foreground select-none">
-                              No notes have been logged for this lead.
+                            <div className="py-12 text-center flex flex-col items-center gap-3">
+                              <div className="h-12 w-12 rounded-full bg-muted/20 flex items-center justify-center">
+                                <FileText className="h-5 w-5 text-muted-foreground/50" />
+                              </div>
+                              <span className="text-sm font-semibold text-muted-foreground">
+                                No intel logged yet
+                              </span>
                             </div>
                           )}
                         </div>
@@ -1748,182 +1821,158 @@ export default function CRMPage() {
         )}
 
       {/* CREATE LEAD DIALOG MODAL */}
-      {mounted &&
-        createPortal(
-          <AnimatePresence>
-            {createModalOpen && (
-              <>
-                {/* Backdrop click closer */}
-                <div
-                  className="fixed inset-0 z-50 bg-background/50 backdrop-blur-sm"
-                  onClick={() => setCreateModalOpen(false)}
-                />
+      <Modal
+        isOpen={createModalOpen}
+        onClose={() => setCreateModalOpen(false)}
+        title="Capture New Account Lead"
+        description="Track dynamic pipeline budgets, currencies, priority tags, and socials."
+        size="md"
+        footer={
+          <>
+            <Button
+              onClick={() => setCreateModalOpen(false)}
+              variant="outline"
+              size="sm"
+              className="h-8 text-xs"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleCreateLead}
+              variant="default"
+              size="sm"
+              className="h-8 text-xs font-bold"
+            >
+              Ingest Lead
+            </Button>
+          </>
+        }
+      >
+        <form id="create-lead-form" onSubmit={handleCreateLead} className="space-y-3.5 text-xs">
+          <div className="grid grid-cols-2 gap-3.5">
+            <div className="space-y-1">
+              <label className="text-[9px] font-bold text-muted-foreground uppercase">
+                Company Name *
+              </label>
+              <Input
+                value={formName}
+                onChange={(e) => setFormName(e.target.value)}
+                placeholder="Acme Corp"
+                className="h-8.5 bg-background/50 focus-visible:ring-1"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[9px] font-bold text-muted-foreground uppercase">
+                Primary Contact *
+              </label>
+              <Input
+                value={formContact}
+                onChange={(e) => setFormContact(e.target.value)}
+                placeholder="John Carter"
+                className="h-8.5 bg-background/50 focus-visible:ring-1"
+              />
+            </div>
+          </div>
 
-                <motion.div
-                  initial={{ scale: 0.95, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0.95, opacity: 0 }}
-                  className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md p-6 rounded-xl border border-border bg-popover text-popover-foreground shadow-2xl z-50 text-left space-y-4"
-                >
-                  <div className="space-y-1 border-b border-border/40 pb-3 select-none">
-                    <h4 className="text-sm font-black uppercase tracking-wider text-primary flex items-center gap-1.5">
-                      <Sparkles className="h-4.5 w-4.5 text-primary animate-pulse" />
-                      Capture New Account Lead
-                    </h4>
-                    <p className="text-[10px] text-muted-foreground">
-                      Track dynamic pipeline budgets, currencies, priority tags, and socials.
-                    </p>
-                  </div>
+          <div className="grid grid-cols-2 gap-3.5">
+            <div className="space-y-1">
+              <label className="text-[9px] font-bold text-muted-foreground uppercase">
+                Email Address
+              </label>
+              <Input
+                type="email"
+                value={formEmail}
+                onChange={(e) => setFormEmail(e.target.value)}
+                placeholder="carter@acme.com"
+                className="h-8.5 bg-background/50"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[9px] font-bold text-muted-foreground uppercase">
+                Phone Number
+              </label>
+              <Input
+                value={formPhone}
+                onChange={(e) => setFormPhone(e.target.value)}
+                placeholder="415-555-0190"
+                className="h-8.5 bg-background/50"
+              />
+            </div>
+          </div>
 
-                  <form onSubmit={handleCreateLead} className="space-y-3.5 text-xs">
-                    <div className="grid grid-cols-2 gap-3.5">
-                      <div className="space-y-1">
-                        <label className="text-[9px] font-bold text-muted-foreground uppercase">
-                          Company Name *
-                        </label>
-                        <Input
-                          value={formName}
-                          onChange={(e) => setFormName(e.target.value)}
-                          placeholder="Acme Corp"
-                          className="h-8.5 bg-background/50 focus-visible:ring-1"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-[9px] font-bold text-muted-foreground uppercase">
-                          Primary Contact *
-                        </label>
-                        <Input
-                          value={formContact}
-                          onChange={(e) => setFormContact(e.target.value)}
-                          placeholder="John Carter"
-                          className="h-8.5 bg-background/50 focus-visible:ring-1"
-                        />
-                      </div>
-                    </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="space-y-1">
+              <label className="text-[9px] font-bold text-muted-foreground uppercase">
+                Project Budget ($)
+              </label>
+              <Input
+                type="number"
+                value={formBudget}
+                onChange={(e) => setFormBudget(parseInt(e.target.value) || 0)}
+                className="h-8.5 bg-background/50"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[9px] font-bold text-muted-foreground uppercase">
+                Priority
+              </label>
+              <Select
+                value={formPriority}
+                onChange={(val) => setFormPriority(val as 'low' | 'medium' | 'high')}
+                className="w-full h-8.5 rounded-[calc(var(--radius)-2px)] border border-input bg-background/50 px-2 py-1 text-xs text-foreground focus:outline-none"
+                options={[
+                  { value: 'low', label: 'Low' },
+                  { value: 'medium', label: 'Medium' },
+                  { value: 'high', label: 'High' },
+                ]}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[9px] font-bold text-muted-foreground uppercase">
+                Source Channel
+              </label>
+              <Select
+                value={formSource}
+                onChange={(val) => setFormSource(val)}
+                className="w-full h-8.5 rounded-[calc(var(--radius)-2px)] border border-input bg-background/50 px-2 py-1 text-xs text-foreground focus:outline-none"
+                options={[
+                  { value: 'website', label: 'Website' },
+                  { value: 'linkedin', label: 'LinkedIn' },
+                  { value: 'upwork', label: 'Upwork' },
+                  { value: 'referral', label: 'Referral' },
+                  { value: 'ads', label: 'Ads' },
+                  { value: 'cold-reach', label: 'Outreach' },
+                ]}
+              />
+            </div>
+          </div>
 
-                    <div className="grid grid-cols-2 gap-3.5">
-                      <div className="space-y-1">
-                        <label className="text-[9px] font-bold text-muted-foreground uppercase">
-                          Email Address
-                        </label>
-                        <Input
-                          type="email"
-                          value={formEmail}
-                          onChange={(e) => setFormEmail(e.target.value)}
-                          placeholder="carter@acme.com"
-                          className="h-8.5 bg-background/50"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-[9px] font-bold text-muted-foreground uppercase">
-                          Phone Number
-                        </label>
-                        <Input
-                          value={formPhone}
-                          onChange={(e) => setFormPhone(e.target.value)}
-                          placeholder="415-555-0190"
-                          className="h-8.5 bg-background/50"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-3">
-                      <div className="space-y-1">
-                        <label className="text-[9px] font-bold text-muted-foreground uppercase">
-                          Project Budget ($)
-                        </label>
-                        <Input
-                          type="number"
-                          value={formBudget}
-                          onChange={(e) => setFormBudget(parseInt(e.target.value) || 0)}
-                          className="h-8.5 bg-background/50"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-[9px] font-bold text-muted-foreground uppercase">
-                          Priority
-                        </label>
-                        <Select
-                          value={formPriority}
-                          onChange={(val) => setFormPriority(val as 'low' | 'medium' | 'high')}
-                          className="w-full h-8.5 rounded-md border border-input bg-background/50 px-2 py-1 text-xs text-foreground focus:outline-none"
-                          options={[
-                            { value: 'low', label: 'Low' },
-                            { value: 'medium', label: 'Medium' },
-                            { value: 'high', label: 'High' },
-                          ]}
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-[9px] font-bold text-muted-foreground uppercase">
-                          Source Channel
-                        </label>
-                        <Select
-                          value={formSource}
-                          onChange={(val) => setFormSource(val)}
-                          className="w-full h-8.5 rounded-md border border-input bg-background/50 px-2 py-1 text-xs text-foreground focus:outline-none"
-                          options={[
-                            { value: 'website', label: 'Website' },
-                            { value: 'linkedin', label: 'LinkedIn' },
-                            { value: 'upwork', label: 'Upwork' },
-                            { value: 'referral', label: 'Referral' },
-                            { value: 'ads', label: 'Ads' },
-                            { value: 'cold-reach', label: 'Outreach' },
-                          ]}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3.5">
-                      <div className="space-y-1">
-                        <label className="text-[9px] font-bold text-muted-foreground uppercase">
-                          Work Category
-                        </label>
-                        <Input
-                          value={formWorkType}
-                          onChange={(e) => setFormWorkType(e.target.value)}
-                          placeholder="e.g. ERP Development"
-                          className="h-8.5 bg-background/50"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-[9px] font-bold text-muted-foreground uppercase">
-                          Tech Stack (comma-split)
-                        </label>
-                        <Input
-                          value={formStack}
-                          onChange={(e) => setFormStack(e.target.value)}
-                          placeholder="React, Next.js, Go"
-                          className="h-8.5 bg-background/50"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex justify-end gap-2 pt-4 border-t border-border/40 select-none">
-                      <Button
-                        onClick={() => setCreateModalOpen(false)}
-                        variant="outline"
-                        size="sm"
-                        className="h-8 text-xs"
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        type="submit"
-                        variant="default"
-                        size="sm"
-                        className="h-8 text-xs font-bold"
-                      >
-                        Ingest Lead
-                      </Button>
-                    </div>
-                  </form>
-                </motion.div>
-              </>
-            )}
-          </AnimatePresence>,
-          document.body
-        )}
+          <div className="grid grid-cols-2 gap-3.5">
+            <div className="space-y-1">
+              <label className="text-[9px] font-bold text-muted-foreground uppercase">
+                Work Category
+              </label>
+              <Input
+                value={formWorkType}
+                onChange={(e) => setFormWorkType(e.target.value)}
+                placeholder="e.g. ERP Development"
+                className="h-8.5 bg-background/50"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[9px] font-bold text-muted-foreground uppercase">
+                Tech Stack (comma-split)
+              </label>
+              <Input
+                value={formStack}
+                onChange={(e) => setFormStack(e.target.value)}
+                placeholder="React, Next.js, Go"
+                className="h-8.5 bg-background/50"
+              />
+            </div>
+          </div>
+        </form>
+      </Modal>
 
       {/* Single Lead Delete Confirmation Modal */}
       <ConfirmationModal

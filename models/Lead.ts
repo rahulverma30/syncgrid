@@ -173,8 +173,7 @@ const LeadSchema = new Schema(
 );
 
 // Compound optimization index
-LeadSchema.index({ companyId: 1, isArchived: 1 });
-LeadSchema.index({ companyId: 1, status: 1 });
+
 LeadSchema.index({ companyId: 1, assignedTo: 1 });
 
 export const Lead = ((mongoose.models.Lead as Model<any>) ||

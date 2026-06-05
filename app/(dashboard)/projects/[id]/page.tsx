@@ -23,6 +23,7 @@ import {
   User,
   Heart,
   ShieldCheck,
+  ArrowLeft,
   Building,
   Edit,
   Activity,
@@ -36,15 +37,39 @@ import { useProjectsStore, ProjectAccount } from '@/store/projectsStore';
 import { toast } from 'sonner';
 import { ENTERPRISE_WORKFLOWS } from '@/config/enterpriseConfig';
 import { detectCircularDependency } from '@/utils/graphEngine';
-import { useLockBodyScroll } from '@/hooks';
+import { ConfirmationModal } from '@/components/ui';
+import { useParams, useRouter } from 'next/navigation';
 
-export const ProjectDetailDrawer: React.FC = () => {
+export default function ProjectDetailPage() {
   const { selectedProject, setSelectedProject, activeTab, setActiveTab, fetchProjects, projects } =
     useProjectsStore();
 
-  useLockBodyScroll(!!selectedProject);
+  const params = useParams();
+  const router = useRouter();
+  const projectId = params?.id ? (Array.isArray(params.id) ? params.id[0] : params.id) : '';
 
-  const drawerRef = useRef<HTMLDivElement>(null);
+  const [docToDelete, setDocToDelete] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!projectId) return;
+    const fetchProj = async () => {
+      try {
+        const res = await fetch(`/api/protected/projects/${projectId}`);
+        const d = await res.json();
+        if (d.success) setSelectedProject(d.data);
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    if (!selectedProject || selectedProject._id !== projectId) {
+      fetchProj();
+    }
+  }, [projectId, selectedProject, setSelectedProject]);
+
+  const handleBack = () => {
+    setSelectedProject(null);
+    router.push('/projects');
+  };
 
   // Global hotkeys & accessibility enhancements
   useEffect(() => {
@@ -152,14 +177,14 @@ export const ProjectDetailDrawer: React.FC = () => {
     fetchTimeline();
   }, [selectedProject, activeTab]);
 
-  if (!selectedProject) return null;
-
-  // Handle outside click to close drawer
-  const handleBackdropClick = (e: React.MouseEvent) => {
-    if (drawerRef.current && !drawerRef.current.contains(e.target as Node)) {
-      setSelectedProject(null);
-    }
-  };
+  if (!selectedProject) {
+    return (
+      <div className="h-96 flex flex-col items-center justify-center space-y-3">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-primary" />
+        <p className="text-sm text-muted-foreground">Loading project details...</p>
+      </div>
+    );
+  }
 
   const handleStatusChange = async (newStatus: string) => {
     try {
@@ -413,12 +438,15 @@ export const ProjectDetailDrawer: React.FC = () => {
     }
   };
 
-  const handleDeleteDocument = async (docId: string) => {
-    if (!window.confirm('Are you sure you want to remove this document?')) return;
+  const handleDeleteDocument = async () => {
+    if (!docToDelete) return;
     try {
-      const res = await fetch(`/api/protected/projects/${selectedProject._id}/documents/${docId}`, {
-        method: 'DELETE',
-      });
+      const res = await fetch(
+        `/api/protected/projects/${selectedProject._id}/documents/${docToDelete}`,
+        {
+          method: 'DELETE',
+        }
+      );
       const d = await res.json();
       if (d.success) {
         toast.success('Document removed!');
@@ -429,6 +457,8 @@ export const ProjectDetailDrawer: React.FC = () => {
       }
     } catch {
       toast.error('Failed to remove document.');
+    } finally {
+      setDocToDelete(null);
     }
   };
 
@@ -444,35 +474,26 @@ export const ProjectDetailDrawer: React.FC = () => {
   ];
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex justify-end bg-background/40 backdrop-blur-xs select-none"
-      onClick={handleBackdropClick}
-    >
+    <div className="space-y-6">
       <div id="syncgrid-sr-announcer" aria-live="polite" className="sr-only" />
-      {/* Drawer Container */}
-      <motion.div
-        ref={drawerRef}
-        initial={{ x: '100%' }}
-        animate={{ x: 0 }}
-        exit={{ x: '100%' }}
-        transition={{ type: 'tween', duration: 0.35 }}
-        className="w-full max-w-xl h-full bg-popover border-l border-border/80 flex flex-col shadow-2xl relative"
-      >
+      <div className="w-full bg-popover rounded-xl border border-border flex flex-col shadow-sm relative overflow-hidden h-[calc(100vh-8rem)]">
         {/* Close & Header */}
-        <div className="p-3 border-b border-border/40 flex items-center justify-between">
+        <div className="p-4 border-b border-border/40 flex items-center justify-between">
           <div className="space-y-0.5">
-            <h4 className="text-sm font-black text-foreground uppercase tracking-wide flex items-center gap-1.5">
-              <Layers className="h-4 w-4 text-primary" />
+            <h4 className="text-lg font-black text-foreground uppercase tracking-wide flex items-center gap-2">
+              <Layers className="h-5 w-5 text-primary" />
               {selectedProject.name}
             </h4>
-            <p className="text-[10px] font-mono text-muted-foreground">{selectedProject.code}</p>
+            <p className="text-xs font-mono text-muted-foreground">{selectedProject.code}</p>
           </div>
-          <button
-            onClick={() => setSelectedProject(null)}
-            className="text-xs font-bold text-muted-foreground hover:text-foreground cursor-pointer"
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleBack}
+            className="text-xs font-bold gap-1"
           >
-            Close ×
-          </button>
+            <ArrowLeft className="h-3.5 w-3.5" /> Back to Projects
+          </Button>
         </div>
 
         {/* Navigation Tabs */}
@@ -1231,7 +1252,7 @@ export const ProjectDetailDrawer: React.FC = () => {
                         type="button"
                         onClick={(e) => {
                           e.preventDefault();
-                          handleDeleteDocument(doc._id);
+                          setDocToDelete(doc._id);
                         }}
                         className="p-1.5 rounded hover:bg-rose-500/10 text-muted-foreground hover:text-rose-500 transition-colors"
                         title="Delete Document"
@@ -1481,7 +1502,17 @@ export const ProjectDetailDrawer: React.FC = () => {
             </div>
           )}
         </div>
-      </motion.div>
+      </div>
+
+      <ConfirmationModal
+        isOpen={!!docToDelete}
+        onClose={() => setDocToDelete(null)}
+        onConfirm={handleDeleteDocument}
+        title="Remove Document"
+        message="Are you sure you want to remove this document? This action cannot be undone."
+        confirmLabel="Remove"
+        type="danger"
+      />
     </div>
   );
-};
+}

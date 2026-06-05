@@ -393,7 +393,7 @@ export const ClientDetailDrawer: React.FC = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: fileName,
+          name: fileName.includes('.') ? fileName : `${fileName}.pdf`,
           category: fileCat,
           url: `https://syncgrid-vault.s3.amazonaws.com/clients/${selectedClient._id}/${fileName}.pdf`,
           size: 2048576,
@@ -532,7 +532,7 @@ export const ClientDetailDrawer: React.FC = () => {
     <>
       {/* Backdrop Closer */}
       <div
-        className="fixed inset-0 z-40 bg-background/50 backdrop-blur-xs transition-opacity duration-300"
+        className="fixed inset-0 z-40 bg-background/50 backdrop-blur-xs transition-opacity duration-300 !mt-0"
         onClick={() => setSelectedClient(null)}
       />
 
@@ -545,7 +545,7 @@ export const ClientDetailDrawer: React.FC = () => {
         animate={{ x: 0 }}
         exit={{ x: '100%' }}
         transition={{ type: 'spring', damping: 26, stiffness: 220 }}
-        className="fixed top-0 right-0 h-full w-full max-w-lg z-50 border-l border-border bg-popover/95 backdrop-blur-md shadow-2xl flex flex-col overflow-hidden text-left"
+        className="fixed top-0 right-0 h-full w-full max-w-lg z-50 border-l border-border bg-popover/95 backdrop-blur-md shadow-2xl flex flex-col overflow-hidden text-left !mt-0"
       >
         {/* Header */}
         <div className="p-5 border-b border-border/40 flex items-center justify-between bg-muted/10 select-none">
@@ -1199,7 +1199,7 @@ export const ClientDetailDrawer: React.FC = () => {
 
                 {/* Mentions dropdown list */}
                 {showMentions && (
-                  <div className="absolute left-2 bottom-12 w-48 border border-border bg-popover rounded-md shadow-lg z-50 overflow-hidden flex flex-col text-left">
+                  <div className="absolute left-0 top-full mt-1 w-48 border border-border bg-popover rounded-md shadow-2xl z-[9999] overflow-hidden flex flex-col text-left">
                     <div className="px-2.5 py-1.5 text-[8.5px] font-mono text-muted-foreground border-b border-border bg-muted/20 select-none">
                       Mention Manager
                     </div>

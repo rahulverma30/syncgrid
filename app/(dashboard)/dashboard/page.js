@@ -150,17 +150,6 @@ export default function DashboardPage() {
               <RefreshCw className="h-3.5 w-3.5" />
               Sync Grid
             </Button>
-
-            {/* Command Palette Trigger */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={togglePalette}
-              className="h-9 hover:bg-accent/40 text-xs gap-1.5"
-            >
-              <Command className="h-3.5 w-3.5" />
-              Shortcut (Ctrl + K)
-            </Button>
           </div>
         }
       />

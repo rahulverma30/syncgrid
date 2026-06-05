@@ -108,17 +108,17 @@ export function Select({
     const spaceAbove = rect.top;
 
     let placement: 'bottom' | 'top' = 'bottom';
-    let top = rect.bottom + window.scrollY + 6;
+    let top = rect.bottom + 6;
 
     // Flip upwards if there is not enough space below, and more space above
     if (spaceBelow < dropdownHeight && spaceAbove > spaceBelow) {
       placement = 'top';
-      top = rect.top + window.scrollY - dropdownHeight - 6;
+      top = rect.top - dropdownHeight - 6;
     }
 
     setCoords({
       top,
-      left: rect.left + window.scrollX,
+      left: rect.left,
       width: rect.width,
       placement,
     });
@@ -286,7 +286,7 @@ export function Select({
                   exit={{ opacity: 0, y: coords.placement === 'bottom' ? -4 : 4, scale: 0.98 }}
                   transition={{ duration: 0.12, ease: 'easeOut' }}
                   style={{
-                    position: 'absolute',
+                    position: 'fixed',
                     top: coords.top,
                     left: coords.left,
                     width: coords.width,

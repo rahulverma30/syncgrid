@@ -40,16 +40,37 @@ export default function CreateAccountPage() {
   const [accountManager, setAccountManager] = useState('');
   const [timezone, setTimezone] = useState('UTC');
   const [address, setAddress] = useState('');
+  const [users, setUsers] = useState<any[]>([]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
+    const fetchUsers = async () => {
+      try {
+        const res = await fetch('/api/protected/team/members');
+        const d = await res.json();
+        if (d.success) setUsers(d.data);
+      } catch (err) {
+        console.error('Failed to load users');
+      }
+    };
+    fetchUsers();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !accountManager) {
       toast.error('Company Name and designated Account Manager are required.');
+      return;
+    }
+
+    if (website && !/^https?:\/\/[^\s$.?#].[^\s]*$/.test(website)) {
+      toast.error('Please enter a valid website URL starting with http:// or https://');
+      return;
+    }
+
+    if (revenueContribution < 0) {
+      toast.error('Annual revenue contribution cannot be negative.');
       return;
     }
 
@@ -212,13 +233,15 @@ export default function CreateAccountPage() {
                   Designated Account Manager
                 </label>
                 <div className="relative">
-                  <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                  <Input
-                    required
+                  <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 z-10" />
+                  <Select
                     value={accountManager}
-                    onChange={(e) => setAccountManager(e.target.value)}
-                    placeholder="Jane Doe (Sales Chief)"
-                    className="pl-10 bg-background/30 h-10 text-xs"
+                    onChange={(val) => setAccountManager(val)}
+                    className="w-full pl-10 pr-4 bg-background/30 border border-border/60 hover:border-primary/20 rounded-xl h-10 text-xs text-slate-300 focus:ring-0 outline-none cursor-pointer"
+                    options={[
+                      { value: '', label: 'Select Manager...' },
+                      ...users.map((u) => ({ value: u.name, label: `${u.name} (${u.role})` })),
+                    ]}
                   />
                 </div>
               </div>

@@ -10,7 +10,8 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     await connectToDatabase();
     const companyId = session.user.companyId;
     const userName = session.user.name;
-    const { id } = context.params;
+    const params = await context.params;
+    const { id } = params;
     const body = await request.json();
 
     const parseResult = ContactIngestSchema.safeParse(body);

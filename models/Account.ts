@@ -50,7 +50,6 @@ const AccountSchema = new Schema(
   }
 );
 
-AccountSchema.index({ companyId: 1, isArchived: 1 });
 AccountSchema.index({ companyId: 1, name: 1 });
 
 export const Account = ((mongoose.models.Account as Model<any>) ||

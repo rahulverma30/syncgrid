@@ -39,7 +39,5 @@ const ActivitySchema = new Schema(
   }
 );
 
-ActivitySchema.index({ companyId: 1, createdAt: -1 });
-
 export const Activity = ((mongoose.models.Activity as Model<any>) ||
   mongoose.model('Activity', ActivitySchema)) as Model<any>;

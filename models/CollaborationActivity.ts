@@ -36,7 +36,5 @@ const CollaborationActivitySchema = new Schema(
   }
 );
 
-CollaborationActivitySchema.index({ companyId: 1, createdAt: -1 });
-
 export const CollaborationActivity = ((mongoose.models.CollaborationActivity as Model<any>) ||
   mongoose.model('CollaborationActivity', CollaborationActivitySchema)) as Model<any>;

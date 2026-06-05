@@ -55,23 +55,33 @@ export default function CreateDealPage() {
       return;
     }
 
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast.error('Please enter a valid email address.');
+      return;
+    }
+
+    if (phone && phone.replace(/\D/g, '').length < 10) {
+      toast.error('Please enter a valid phone number with at least 10 digits.');
+      return;
+    }
+
+    if (budget < 0) {
+      toast.error('Budget cannot be negative.');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      const res = await fetch('/api/protected/crm/leads', {
+      const res = await fetch('/api/protected/crm/deals', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name,
-          contactPerson,
-          email,
-          phone,
-          budget,
-          status,
-          priority,
-          source,
-          expectedCloseDate: expectedCloseDate ? new Date(expectedCloseDate) : null,
-          workType,
-          techStack: techStack ? techStack.split(',').map((s) => s.trim()) : [],
+          value: budget,
+          stage: status,
+          expectedCloseDate: expectedCloseDate ? new Date(expectedCloseDate) : new Date(),
+          probability: 50,
+          notes: `${workType} - ${priority} priority - Source: ${source}`,
         }),
       });
 

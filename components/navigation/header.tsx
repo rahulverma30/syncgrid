@@ -69,32 +69,6 @@ export function Header() {
 
         {/* Right: Actions */}
         <div className="flex items-center gap-1">
-          {/* Search button — wider on desktop */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={togglePalette}
-            className="hidden text-muted-foreground md:inline-flex h-8 w-[200px] justify-start text-xs border-border/60 bg-muted/40 hover:bg-muted/60 hover:text-foreground"
-            aria-label="Search (Ctrl+K)"
-          >
-            <Search className="h-3.5 w-3.5 shrink-0" />
-            <span className="flex-1 text-left">Search...</span>
-            <kbd className="rounded border border-border/80 bg-background px-1.5 py-0.5 text-[10px] font-mono shrink-0 text-muted-foreground">
-              ⌘K
-            </kbd>
-          </Button>
-
-          {/* Mobile search icon */}
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={togglePalette}
-            className="md:hidden text-muted-foreground hover:text-foreground"
-            aria-label="Search"
-          >
-            <Search className="h-4 w-4" />
-          </Button>
-
           {/* Notifications */}
           <NotificationBellWidget />
 
@@ -102,7 +76,7 @@ export function Header() {
           <DropdownMenu
             trigger={
               <div
-                className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-primary/15 text-primary font-semibold text-xs select-none hover:bg-primary/25 transition-colors border border-primary/20"
+                className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-primary/15 text-primary font-semibold text-md select-none hover:bg-primary/25 transition-colors border border-primary/20"
                 title={userName}
                 role="button"
                 tabIndex={0}

@@ -52,7 +52,6 @@ const ClientPortalAuditLogSchema = new Schema(
   }
 );
 
-ClientPortalAuditLogSchema.index({ companyId: 1, createdAt: -1 });
 ClientPortalAuditLogSchema.index({ clientId: 1, createdAt: -1 });
 
 export const ClientPortalAuditLog = ((mongoose.models.ClientPortalAuditLog as Model<any>) ||

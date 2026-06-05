@@ -10,7 +10,8 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
   try {
     await connectToDatabase();
     const companyId = session.user.companyId;
-    const { id } = context.params;
+    const params = await context.params;
+    const { id } = params;
 
     const client = await Client.findOne({ _id: id, companyId });
 
@@ -81,7 +82,8 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
     await connectToDatabase();
     const companyId = session.user.companyId;
     const userName = session.user.name;
-    const { id } = context.params;
+    const params = await context.params;
+    const { id } = params;
     const body = await request.json();
 
     const client = await Client.findOne({ _id: id, companyId });
@@ -172,7 +174,8 @@ export const DELETE = withApiAuth(async (request: Request, context: any, session
     await connectToDatabase();
     const companyId = session.user.companyId;
     const roles = session.user.roles || [];
-    const { id } = context.params;
+    const params = await context.params;
+    const { id } = params;
 
     // Strict access control: Permanent deletion of core Client accounts is locked to admins/managers
     const hasElevatedAccess = hasRole(roles, [

@@ -5,12 +5,7 @@ import { PageHeader, Button, Input, LoadingSpinner } from '@/components/ui';
 import { Plus, Search, RefreshCw } from 'lucide-react';
 import { AnimatePresence } from 'framer-motion';
 import { useProjectsStore } from '@/store/projectsStore';
-import {
-  ProjectAnalytics,
-  ProjectTable,
-  ProjectCreateModal,
-  ProjectDetailDrawer,
-} from '@/components/projects';
+import { ProjectAnalytics, ProjectTable, ProjectCreateModal } from '@/components/projects';
 
 export default function ProjectsPage() {
   const {
@@ -120,11 +115,8 @@ export default function ProjectsPage() {
         </AnimatePresence>
       )}
 
-      {/* RENDER POPUPS & SLIDING DRAWER CHANNELS */}
+      {/* RENDER POPUPS */}
       <ProjectCreateModal />
-      <AnimatePresence>
-        <ProjectDetailDrawer />
-      </AnimatePresence>
     </div>
   );
 }

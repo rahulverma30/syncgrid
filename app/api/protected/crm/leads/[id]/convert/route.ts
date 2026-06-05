@@ -15,7 +15,8 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     const userId = session.user.id;
     const userName = session.user.name;
     const roles = session.user.roles || [];
-    const leadId = await context.params.id;
+    const params = await context.params;
+    const leadId = params.id;
     const body = await request.json().catch(() => ({}));
 
     const lead = await Lead.findOne({ _id: leadId, companyId });

@@ -55,7 +55,6 @@ const ExternalActivityLogSchema = new Schema(
   }
 );
 
-ExternalActivityLogSchema.index({ companyId: 1, createdAt: -1 });
 ExternalActivityLogSchema.index({ clientId: 1, createdAt: -1 });
 
 export const ExternalActivityLog = ((mongoose.models.ExternalActivityLog as Model<any>) ||

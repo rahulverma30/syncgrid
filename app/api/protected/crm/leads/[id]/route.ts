@@ -10,7 +10,8 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     const companyId = session.user.companyId;
     const userId = session.user.id;
     const roles = session.user.roles || [];
-    const leadId = context.params.id;
+    const params = await context.params;
+    const leadId = params.id;
 
     const lead = await Lead.findOne({ _id: leadId, companyId });
 
@@ -49,7 +50,8 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
     const userId = session.user.id;
     const userName = session.user.name;
     const roles = session.user.roles || [];
-    const leadId = context.params.id;
+    const params = await context.params;
+    const leadId = params.id;
     const body = await request.json();
 
     const lead = await Lead.findOne({ _id: leadId, companyId });
@@ -144,7 +146,8 @@ export const DELETE = withApiAuth(async (request: Request, context: any, session
     const companyId = session.user.companyId;
     const userId = session.user.id;
     const roles = session.user.roles || [];
-    const leadId = context.params.id;
+    const params = await context.params;
+    const leadId = params.id;
 
     // RBAC: Only Super Admin, Sales Manager can permanently delete leads
     const hasElevatedAccess = hasRole(roles, ['super-admin', 'admin', 'sales-manager', 'manager']);

@@ -152,31 +152,31 @@ export const ProjectCreateModal: React.FC = () => {
       isOpen={createModalOpen}
       onClose={() => setCreateModalOpen(false)}
       title="Initialize Project"
-      description="Set up a new project with budget, timeline, and team allocation parameters."
-      className="max-w-2xl"
+      description="Deploy a new workspace, configure budgeting, allocate team members, and define the tech stack."
+      size="xl"
     >
       {/* Visual Templates Selector */}
-      <div className="space-y-1.5 border-b border-border/40 pb-3 mb-3 select-none">
-        <label className="text-[9px] font-black uppercase text-muted-foreground tracking-wider">
+      <div className="space-y-2 border-b border-border/40 pb-4 mb-4 select-none">
+        <label className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">
           Select Blueprint Template:
         </label>
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {templates.map((t) => (
             <button
               key={t.id}
               type="button"
               onClick={() => applyTemplate(t)}
-              className={`p-2.5 rounded-lg border text-left flex flex-col justify-between transition-all select-none cursor-pointer ${
+              className={`p-3 rounded-xl border text-left flex flex-col justify-between transition-all select-none cursor-pointer ${
                 activeTemplate === t.id
-                  ? 'bg-primary/10 border-primary shadow-xs ring-1 ring-primary/20'
-                  : 'bg-card/25 border-border/60 hover:bg-card/65'
+                  ? 'bg-primary/10 border-primary shadow-lg shadow-primary/10 ring-1 ring-primary/20'
+                  : 'bg-background/30 border-border/60 hover:bg-card/60'
               }`}
             >
-              <div className="space-y-0.5">
-                <p className="text-[10px] font-black tracking-wide text-foreground leading-none">
+              <div className="space-y-1">
+                <p className="text-[11px] font-bold tracking-wide text-white leading-none">
                   {t.name}
                 </p>
-                <p className="text-[8px] text-muted-foreground leading-tight line-clamp-2">
+                <p className="text-[9px] text-slate-400 leading-tight line-clamp-2">
                   {t.description}
                 </p>
               </div>
@@ -185,145 +185,159 @@ export const ProjectCreateModal: React.FC = () => {
         </div>
       </div>
 
-      <form onSubmit={handleCreate} className="space-y-4 text-xs">
-        <div className="grid grid-cols-2 gap-3.5">
-          <div className="space-y-1 col-span-2">
-            <label className="text-[9px] font-bold text-muted-foreground uppercase">
-              Project Name *
-            </label>
+      <form onSubmit={handleCreate} className="space-y-5 text-sm py-2">
+        <div className="space-y-1.5">
+          <label className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">
+            Project Name *
+          </label>
+          <div className="relative">
+            <Layers className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
             <Input
               value={formName}
               onChange={(e) => setFormName(e.target.value)}
               placeholder="SyncGrid Enterprise Platform"
-              className="h-8.5 bg-background/50 focus-visible:ring-1"
+              className="pl-10 h-10 bg-background/30 border border-border/60 hover:border-primary/30 transition-colors text-xs rounded-xl"
               required
             />
           </div>
         </div>
 
-        <div className="space-y-1">
-          <label className="text-[9px] font-bold text-muted-foreground uppercase">
+        <div className="space-y-1.5">
+          <label className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">
             Description
           </label>
           <textarea
             value={formDescription}
             onChange={(e) => setFormDescription(e.target.value)}
             placeholder="Brief project scope and objectives..."
-            className="w-full h-16 p-2 rounded-lg border border-border bg-background/50 focus:outline-none focus:ring-2 focus:ring-ring text-xs leading-relaxed"
+            className="w-full h-20 p-3 rounded-xl border border-border/60 bg-background/30 hover:border-primary/30 transition-colors focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 text-xs text-white leading-relaxed resize-none"
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-3.5 items-end">
-          <div className="space-y-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 items-end">
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">
+              Priority
+            </label>
             <Select
-              label="Priority"
               value={formPriority}
               onChange={(val) => setFormPriority(val as any)}
               options={[
-                { value: 'low', label: 'Low' },
-                { value: 'medium', label: 'Medium' },
-                { value: 'high', label: 'High' },
-                { value: 'urgent', label: 'Urgent' },
+                { value: 'low', label: 'Low Priority' },
+                { value: 'medium', label: 'Medium Priority' },
+                { value: 'high', label: 'High Priority' },
+                { value: 'urgent', label: 'Urgent Priority' },
               ]}
+              className="h-10 text-xs rounded-xl bg-background/30 border border-border/60 px-3 hover:border-primary/30 transition-colors text-slate-300 outline-none w-full"
             />
           </div>
-          <div className="space-y-1">
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">
+              Billing Model
+            </label>
             <Select
-              label="Billing Model"
               value={formBillingType}
               onChange={(val) => setFormBillingType(val as any)}
               options={[
-                { value: 'fixed', label: 'Fixed Price' },
+                { value: 'fixed', label: 'Fixed Price Contract' },
                 { value: 'hourly', label: 'Hourly Rate' },
-                { value: 'retainer', label: 'Retainer' },
+                { value: 'retainer', label: 'Ongoing Retainer' },
                 { value: 'milestone-based', label: 'Milestone Based' },
               ]}
+              className="h-10 text-xs rounded-xl bg-background/30 border border-border/60 px-3 hover:border-primary/30 transition-colors text-slate-300 outline-none w-full"
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-3 items-end select-none">
-          <div className="space-y-1">
-            <label className="text-[9px] font-bold text-muted-foreground uppercase">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 items-end select-none">
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">
               Budget ($)
             </label>
             <Input
               type="number"
               value={formBudget}
               onChange={(e) => setFormBudget(parseInt(e.target.value) || 0)}
-              className="h-8.5 bg-background/50"
+              className="h-10 px-3 bg-background/30 border border-border/60 hover:border-primary/30 transition-colors text-xs rounded-xl font-mono text-emerald-400"
             />
           </div>
-          <div className="space-y-1">
-            <label className="text-[9px] font-bold text-muted-foreground uppercase">
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">
               Est. Hours
             </label>
             <Input
               type="number"
               value={formEstimatedHours}
               onChange={(e) => setFormEstimatedHours(parseInt(e.target.value) || 0)}
-              className="h-8.5 bg-background/50"
+              className="h-10 px-3 bg-background/30 border border-border/60 hover:border-primary/30 transition-colors text-xs rounded-xl font-mono text-blue-400"
             />
           </div>
-          <div className="space-y-1">
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">
+              Project Manager
+            </label>
             <Select
-              label="Project Manager"
               value={formManager}
               onChange={(val) => setFormManager(val)}
-              placeholder="Choose PM..."
+              placeholder="Auto-assign..."
               options={[
-                { value: '', label: 'Choose PM...' },
+                { value: '', label: 'Auto-assign...' },
                 ...teamMembers.map((user) => ({
                   value: user.name,
                   label: user.name,
                 })),
               ]}
+              className="h-10 text-xs rounded-xl bg-background/30 border border-border/60 px-3 hover:border-primary/30 transition-colors text-slate-300 outline-none w-full"
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3.5">
-          <div className="space-y-1">
-            <label className="text-[9px] font-bold text-muted-foreground uppercase">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">
               Start Date
             </label>
             <DateInput
               value={formStartDate}
               onChange={(e) => setFormStartDate(e.target.value)}
-              className="h-8.5 bg-background/50"
+              className="h-10 px-3 bg-background/30 border border-border/60 hover:border-primary/30 transition-colors text-xs rounded-xl"
             />
           </div>
-          <div className="space-y-1">
-            <label className="text-[9px] font-bold text-muted-foreground uppercase">Deadline</label>
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">
+              Deadline Target
+            </label>
             <DateInput
               value={formDeadline}
               onChange={(e) => setFormDeadline(e.target.value)}
-              className="h-8.5 bg-background/50"
+              className="h-10 px-3 bg-background/30 border border-border/60 hover:border-primary/30 transition-colors text-xs rounded-xl"
             />
           </div>
         </div>
 
-        <div className="space-y-1">
-          <label className="text-[9px] font-bold text-muted-foreground uppercase">
-            Technologies (comma-separated)
+        <div className="space-y-1.5">
+          <label className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">
+            Tech Stack (comma-separated)
           </label>
           <Input
             value={formTechnologies}
             onChange={(e) => setFormTechnologies(e.target.value)}
             placeholder="React, Node.js, MongoDB, TypeScript"
-            className="h-8.5 bg-background/50"
+            className="h-10 px-3 bg-background/30 border border-border/60 hover:border-primary/30 transition-colors text-xs rounded-xl text-purple-300 font-mono"
           />
         </div>
 
-        <ProjectTagSelector selectedTags={selectedTags} onChange={setSelectedTags} />
+        <div className="pt-2">
+          <ProjectTagSelector selectedTags={selectedTags} onChange={setSelectedTags} />
+        </div>
 
-        <div className="flex justify-end gap-2 pt-4 border-t border-border/40 select-none">
+        <div className="flex justify-end gap-3 pt-6 border-t border-border/40 select-none mt-4">
           <Button
             type="button"
             onClick={() => setCreateModalOpen(false)}
             variant="outline"
             size="sm"
-            className="h-8 text-xs"
+            className="h-9 text-xs px-4 rounded-lg hover:bg-slate-800"
           >
             Cancel
           </Button>
@@ -331,10 +345,10 @@ export const ProjectCreateModal: React.FC = () => {
             type="submit"
             variant="default"
             size="sm"
-            className="h-8 text-xs font-bold"
+            className="h-9 text-xs font-bold px-6 rounded-lg bg-blue-600 hover:bg-blue-500 text-white border-0 shadow-lg shadow-blue-900/20"
             disabled={isSubmitting}
           >
-            {isSubmitting ? 'Initializing...' : 'Create Project'}
+            {isSubmitting ? 'Provisioning...' : 'Deploy Workspace'}
           </Button>
         </div>
       </form>

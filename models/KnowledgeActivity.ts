@@ -56,7 +56,5 @@ const KnowledgeActivitySchema = new Schema(
   }
 );
 
-KnowledgeActivitySchema.index({ companyId: 1, createdAt: -1 });
-
 export const KnowledgeActivity = ((mongoose.models.KnowledgeActivity as Model<any>) ||
   mongoose.model('KnowledgeActivity', KnowledgeActivitySchema)) as Model<any>;

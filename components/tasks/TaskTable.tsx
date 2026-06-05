@@ -11,6 +11,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
+import { Pagination } from '@/components/ui';
 
 interface TaskTableProps {
   onSelectTask: (code: string) => void;
@@ -36,7 +37,7 @@ export function TaskTable({ onSelectTask }: TaskTableProps) {
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 50; // Increased to showcase high-scale virtualization performance
+  const [itemsPerPage, setItemsPerPage] = useState(50); // Increased to showcase high-scale virtualization performance
 
   // Virtualization Scroll States
   const [scrollTop, setScrollTop] = useState(0);
@@ -465,29 +466,14 @@ export function TaskTable({ onSelectTask }: TaskTableProps) {
       </div>
 
       {/* Pagination controls */}
-      {totalPages > 1 && (
-        <div className="flex justify-between items-center text-xs text-muted-foreground select-none">
-          <span>
-            Page <strong>{currentPage}</strong> of {totalPages} ({tasks.length} total tasks)
-          </span>
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-              disabled={currentPage === 1}
-              className="p-1.5 border border-border/40 rounded-lg hover:bg-muted/10 disabled:opacity-50 disabled:hover:bg-transparent transition"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-              disabled={currentPage === totalPages}
-              className="p-1.5 border border-border/40 rounded-lg hover:bg-muted/10 disabled:opacity-50 disabled:hover:bg-transparent transition"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      )}
+      <Pagination
+        currentPage={currentPage}
+        totalItems={sortedTasks.length}
+        pageSize={itemsPerPage}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={setItemsPerPage}
+        pageSizeOptions={[20, 50, 100]}
+      />
     </div>
   );
 }

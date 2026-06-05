@@ -11,7 +11,8 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     await connectToDatabase();
     const companyId = session.user.companyId;
     const userName = session.user.name;
-    const { id } = context.params;
+    const params = await context.params;
+    const { id } = params;
     const body = await request.json();
 
     const parseResult = NoteIngestSchema.safeParse(body);
@@ -79,7 +80,8 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
     await connectToDatabase();
     const companyId = session.user.companyId;
     const userName = session.user.name;
-    const { id } = context.params;
+    const params = await context.params;
+    const { id } = params;
     const body = await request.json();
 
     const { noteId, content } = body;

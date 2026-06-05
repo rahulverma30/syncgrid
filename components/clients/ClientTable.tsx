@@ -9,6 +9,7 @@ import {
   EmptyState,
   SkeletonTable,
   SkeletonCard,
+  Pagination,
 } from '@/components/ui';
 import {
   Search,
@@ -817,72 +818,14 @@ export const ClientTable: React.FC = () => {
       </div>
 
       {/* Pagination Controls Footer */}
-      {totalItems > 0 && (
-        <div className="flex justify-between items-center flex-wrap gap-3 pt-2 text-xs select-none">
-          <div className="flex items-center gap-2">
-            <span className="text-muted-foreground">Rows per page:</span>
-            <div className="w-16">
-              <Select
-                value={String(pageSize)}
-                onChange={(value) => setPageSize(parseInt(value) || 10)}
-                options={[
-                  { value: '5', label: '5' },
-                  { value: '10', label: '10' },
-                  { value: '20', label: '20' },
-                  { value: '50', label: '50' },
-                ]}
-                className="h-8 text-xs rounded-lg px-2"
-              />
-            </div>
-            <span className="text-muted-foreground ml-2">
-              Showing{' '}
-              <span className="font-bold text-foreground">{(currentPage - 1) * pageSize + 1}</span>{' '}
-              to{' '}
-              <span className="font-bold text-foreground">
-                {Math.min(currentPage * pageSize, totalItems)}
-              </span>{' '}
-              of <span className="font-bold text-foreground">{totalItems}</span>
-            </span>
-          </div>
-
-          <div className="flex gap-1">
-            <Button
-              onClick={() => setPage(currentPage - 1)}
-              disabled={currentPage === 1}
-              variant="outline"
-              size="sm"
-              className="h-8 w-8 p-0"
-              aria-label="Previous Page"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            {Array.from({ length: totalPages }).map((_, idx) => {
-              const p = idx + 1;
-              return (
-                <Button
-                  key={p}
-                  onClick={() => setPage(p)}
-                  variant={currentPage === p ? 'default' : 'outline'}
-                  size="sm"
-                  className="h-8 w-8 p-0 text-xs font-bold"
-                >
-                  {p}
-                </Button>
-              );
-            })}
-            <Button
-              onClick={() => setPage(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              variant="outline"
-              size="sm"
-              className="h-8 w-8 p-0"
-              aria-label="Next Page"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      )}
+      <Pagination
+        currentPage={currentPage}
+        totalItems={totalItems}
+        pageSize={pageSize}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
+        pageSizeOptions={[5, 10, 20, 50]}
+      />
 
       {/* Save Ledger View Preset Modal */}
       <CenteredModal

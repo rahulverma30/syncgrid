@@ -46,7 +46,6 @@ const ClientActivitySchema = new Schema(
 
 // High-performance compound indexes for paginating timeline feeds
 ClientActivitySchema.index({ clientId: 1, createdAt: -1 });
-ClientActivitySchema.index({ companyId: 1, createdAt: -1 });
 
 export const ClientActivity = ((mongoose.models.ClientActivity as Model<any>) ||
   mongoose.model('ClientActivity', ClientActivitySchema)) as Model<any>;

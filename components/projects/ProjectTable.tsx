@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useRef } from 'react';
-import { Button, CenteredModal, ConfirmationModal, Select } from '@/components/ui';
+import { Button, CenteredModal, ConfirmationModal, Select, Pagination } from '@/components/ui';
 import {
   ArrowUpDown,
   ChevronLeft,
@@ -17,6 +17,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useProjectsStore, ProjectAccount } from '@/store/projectsStore';
 import { ProjectTagPill } from './ProjectTagSelector';
+import { useRouter } from 'next/navigation';
 
 // ── Status helpers ──────────────────────────────────────────────────────────────
 const STATUS_COLORS: Record<string, string> = {
@@ -38,6 +39,7 @@ const PRIORITY_COLORS: Record<string, string> = {
 };
 
 export const ProjectTable: React.FC = () => {
+  const router = useRouter();
   const {
     projects,
     setSelectedProject,
@@ -509,7 +511,7 @@ export const ProjectTable: React.FC = () => {
               <tr
                 key={project._id}
                 className={`cursor-pointer group ${selectedRows.includes(project._id) ? 'table-row-selected table-row' : 'table-row'}`}
-                onClick={() => setSelectedProject(project)}
+                onClick={() => router.push(`/projects/${project._id}`)}
               >
                 <td className="table-body-cell" onClick={(e) => e.stopPropagation()}>
                   <input
@@ -689,7 +691,7 @@ export const ProjectTable: React.FC = () => {
         {paginatedProjects.map((project) => (
           <div
             key={project._id}
-            onClick={() => setSelectedProject(project)}
+            onClick={() => router.push(`/projects/${project._id}`)}
             className="p-3.5 rounded-lg border border-border/60 bg-card/30 hover:bg-card hover:border-border transition-all cursor-pointer space-y-2"
           >
             <div className="flex items-start justify-between">
@@ -731,58 +733,15 @@ export const ProjectTable: React.FC = () => {
         ))}
       </div>
 
-      {/* Pagination */}
-      <div className="flex items-center justify-between flex-wrap gap-3 pt-2 select-none">
-        <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-          <span>
-            Showing {(currentPage - 1) * pageSize + 1}–
-            {Math.min(currentPage * pageSize, sortedProjects.length)} of {sortedProjects.length}
-          </span>
-          <Select
-            value={String(pageSize)}
-            onChange={(val) => setPageSize(Number(val))}
-            options={[
-              { value: '5', label: '5/pg' },
-              { value: '10', label: '10/pg' },
-              { value: '20', label: '20/pg' },
-              { value: '50', label: '50/pg' },
-            ]}
-          />
-        </div>
-        <div className="flex items-center gap-1">
-          <Button
-            onClick={() => setPage(Math.max(1, currentPage - 1))}
-            disabled={currentPage <= 1}
-            variant="outline"
-            size="sm"
-            className="h-7 w-7 p-0"
-            aria-label="Previous page"
-          >
-            <ChevronLeft className="h-3.5 w-3.5" />
-          </Button>
-          {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map((pg) => (
-            <Button
-              key={pg}
-              onClick={() => setPage(pg)}
-              variant={currentPage === pg ? 'default' : 'outline'}
-              size="sm"
-              className="h-7 w-7 p-0 text-[10px]"
-            >
-              {pg}
-            </Button>
-          ))}
-          <Button
-            onClick={() => setPage(Math.min(totalPages, currentPage + 1))}
-            disabled={currentPage >= totalPages}
-            variant="outline"
-            size="sm"
-            className="h-7 w-7 p-0"
-            aria-label="Next page"
-          >
-            <ChevronRight className="h-3.5 w-3.5" />
-          </Button>
-        </div>
-      </div>
+      {/* Pagination Controls */}
+      <Pagination
+        currentPage={currentPage}
+        totalItems={sortedProjects.length}
+        pageSize={pageSize}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
+        pageSizeOptions={[5, 10, 20, 50]}
+      />
 
       {/* Save View Preset Modal */}
       <CenteredModal
