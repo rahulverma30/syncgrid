@@ -45,7 +45,9 @@ interface Contact {
   communicationPref: string;
   companyName: string;
   companyId: string;
+  companyId: string;
   createdAt: string;
+  source: 'client' | 'crm';
 }
 
 export default function CRMContactsPage() {
@@ -67,17 +69,21 @@ export default function CRMContactsPage() {
   const fetchContacts = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch('/api/protected/clients');
-      const d = await res.json();
-      if (d.success) {
-        // Flatten contacts from all clients
-        const flatContacts: Contact[] = [];
-        d.data.forEach((client: any) => {
+      const [clientsRes, crmRes] = await Promise.all([
+        fetch('/api/protected/clients'),
+        fetch('/api/protected/crm/contacts'),
+      ]);
+      const [clientsData, crmData] = await Promise.all([clientsRes.json(), crmRes.json()]);
+
+      const flatContacts: Contact[] = [];
+
+      if (clientsData.success) {
+        clientsData.data.forEach((client: any) => {
           if (client.contacts && client.contacts.length > 0) {
             client.contacts.forEach((c: any) => {
               flatContacts.push({
                 _id: c._id,
-                name: c.name,
+                name: c.name || `${c.firstName || ''} ${c.lastName || ''}`.trim(),
                 role: c.role || 'Executive',
                 email: c.email || '',
                 phone: c.phone || '',
@@ -86,13 +92,32 @@ export default function CRMContactsPage() {
                 companyName: client.name,
                 companyId: client._id,
                 createdAt: c.createdAt || client.createdAt,
+                source: 'client',
               });
             });
           }
         });
-
-        setContacts(flatContacts);
       }
+
+      if (crmData.success) {
+        crmData.data.forEach((c: any) => {
+          flatContacts.push({
+            _id: c._id,
+            name: c.name || `${c.firstName || ''} ${c.lastName || ''}`.trim(),
+            role: c.role || c.title || 'Executive',
+            email: c.email || '',
+            phone: c.phone || '',
+            isPrimary: !!c.isPrimary,
+            communicationPref: c.communicationPref || 'email',
+            companyName: c.accountId?.name || 'Unknown Account',
+            companyId: c.accountId?._id || c.companyId,
+            createdAt: c.createdAt,
+            source: 'crm',
+          });
+        });
+      }
+
+      setContacts(flatContacts);
     } catch (err) {
       toast.error('Could not fetch contacts.');
     } finally {
@@ -481,12 +506,14 @@ export default function CRMContactsPage() {
             const contactObj = contacts.find((c) => c._id === contactToDeleteId);
             if (contactObj) {
               try {
-                const res = await fetch(
-                  `/api/protected/clients/${contactObj.companyId}/contacts/${contactToDeleteId}`,
-                  {
-                    method: 'DELETE',
-                  }
-                );
+                const endpoint =
+                  contactObj.source === 'client'
+                    ? `/api/protected/clients/${contactObj.companyId}/contacts/${contactToDeleteId}`
+                    : `/api/protected/crm/contacts/${contactToDeleteId}`;
+
+                const res = await fetch(endpoint, {
+                  method: 'DELETE',
+                });
                 const data = await res.json();
                 if (data.success) {
                   setContacts(contacts.filter((c) => c._id !== contactToDeleteId));
@@ -518,12 +545,14 @@ export default function CRMContactsPage() {
             const contactObj = contacts.find((c) => c._id === id);
             if (contactObj) {
               try {
-                const res = await fetch(
-                  `/api/protected/clients/${contactObj.companyId}/contacts/${id}`,
-                  {
-                    method: 'DELETE',
-                  }
-                );
+                const endpoint =
+                  contactObj.source === 'client'
+                    ? `/api/protected/clients/${contactObj.companyId}/contacts/${id}`
+                    : `/api/protected/crm/contacts/${id}`;
+
+                const res = await fetch(endpoint, {
+                  method: 'DELETE',
+                });
                 const data = await res.json();
                 if (data.success) {
                   deletedCount++;

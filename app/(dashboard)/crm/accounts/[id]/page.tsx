@@ -19,8 +19,15 @@ import {
   History,
   CheckCircle,
   Plus,
+  CalendarDays,
+  MoreVertical,
+  Link as LinkIcon,
+  FolderOpen,
+  Download,
+  File,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { format } from 'date-fns';
 
 interface Contact {
   _id: string;
@@ -349,104 +356,152 @@ export default function AccountDetailsPage() {
           </Card>
 
           {/* Calendar Meetings Schedule */}
-          <Card className="bg-card/40 border border-border/60 p-5 rounded-2xl text-left backdrop-blur-md">
-            <h2 className="text-sm font-bold text-white uppercase tracking-wider mb-4 flex items-center gap-2 select-none">
-              <Calendar className="h-4 w-4 text-slate-400" />
-              Calendar Meetings schedule
-            </h2>
-
-            <div className="flex gap-2 mb-4">
-              <Input
-                value={meetingTitle}
-                onChange={(e) => setMeetingTitle(e.target.value)}
-                placeholder="Meeting Title"
-                className="bg-background/40 h-8 text-xs flex-1"
-              />
-              <Input
-                type="date"
-                value={meetingDate}
-                onChange={(e) => setMeetingDate(e.target.value)}
-                className="bg-background/40 h-8 text-xs w-32"
-              />
-              <Button onClick={handleAddMeeting} size="sm" className="h-8 text-xs px-3">
-                <Plus className="h-3 w-3" />
-              </Button>
+          <Card className="bg-card/40 border border-border/60 p-0 rounded-2xl text-left backdrop-blur-md overflow-hidden">
+            <div className="p-5 border-b border-border/60 bg-gradient-to-r from-card/60 to-transparent">
+              <h2 className="text-sm font-bold text-white uppercase tracking-wider mb-4 flex items-center gap-2 select-none">
+                <CalendarDays className="h-4 w-4 text-blue-400" />
+                Meeting Schedule
+              </h2>
+              <div className="flex gap-2">
+                <Input
+                  value={meetingTitle}
+                  onChange={(e) => setMeetingTitle(e.target.value)}
+                  placeholder="Meeting Title"
+                  className="bg-background/60 h-8 text-xs flex-1 border-border/50 focus:border-blue-500/50"
+                />
+                <Input
+                  type="datetime-local"
+                  value={meetingDate}
+                  onChange={(e) => setMeetingDate(e.target.value)}
+                  className="bg-background/60 h-8 text-xs w-44 border-border/50 focus:border-blue-500/50 text-slate-300 [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert"
+                />
+                <Button
+                  onClick={handleAddMeeting}
+                  size="sm"
+                  className="h-8 text-xs px-3 bg-blue-600 hover:bg-blue-500 text-white"
+                >
+                  Schedule
+                </Button>
+              </div>
             </div>
 
-            <div className="space-y-3">
-              {meetings.map((m) => (
-                <div
-                  key={m._id}
-                  className="bg-background/20 p-3.5 rounded-xl border border-border/40 text-xs flex items-center justify-between"
-                >
-                  <div className="space-y-1">
-                    <h4
-                      className={`font-bold ${m.isCompleted ? 'text-slate-500 line-through' : 'text-white'}`}
-                    >
-                      {m.title}
-                    </h4>
-                    <span className="text-[10px] text-slate-400 flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      {m.dueDate}
-                    </span>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={m.isCompleted}
-                    onChange={() => handleToggleMeeting(m._id)}
-                    className="rounded border-border/60 text-primary h-4.5 w-4.5 focus:ring-0 cursor-pointer"
-                  />
+            <div className="p-5">
+              {meetings.length === 0 ? (
+                <div className="text-center py-6 text-slate-500 text-xs italic">
+                  No meetings scheduled.
                 </div>
-              ))}
+              ) : (
+                <div className="relative border-l border-border/60 ml-3 space-y-6">
+                  {meetings.map((m) => {
+                    const isPast = new Date(m.dueDate) < new Date() && !m.isCompleted;
+                    return (
+                      <div key={m._id} className="relative pl-6">
+                        <div
+                          className={`absolute -left-1.5 top-1.5 h-3 w-3 rounded-full border-2 border-card ${
+                            m.isCompleted
+                              ? 'bg-emerald-500'
+                              : isPast
+                                ? 'bg-rose-500'
+                                : 'bg-blue-500'
+                          }`}
+                        />
+                        <div className="bg-background/20 hover:bg-background/40 transition-colors p-3.5 rounded-xl border border-border/40 text-xs flex items-center justify-between group">
+                          <div className="space-y-1">
+                            <h4
+                              className={`font-bold text-sm ${m.isCompleted ? 'text-slate-500 line-through' : 'text-white'}`}
+                            >
+                              {m.title}
+                            </h4>
+                            <span
+                              className={`text-[10px] flex items-center gap-1.5 ${isPast && !m.isCompleted ? 'text-rose-400' : 'text-slate-400'}`}
+                            >
+                              <Clock className="h-3 w-3" />
+                              {m.dueDate ? new Date(m.dueDate).toLocaleString() : 'No date'}
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => handleToggleMeeting(m._id)}
+                            className={`h-7 w-7 rounded-full flex items-center justify-center transition-colors border ${
+                              m.isCompleted
+                                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500'
+                                : 'bg-background border-border hover:border-primary hover:text-primary text-slate-400'
+                            }`}
+                          >
+                            <CheckCircle className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </Card>
 
           {/* Documents Folder */}
-          <Card className="bg-card/40 border border-border/60 p-5 rounded-2xl text-left backdrop-blur-md">
-            <h2 className="text-sm font-bold text-white uppercase tracking-wider mb-4 flex items-center gap-2 select-none">
-              <FileText className="h-4 w-4 text-slate-400" />
-              Shared Enterprise Documents folder
-            </h2>
-
-            <div className="flex gap-2 mb-4">
-              <Input
-                value={docName}
-                onChange={(e) => setDocName(e.target.value)}
-                placeholder="Filename (e.g. contract.pdf)"
-                className="bg-background/40 h-8 text-xs flex-1"
-              />
-              <select
-                value={docCat}
-                onChange={(e) => setDocCat(e.target.value)}
-                className="bg-background/40 border border-input rounded-md h-8 text-xs w-28 px-2 text-foreground"
-              >
-                <option value="contract">Contract</option>
-                <option value="proposal">Proposal</option>
-                <option value="NDA">NDA</option>
-              </select>
-              <Button onClick={handleAddDoc} size="sm" className="h-8 text-xs px-3">
-                <Plus className="h-3 w-3" />
-              </Button>
+          <Card className="bg-card/40 border border-border/60 p-0 rounded-2xl text-left backdrop-blur-md overflow-hidden">
+            <div className="p-5 border-b border-border/60 bg-gradient-to-r from-card/60 to-transparent">
+              <h2 className="text-sm font-bold text-white uppercase tracking-wider mb-4 flex items-center gap-2 select-none">
+                <FolderOpen className="h-4 w-4 text-purple-400" />
+                Enterprise Vault
+              </h2>
+              <div className="flex gap-2">
+                <Input
+                  value={docName}
+                  onChange={(e) => setDocName(e.target.value)}
+                  placeholder="Upload document (e.g. Contract.pdf)"
+                  className="bg-background/60 h-8 text-xs flex-1 border-border/50 focus:border-purple-500/50"
+                />
+                <select
+                  value={docCat}
+                  onChange={(e) => setDocCat(e.target.value)}
+                  className="bg-background/60 border border-border/50 focus:border-purple-500/50 rounded-md h-8 text-xs w-32 px-2 text-slate-300"
+                >
+                  <option value="contract">Contract</option>
+                  <option value="proposal">Proposal</option>
+                  <option value="NDA">NDA</option>
+                </select>
+                <Button
+                  onClick={handleAddDoc}
+                  size="sm"
+                  className="h-8 text-xs px-3 bg-purple-600 hover:bg-purple-500 text-white border-0"
+                >
+                  <Plus className="h-3 w-3" />
+                </Button>
+              </div>
             </div>
 
-            <div className="space-y-3">
-              {documents.map((d) => (
-                <div
-                  key={d._id}
-                  className="bg-background/20 p-3.5 rounded-xl border border-border/40 text-xs flex items-center justify-between"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <FileText className="h-5 w-5 text-blue-500" />
-                    <div>
-                      <h4 className="font-bold text-white">{d.name}</h4>
-                      <span className="text-[9px] uppercase tracking-wider font-bold text-slate-500">
-                        {d.category}
-                      </span>
-                    </div>
-                  </div>
-                  <span className="text-[10px] text-slate-400">{d.createdAt}</span>
+            <div className="p-5">
+              {documents.length === 0 ? (
+                <div className="text-center py-6 text-slate-500 text-xs italic">
+                  Vault is empty.
                 </div>
-              ))}
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {documents.map((d) => (
+                    <div
+                      key={d._id}
+                      className="bg-background/20 hover:bg-background/40 transition-all p-3 rounded-xl border border-border/40 text-xs flex items-start gap-3 group"
+                    >
+                      <div className="h-10 w-10 shrink-0 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+                        <File className="h-5 w-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-bold text-white text-sm truncate">{d.name}</h4>
+                        <div className="flex items-center justify-between mt-1">
+                          <span className="text-[9px] uppercase tracking-wider font-bold text-slate-500 bg-slate-800/50 px-1.5 py-0.5 rounded">
+                            {d.category}
+                          </span>
+                          <span className="text-[9px] text-slate-400">{d.createdAt}</span>
+                        </div>
+                      </div>
+                      <button className="opacity-0 group-hover:opacity-100 p-1.5 text-slate-400 hover:text-white transition-opacity bg-background/50 rounded-md border border-border/50">
+                        <Download className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </Card>
         </div>

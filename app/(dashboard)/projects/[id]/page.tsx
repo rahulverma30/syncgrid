@@ -40,6 +40,18 @@ import { detectCircularDependency } from '@/utils/graphEngine';
 import { ConfirmationModal } from '@/components/ui';
 import { useParams, useRouter } from 'next/navigation';
 
+const DEFAULT_AVATARS = [
+  'https://api.dicebear.com/7.x/notionists/svg?seed=Felix',
+  'https://api.dicebear.com/7.x/notionists/svg?seed=Aneka',
+  'https://api.dicebear.com/7.x/notionists/svg?seed=Jasper',
+];
+
+const normalizeUrl = (url: string) => {
+  if (!url) return '#';
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  return `https://${url}`;
+};
+
 export default function ProjectDetailPage() {
   const { selectedProject, setSelectedProject, activeTab, setActiveTab, fetchProjects, projects } =
     useProjectsStore();
@@ -1240,7 +1252,7 @@ export default function ProjectDetailPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       <a
-                        href={doc.url}
+                        href={normalizeUrl(doc.url)}
                         target="_blank"
                         rel="noreferrer"
                         className="p-1.5 rounded hover:bg-background transition-colors text-primary"
