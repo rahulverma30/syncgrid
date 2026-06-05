@@ -27,7 +27,6 @@ import {
   File,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
 
 interface Contact {
   _id: string;

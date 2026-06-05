@@ -93,32 +93,45 @@ export default function ContactDetailsPage() {
     const fetchContactDetails = async () => {
       setIsLoading(true);
       try {
-        await new Promise((resolve) => setTimeout(resolve, 600));
-        // Fallback or seed dynamically based on mock values or API
-        if (contactId === 'c2') {
-          setName('Samantha Vance');
-          setRole('VP Marketing');
-          setEmail('vance@globex.co');
-          setPhone('650-555-0143');
-          setCompanyName('Globex Inc');
-          setIsPrimary(true);
-          setCommunicationPref('slack');
-        } else if (contactId === 'c3') {
-          setName('Albert Wesker');
-          setRole('Head of Operations');
-          setEmail('wesker@umbrella.com');
-          setPhone('312-555-0105');
-          setCompanyName('Umbrella Corp');
-          setIsPrimary(false);
-          setCommunicationPref('zoom');
-        } else if (contactId === 'c4') {
-          setName('Pepper Potts');
-          setRole('CEO');
-          setEmail('potts@stark.com');
-          setPhone('212-555-0177');
-          setCompanyName('Stark Industries');
-          setIsPrimary(true);
-          setCommunicationPref('phone');
+        // Try fetching from CRM Contacts first
+        let res = await fetch(`/api/protected/crm/contacts/${contactId}`);
+        let d = await res.json();
+
+        let foundContact = null;
+        let companyNameStr = 'Unknown Company';
+
+        if (d.success && d.data) {
+          foundContact = d.data;
+          companyNameStr = foundContact.accountId?.name || 'Unknown Account';
+        } else {
+          // If not found in CRM contacts, check Client embedded contacts
+          const clientsRes = await fetch('/api/protected/clients');
+          const clientsData = await clientsRes.json();
+          if (clientsData.success) {
+            for (const client of clientsData.data) {
+              const c = client.contacts?.find((ct: any) => ct._id === contactId);
+              if (c) {
+                foundContact = c;
+                companyNameStr = client.name;
+                break;
+              }
+            }
+          }
+        }
+
+        if (foundContact) {
+          setName(
+            foundContact.name ||
+              `${foundContact.firstName || ''} ${foundContact.lastName || ''}`.trim()
+          );
+          setRole(foundContact.role || foundContact.title || 'Executive');
+          setEmail(foundContact.email || 'No email');
+          setPhone(foundContact.phone || 'No phone');
+          setCompanyName(companyNameStr);
+          setIsPrimary(!!foundContact.isPrimary);
+          setCommunicationPref(foundContact.communicationPref || 'email');
+        } else {
+          toast.error('Contact not found.');
         }
       } catch (err) {
         toast.error('Failed to sync stakeholder profile details.');
