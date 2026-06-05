@@ -68,7 +68,6 @@ const config: Config = {
       fontFamily: {
         sans: [
           'var(--font-sans)',
-          'Geist',
           'Inter',
           'system-ui',
           '-apple-system',
