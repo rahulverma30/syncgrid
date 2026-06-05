@@ -254,9 +254,9 @@ export function Select({
           }}
           onKeyDown={handleKeyDown}
           className={cn(
-            'flex w-full items-center justify-between h-10 rounded-lg border border-input bg-background/50 px-3 py-2 text-sm text-foreground shadow-sm transition-all duration-150 hover:bg-background hover:border-input/80 focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-ring disabled:cursor-not-allowed disabled:opacity-50',
-            error && 'border-destructive focus:ring-destructive focus:ring-offset-0',
-            isOpen && 'ring-2 ring-ring/50 border-ring',
+            'flex w-full items-center justify-between h-9 rounded-lg border border-input bg-muted/40 px-3 py-2 text-sm text-foreground transition-all duration-150 hover:bg-muted/60 hover:border-border focus:outline-none focus:ring-1 focus:ring-ring focus:border-ring disabled:cursor-not-allowed disabled:opacity-50',
+            error && 'border-destructive focus:ring-destructive',
+            isOpen && 'ring-1 ring-ring border-ring',
             className
           )}
         >
@@ -291,7 +291,7 @@ export function Select({
                     left: coords.left,
                     width: coords.width,
                   }}
-                  className="z-[9999] rounded-xl border border-border/60 bg-popover/95 backdrop-blur-xl text-popover-foreground shadow-2xl p-1 max-h-[280px] overflow-hidden flex flex-col ring-1 ring-black/5 dark:ring-white/10"
+                  className="z-[9999] rounded-xl border border-border/60 bg-popover text-popover-foreground shadow-2xl shadow-black/40 p-1 max-h-[280px] overflow-hidden flex flex-col"
                 >
                   {/* Search Box */}
                   {isSearchEnabled && (

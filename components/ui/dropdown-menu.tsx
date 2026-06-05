@@ -118,7 +118,7 @@ export function DropdownMenu({ trigger, items, align = 'right', className }: Dro
                 exit={{ opacity: 0, y: coords.placement === 'bottom' ? -5 : 5, scale: 0.98 }}
                 transition={{ duration: 0.15, ease: 'easeOut' }}
                 style={{ top: coords.top, left: coords.left }}
-                className="absolute z-[9999] min-w-[200px] overflow-hidden rounded-xl border border-border/60 bg-popover/95 backdrop-blur-xl text-popover-foreground shadow-2xl flex flex-col ring-1 ring-black/5 dark:ring-white/10 p-1"
+                className="absolute z-[9999] min-w-[200px] overflow-hidden rounded-xl border border-border/60 bg-popover text-popover-foreground shadow-2xl shadow-black/40 flex flex-col p-1"
               >
                 {items.map((item, index) => (
                   <button
@@ -129,10 +129,10 @@ export function DropdownMenu({ trigger, items, align = 'right', className }: Dro
                     }}
                     disabled={item.disabled}
                     className={cn(
-                      'w-full flex items-center gap-2.5 px-3 py-2 text-sm font-medium text-left transition-colors duration-150 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                      'w-full flex items-center gap-2.5 px-3 py-2 text-sm font-medium text-left transition-colors duration-100 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed outline-none focus-visible:ring-1 focus-visible:ring-ring',
                       item.destructive
-                        ? 'text-rose-600 dark:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10'
-                        : 'hover:bg-accent hover:text-accent-foreground text-foreground/80 hover:text-foreground'
+                        ? 'text-red-400 hover:bg-red-500/10 hover:text-red-300'
+                        : 'text-foreground/80 hover:bg-muted hover:text-foreground'
                     )}
                   >
                     {item.icon}

@@ -24,8 +24,8 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
 
 const sizeClasses = {
   sm: 'h-8 text-xs px-2.5',
-  md: 'h-10 text-sm px-3',
-  lg: 'h-12 text-base px-4',
+  md: 'h-9 text-sm px-3',
+  lg: 'h-10 text-sm px-3.5',
 };
 
 export function Input({
@@ -78,18 +78,18 @@ export function Input({
           maxLength={maxLength}
           value={value}
           className={cn(
-            'flex w-full rounded-lg border border-input bg-background/50 text-foreground shadow-sm transition-all',
-            'placeholder:text-muted-foreground/60',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:border-ring',
-            'hover:border-input/80 hover:bg-background',
+            'flex w-full rounded-lg border border-input bg-muted/40 text-foreground transition-all duration-150',
+            'placeholder:text-muted-foreground/50',
+            'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-ring',
+            'hover:border-border hover:bg-muted/60',
             'disabled:cursor-not-allowed disabled:opacity-50',
             sizeClasses[inputSize],
             icon && iconPosition === 'left' && 'pl-10',
             icon && iconPosition === 'right' && 'pr-10',
             error
-              ? 'border-destructive focus-visible:ring-destructive/50'
+              ? 'border-destructive focus-visible:ring-destructive'
               : success
-                ? 'border-green-500 focus-visible:ring-green-500/50'
+                ? 'border-emerald-500 focus-visible:ring-emerald-500'
                 : 'border-input',
             className
           )}
@@ -115,9 +115,7 @@ export function Input({
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1">
           {error && <p className="text-xs text-destructive">{error}</p>}
-          {success && !error && (
-            <p className="text-xs text-green-600 dark:text-green-400">{success}</p>
-          )}
+          {success && !error && <p className="text-xs text-emerald-400">{success}</p>}
           {hint && !error && !success && <p className="text-xs text-muted-foreground">{hint}</p>}
         </div>
         {showCount && maxLength && (

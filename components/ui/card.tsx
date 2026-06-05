@@ -1,6 +1,6 @@
 /**
- * Card components — enhanced with variant prop, highlighted accent,
- * micro-lift interaction, and CardStat sub-component for KPIs.
+ * Card components — Premium dark surfaces.
+ * Clean hierarchy, minimal borders, executive-quality KPIs.
  */
 
 'use client';
@@ -21,9 +21,9 @@ interface CardProps {
 }
 
 const variantClasses: Record<CardVariant, string> = {
-  default: 'rounded-xl border border-border/60 bg-card/95 shadow-sm backdrop-blur-sm',
-  elevated: 'rounded-xl border border-border/80 bg-card/95 shadow-lg backdrop-blur-md',
-  flat: 'rounded-xl bg-muted/30 border border-transparent',
+  default: 'rounded-xl border border-border/40 bg-card shadow-sm',
+  elevated: 'rounded-xl border border-border/50 bg-card shadow-lg shadow-black/20',
+  flat: 'rounded-xl bg-muted/20 border border-border/20',
   outlined: 'rounded-xl border border-border bg-transparent',
 };
 
@@ -41,8 +41,8 @@ export function Card({
         variantClasses[variant],
         'text-card-foreground',
         interactive &&
-          'cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-px active:scale-[0.99]',
-        highlighted && `border-l-4 ${highlightColor}`,
+          'cursor-pointer transition-all duration-200 hover:border-border/70 hover:shadow-md hover:-translate-y-px active:scale-[0.99]',
+        highlighted && `border-l-2 ${highlightColor}`,
         className
       )}
     >
@@ -56,11 +56,7 @@ interface CardHeaderProps {
   className?: string;
 }
 export function CardHeader({ children, className }: CardHeaderProps) {
-  return (
-    <div className={cn('flex flex-col space-y-1.5 border-b border-border p-6', className)}>
-      {children}
-    </div>
-  );
+  return <div className={cn('flex flex-col space-y-1 px-5 pt-5 pb-4', className)}>{children}</div>;
 }
 
 interface CardTitleProps {
@@ -69,7 +65,7 @@ interface CardTitleProps {
 }
 export function CardTitle({ children, className }: CardTitleProps) {
   return (
-    <h2 className={cn('text-lg font-semibold leading-none tracking-tight', className)}>
+    <h2 className={cn('text-[15px] font-semibold leading-none tracking-tight', className)}>
       {children}
     </h2>
   );
@@ -80,7 +76,7 @@ interface CardDescriptionProps {
   className?: string;
 }
 export function CardDescription({ children, className }: CardDescriptionProps) {
-  return <p className={cn('text-sm text-muted-foreground', className)}>{children}</p>;
+  return <p className={cn('text-[13px] text-muted-foreground mt-0.5', className)}>{children}</p>;
 }
 
 interface CardContentProps {
@@ -88,7 +84,7 @@ interface CardContentProps {
   className?: string;
 }
 export function CardContent({ children, className }: CardContentProps) {
-  return <div className={cn('p-6 pt-4', className)}>{children}</div>;
+  return <div className={cn('px-5 pb-5', className)}>{children}</div>;
 }
 
 interface CardFooterProps {
@@ -97,14 +93,14 @@ interface CardFooterProps {
 }
 export function CardFooter({ children, className }: CardFooterProps) {
   return (
-    <div className={cn('flex items-center border-t border-border p-6 pt-4', className)}>
+    <div className={cn('flex items-center border-t border-border/30 px-5 py-3.5', className)}>
       {children}
     </div>
   );
 }
 
 /**
- * CardStat — KPI metric display card sub-component
+ * CardStat — Executive KPI metric card
  */
 interface CardStatProps {
   label: string;
@@ -121,28 +117,26 @@ export function CardStat({ label, value, change, icon, className }: CardStatProp
   return (
     <div
       className={cn(
-        'rounded-xl border border-border/50 bg-card/80 backdrop-blur-sm p-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300',
+        'rounded-xl border border-border/40 bg-card p-5 space-y-3 shadow-sm hover:border-border/70 hover:shadow-md transition-all duration-200',
         className
       )}
     >
       <div className="flex items-center justify-between">
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
           {label}
         </p>
         {icon && (
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
             {icon}
           </div>
         )}
       </div>
-      <p className="text-3xl font-bold tracking-tight text-foreground">{value}</p>
+      <p className="text-[28px] font-bold tracking-tight text-foreground leading-none">{value}</p>
       {change && (
         <p
           className={cn(
-            'text-xs font-medium',
-            change.positive
-              ? 'text-green-600 dark:text-green-400'
-              : 'text-red-600 dark:text-red-400'
+            'text-xs font-semibold',
+            change.positive ? 'text-emerald-400' : 'text-red-400'
           )}
         >
           {change.positive ? '↑' : '↓'} {change.value}

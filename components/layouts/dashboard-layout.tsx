@@ -29,12 +29,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       <Sidebar />
       <main
         className={cn(
-          'min-h-screen pt-16 transition-[padding-left] duration-300 ease-out',
-          isCollapsed ? 'md:pl-20' : 'md:pl-[280px]'
+          'min-h-screen pt-14 transition-[padding-left] duration-300 ease-out',
+          isCollapsed ? 'md:pl-16' : 'md:pl-64'
         )}
       >
-        <div className="border-b border-border/70 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/70">
-          <PageContainer className="py-3">
+        <div className="border-b border-border/40 bg-background/90 backdrop-blur-md">
+          <PageContainer className="py-2.5">
             <Breadcrumb items={breadcrumbs} />
           </PageContainer>
         </div>

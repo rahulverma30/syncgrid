@@ -69,7 +69,7 @@ export function Modal({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-background/80 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/70"
             onClick={onClose}
           />
 
@@ -82,7 +82,7 @@ export function Modal({
             role="dialog"
             aria-modal="true"
             className={cn(
-              'relative z-10 w-full rounded-xl border border-border bg-card p-6 shadow-xl flex flex-col max-h-[90vh] overflow-hidden text-left',
+              'relative z-10 w-full rounded-xl border border-border/50 bg-card p-6 shadow-2xl shadow-black/50 flex flex-col max-h-[90vh] overflow-hidden text-left',
               sizeClasses[size],
               className
             )}

@@ -24,7 +24,7 @@ export function Textarea({ className, label, error, hint, ...props }: TextareaPr
       )}
       <textarea
         className={cn(
-          'flex min-h-[80px] w-full rounded-lg border border-input bg-background/50 px-3 py-2 text-sm text-foreground shadow-sm transition-all placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:border-ring hover:border-input/80 hover:bg-background disabled:cursor-not-allowed disabled:opacity-50 resize-none',
+          'flex min-h-[80px] w-full rounded-lg border border-input bg-muted/40 px-3 py-2 text-sm text-foreground transition-all duration-150 placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-ring hover:border-border hover:bg-muted/60 disabled:cursor-not-allowed disabled:opacity-50 resize-none',
           error && 'border-destructive focus-visible:ring-destructive',
           className
         )}
