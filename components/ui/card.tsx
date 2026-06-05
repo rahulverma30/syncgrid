@@ -21,10 +21,10 @@ interface CardProps {
 }
 
 const variantClasses: Record<CardVariant, string> = {
-  default: 'rounded-xl border border-border bg-card shadow-sm',
-  elevated: 'rounded-xl border border-border bg-card shadow-md',
-  flat: 'rounded-xl bg-muted/50',
-  outlined: 'rounded-xl border-2 border-border bg-transparent',
+  default: 'rounded-xl border border-border/60 bg-card/95 shadow-sm backdrop-blur-sm',
+  elevated: 'rounded-xl border border-border/80 bg-card/95 shadow-lg backdrop-blur-md',
+  flat: 'rounded-xl bg-muted/30 border border-transparent',
+  outlined: 'rounded-xl border border-border bg-transparent',
 };
 
 export function Card({
@@ -119,7 +119,12 @@ interface CardStatProps {
 
 export function CardStat({ label, value, change, icon, className }: CardStatProps) {
   return (
-    <div className={cn('rounded-xl border border-border bg-card p-5 space-y-3', className)}>
+    <div
+      className={cn(
+        'rounded-xl border border-border/50 bg-card/80 backdrop-blur-sm p-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300',
+        className
+      )}
+    >
       <div className="flex items-center justify-between">
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           {label}
