@@ -45,7 +45,6 @@ interface Contact {
   communicationPref: string;
   companyName: string;
   companyId: string;
-  companyId: string;
   createdAt: string;
   source: 'client' | 'crm';
 }
