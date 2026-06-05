@@ -10,7 +10,7 @@ import {
   X,
   Check,
 } from 'lucide-react';
-import { Button, Input, Select } from '@/components/ui';
+import { Button, Input, Select, Modal } from '@/components/ui';
 import { toast } from 'sonner';
 
 interface BudgetPlannerProps {
@@ -221,157 +221,123 @@ export const BudgetPlanner: React.FC<BudgetPlannerProps> = ({ budgets, onSaveBud
       </div>
 
       {/* Set Allocation Limit Dialog */}
-      <AnimatePresence>
-        {budgetModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-card border border-border rounded-xl p-6 w-full max-w-md shadow-2xl space-y-4"
-            >
-              <div className="flex justify-between items-center pb-2 border-b border-border/60">
-                <h3 className="text-sm font-bold uppercase tracking-wider">
-                  {selectedBudget ? 'Adjust spend cap limit' : 'Set allocation spent limit'}
-                </h3>
-                <button
-                  onClick={() => setBudgetModalOpen(false)}
-                  className="p-1 hover:bg-accent/40 rounded text-muted-foreground"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-
-              <form onSubmit={handleFormSubmit} className="space-y-4">
-                <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
-                    Budget Name *
-                  </label>
-                  <Input
-                    required
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="e.g. Q2 Global Marketing Campaign"
-                    className="h-9 text-xs"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <Select
-                    label="Budget Type"
-                    value={type}
-                    onChange={(val) => setType(val)}
-                    options={[
-                      { value: 'operational', label: 'Operational Overhead' },
-                      { value: 'project', label: 'Project Schedule Allocation' },
-                      { value: 'department', label: 'Department Fund' },
-                    ]}
-                  />
-                </div>
-
-                {type === 'project' && (
-                  <div className="space-y-1">
-                    <Select
-                      label="Target Project *"
-                      value={selectedProject}
-                      onChange={(val) => setSelectedProject(val)}
-                      placeholder="Select Project..."
-                      options={projects.map((p) => ({
-                        value: p._id,
-                        label: p.name,
-                      }))}
-                    />
-                  </div>
-                )}
-
-                <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
-                    Allocation Cap ($ USD) *
-                  </label>
-                  <Input
-                    type="number"
-                    required
-                    min={1}
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    placeholder="0.00"
-                    className="h-9 text-xs"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
-                      Start Date *
-                    </label>
-                    <Input
-                      type="date"
-                      required
-                      value={startDate}
-                      onChange={(e) => setStartDate(e.target.value)}
-                      className="h-9 text-xs"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
-                      End Date *
-                    </label>
-                    <Input
-                      type="date"
-                      required
-                      value={endDate}
-                      onChange={(e) => setEndDate(e.target.value)}
-                      className="h-9 text-xs"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
-                    Spent Threshold Alarm limit (%)
-                  </label>
-                  <Input
-                    type="number"
-                    min={10}
-                    max={100}
-                    value={threshold}
-                    onChange={(e) => setThreshold(e.target.value)}
-                    placeholder="80"
-                    className="h-9 text-xs"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
-                    Allocation Notes
-                  </label>
-                  <Input
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Short summary detail"
-                    className="h-9 text-xs"
-                  />
-                </div>
-
-                <div className="flex gap-2 justify-end pt-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setBudgetModalOpen(false)}
-                    className="h-9 text-xs cursor-pointer"
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit" size="sm" className="h-9 text-xs cursor-pointer">
-                    Adjust Cap
-                  </Button>
-                </div>
-              </form>
-            </motion.div>
+      <Modal
+        isOpen={budgetModalOpen}
+        onClose={() => setBudgetModalOpen(false)}
+        title={selectedBudget ? 'Adjust spend cap limit' : 'Set allocation spent limit'}
+        size="md"
+      >
+        <form onSubmit={handleFormSubmit} className="space-y-4 pt-2">
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-foreground">
+              Budget Name <span className="text-destructive">*</span>
+            </label>
+            <Input
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Q2 Global Marketing Campaign"
+            />
           </div>
-        )}
-      </AnimatePresence>
+
+          <div className="space-y-1.5">
+            <Select
+              label="Budget Type"
+              value={type}
+              onChange={(val) => setType(val)}
+              options={[
+                { value: 'operational', label: 'Operational Overhead' },
+                { value: 'project', label: 'Project Schedule Allocation' },
+                { value: 'department', label: 'Department Fund' },
+              ]}
+            />
+          </div>
+
+          {type === 'project' && (
+            <div className="space-y-1.5">
+              <Select
+                label="Target Project *"
+                value={selectedProject}
+                onChange={(val) => setSelectedProject(val)}
+                placeholder="Select Project..."
+                options={projects.map((p) => ({
+                  value: p._id,
+                  label: p.name,
+                }))}
+              />
+            </div>
+          )}
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-foreground">
+              Allocation Cap ($ USD) <span className="text-destructive">*</span>
+            </label>
+            <Input
+              type="number"
+              required
+              min={1}
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="0.00"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-foreground">
+                Start Date <span className="text-destructive">*</span>
+              </label>
+              <Input
+                type="date"
+                required
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-foreground">
+                End Date <span className="text-destructive">*</span>
+              </label>
+              <Input
+                type="date"
+                required
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-foreground">
+              Spent Threshold Alarm limit (%)
+            </label>
+            <Input
+              type="number"
+              min={10}
+              max={100}
+              value={threshold}
+              onChange={(e) => setThreshold(e.target.value)}
+              placeholder="80"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-foreground">Allocation Notes</label>
+            <Input
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Short summary detail"
+            />
+          </div>
+
+          <div className="flex gap-2 justify-end pt-4">
+            <Button type="button" variant="outline" onClick={() => setBudgetModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit">Adjust Cap</Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };

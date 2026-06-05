@@ -31,14 +31,21 @@ export function Checkbox({ label, onChange, checked, className, ...props }: Chec
         />
         <div
           className={cn(
-            'h-5 w-5 rounded-md border border-input flex items-center justify-center transition-colors',
-            checked ? 'bg-primary border-primary' : 'bg-background'
+            'h-4 w-4 rounded-[4px] border border-input flex items-center justify-center transition-all duration-200 shadow-sm',
+            checked
+              ? 'bg-primary border-primary text-primary-foreground'
+              : 'bg-background hover:bg-accent/40',
+            className
           )}
         >
-          {checked && <Check className="h-3 w-3 text-primary-foreground" />}
+          {checked && <Check className="h-3 w-3" />}
         </div>
       </div>
-      {label && <label className="text-sm font-medium cursor-pointer select-none">{label}</label>}
+      {label && (
+        <label className="text-xs font-medium text-foreground cursor-pointer select-none leading-none">
+          {label}
+        </label>
+      )}
     </div>
   );
 }

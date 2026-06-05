@@ -56,7 +56,7 @@ export function Input({
       {label && (
         <label
           htmlFor={inputId}
-          className="text-sm font-medium text-foreground flex items-center gap-1"
+          className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1 mb-0.5 select-none"
         >
           {label}
           {required && (
@@ -78,10 +78,11 @@ export function Input({
           maxLength={maxLength}
           value={value}
           className={cn(
-            'flex w-full rounded-lg border bg-background py-2 text-foreground',
-            'placeholder:text-muted-foreground',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
-            'disabled:cursor-not-allowed disabled:opacity-50 transition-shadow',
+            'flex w-full rounded-lg border border-input bg-background/50 text-foreground shadow-sm transition-all',
+            'placeholder:text-muted-foreground/60',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:border-ring',
+            'hover:border-input/80 hover:bg-background',
+            'disabled:cursor-not-allowed disabled:opacity-50',
             sizeClasses[inputSize],
             icon && iconPosition === 'left' && 'pl-10',
             icon && iconPosition === 'right' && 'pr-10',

@@ -43,25 +43,23 @@ const ClientRow: React.FC<ClientRowProps> = React.memo(
     return (
       <tr
         onClick={() => setSelectedClient(acc)}
-        className={`hover:bg-muted/15 cursor-pointer transition-colors duration-200 ${
-          isSelected ? 'bg-primary/5 hover:bg-primary/10' : ''
-        }`}
+        className={`cursor-pointer group ${isSelected ? 'table-row-selected table-row' : 'table-row'}`}
       >
-        <td className="py-3.5 px-4" onClick={(e) => e.stopPropagation()}>
+        <td className="table-body-cell" onClick={(e) => e.stopPropagation()}>
           <input
             type="checkbox"
             checked={isSelected}
             onChange={(e) => handleRowSelect(acc._id, e.target.checked)}
-            className="rounded border-border focus:ring-ring"
+            className="rounded border-border focus:ring-ring accent-primary"
           />
         </td>
         {columnVisibility['Client Company'] && (
-          <td className="py-3.5 px-4 font-bold text-foreground hover:text-primary transition-colors">
+          <td className="table-body-cell font-bold text-foreground hover:text-primary transition-colors">
             {acc.name}
           </td>
         )}
         {columnVisibility['Classification'] && (
-          <td className="py-3.5 px-4">
+          <td className="table-body-cell">
             <span
               className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[9px] font-black uppercase tracking-wider border select-none"
               style={{
@@ -90,15 +88,15 @@ const ClientRow: React.FC<ClientRowProps> = React.memo(
           </td>
         )}
         {columnVisibility['Industry'] && (
-          <td className="py-3.5 px-4 uppercase text-[9px] font-bold text-muted-foreground font-mono">
+          <td className="table-body-cell uppercase text-[10px] font-bold text-muted-foreground font-mono">
             {acc.industry}
           </td>
         )}
         {columnVisibility['Account Owner'] && (
-          <td className="py-3.5 px-4 font-semibold text-foreground/80">{acc.accountManager}</td>
+          <td className="table-body-cell font-semibold text-foreground/80">{acc.accountManager}</td>
         )}
         {columnVisibility['Health Index'] && (
-          <td className="py-3.5 px-4 font-mono font-bold">
+          <td className="table-body-cell font-mono font-bold">
             <span
               className={
                 acc.healthScore >= 90
@@ -113,25 +111,25 @@ const ClientRow: React.FC<ClientRowProps> = React.memo(
           </td>
         )}
         {columnVisibility['ARR Yield'] && (
-          <td className="py-3.5 px-4 font-mono font-bold text-primary">
+          <td className="table-body-cell font-mono font-bold text-primary">
             ${acc.revenueContribution.toLocaleString()}
           </td>
         )}
         {columnVisibility['Tags'] && (
-          <td className="py-3.5 px-4">
+          <td className="table-body-cell">
             <div className="flex flex-wrap gap-1">
               {acc.tags?.slice(0, 2).map((t) => (
                 <TagPill key={t} tag={t} />
               ))}
               {acc.tags?.length > 2 && (
-                <span className="text-[9px] text-muted-foreground font-bold px-1 select-none">
+                <span className="text-[10px] text-muted-foreground font-bold px-1 select-none">
                   +{acc.tags.length - 2}
                 </span>
               )}
             </div>
           </td>
         )}
-        <td className="py-3.5 px-4 text-right" onClick={(e) => e.stopPropagation()}>
+        <td className="table-body-cell text-right" onClick={(e) => e.stopPropagation()}>
           <div className="flex justify-end gap-1.5">
             {acc.isArchived ? (
               <Button
@@ -577,10 +575,10 @@ export const ClientTable: React.FC = () => {
 
       {/* RENDER MODE 1: DESKTOP TABLE VIEW */}
       <div className="hidden sm:block overflow-x-auto rounded-xl border border-border/80 bg-card/25 backdrop-blur-md">
-        <table className="w-full text-xs text-left">
-          <thead className="bg-muted/30 border-b border-border/80 text-muted-foreground font-bold select-none uppercase tracking-wider text-[10px]">
-            <tr>
-              <th className="py-2.5 px-4 w-10">
+        <table className="table-container">
+          <thead>
+            <tr className="table-header-row">
+              <th className="table-header-cell w-10">
                 <input
                   type="checkbox"
                   checked={
@@ -588,13 +586,13 @@ export const ClientTable: React.FC = () => {
                     paginatedClients.every((c) => selectedRows.includes(c._id))
                   }
                   onChange={(e) => toggleSelectAll(e.target.checked)}
-                  className="rounded border-border focus:ring-ring"
+                  className="rounded border-border focus:ring-ring accent-primary"
                 />
               </th>
               {columnVisibility['Client Company'] && (
                 <th
                   onClick={() => setSort('name')}
-                  className="py-2.5 px-4 cursor-pointer hover:text-foreground transition-colors"
+                  className="table-header-cell cursor-pointer hover:text-foreground transition-colors"
                 >
                   Client Company {renderSortIndicator('name')}
                 </th>
@@ -602,7 +600,7 @@ export const ClientTable: React.FC = () => {
               {columnVisibility['Classification'] && (
                 <th
                   onClick={() => setSort('clientType')}
-                  className="py-2.5 px-4 cursor-pointer hover:text-foreground transition-colors"
+                  className="table-header-cell cursor-pointer hover:text-foreground transition-colors"
                 >
                   Classification {renderSortIndicator('clientType')}
                 </th>
@@ -610,7 +608,7 @@ export const ClientTable: React.FC = () => {
               {columnVisibility['Industry'] && (
                 <th
                   onClick={() => setSort('industry')}
-                  className="py-2.5 px-4 cursor-pointer hover:text-foreground transition-colors"
+                  className="table-header-cell cursor-pointer hover:text-foreground transition-colors"
                 >
                   Industry {renderSortIndicator('industry')}
                 </th>
@@ -618,7 +616,7 @@ export const ClientTable: React.FC = () => {
               {columnVisibility['Account Owner'] && (
                 <th
                   onClick={() => setSort('accountManager')}
-                  className="py-2.5 px-4 cursor-pointer hover:text-foreground transition-colors"
+                  className="table-header-cell cursor-pointer hover:text-foreground transition-colors"
                 >
                   Account Owner {renderSortIndicator('accountManager')}
                 </th>
@@ -626,7 +624,7 @@ export const ClientTable: React.FC = () => {
               {columnVisibility['Health Index'] && (
                 <th
                   onClick={() => setSort('healthScore')}
-                  className="py-2.5 px-4 cursor-pointer hover:text-foreground transition-colors"
+                  className="table-header-cell cursor-pointer hover:text-foreground transition-colors"
                 >
                   Health Index {renderSortIndicator('healthScore')}
                 </th>
@@ -634,13 +632,13 @@ export const ClientTable: React.FC = () => {
               {columnVisibility['ARR Yield'] && (
                 <th
                   onClick={() => setSort('revenueContribution')}
-                  className="py-2.5 px-4 cursor-pointer hover:text-foreground transition-colors"
+                  className="table-header-cell cursor-pointer hover:text-foreground transition-colors"
                 >
                   ARR Yield {renderSortIndicator('revenueContribution')}
                 </th>
               )}
-              {columnVisibility['Tags'] && <th className="py-2.5 px-4">Tags</th>}
-              <th className="py-2.5 px-4 text-right">Actions</th>
+              {columnVisibility['Tags'] && <th className="table-header-cell">Tags</th>}
+              <th className="table-header-cell text-right w-16">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border/40">

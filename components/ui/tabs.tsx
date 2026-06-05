@@ -40,10 +40,10 @@ export function Tabs({ tabs, defaultTab, onTabChange, className }: TabsProps) {
             onClick={() => handleTabChange(tab.id)}
             disabled={tab.disabled}
             className={cn(
-              'flex items-center gap-2 border-b-2 px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed',
+              'flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-semibold transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed outline-none focus-visible:ring-2 focus-visible:ring-ring/50 rounded-t-md',
               activeTab === tab.id
                 ? 'border-primary text-primary'
-                : 'border-transparent text-muted-foreground hover:text-foreground'
+                : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-accent/40'
             )}
           >
             {tab.icon}

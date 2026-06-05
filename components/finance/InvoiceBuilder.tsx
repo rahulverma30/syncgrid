@@ -274,16 +274,16 @@ export const InvoiceBuilder: React.FC<InvoiceBuilderProps> = ({ onClose, onSubmi
           </div>
 
           <div className="border border-border/60 rounded-lg overflow-hidden">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-muted/10 border-b border-border/40 text-[9px] uppercase font-bold tracking-wider text-muted-foreground">
-                <tr>
-                  <th className="p-3">Item Description</th>
-                  <th className="p-3 w-16 text-center">Qty</th>
-                  <th className="p-3 w-28">Unit Price</th>
-                  <th className="p-3 w-20">Tax (%)</th>
-                  <th className="p-3 w-24">Discount</th>
-                  <th className="p-3 w-28 text-right">Line Total</th>
-                  <th className="p-3 w-12"></th>
+            <table className="table-container">
+              <thead>
+                <tr className="table-header-row">
+                  <th className="table-header-cell">Item Description</th>
+                  <th className="table-header-cell w-16 text-center">Qty</th>
+                  <th className="table-header-cell w-28">Unit Price</th>
+                  <th className="table-header-cell w-20">Tax (%)</th>
+                  <th className="table-header-cell w-24">Discount</th>
+                  <th className="table-header-cell w-28 text-right">Line Total</th>
+                  <th className="table-header-cell w-12"></th>
                 </tr>
               </thead>
               <tbody>
@@ -294,8 +294,8 @@ export const InvoiceBuilder: React.FC<InvoiceBuilderProps> = ({ onClose, onSubmi
                     item.discountAmount;
 
                   return (
-                    <tr key={idx} className="border-b border-border/30">
-                      <td className="p-2">
+                    <tr key={idx} className="table-row">
+                      <td className="table-body-cell">
                         <Input
                           required
                           value={item.description}
@@ -304,7 +304,7 @@ export const InvoiceBuilder: React.FC<InvoiceBuilderProps> = ({ onClose, onSubmi
                           className="h-8 text-xs"
                         />
                       </td>
-                      <td className="p-2">
+                      <td className="table-body-cell">
                         <Input
                           type="number"
                           required
@@ -316,7 +316,7 @@ export const InvoiceBuilder: React.FC<InvoiceBuilderProps> = ({ onClose, onSubmi
                           className="h-8 text-xs text-center"
                         />
                       </td>
-                      <td className="p-2">
+                      <td className="table-body-cell">
                         <Input
                           type="number"
                           required
@@ -329,7 +329,7 @@ export const InvoiceBuilder: React.FC<InvoiceBuilderProps> = ({ onClose, onSubmi
                           className="h-8 text-xs"
                         />
                       </td>
-                      <td className="p-2">
+                      <td className="table-body-cell">
                         <Input
                           type="number"
                           required
@@ -340,7 +340,7 @@ export const InvoiceBuilder: React.FC<InvoiceBuilderProps> = ({ onClose, onSubmi
                           className="h-8 text-xs"
                         />
                       </td>
-                      <td className="p-2">
+                      <td className="table-body-cell">
                         <Input
                           type="number"
                           required
@@ -353,14 +353,14 @@ export const InvoiceBuilder: React.FC<InvoiceBuilderProps> = ({ onClose, onSubmi
                           className="h-8 text-xs"
                         />
                       </td>
-                      <td className="p-2 text-right font-bold text-foreground">
+                      <td className="table-body-cell text-right font-bold text-foreground">
                         {currency}{' '}
                         {lineTotal.toLocaleString(undefined, {
                           minimumFractionDigits: 2,
                           maximumFractionDigits: 2,
                         })}
                       </td>
-                      <td className="p-2 text-center">
+                      <td className="table-body-cell text-center">
                         <button
                           type="button"
                           disabled={lineItems.length === 1}

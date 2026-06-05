@@ -157,7 +157,7 @@ export const ProjectTable: React.FC = () => {
   const renderSortHeader = (label: string, column: keyof ProjectAccount | 'createdDate') => (
     <th
       onClick={() => setSort(column)}
-      className="px-3 py-2.5 text-left text-[9px] font-black text-muted-foreground uppercase tracking-wider cursor-pointer select-none hover:text-foreground transition-colors whitespace-nowrap"
+      className="table-header-cell cursor-pointer hover:text-foreground transition-colors whitespace-nowrap"
     >
       <span className="flex items-center gap-1">
         {label}
@@ -473,16 +473,16 @@ export const ProjectTable: React.FC = () => {
       </AnimatePresence>
 
       {/* Desktop Table */}
-      <div className="hidden md:block overflow-x-auto rounded-lg border border-border/60">
-        <table className="w-full border-collapse">
+      <div className="hidden md:block overflow-x-auto rounded-xl border border-border/60 bg-card/25 backdrop-blur-md">
+        <table className="table-container">
           <thead>
-            <tr className="border-b border-border/60 bg-card/30">
-              <th className="px-3 py-2.5 w-8">
+            <tr className="table-header-row">
+              <th className="table-header-cell w-10">
                 <input
                   type="checkbox"
                   checked={allSelected}
                   onChange={toggleSelectAll}
-                  className="accent-primary"
+                  className="accent-primary rounded border-border"
                   aria-label="Select all projects"
                 />
               </th>
@@ -493,14 +493,8 @@ export const ProjectTable: React.FC = () => {
               {columnVisibility['Health Score'] && renderSortHeader('Health', 'healthScore')}
               {columnVisibility['Budget'] && renderSortHeader('Budget', 'budget')}
               {columnVisibility['Deadline'] && renderSortHeader('Deadline', 'deadline')}
-              {columnVisibility['Tags'] && (
-                <th className="px-3 py-2.5 text-left text-[9px] font-black text-muted-foreground uppercase tracking-wider">
-                  Tags
-                </th>
-              )}
-              <th className="px-3 py-2.5 text-right text-[9px] font-black text-muted-foreground uppercase tracking-wider w-16">
-                Acts
-              </th>
+              {columnVisibility['Tags'] && <th className="table-header-cell">Tags</th>}
+              <th className="table-header-cell text-right w-16">Acts</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border/30">
@@ -514,10 +508,10 @@ export const ProjectTable: React.FC = () => {
             {paginatedProjects.map((project) => (
               <tr
                 key={project._id}
-                className="hover:bg-card/40 transition-colors cursor-pointer group"
+                className={`cursor-pointer group ${selectedRows.includes(project._id) ? 'table-row-selected table-row' : 'table-row'}`}
                 onClick={() => setSelectedProject(project)}
               >
-                <td className="px-3 py-2.5" onClick={(e) => e.stopPropagation()}>
+                <td className="table-body-cell" onClick={(e) => e.stopPropagation()}>
                   <input
                     type="checkbox"
                     checked={selectedRows.includes(project._id)}
@@ -528,45 +522,45 @@ export const ProjectTable: React.FC = () => {
                           : [...prev, project._id]
                       );
                     }}
-                    className="accent-primary"
+                    className="accent-primary rounded border-border"
                     aria-label={`Select ${project.name}`}
                   />
                 </td>
                 {columnVisibility['Project Name'] && (
-                  <td className="px-3 py-2.5">
+                  <td className="table-body-cell">
                     <div className="space-y-0.5">
-                      <p className="text-xs font-bold text-foreground truncate max-w-[200px]">
+                      <p className="font-bold text-foreground truncate max-w-[200px]">
                         {project.name}
                       </p>
-                      <p className="text-[9px] font-mono text-muted-foreground">{project.code}</p>
+                      <p className="text-[10px] font-mono text-muted-foreground">{project.code}</p>
                     </div>
                   </td>
                 )}
                 {columnVisibility['Status'] && (
-                  <td className="px-3 py-2.5">
+                  <td className="table-body-cell">
                     <span
-                      className={`inline-flex px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border select-none ${STATUS_COLORS[project.status] || ''}`}
+                      className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border select-none ${STATUS_COLORS[project.status] || ''}`}
                     >
                       {project.status}
                     </span>
                   </td>
                 )}
                 {columnVisibility['Priority'] && (
-                  <td className="px-3 py-2.5">
+                  <td className="table-body-cell">
                     <span
-                      className={`inline-flex px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border select-none ${PRIORITY_COLORS[project.priority] || ''}`}
+                      className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border select-none ${PRIORITY_COLORS[project.priority] || ''}`}
                     >
                       {project.priority}
                     </span>
                   </td>
                 )}
                 {columnVisibility['Project Manager'] && (
-                  <td className="px-3 py-2.5 text-xs text-foreground/80 truncate max-w-[120px]">
+                  <td className="table-body-cell text-foreground/80 truncate max-w-[120px]">
                     {project.projectManager || 'Unassigned'}
                   </td>
                 )}
                 {columnVisibility['Health Score'] && (
-                  <td className="px-3 py-2.5">
+                  <td className="table-body-cell">
                     <div className="flex items-center gap-1.5">
                       <div className="w-12 h-1.5 rounded-full bg-muted overflow-hidden">
                         <div
@@ -580,22 +574,24 @@ export const ProjectTable: React.FC = () => {
                           style={{ width: `${project.healthScore}%` }}
                         />
                       </div>
-                      <span className="text-[9px] font-mono font-bold">{project.healthScore}%</span>
+                      <span className="text-[10px] font-mono font-bold">
+                        {project.healthScore}%
+                      </span>
                     </div>
                   </td>
                 )}
                 {columnVisibility['Budget'] && (
-                  <td className="px-3 py-2.5 text-xs font-mono text-foreground/80">
+                  <td className="table-body-cell font-mono text-foreground/80">
                     ${(project.budget || 0).toLocaleString()}
                   </td>
                 )}
                 {columnVisibility['Deadline'] && (
-                  <td className="px-3 py-2.5 text-[10px] text-muted-foreground">
+                  <td className="table-body-cell text-[11px] text-muted-foreground">
                     {project.deadline ? new Date(project.deadline).toLocaleDateString() : '—'}
                   </td>
                 )}
                 {columnVisibility['Tags'] && (
-                  <td className="px-3 py-2.5">
+                  <td className="table-body-cell">
                     <div className="flex gap-1 flex-wrap">
                       {project.tags.slice(0, 2).map((tag) => (
                         <ProjectTagPill key={tag} tag={tag} />

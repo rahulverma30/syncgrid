@@ -13,7 +13,7 @@ import {
   ClipboardCheck,
   ArrowUpRight,
 } from 'lucide-react';
-import { Button, Input, Select } from '@/components/ui';
+import { Button, Input, Select, Modal } from '@/components/ui';
 import { toast } from 'sonner';
 
 interface ExpenseManagerProps {
@@ -169,17 +169,17 @@ export const ExpenseManager: React.FC<ExpenseManagerProps> = ({
 
       {/* Main Expenses listing Grid Table */}
       <div className="border border-border/80 rounded-xl overflow-hidden backdrop-blur-md">
-        <table className="w-full text-left text-xs border-collapse">
+        <table className="table-container">
           <thead>
-            <tr className="bg-muted/20 border-b border-border/60 text-[10px] uppercase font-bold tracking-wider text-muted-foreground select-none">
-              <th className="p-4">Expense ID</th>
-              <th className="p-4">Merchant / Vendor</th>
-              <th className="p-4">Employee Claimant</th>
-              <th className="p-4">Category</th>
-              <th className="p-4">Expense Date</th>
-              <th className="p-4">Amount</th>
-              <th className="p-4">Reimbursement</th>
-              <th className="p-4 text-right">Receipt / Review</th>
+            <tr className="table-header-row">
+              <th className="table-header-cell">Expense ID</th>
+              <th className="table-header-cell">Merchant / Vendor</th>
+              <th className="table-header-cell">Employee Claimant</th>
+              <th className="table-header-cell">Category</th>
+              <th className="table-header-cell">Expense Date</th>
+              <th className="table-header-cell">Amount</th>
+              <th className="table-header-cell">Reimbursement</th>
+              <th className="table-header-cell text-right">Receipt / Review</th>
             </tr>
           </thead>
           <tbody>
@@ -191,12 +191,9 @@ export const ExpenseManager: React.FC<ExpenseManagerProps> = ({
               </tr>
             ) : (
               filteredExpenses.map((exp) => (
-                <tr
-                  key={exp._id}
-                  className="border-b border-border/40 hover:bg-muted/10 transition-colors"
-                >
-                  <td className="p-4 font-bold text-foreground">{exp.expenseNumber}</td>
-                  <td className="p-4 font-semibold">
+                <tr key={exp._id} className="table-row">
+                  <td className="table-body-cell font-bold text-foreground">{exp.expenseNumber}</td>
+                  <td className="table-body-cell font-semibold">
                     <div className="flex flex-col">
                       <span>{exp.merchant}</span>
                       {exp.projectId && (
@@ -207,7 +204,7 @@ export const ExpenseManager: React.FC<ExpenseManagerProps> = ({
                       )}
                     </div>
                   </td>
-                  <td className="p-4 text-muted-foreground">
+                  <td className="table-body-cell text-muted-foreground">
                     {exp.employeeId ? (
                       <span>
                         {exp.employeeId?.firstName} {exp.employeeId?.lastName}
@@ -218,23 +215,23 @@ export const ExpenseManager: React.FC<ExpenseManagerProps> = ({
                       </span>
                     )}
                   </td>
-                  <td className="p-4">
+                  <td className="table-body-cell">
                     <span className="px-2 py-0.5 bg-muted/40 border border-border text-[9px] uppercase font-bold tracking-wider rounded-md">
                       {exp.category}
                     </span>
                   </td>
-                  <td className="p-4 text-muted-foreground">
+                  <td className="table-body-cell text-muted-foreground">
                     <div className="flex items-center gap-1.5">
                       <Calendar className="h-3.5 w-3.5 opacity-60" />
                       {new Date(exp.expenseDate).toLocaleDateString()}
                     </div>
                   </td>
-                  <td className="p-4 font-bold text-foreground">
+                  <td className="table-body-cell font-bold text-foreground">
                     {exp.currency}{' '}
                     {exp.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </td>
-                  <td className="p-4">{getStatusBadge(exp.reimbursementStatus)}</td>
-                  <td className="p-4 text-right">
+                  <td className="table-body-cell">{getStatusBadge(exp.reimbursementStatus)}</td>
+                  <td className="table-body-cell text-right">
                     {isFinance && exp.reimbursementStatus === 'pending' ? (
                       <button
                         onClick={() => handleOpenReview(exp)}
@@ -257,214 +254,164 @@ export const ExpenseManager: React.FC<ExpenseManagerProps> = ({
       </div>
 
       {/* Claim Submission Drawer Form Overlay */}
-      <AnimatePresence>
-        {claimDrawerOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-card border border-border rounded-xl p-6 w-full max-w-md shadow-2xl space-y-4"
-            >
-              <div className="flex justify-between items-center pb-2 border-b border-border/60">
-                <h3 className="text-sm font-bold uppercase tracking-wider">
-                  File Business Expense Claim
-                </h3>
-                <button
-                  onClick={() => setClaimDrawerOpen(false)}
-                  className="p-1 hover:bg-accent/40 rounded text-muted-foreground"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-
-              <form onSubmit={handleFormSubmit} className="space-y-4">
-                <div className="space-y-1">
-                  <Select
-                    label="Claim Category"
-                    value={category}
-                    onChange={(val) => setCategory(val)}
-                    options={[
-                      { value: 'travel', label: 'Travel & Flights' },
-                      { value: 'meals', label: 'Client Meals & Dining' },
-                      { value: 'software', label: 'Software Tools & SaaS' },
-                      { value: 'hardware', label: 'Hardware & Workstation' },
-                      { value: 'marketing', label: 'Marketing Outflows' },
-                      { value: 'utilities', label: 'Office Utilities' },
-                      { value: 'rent', label: 'Office Rent' },
-                      { value: 'consulting', label: 'Audit advisory consulting' },
-                      { value: 'other', label: 'Other Operations spend' },
-                    ]}
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
-                    Merchant / Vendor Name
-                  </label>
-                  <Input
-                    required
-                    value={merchant}
-                    onChange={(e) => setMerchant(e.target.value)}
-                    placeholder="e.g. AWS Charges, Delta Flights"
-                    className="h-10 text-xs"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <Select
-                    label="Linked Project (Optional)"
-                    value={selectedProject}
-                    onChange={(val) => setSelectedProject(val)}
-                    placeholder="No Linked Project..."
-                    options={projects.map((p) => ({
-                      value: p._id,
-                      label: p.name,
-                    }))}
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
-                    Total Payout Amount (USD)
-                  </label>
-                  <Input
-                    type="number"
-                    required
-                    min={0.01}
-                    step="0.01"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    placeholder="0.00"
-                    className="h-9 text-xs"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
-                    Short Description Notes
-                  </label>
-                  <Input
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="e.g. Flight to onsite client kickoff"
-                    className="h-9 text-xs"
-                  />
-                </div>
-
-                {/* Simulated file upload receipt */}
-                <div className="border border-dashed border-border/80 rounded-xl p-4 flex flex-col items-center justify-center space-y-2 bg-muted/5 select-none">
-                  <Upload className="h-5 w-5 text-muted-foreground/60" />
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                    Simulate Receipt Attachment
-                  </span>
-                  <span className="text-[9px] text-muted-foreground/80 font-semibold italic">
-                    Receipt_AcmeDelta.pdf (124 KB) automatically attached
-                  </span>
-                </div>
-
-                <div className="flex gap-2 justify-end pt-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setClaimDrawerOpen(false)}
-                    className="h-9 text-xs cursor-pointer"
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit" size="sm" className="h-9 text-xs cursor-pointer">
-                    File Claim
-                  </Button>
-                </div>
-              </form>
-            </motion.div>
+      <Modal
+        isOpen={claimDrawerOpen}
+        onClose={() => setClaimDrawerOpen(false)}
+        title="File Business Expense Claim"
+        size="md"
+      >
+        <form onSubmit={handleFormSubmit} className="space-y-4 pt-2">
+          <div className="space-y-1.5">
+            <Select
+              label="Claim Category"
+              value={category}
+              onChange={(val) => setCategory(val)}
+              options={[
+                { value: 'travel', label: 'Travel & Flights' },
+                { value: 'meals', label: 'Client Meals & Dining' },
+                { value: 'software', label: 'Software Tools & SaaS' },
+                { value: 'hardware', label: 'Hardware & Workstation' },
+                { value: 'marketing', label: 'Marketing Outflows' },
+                { value: 'utilities', label: 'Office Utilities' },
+                { value: 'rent', label: 'Office Rent' },
+                { value: 'consulting', label: 'Audit advisory consulting' },
+                { value: 'other', label: 'Other Operations spend' },
+              ]}
+            />
           </div>
-        )}
-      </AnimatePresence>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-foreground">
+              Merchant / Vendor Name <span className="text-destructive">*</span>
+            </label>
+            <Input
+              required
+              value={merchant}
+              onChange={(e) => setMerchant(e.target.value)}
+              placeholder="e.g. AWS Charges, Delta Flights"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Select
+              label="Linked Project (Optional)"
+              value={selectedProject}
+              onChange={(val) => setSelectedProject(val)}
+              placeholder="No Linked Project..."
+              options={projects.map((p) => ({
+                value: p._id,
+                label: p.name,
+              }))}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-foreground">
+              Total Payout Amount (USD) <span className="text-destructive">*</span>
+            </label>
+            <Input
+              type="number"
+              required
+              min={0.01}
+              step="0.01"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="0.00"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-foreground">Short Description Notes</label>
+            <Input
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="e.g. Flight to onsite client kickoff"
+            />
+          </div>
+
+          {/* Simulated file upload receipt */}
+          <div className="border border-dashed border-border/80 rounded-xl p-4 flex flex-col items-center justify-center space-y-2 bg-muted/5 select-none">
+            <Upload className="h-5 w-5 text-muted-foreground/60" />
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+              Simulate Receipt Attachment
+            </span>
+            <span className="text-[9px] text-muted-foreground/80 font-semibold italic">
+              Receipt_AcmeDelta.pdf (124 KB) automatically attached
+            </span>
+          </div>
+
+          <div className="flex gap-2 justify-end pt-4">
+            <Button type="button" variant="outline" onClick={() => setClaimDrawerOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit">File Claim</Button>
+          </div>
+        </form>
+      </Modal>
 
       {/* Resolve Review Manager Dialog */}
-      <AnimatePresence>
+      <Modal
+        isOpen={!!activeReviewClaim}
+        onClose={() => setActiveReviewClaim(null)}
+        title="Resolve Claim Review"
+        size="md"
+      >
         {activeReviewClaim && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-card border border-border rounded-xl p-6 w-full max-w-md shadow-2xl space-y-4"
-            >
-              <div className="flex justify-between items-center pb-2 border-b border-border/60">
-                <h3 className="text-sm font-bold uppercase tracking-wider">Resolve Claim Review</h3>
-                <button
-                  onClick={() => setActiveReviewClaim(null)}
-                  className="p-1 hover:bg-accent/40 rounded text-muted-foreground"
-                >
-                  <X className="h-4 w-4" />
-                </button>
+          <div className="space-y-4 pt-2">
+            <div className="bg-muted/30 p-4 rounded-xl border border-border text-sm space-y-3 select-none">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Claimant:</span>
+                <span className="font-semibold">
+                  {activeReviewClaim.employeeId?.firstName} {activeReviewClaim.employeeId?.lastName}
+                </span>
               </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Merchant:</span>
+                <span className="font-semibold">{activeReviewClaim.merchant}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Category:</span>
+                <span className="font-semibold capitalize text-primary">
+                  {activeReviewClaim.category}
+                </span>
+              </div>
+              <div className="flex justify-between pt-3 border-t border-border font-bold text-foreground">
+                <span>Claim Amount:</span>
+                <span>
+                  {activeReviewClaim.currency} {activeReviewClaim.amount.toLocaleString()}
+                </span>
+              </div>
+              {activeReviewClaim.notes && (
+                <div className="pt-2 text-xs text-muted-foreground leading-relaxed italic">
+                  Notes: &ldquo;{activeReviewClaim.notes}&rdquo;
+                </div>
+              )}
+            </div>
 
-              <div className="bg-muted/15 p-4 rounded-xl border border-border/60 text-xs space-y-2 select-none">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Claimant:</span>
-                  <span className="font-bold">
-                    {activeReviewClaim.employeeId?.firstName}{' '}
-                    {activeReviewClaim.employeeId?.lastName}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Merchant:</span>
-                  <span className="font-bold">{activeReviewClaim.merchant}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Category:</span>
-                  <span className="font-semibold uppercase tracking-wider text-primary">
-                    {activeReviewClaim.category}
-                  </span>
-                </div>
-                <div className="flex justify-between pt-1 border-t border-border/40 text-sm font-extrabold text-foreground">
-                  <span>Claim Amount:</span>
-                  <span>
-                    {activeReviewClaim.currency} {activeReviewClaim.amount.toLocaleString()}
-                  </span>
-                </div>
-                {activeReviewClaim.notes && (
-                  <div className="pt-1 text-[10px] text-muted-foreground font-semibold leading-relaxed">
-                    Notes: &ldquo;{activeReviewClaim.notes}&rdquo;
-                  </div>
-                )}
-              </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-foreground">
+                Approver Notes / Comments
+              </label>
+              <textarea
+                value={reviewComments}
+                onChange={(e) => setReviewComments(e.target.value)}
+                placeholder="Include clearance guidelines or audit feedback..."
+                className="w-full h-20 p-3 bg-background border border-input text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
 
-              <div className="space-y-1">
-                <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
-                  Approver Notes / Comments
-                </label>
-                <textarea
-                  value={reviewComments}
-                  onChange={(e) => setReviewComments(e.target.value)}
-                  placeholder="Include clearance guidelines or audit feedback..."
-                  className="w-full h-16 p-2 bg-background/40 border border-border text-xs rounded-md focus:outline-none"
-                />
-              </div>
-
-              <div className="flex gap-2 justify-end pt-2">
-                <button
-                  onClick={() => handleResolveReview('rejected')}
-                  className="px-4 py-2 border border-rose-500/40 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-bold rounded-lg text-xs uppercase tracking-wider transition-all cursor-pointer"
-                >
-                  Reject Claim
-                </button>
-                <button
-                  onClick={() => handleResolveReview('approved')}
-                  className="px-4 py-2 bg-primary hover:bg-primary/95 text-primary-foreground font-bold rounded-lg text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer"
-                >
-                  <ShieldCheck className="h-4 w-4" />
-                  Approve claim
-                </button>
-              </div>
-            </motion.div>
+            <div className="flex gap-2 justify-end pt-4">
+              <Button variant="destructive" onClick={() => handleResolveReview('rejected')}>
+                Reject Claim
+              </Button>
+              <Button onClick={() => handleResolveReview('approved')} className="gap-2">
+                <ShieldCheck className="h-4 w-4" />
+                Approve claim
+              </Button>
+            </div>
           </div>
         )}
-      </AnimatePresence>
+      </Modal>
     </div>
   );
 };

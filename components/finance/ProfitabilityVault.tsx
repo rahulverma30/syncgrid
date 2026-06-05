@@ -10,7 +10,7 @@ import {
   ShieldCheck,
   X,
 } from 'lucide-react';
-import { Button, Input } from '@/components/ui';
+import { Button, Input, Modal } from '@/components/ui';
 import { toast } from 'sonner';
 
 interface ProfitabilityVaultProps {
@@ -235,75 +235,50 @@ export const ProfitabilityVault: React.FC<ProfitabilityVaultProps> = ({ dashboar
       </div>
 
       {/* Adjust Labor Cost Rate Dialog */}
-      <AnimatePresence>
-        {costRatesOpen && selectedEmployee && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-card border border-border rounded-xl p-6 w-full max-w-sm shadow-2xl space-y-4"
-            >
-              <div className="flex justify-between items-center pb-2 border-b border-border/60">
-                <h3 className="text-sm font-bold uppercase tracking-wider">
-                  Adjust Labor Cost Rate
-                </h3>
-                <button
-                  onClick={() => setCostRatesOpen(false)}
-                  className="p-1 hover:bg-accent/40 rounded text-muted-foreground"
-                >
-                  <X className="h-4 w-4" />
-                </button>
+      <Modal
+        isOpen={costRatesOpen && !!selectedEmployee}
+        onClose={() => setCostRatesOpen(false)}
+        title="Adjust Labor Cost Rate"
+        size="sm"
+      >
+        {selectedEmployee && (
+          <form onSubmit={handleSaveRateSubmit} className="space-y-4 pt-2">
+            <div className="bg-muted/50 p-3 rounded-lg border border-border text-sm select-none">
+              <div className="flex justify-between font-medium">
+                <span className="text-muted-foreground">Resource Name:</span>
+                <span className="text-foreground">
+                  {selectedEmployee.firstName} {selectedEmployee.lastName}
+                </span>
               </div>
+              <div className="flex justify-between mt-1">
+                <span className="text-muted-foreground">Role Designation:</span>
+                <span className="text-foreground">{selectedEmployee.title}</span>
+              </div>
+            </div>
 
-              <form onSubmit={handleSaveRateSubmit} className="space-y-4">
-                <div className="bg-muted/15 p-3 rounded-xl border border-border/60 text-xs select-none">
-                  <div className="flex justify-between font-bold">
-                    <span className="text-muted-foreground">Resource Name:</span>
-                    <span className="text-foreground">
-                      {selectedEmployee.firstName} {selectedEmployee.lastName}
-                    </span>
-                  </div>
-                  <div className="flex justify-between font-semibold mt-1">
-                    <span className="text-muted-foreground">Role Designation:</span>
-                    <span className="text-muted-foreground">{selectedEmployee.title}</span>
-                  </div>
-                </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-foreground">
+                Hourly Labor rate ($ USD) <span className="text-destructive">*</span>
+              </label>
+              <Input
+                type="number"
+                required
+                min={1}
+                value={hourlyRateVal}
+                onChange={(e) => setHourlyRateVal(e.target.value)}
+                placeholder="45"
+              />
+            </div>
 
-                <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
-                    Hourly Labor rate ($ USD) *
-                  </label>
-                  <Input
-                    type="number"
-                    required
-                    min={1}
-                    value={hourlyRateVal}
-                    onChange={(e) => setHourlyRateVal(e.target.value)}
-                    placeholder="45"
-                    className="h-9 text-xs"
-                  />
-                </div>
-
-                <div className="flex gap-2 justify-end pt-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCostRatesOpen(false)}
-                    className="h-9 text-xs cursor-pointer"
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit" size="sm" className="h-9 text-xs cursor-pointer">
-                    Adjust Rating
-                  </Button>
-                </div>
-              </form>
-            </motion.div>
-          </div>
+            <div className="flex gap-2 justify-end pt-4">
+              <Button type="button" variant="outline" onClick={() => setCostRatesOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit">Save Rate</Button>
+            </div>
+          </form>
         )}
-      </AnimatePresence>
+      </Modal>
     </div>
   );
 };

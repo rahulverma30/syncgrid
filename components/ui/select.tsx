@@ -229,7 +229,10 @@ export function Select({
   return (
     <div className="flex flex-col gap-1.5 w-full relative" ref={containerRef}>
       {label && (
-        <label id={`${triggerId}-label`} className="text-sm font-medium text-foreground">
+        <label
+          id={`${triggerId}-label`}
+          className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-0.5 select-none"
+        >
           {label}
         </label>
       )}
@@ -251,9 +254,9 @@ export function Select({
           }}
           onKeyDown={handleKeyDown}
           className={cn(
-            'flex w-full items-center justify-between h-10 rounded-md border border-input bg-background px-3 py-4 text-sm text-foreground transition-all duration-150 hover:bg-accent/40 hover:border-input/80 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50',
+            'flex w-full items-center justify-between h-10 rounded-lg border border-input bg-background/50 px-3 py-2 text-sm text-foreground shadow-sm transition-all duration-150 hover:bg-background hover:border-input/80 focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-ring disabled:cursor-not-allowed disabled:opacity-50',
             error && 'border-destructive focus:ring-destructive focus:ring-offset-0',
-            isOpen && 'ring-2 ring-ring ring-offset-1 border-input',
+            isOpen && 'ring-2 ring-ring/50 border-ring',
             className
           )}
         >
@@ -288,7 +291,7 @@ export function Select({
                     left: coords.left,
                     width: coords.width,
                   }}
-                  className="z-[9999] rounded-md border border-border bg-popover text-popover-foreground shadow-lg p-1 max-h-[280px] overflow-hidden flex flex-col backdrop-blur-md bg-popover/95"
+                  className="z-[9999] rounded-xl border border-border/60 bg-popover/95 backdrop-blur-xl text-popover-foreground shadow-2xl p-1 max-h-[280px] overflow-hidden flex flex-col ring-1 ring-black/5 dark:ring-white/10"
                 >
                   {/* Search Box */}
                   {isSearchEnabled && (

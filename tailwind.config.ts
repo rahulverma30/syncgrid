@@ -66,8 +66,24 @@ const config: Config = {
         'glow-primary': '0 0 15px -3px hsl(var(--primary) / 0.4)',
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        mono: ['JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', 'monospace'],
+        sans: [
+          'var(--font-sans)',
+          'Geist',
+          'Inter',
+          'system-ui',
+          '-apple-system',
+          'BlinkMacSystemFont',
+          'Segoe UI',
+          'sans-serif',
+        ],
+        mono: [
+          'var(--font-mono)',
+          'JetBrains Mono',
+          'Fira Code',
+          'Cascadia Code',
+          'Consolas',
+          'monospace',
+        ],
       },
       keyframes: {
         'accordion-down': {

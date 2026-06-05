@@ -15,7 +15,7 @@ import {
   Clock,
   AlertCircle,
 } from 'lucide-react';
-import { Button, Input, Select } from '@/components/ui';
+import { Button, Input, Select, Modal } from '@/components/ui';
 
 interface InvoiceManagerProps {
   invoices: any[];
@@ -144,17 +144,17 @@ export const InvoiceManager: React.FC<InvoiceManagerProps> = ({
 
       {/* Invoice Grid Table */}
       <div className="border border-border/80 rounded-xl overflow-hidden backdrop-blur-md">
-        <table className="w-full text-left text-xs border-collapse">
+        <table className="table-container">
           <thead>
-            <tr className="bg-muted/20 border-b border-border/60 text-[10px] uppercase font-bold tracking-wider text-muted-foreground select-none">
-              <th className="p-4">Invoice #</th>
-              <th className="p-4">Customer Client</th>
-              <th className="p-4">Due Date</th>
-              <th className="p-4">Grand Total</th>
-              <th className="p-4">Paid Total</th>
-              <th className="p-4">Outstanding</th>
-              <th className="p-4">Status</th>
-              {isFinance && <th className="p-4 text-right">Actions</th>}
+            <tr className="table-header-row">
+              <th className="table-header-cell">Invoice #</th>
+              <th className="table-header-cell">Customer Client</th>
+              <th className="table-header-cell">Due Date</th>
+              <th className="table-header-cell">Grand Total</th>
+              <th className="table-header-cell">Paid Total</th>
+              <th className="table-header-cell">Outstanding</th>
+              <th className="table-header-cell">Status</th>
+              {isFinance && <th className="table-header-cell text-right">Actions</th>}
             </tr>
           </thead>
           <tbody>
@@ -166,17 +166,14 @@ export const InvoiceManager: React.FC<InvoiceManagerProps> = ({
               </tr>
             ) : (
               filteredInvoices.map((inv) => (
-                <tr
-                  key={inv._id}
-                  className="border-b border-border/40 hover:bg-muted/10 transition-colors"
-                >
-                  <td className="p-4 font-bold text-foreground">
+                <tr key={inv._id} className="table-row">
+                  <td className="table-body-cell font-bold text-foreground">
                     <span className="flex items-center gap-1.5">
                       <FileText className="h-3.5 w-3.5 text-muted-foreground/60" />
                       {inv.invoiceNumber}
                     </span>
                   </td>
-                  <td className="p-4 font-semibold">
+                  <td className="table-body-cell font-semibold">
                     <div className="flex flex-col">
                       <span>{inv.clientId?.name}</span>
                       <span className="text-[10px] text-muted-foreground font-normal">
@@ -184,7 +181,7 @@ export const InvoiceManager: React.FC<InvoiceManagerProps> = ({
                       </span>
                     </div>
                   </td>
-                  <td className="p-4 text-muted-foreground">
+                  <td className="table-body-cell text-muted-foreground">
                     <div className="flex items-center gap-1.5">
                       <Calendar className="h-3.5 w-3.5 opacity-60" />
                       {new Date(inv.dueDate).toLocaleDateString(undefined, {
@@ -194,21 +191,21 @@ export const InvoiceManager: React.FC<InvoiceManagerProps> = ({
                       })}
                     </div>
                   </td>
-                  <td className="p-4 font-bold text-foreground">
+                  <td className="table-body-cell font-bold text-foreground">
                     {inv.currency}{' '}
                     {inv.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </td>
-                  <td className="p-4 font-medium text-emerald-400">
+                  <td className="table-body-cell font-medium text-emerald-400">
                     {inv.currency}{' '}
                     {inv.paidAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </td>
-                  <td className="p-4 font-medium text-amber-500">
+                  <td className="table-body-cell font-medium text-amber-500">
                     {inv.currency}{' '}
                     {inv.outstandingAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </td>
-                  <td className="p-4">{getStatusBadge(inv.status)}</td>
+                  <td className="table-body-cell">{getStatusBadge(inv.status)}</td>
                   {isFinance && (
-                    <td className="p-4 text-right">
+                    <td className="table-body-cell text-right">
                       <div className="flex items-center justify-end gap-1.5">
                         {inv.status === 'draft' && (
                           <button
@@ -260,104 +257,78 @@ export const InvoiceManager: React.FC<InvoiceManagerProps> = ({
       </div>
 
       {/* Manual Payment overlays Dialog */}
-      <AnimatePresence>
-        {paymentModalOpen && selectedInvoice && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-card border border-border rounded-xl p-6 w-full max-w-md shadow-2xl space-y-4"
-            >
-              <div className="flex justify-between items-center pb-2 border-b border-border/60">
-                <h3 className="text-sm font-bold uppercase tracking-wider">
-                  Record Manual Payment
-                </h3>
-                <span className="text-xs font-bold text-primary">
-                  {selectedInvoice.invoiceNumber}
-                </span>
-              </div>
+      <Modal
+        isOpen={paymentModalOpen && !!selectedInvoice}
+        onClose={() => setPaymentModalOpen(false)}
+        title="Record Manual Payment"
+        description={selectedInvoice ? `Invoice ${selectedInvoice.invoiceNumber}` : ''}
+        size="md"
+      >
+        {selectedInvoice && (
+          <form onSubmit={handleSubmitPayment} className="space-y-4 pt-2">
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-foreground">
+                Total Amount Due ({selectedInvoice.currency}){' '}
+                <span className="text-destructive">*</span>
+              </label>
+              <Input
+                type="number"
+                required
+                value={payAmount}
+                onChange={(e) => setPayAmount(e.target.value)}
+                max={selectedInvoice.outstandingAmount}
+                min={0.01}
+                step="0.01"
+              />
+              <p className="text-[11px] text-muted-foreground font-medium mt-1">
+                Outstanding balance limit: {selectedInvoice.currency}{' '}
+                {selectedInvoice.outstandingAmount.toLocaleString()}
+              </p>
+            </div>
 
-              <form onSubmit={handleSubmitPayment} className="space-y-4">
-                <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
-                    Total Amount Due ({selectedInvoice.currency})
-                  </label>
-                  <Input
-                    type="number"
-                    required
-                    value={payAmount}
-                    onChange={(e) => setPayAmount(e.target.value)}
-                    max={selectedInvoice.outstandingAmount}
-                    min={0.01}
-                    step="0.01"
-                    className="h-9 text-xs"
-                  />
-                  <p className="text-[9px] text-muted-foreground font-semibold">
-                    Outstanding balance limit: {selectedInvoice.currency}{' '}
-                    {selectedInvoice.outstandingAmount.toLocaleString()}
-                  </p>
-                </div>
+            <div className="space-y-1.5">
+              <Select
+                label="Payment Gateway / Method"
+                value={payMethod}
+                onChange={(val) => setPayMethod(val)}
+                options={[
+                  { value: 'bank_transfer', label: 'Direct Bank Payout' },
+                  { value: 'stripe', label: 'Stripe Gateway' },
+                  { value: 'razorpay', label: 'Razorpay UPI' },
+                  { value: 'upi', label: 'UPI/QR Code' },
+                  { value: 'cash', label: 'Cash Ledger' },
+                  { value: 'manual', label: 'Manual Ledger Balance' },
+                ]}
+              />
+            </div>
 
-                <div className="space-y-1">
-                  <Select
-                    label="Payment Gateway / Method"
-                    value={payMethod}
-                    onChange={(val) => setPayMethod(val)}
-                    options={[
-                      { value: 'bank_transfer', label: 'Direct Bank Payout' },
-                      { value: 'stripe', label: 'Stripe Gateway' },
-                      { value: 'razorpay', label: 'Razorpay UPI' },
-                      { value: 'upi', label: 'UPI/QR Code' },
-                      { value: 'cash', label: 'Cash Ledger' },
-                      { value: 'manual', label: 'Manual Ledger Balance' },
-                    ]}
-                  />
-                </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-foreground">Clearing Ref Number</label>
+              <Input
+                value={payRef}
+                onChange={(e) => setPayRef(e.target.value)}
+                placeholder="e.g. wire ref or check serial"
+              />
+            </div>
 
-                <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
-                    Clearing Ref Number
-                  </label>
-                  <Input
-                    value={payRef}
-                    onChange={(e) => setPayRef(e.target.value)}
-                    placeholder="e.g. wire ref or check serial"
-                    className="h-9 text-xs"
-                  />
-                </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-foreground">Notes</label>
+              <Input
+                value={payNotes}
+                onChange={(e) => setPayNotes(e.target.value)}
+                placeholder="Transaction clearing notes"
+              />
+            </div>
 
-                <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
-                    Notes
-                  </label>
-                  <Input
-                    value={payNotes}
-                    onChange={(e) => setPayNotes(e.target.value)}
-                    placeholder="Transaction clearing notes"
-                    className="h-9 text-xs"
-                  />
-                </div>
-
-                <div className="flex gap-2 justify-end pt-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPaymentModalOpen(false)}
-                    className="h-9 text-xs cursor-pointer"
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit" size="sm" className="h-9 text-xs cursor-pointer">
-                    Clear Receipt
-                  </Button>
-                </div>
-              </form>
-            </motion.div>
-          </div>
+            <div className="flex gap-2 justify-end pt-4">
+              <Button type="button" variant="outline" onClick={() => setPaymentModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit">Clear Receipt</Button>
+            </div>
+          </form>
         )}
-      </AnimatePresence>
+      </Modal>
     </div>
   );
 };
