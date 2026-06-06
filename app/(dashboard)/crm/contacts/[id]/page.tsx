@@ -21,18 +21,13 @@ import {
   Plus,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useSession } from 'next-auth/react';
 
 interface Note {
-  id: string;
+  _id: string;
   content: string;
   createdAt: string;
-}
-
-interface Activity {
-  id: string;
-  title: string;
-  desc: string;
-  date: string;
+  createdByName?: string;
 }
 
 export default function ContactDetailsPage() {
@@ -40,6 +35,9 @@ export default function ContactDetailsPage() {
   const contactId = params?.id ? (Array.isArray(params.id) ? params.id[0] : params.id) : '';
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
+  const { data: session } = useSession();
+  const userName = session?.user?.name || 'You';
+
   const [isLoading, setIsLoading] = useState(true);
 
   // States
@@ -51,40 +49,8 @@ export default function ContactDetailsPage() {
   const [isPrimary, setIsPrimary] = useState(true);
   const [communicationPref, setCommunicationPref] = useState('slack');
 
-  const [notes, setNotes] = useState<Note[]>([
-    {
-      id: 'n1',
-      content: 'Requested a proposal update regarding the Custom ERP Dashboard.',
-      createdAt: 'Yesterday, 2:40 PM',
-    },
-    {
-      id: 'n2',
-      content: 'Prefers asynchronously talking on Slack over phone calls.',
-      createdAt: '3 days ago',
-    },
-  ]);
+  const [notes, setNotes] = useState<Note[]>([]);
   const [noteText, setNoteText] = useState('');
-
-  const [activities, setActivities] = useState<Activity[]>([
-    {
-      id: 'a1',
-      title: 'Zoom Telemetry Meeting Completed',
-      desc: 'Discussed AWS deployment architecture overrides.',
-      date: 'Today, 10:00 AM',
-    },
-    {
-      id: 'a2',
-      title: 'Contract Proposal Transmitted',
-      desc: 'Sent invoice draft and security checklists.',
-      date: 'Yesterday, 4:15 PM',
-    },
-    {
-      id: 'a3',
-      title: 'Stakeholder Created',
-      desc: 'Registered in client ERP directory.',
-      date: 'May 15, 2026',
-    },
-  ]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -93,8 +59,7 @@ export default function ContactDetailsPage() {
     const fetchContactDetails = async () => {
       setIsLoading(true);
       try {
-        // Try fetching from CRM Contacts first
-        let res = await fetch(`/api/protected/crm/contacts/${contactId}`);
+        let res = await fetch(`/api/protected/crm/contacts/${contactId}?t=${Date.now()}`);
         let d = await res.json();
 
         let foundContact = null;
@@ -105,7 +70,7 @@ export default function ContactDetailsPage() {
           companyNameStr = foundContact.accountId?.name || 'Unknown Account';
         } else {
           // If not found in CRM contacts, check Client embedded contacts
-          const clientsRes = await fetch('/api/protected/clients');
+          const clientsRes = await fetch(`/api/protected/clients?t=${Date.now()}`);
           const clientsData = await clientsRes.json();
           if (clientsData.success) {
             for (const client of clientsData.data) {
@@ -130,6 +95,19 @@ export default function ContactDetailsPage() {
           setCompanyName(companyNameStr);
           setIsPrimary(!!foundContact.isPrimary);
           setCommunicationPref(foundContact.communicationPref || 'email');
+
+          if (foundContact.notes && Array.isArray(foundContact.notes)) {
+            setNotes(
+              foundContact.notes
+                .map((n: any) => ({
+                  _id: n._id,
+                  content: n.content,
+                  createdAt: new Date(n.createdAt).toLocaleDateString(),
+                  createdByName: n.createdByName || 'CRM Agent',
+                }))
+                .reverse()
+            );
+          }
         } else {
           toast.error('Contact not found.');
         }
@@ -142,17 +120,41 @@ export default function ContactDetailsPage() {
     fetchContactDetails();
   }, [contactId]);
 
-  const handleAddNote = () => {
+  const handleAddNote = async () => {
     if (!noteText.trim()) return;
-    setNotes([{ id: `n${Date.now()}`, content: noteText, createdAt: 'Just now' }, ...notes]);
-    setNoteText('');
-    toast.success('Note attached to profile.');
+    try {
+      const res = await fetch(`/api/protected/crm/contacts/${contactId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newNote: noteText }),
+      });
+      const d = await res.json();
+      if (d.success) {
+        setNotes([
+          {
+            _id: Date.now().toString(),
+            content: noteText,
+            createdAt: 'Just now',
+            createdByName: userName,
+          },
+          ...notes,
+        ]);
+        setNoteText('');
+        toast.success('Note attached to profile.');
+      } else {
+        toast.error(d.message || 'Failed to add note.');
+      }
+    } catch {
+      toast.error('Network error.');
+    }
   };
 
   const handleSimulateCommunication = (channel: string) => {
-    toast.success(
-      `Action Triggered: Opening active B2B ${channel} channel for stakeholder ${name}.`
-    );
+    if (channel === 'Email') {
+      window.location.href = `mailto:${email}`;
+    } else if (channel === 'Phone') {
+      window.location.href = `tel:${phone}`;
+    }
   };
 
   if (!mounted) return null;
@@ -222,22 +224,13 @@ export default function ContactDetailsPage() {
               Email
             </Button>
             <Button
-              onClick={() => handleSimulateCommunication('Slack')}
+              onClick={() => handleSimulateCommunication('Phone')}
               variant="outline"
               size="sm"
               className="h-8 text-xs gap-1 hover:bg-accent/40"
             >
-              <MessageSquare className="h-3.5 w-3.5 text-blue-400" />
-              Slack
-            </Button>
-            <Button
-              onClick={() => handleSimulateCommunication('Zoom')}
-              variant="outline"
-              size="sm"
-              className="h-8 text-xs gap-1 hover:bg-accent/40"
-            >
-              <Video className="h-3.5 w-3.5 text-emerald-400" />
-              Zoom Video
+              <Phone className="h-3.5 w-3.5 text-blue-400" />
+              Phone Call
             </Button>
           </div>
         </div>
@@ -269,12 +262,12 @@ export default function ContactDetailsPage() {
               <div className="space-y-3 pt-2">
                 {notes.map((n) => (
                   <div
-                    key={n.id}
+                    key={n._id}
                     className="bg-background/20 p-3.5 rounded-xl border border-border/40 text-xs space-y-1"
                   >
                     <p className="text-slate-200 font-medium leading-relaxed">{n.content}</p>
                     <span className="text-[9px] text-slate-500 block">
-                      {n.createdAt} • by CRM Agent
+                      {n.createdAt} • logged by {n.createdByName}
                     </span>
                   </div>
                 ))}
@@ -282,24 +275,7 @@ export default function ContactDetailsPage() {
             </div>
           </Card>
 
-          {/* Activity Stream */}
-          <Card className="bg-card/40 border border-border/60 p-5 rounded-2xl text-left backdrop-blur-md">
-            <h2 className="text-sm font-bold text-white uppercase tracking-wider mb-4 flex items-center gap-2">
-              <Clock className="h-4 w-4 text-slate-400" />
-              Relationship Activity Stream
-            </h2>
-
-            <div className="space-y-4 relative pl-4 border-l border-border/60">
-              {activities.map((a) => (
-                <div key={a.id} className="relative space-y-1">
-                  <div className="absolute -left-[21px] top-1 h-2 w-2 rounded-full bg-primary ring-4 ring-slate-900" />
-                  <h4 className="text-xs font-bold text-white leading-none">{a.title}</h4>
-                  <p className="text-[11px] text-slate-400 leading-normal">{a.desc}</p>
-                  <span className="text-[9px] text-slate-500 block">{a.date}</span>
-                </div>
-              ))}
-            </div>
-          </Card>
+          {/* Removed Activity Stream */}
         </div>
 
         {/* Sidebar Info Panel */}

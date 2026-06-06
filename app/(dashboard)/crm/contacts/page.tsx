@@ -68,11 +68,11 @@ export default function CRMContactsPage() {
   const fetchContacts = async () => {
     setIsLoading(true);
     try {
-      const [clientsRes, crmRes] = await Promise.all([
-        fetch('/api/protected/clients'),
-        fetch('/api/protected/crm/contacts'),
-      ]);
-      const [clientsData, crmData] = await Promise.all([clientsRes.json(), crmRes.json()]);
+      const clientsRes = await fetch(`/api/protected/clients?t=${Date.now()}`);
+      const clientsData = await clientsRes.json();
+
+      const crmRes = await fetch(`/api/protected/crm/contacts?t=${Date.now()}`);
+      const crmData = await crmRes.json();
 
       const flatContacts: Contact[] = [];
 

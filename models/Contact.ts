@@ -11,7 +11,7 @@ const ContactSchema = new Schema(
     },
     accountId: {
       type: Schema.Types.ObjectId,
-      ref: 'Account',
+      ref: 'Client',
       index: true,
     },
     firstName: {
@@ -42,9 +42,13 @@ const ContactSchema = new Schema(
       type: Boolean,
       default: false,
     },
-    notes: {
-      type: String,
-    },
+    notes: [
+      {
+        content: { type: String, required: true },
+        createdByName: { type: String },
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
     ownerId: {
       type: Schema.Types.ObjectId,
       ref: 'User',

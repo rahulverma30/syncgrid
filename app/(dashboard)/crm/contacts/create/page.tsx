@@ -250,8 +250,6 @@ export default function CreateContactPage() {
                     options={[
                       { value: 'email', label: 'Email Only' },
                       { value: 'phone', label: 'Phone Call' },
-                      { value: 'slack', label: 'Corporate Slack' },
-                      { value: 'zoom', label: 'Zoom Meeting' },
                     ]}
                   />
                 </div>

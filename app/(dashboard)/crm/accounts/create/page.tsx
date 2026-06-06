@@ -240,7 +240,7 @@ export default function CreateAccountPage() {
                     className="w-full pl-10 pr-4 bg-background/30 border border-border/60 hover:border-primary/20 rounded-xl h-10 text-xs text-slate-300 focus:ring-0 outline-none cursor-pointer"
                     options={[
                       { value: '', label: 'Select Manager...' },
-                      ...users.map((u) => ({ value: u.name, label: `${u.name} (${u.role})` })),
+                      ...users.map((u) => ({ value: u.name, label: `${u.name}` })),
                     ]}
                   />
                 </div>

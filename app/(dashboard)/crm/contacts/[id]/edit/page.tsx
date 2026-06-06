@@ -48,28 +48,44 @@ export default function EditContactPage() {
     const fetchContact = async () => {
       setIsLoading(true);
       try {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        if (contactId === 'c2') {
-          setName('Samantha Vance');
-          setRole('VP Marketing');
-          setEmail('vance@globex.co');
-          setPhone('650-555-0143');
-          setIsPrimary(true);
-          setCommunicationPref('slack');
-        } else if (contactId === 'c3') {
-          setName('Albert Wesker');
-          setRole('Head of Operations');
-          setEmail('wesker@umbrella.com');
-          setPhone('312-555-0105');
-          setIsPrimary(false);
-          setCommunicationPref('zoom');
-        } else if (contactId === 'c4') {
-          setName('Pepper Potts');
-          setRole('CEO');
-          setEmail('potts@stark.com');
-          setPhone('212-555-0177');
-          setIsPrimary(true);
-          setCommunicationPref('phone');
+        let res = await fetch(`/api/protected/crm/contacts/${contactId}`);
+        let d = await res.json();
+
+        let foundContact = null;
+        let companyIdStr = '';
+
+        if (d.success && d.data) {
+          foundContact = d.data;
+          companyIdStr = foundContact.accountId?._id || foundContact.companyId;
+        } else {
+          const clientsRes = await fetch('/api/protected/clients');
+          const clientsData = await clientsRes.json();
+          if (clientsData.success) {
+            for (const client of clientsData.data) {
+              const c = client.contacts?.find((ct: any) => ct._id === contactId);
+              if (c) {
+                foundContact = c;
+                companyIdStr = client._id;
+                break;
+              }
+            }
+          }
+        }
+
+        if (foundContact) {
+          setName(
+            foundContact.name ||
+              `${foundContact.firstName || ''} ${foundContact.lastName || ''}`.trim()
+          );
+          setRole(foundContact.role || foundContact.title || '');
+          setEmail(foundContact.email || '');
+          setPhone(foundContact.phone || '');
+          setCompanyId(companyIdStr);
+          setIsPrimary(!!foundContact.isPrimary);
+          setCommunicationPref(foundContact.communicationPref || 'email');
+        } else {
+          toast.error('Contact not found.');
+          router.push('/crm/contacts');
         }
       } catch (err) {
         toast.error('Failed to load contact for editing.');
@@ -89,11 +105,32 @@ export default function EditContactPage() {
 
     setIsSubmitting(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 600));
-      toast.success(`Contact details for "${name}" updated successfully.`);
-      router.push(`/crm/contacts/${contactId}`);
+      const parts = name.split(' ');
+      const firstName = parts[0];
+      const lastName = parts.slice(1).join(' ') || ' ';
+
+      const res = await fetch(`/api/protected/crm/contacts/${contactId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          firstName,
+          lastName,
+          role,
+          email,
+          phone,
+          isPrimary,
+          communicationPref,
+        }),
+      });
+      const d = await res.json();
+      if (d.success) {
+        toast.success(`Contact details for "${name}" updated successfully.`);
+        router.push(`/crm/contacts/${contactId}`);
+      } else {
+        toast.error(d.message || 'Failed to save updates.');
+      }
     } catch (err) {
-      toast.error('Failed to save updates.');
+      toast.error('Network error during save.');
     } finally {
       setIsSubmitting(false);
     }
@@ -178,8 +215,6 @@ export default function EditContactPage() {
                     options={[
                       { value: 'email', label: 'Email Only' },
                       { value: 'phone', label: 'Phone Call' },
-                      { value: 'slack', label: 'Corporate Slack' },
-                      { value: 'zoom', label: 'Zoom Meeting' },
                     ]}
                   />
                 </div>
