@@ -6,10 +6,14 @@
  * Uses `color-scheme: dark` to force the native date picker chrome
  * into dark mode, combined with custom Tailwind styling that matches
  * the SyncGrid input design system.
+ *
+ * Calendar is rendered via a React Portal so it correctly escapes
+ * modal overflow / stacking-context constraints.
  */
 'use client';
 
-import React, { forwardRef, useState, useEffect, useRef } from 'react';
+import React, { forwardRef, useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { cn } from '@/lib/cn';
 import { Calendar, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -51,6 +55,15 @@ const MONTH_NAMES = [
 ];
 const WEEK_DAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
+/** Popover position relative to the viewport (fixed coordinates). */
+interface PopoverPos {
+  top: number;
+  left: number;
+  openUpward: boolean;
+}
+
+const CALENDAR_HEIGHT = 296; // approx rendered height of the calendar popover
+
 export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
   (
     {
@@ -70,7 +83,20 @@ export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
     const inputId = id || `date-${Math.random().toString(36).slice(2, 9)}`;
     const [isOpen, setIsOpen] = useState(false);
     const [currentDate, setCurrentDate] = useState(() => parseISODate(value));
-    const containerRef = useRef<HTMLDivElement>(null);
+    const [popoverPos, setPopoverPos] = useState<PopoverPos>({
+      top: 0,
+      left: 0,
+      openUpward: false,
+    });
+    const [mounted, setMounted] = useState(false);
+
+    const buttonRef = useRef<HTMLButtonElement>(null);
+    const popoverRef = useRef<HTMLDivElement>(null);
+
+    // Ensure we only portal on the client
+    useEffect(() => {
+      setMounted(true);
+    }, []);
 
     useEffect(() => {
       if (typeof value === 'string' && value) {
@@ -78,15 +104,50 @@ export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
       }
     }, [value]);
 
+    /** Recompute the fixed position of the popover from the trigger button rect. */
+    const updatePosition = useCallback(() => {
+      if (!buttonRef.current) return;
+      const rect = buttonRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const openUpward = spaceBelow < CALENDAR_HEIGHT + 8 && rect.top > CALENDAR_HEIGHT + 8;
+      setPopoverPos({
+        top: openUpward ? rect.top - CALENDAR_HEIGHT - 4 : rect.bottom + 4,
+        left: rect.left,
+        openUpward,
+      });
+    }, []);
+
+    const handleOpen = () => {
+      if (disabled) return;
+      updatePosition();
+      setIsOpen((prev) => !prev);
+    };
+
+    // Close when clicking outside both the button and the floating calendar
     useEffect(() => {
+      if (!isOpen) return;
       function handleClickOutside(event: MouseEvent) {
-        if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-          setIsOpen(false);
+        const target = event.target as Node;
+        if (buttonRef.current?.contains(target) || popoverRef.current?.contains(target)) {
+          return;
         }
+        setIsOpen(false);
       }
       document.addEventListener('mousedown', handleClickOutside);
       return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
+    }, [isOpen]);
+
+    // Reposition on scroll / resize while open
+    useEffect(() => {
+      if (!isOpen) return;
+      const update = () => updatePosition();
+      window.addEventListener('scroll', update, true);
+      window.addEventListener('resize', update);
+      return () => {
+        window.removeEventListener('scroll', update, true);
+        window.removeEventListener('resize', update);
+      };
+    }, [isOpen, updatePosition]);
 
     const handlePrevMonth = (e: React.MouseEvent) => {
       e.stopPropagation();
@@ -135,55 +196,27 @@ export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
           })
         : '';
 
-    return (
-      <div className={cn('flex flex-col gap-1', wrapperClassName)} ref={containerRef}>
-        {label && (
-          <label
-            htmlFor={inputId}
-            className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground"
-          >
-            {label}
-          </label>
-        )}
-        <div className="relative">
-          <input type="hidden" id={inputId} ref={ref} value={value} {...props} />
-          <button
-            type="button"
-            onClick={() => !disabled && setIsOpen(!isOpen)}
-            disabled={disabled}
-            className={cn(
-              'flex h-9 w-full items-center justify-between rounded-md border border-border/60 bg-input px-3 py-2 text-sm text-foreground ring-offset-background transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 select-none text-left',
-              disabled && 'cursor-not-allowed opacity-50',
-              error && 'border-destructive focus-visible:ring-destructive',
-              isOpen && 'ring-2 ring-ring ring-offset-0',
-              className
-            )}
-          >
-            <div className="flex items-center gap-2">
-              <Calendar className="h-3.5 w-3.5 text-muted-foreground/60" />
-              <span
-                className={cn('truncate font-medium', !displayValue && 'text-muted-foreground/50')}
-              >
-                {displayValue || placeholder}
-              </span>
-            </div>
-            <ChevronDown
-              className={cn(
-                'h-3.5 w-3.5 text-muted-foreground/60 transition-transform duration-200 shrink-0',
-                isOpen && 'rotate-180'
-              )}
-            />
-          </button>
-
-          <AnimatePresence>
-            {isOpen && (
+    const calendarPopover =
+      mounted && isOpen
+        ? createPortal(
+            <AnimatePresence>
               <motion.div
-                initial={{ opacity: 0, y: 4 }}
+                ref={popoverRef}
+                key="date-popover"
+                initial={{ opacity: 0, y: popoverPos.openUpward ? 4 : -4 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 4 }}
+                exit={{ opacity: 0, y: popoverPos.openUpward ? 4 : -4 }}
                 transition={{ duration: 0.15 }}
-                className="absolute z-50 mt-1 w-[260px] rounded-xl border border-border bg-popover/95 backdrop-blur-md p-3 text-popover-foreground shadow-2xl"
+                style={{
+                  position: 'fixed',
+                  top: popoverPos.top,
+                  left: popoverPos.left,
+                  width: 260,
+                  zIndex: 99999,
+                }}
+                className="rounded-xl border border-border bg-popover/95 backdrop-blur-md p-3 text-popover-foreground shadow-2xl"
               >
+                {/* Month navigation */}
                 <div className="flex items-center justify-between mb-2">
                   <button
                     type="button"
@@ -204,6 +237,7 @@ export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
                   </button>
                 </div>
 
+                {/* Weekday headers */}
                 <div className="grid grid-cols-7 gap-1 mb-1">
                   {WEEK_DAYS.map((d) => (
                     <div
@@ -215,6 +249,7 @@ export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
                   ))}
                 </div>
 
+                {/* Day grid */}
                 <div className="grid grid-cols-7 gap-1">
                   {days.map((d, idx) => {
                     const isSelected =
@@ -254,10 +289,54 @@ export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
                   })}
                 </div>
               </motion.div>
+            </AnimatePresence>,
+            document.body
+          )
+        : null;
+
+    return (
+      <div className={cn('flex flex-col gap-1', wrapperClassName)}>
+        {label && (
+          <label
+            htmlFor={inputId}
+            className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground"
+          >
+            {label}
+          </label>
+        )}
+        <div className="relative">
+          <input type="hidden" id={inputId} ref={ref} value={value} {...props} />
+          <button
+            ref={buttonRef}
+            type="button"
+            onClick={handleOpen}
+            disabled={disabled}
+            className={cn(
+              'flex h-9 w-full items-center justify-between rounded-md border border-border/60 bg-input px-3 py-2 text-sm text-foreground ring-offset-background transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 select-none text-left',
+              disabled && 'cursor-not-allowed opacity-50',
+              error && 'border-destructive focus-visible:ring-destructive',
+              isOpen && 'ring-2 ring-ring ring-offset-0',
+              className
             )}
-          </AnimatePresence>
+          >
+            <div className="flex items-center gap-2">
+              <Calendar className="h-3.5 w-3.5 text-muted-foreground/60" />
+              <span
+                className={cn('truncate font-medium', !displayValue && 'text-muted-foreground/50')}
+              >
+                {displayValue || placeholder}
+              </span>
+            </div>
+            <ChevronDown
+              className={cn(
+                'h-3.5 w-3.5 text-muted-foreground/60 transition-transform duration-200 shrink-0',
+                isOpen && 'rotate-180'
+              )}
+            />
+          </button>
         </div>
         {error && <p className="text-xs text-destructive font-medium">{error}</p>}
+        {calendarPopover}
       </div>
     );
   }

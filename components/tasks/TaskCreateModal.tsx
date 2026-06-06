@@ -289,6 +289,11 @@ export function TaskCreateModal({ isOpen, onClose }: TaskCreateModalProps) {
               Start Date
             </label>
             <DateInput
+              value={
+                watch('startDate') instanceof Date
+                  ? watch('startDate').toISOString().split('T')[0]
+                  : ''
+              }
               onChange={(e) =>
                 setValue('startDate', e.target.value ? new Date(e.target.value) : null)
               }
@@ -300,6 +305,9 @@ export function TaskCreateModal({ isOpen, onClose }: TaskCreateModalProps) {
               Due Date
             </label>
             <DateInput
+              value={
+                watch('dueDate') instanceof Date ? watch('dueDate').toISOString().split('T')[0] : ''
+              }
               onChange={(e) =>
                 setValue('dueDate', e.target.value ? new Date(e.target.value) : null)
               }
