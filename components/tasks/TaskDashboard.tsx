@@ -1,14 +1,52 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import React, { useEffect, useState } from 'react';
-import { TrendingUp, AlertOctagon, CheckCircle2, Users, Activity, Layers } from 'lucide-react';
+import {
+  TrendingUp,
+  AlertOctagon,
+  CheckCircle2,
+  Users,
+  Activity,
+  Layers,
+  Filter,
+  X,
+} from 'lucide-react';
+import { Select } from '@/components/ui/select';
+
+/** Map burndown data points into an SVG polyline string.
+ *  All X values go from xStart to xEnd, Y from yTop to yBottom (SVG inverted). */
+function buildPolyline(
+  points: number[],
+  xStart: number,
+  xEnd: number,
+  yTop: number,
+  yBottom: number,
+  maxVal: number
+): string {
+  if (!points.length) return '';
+  const xStep = (xEnd - xStart) / Math.max(1, points.length - 1);
+  return points
+    .map((val, i) => {
+      const x = xStart + i * xStep;
+      const ratio = maxVal > 0 ? val / maxVal : 0;
+      const y = yBottom - ratio * (yBottom - yTop);
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(' ');
+}
 
 export function TaskDashboard() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchDashboardData = () => {
+  // Filters
+  const [projects, setProjects] = useState<any[]>([]);
+  const [filterProjectId, setFilterProjectId] = useState('');
+
+  const fetchDashboardData = (projectId?: string) => {
     setLoading(true);
-    fetch('/api/protected/tasks/dashboard')
+    const params = new URLSearchParams();
+    if (projectId) params.set('projectId', projectId);
+    fetch(`/api/protected/tasks/dashboard${params.toString() ? `?${params}` : ''}`)
       .then((res) => res.json())
       .then((result) => {
         if (result.success) setData(result.data);
@@ -18,7 +56,16 @@ export function TaskDashboard() {
 
   useEffect(() => {
     fetchDashboardData();
+    fetch('/api/protected/projects')
+      .then((r) => r.json())
+      .then((r) => {
+        if (r.success) setProjects(r.data);
+      });
   }, []);
+
+  useEffect(() => {
+    fetchDashboardData(filterProjectId || undefined);
+  }, [filterProjectId]);
 
   if (loading || !data) {
     return (
@@ -30,8 +77,64 @@ export function TaskDashboard() {
 
   const { kpis, completionTrend, burndown, velocity } = data;
 
+  // Derived chart data
+  const burndownIdeal = burndown.map((b: any) => b.Ideal);
+  const burndownActual = burndown.map((b: any) => b.Remaining);
+  const burndownMax = Math.max(1, ...burndownIdeal);
+
+  const velocityMax = Math.max(1, ...velocity.map((v: any) => Math.max(v.planned, v.completed)));
+
+  const SVG_X_START = 30;
+  const SVG_X_END = 480;
+  const SVG_Y_TOP = 20;
+  const SVG_Y_BOTTOM = 175;
+  const SVG_HEIGHT = 200;
+
+  const idealPolyline = buildPolyline(
+    burndownIdeal,
+    SVG_X_START,
+    SVG_X_END,
+    SVG_Y_TOP,
+    SVG_Y_BOTTOM,
+    burndownMax
+  );
+  const actualPolyline = buildPolyline(
+    burndownActual,
+    SVG_X_START,
+    SVG_X_END,
+    SVG_Y_TOP,
+    SVG_Y_BOTTOM,
+    burndownMax
+  );
+
   return (
     <div className="space-y-6">
+      {/* Project filter */}
+      <div className="flex items-center gap-3">
+        <Filter className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+        <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+          Filter:
+        </span>
+        <div className="w-56">
+          <Select
+            value={filterProjectId}
+            onChange={setFilterProjectId}
+            options={[
+              { value: '', label: 'All Projects' },
+              ...projects.map((p) => ({ value: p._id, label: `${p.name} (${p.code})` })),
+            ]}
+          />
+        </div>
+        {filterProjectId && (
+          <button
+            onClick={() => setFilterProjectId('')}
+            className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground font-bold"
+          >
+            <X className="w-3 h-3" /> Clear
+          </button>
+        )}
+      </div>
+
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-5 gap-4">
         {/* Total */}
@@ -106,13 +209,13 @@ export function TaskDashboard() {
         </div>
       </div>
 
-      {/* SVG Charts Area */}
+      {/* Charts */}
       <div className="grid grid-cols-2 gap-6">
-        {/* Burndown line chart */}
+        {/* Burndown — real data */}
         <div className="bg-background border border-border/30 rounded-xl p-5 space-y-4">
           <div className="flex justify-between items-center">
-            <h4 className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
-              Sprint Burndown Chart (10-Day Cycle)
+            <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">
+              Sprint Burndown Chart ({burndown.length - 1}-Day Cycle)
             </h4>
             <div className="flex gap-3 text-[10px] font-bold text-muted-foreground">
               <span className="flex items-center gap-1">
@@ -124,242 +227,179 @@ export function TaskDashboard() {
             </div>
           </div>
 
-          {/* Line Chart drawing using SVG */}
           <div className="h-64 w-full relative pt-2">
-            <svg viewBox="0 0 500 200" className="w-full h-full">
-              {/* Grid Lines */}
+            <svg viewBox={`0 0 500 ${SVG_HEIGHT}`} className="w-full h-full">
+              {/* Grid lines */}
+              {[20, 70, 120, 170].map((y) => (
+                <line
+                  key={y}
+                  x1={SVG_X_START}
+                  y1={y}
+                  x2={SVG_X_END}
+                  y2={y}
+                  stroke="var(--border)"
+                  strokeWidth="0.5"
+                  strokeDasharray="3"
+                />
+              ))}
               <line
-                x1="30"
-                y1="20"
-                x2="480"
-                y2="20"
+                x1={SVG_X_START}
+                y1={SVG_Y_BOTTOM}
+                x2={SVG_X_END}
+                y2={SVG_Y_BOTTOM}
                 stroke="var(--border)"
-                strokeWidth="0.5"
-                strokeDasharray="3"
-              />
-              <line
-                x1="30"
-                y1="80"
-                x2="480"
-                y2="80"
-                stroke="var(--border)"
-                strokeWidth="0.5"
-                strokeDasharray="3"
-              />
-              <line
-                x1="30"
-                y1="140"
-                x2="480"
-                y2="140"
-                stroke="var(--border)"
-                strokeWidth="0.5"
-                strokeDasharray="3"
-              />
-              <line x1="30" y1="180" x2="480" y2="180" stroke="var(--border)" strokeWidth="1" />
-
-              {/* Ideal Line: from (30, 20) to (480, 180) */}
-              <line
-                x1="30"
-                y1="20"
-                x2="480"
-                y2="180"
-                stroke="#3b82f6"
-                strokeWidth="2.5"
-                strokeDasharray="5"
+                strokeWidth="1"
               />
 
-              {/* Actual Line plotting */}
-              <path
-                d="M 30 20 L 75 35 L 120 50 L 165 45 L 210 70 L 255 100 L 300 95 L 345 130 L 390 145 L 435 170 L 480 178"
-                fill="none"
-                stroke="#f43f5e"
-                strokeWidth="3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
+              {/* Y axis label: max points */}
+              <text x="2" y="24" fill="var(--muted-foreground)" fontSize="7">
+                {burndownMax}pts
+              </text>
+              <text x="2" y={SVG_Y_BOTTOM + 4} fill="var(--muted-foreground)" fontSize="7">
+                0
+              </text>
 
-              {/* Dots and points */}
-              <circle cx="30" cy="20" r="4" fill="#f43f5e" />
-              <circle cx="480" cy="178" r="4" fill="#f43f5e" />
+              {/* Ideal slope line */}
+              {idealPolyline && (
+                <polyline
+                  points={idealPolyline}
+                  fill="none"
+                  stroke="#3b82f6"
+                  strokeWidth="2.5"
+                  strokeDasharray="5"
+                />
+              )}
 
-              {/* Day Labels */}
-              <text x="30" y="195" fill="var(--muted-foreground)" fontSize="8" textAnchor="middle">
-                Day 0
-              </text>
-              <text x="120" y="195" fill="var(--muted-foreground)" fontSize="8" textAnchor="middle">
-                Day 2
-              </text>
-              <text x="210" y="195" fill="var(--muted-foreground)" fontSize="8" textAnchor="middle">
-                Day 4
-              </text>
-              <text x="300" y="195" fill="var(--muted-foreground)" fontSize="8" textAnchor="middle">
-                Day 6
-              </text>
-              <text x="390" y="195" fill="var(--muted-foreground)" fontSize="8" textAnchor="middle">
-                Day 8
-              </text>
-              <text x="480" y="195" fill="var(--muted-foreground)" fontSize="8" textAnchor="middle">
-                Day 10
-              </text>
+              {/* Actual remaining line */}
+              {actualPolyline && (
+                <polyline
+                  points={actualPolyline}
+                  fill="none"
+                  stroke="#f43f5e"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              )}
+
+              {/* Day labels */}
+              {burndown
+                .filter((_: any, i: number) => i % 2 === 0)
+                .map((b: any, i: number) => {
+                  const x =
+                    SVG_X_START +
+                    i * 2 * ((SVG_X_END - SVG_X_START) / Math.max(1, burndown.length - 1));
+                  return (
+                    <text
+                      key={i}
+                      x={x}
+                      y={SVG_HEIGHT - 4}
+                      fill="var(--muted-foreground)"
+                      fontSize="8"
+                      textAnchor="middle"
+                    >
+                      {b.day}
+                    </text>
+                  );
+                })}
             </svg>
           </div>
         </div>
 
-        {/* Velocity Trends bar chart */}
+        {/* Velocity — real sprint data */}
         <div className="bg-background border border-border/30 rounded-xl p-5 space-y-4">
           <div className="flex justify-between items-center">
-            <h4 className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
+            <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">
               Sprint Velocity Chart
             </h4>
             <div className="flex gap-3 text-[10px] font-bold text-muted-foreground">
               <span className="flex items-center gap-1">
                 <span className="w-2.5 h-2.5 bg-primary/20 border border-primary block rounded-sm" />{' '}
-                Planned points
+                Planned pts
               </span>
               <span className="flex items-center gap-1">
                 <span className="w-2.5 h-2.5 bg-emerald-500/20 border border-emerald-500 block rounded-sm" />{' '}
-                Completed points
+                Completed pts
               </span>
             </div>
           </div>
 
-          {/* Bar Chart using SVG */}
           <div className="h-64 w-full pt-2">
-            <svg viewBox="0 0 500 200" className="w-full h-full">
+            <svg viewBox={`0 0 500 ${SVG_HEIGHT}`} className="w-full h-full">
+              {[20, 80, 140].map((y) => (
+                <line
+                  key={y}
+                  x1={SVG_X_START}
+                  y1={y}
+                  x2={SVG_X_END}
+                  y2={y}
+                  stroke="var(--border)"
+                  strokeWidth="0.5"
+                  strokeDasharray="3"
+                />
+              ))}
               <line
-                x1="30"
-                y1="20"
-                x2="480"
-                y2="20"
+                x1={SVG_X_START}
+                y1={SVG_Y_BOTTOM}
+                x2={SVG_X_END}
+                y2={SVG_Y_BOTTOM}
                 stroke="var(--border)"
-                strokeWidth="0.5"
-                strokeDasharray="3"
+                strokeWidth="1"
               />
-              <line
-                x1="30"
-                y1="80"
-                x2="480"
-                y2="80"
-                stroke="var(--border)"
-                strokeWidth="0.5"
-                strokeDasharray="3"
-              />
-              <line
-                x1="30"
-                y1="140"
-                x2="480"
-                y2="140"
-                stroke="var(--border)"
-                strokeWidth="0.5"
-                strokeDasharray="3"
-              />
-              <line x1="30" y1="180" x2="480" y2="180" stroke="var(--border)" strokeWidth="1" />
 
-              {/* Bar 1 (Sprint 1) */}
-              <rect
-                x="60"
-                y="90"
-                width="20"
-                height="90"
-                fill="#3b82f6"
-                fillOpacity="0.25"
-                stroke="#3b82f6"
-                strokeWidth="1"
-              />
-              <rect
-                x="83"
-                y="100"
-                width="20"
-                height="80"
-                fill="#10b981"
-                fillOpacity="0.25"
-                stroke="#10b981"
-                strokeWidth="1"
-              />
-              <text x="81" y="195" fill="var(--muted-foreground)" fontSize="8" textAnchor="middle">
-                Sprint 1
-              </text>
+              {velocity.map((v: any, i: number) => {
+                const slotWidth = (SVG_X_END - SVG_X_START) / Math.max(1, velocity.length);
+                const slotX = SVG_X_START + i * slotWidth;
+                const barW = 18;
+                const plannedH =
+                  velocityMax > 0 ? (v.planned / velocityMax) * (SVG_Y_BOTTOM - SVG_Y_TOP) : 0;
+                const completedH =
+                  velocityMax > 0 ? (v.completed / velocityMax) * (SVG_Y_BOTTOM - SVG_Y_TOP) : 0;
+                const labelX = slotX + slotWidth / 2;
 
-              {/* Bar 2 (Sprint 2) */}
-              <rect
-                x="170"
-                y="70"
-                width="20"
-                height="110"
-                fill="#3b82f6"
-                fillOpacity="0.25"
-                stroke="#3b82f6"
-                strokeWidth="1"
-              />
-              <rect
-                x="193"
-                y="75"
-                width="20"
-                height="105"
-                fill="#10b981"
-                fillOpacity="0.25"
-                stroke="#10b981"
-                strokeWidth="1"
-              />
-              <text x="191" y="195" fill="var(--muted-foreground)" fontSize="8" textAnchor="middle">
-                Sprint 2
-              </text>
-
-              {/* Bar 3 (Sprint 3) */}
-              <rect
-                x="280"
-                y="50"
-                width="20"
-                height="130"
-                fill="#3b82f6"
-                fillOpacity="0.25"
-                stroke="#3b82f6"
-                strokeWidth="1"
-              />
-              <rect
-                x="303"
-                y="40"
-                width="20"
-                height="140"
-                fill="#10b981"
-                fillOpacity="0.25"
-                stroke="#10b981"
-                strokeWidth="1"
-              />
-              <text x="301" y="195" fill="var(--muted-foreground)" fontSize="8" textAnchor="middle">
-                Sprint 3
-              </text>
-
-              {/* Bar 4 (Sprint 4) */}
-              <rect
-                x="390"
-                y="60"
-                width="20"
-                height="120"
-                fill="#3b82f6"
-                fillOpacity="0.25"
-                stroke="#3b82f6"
-                strokeWidth="1"
-              />
-              <rect
-                x="413"
-                y="90"
-                width="20"
-                height="90"
-                fill="#10b981"
-                fillOpacity="0.25"
-                stroke="#10b981"
-                strokeWidth="1"
-              />
-              <text x="411" y="195" fill="var(--muted-foreground)" fontSize="8" textAnchor="middle">
-                Sprint 4
-              </text>
+                return (
+                  <g key={i}>
+                    {/* Planned bar */}
+                    <rect
+                      x={slotX + slotWidth / 2 - barW - 2}
+                      y={SVG_Y_BOTTOM - plannedH}
+                      width={barW}
+                      height={plannedH}
+                      fill="#3b82f6"
+                      fillOpacity="0.25"
+                      stroke="#3b82f6"
+                      strokeWidth="1"
+                    />
+                    {/* Completed bar */}
+                    <rect
+                      x={slotX + slotWidth / 2 + 2}
+                      y={SVG_Y_BOTTOM - completedH}
+                      width={barW}
+                      height={completedH}
+                      fill="#10b981"
+                      fillOpacity="0.25"
+                      stroke="#10b981"
+                      strokeWidth="1"
+                    />
+                    {/* Label */}
+                    <text
+                      x={labelX}
+                      y={SVG_HEIGHT - 4}
+                      fill="var(--muted-foreground)"
+                      fontSize="7"
+                      textAnchor="middle"
+                    >
+                      {v.sprint.length > 10 ? v.sprint.slice(0, 10) + '…' : v.sprint}
+                    </text>
+                  </g>
+                );
+              })}
             </svg>
           </div>
         </div>
       </div>
 
-      {/* Completion sparkline Throughput trend */}
+      {/* Completion throughput */}
       <div className="bg-background border border-border/30 rounded-xl p-5 space-y-4">
         <h4 className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
           <TrendingUp className="w-4 h-4 text-emerald-500" /> Task completion throughput (Last 14
@@ -371,7 +411,9 @@ export function TaskDashboard() {
               <div className="w-full bg-muted/15 rounded-md h-20 flex flex-col justify-end overflow-hidden border border-border/10">
                 <div
                   className="bg-emerald-500 w-full transition-all duration-200"
-                  style={{ height: `${Math.min(100, (t.completed / 6) * 100)}%` }}
+                  style={{
+                    height: `${Math.min(100, (t.completed / Math.max(1, ...completionTrend.map((x: any) => x.completed))) * 100)}%`,
+                  }}
                 />
               </div>
               <span className="text-[8px] font-bold font-mono text-muted-foreground">

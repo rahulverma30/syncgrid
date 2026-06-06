@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu } from '@/components/ui/dropdown-menu';
 import { NotificationBellWidget } from '@/components/ui/notification-bell';
 import { useCommandPaletteStore, useSidebarStore } from '@/store';
+import { ActiveTimerWidget } from '@/components/tasks/ActiveTimerWidget';
 
 export function Header() {
   const isMounted = useMounted();
@@ -68,7 +69,9 @@ export function Header() {
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
+          {/* Active timer — globally visible */}
+          <ActiveTimerWidget />
           {/* Notifications */}
           <NotificationBellWidget />
 

@@ -69,7 +69,13 @@ interface TasksState {
   filters: TasksFilter;
   isLoading: boolean;
   isFetchingActiveTask: boolean;
-  runningTimer: { taskId: string; startTime: string } | null;
+  runningTimer: {
+    taskId: string;
+    startTime: string;
+    taskTitle?: string;
+    projectName?: string;
+    estimatedHours?: number;
+  } | null;
 
   // Actions
   fetchTasks: () => Promise<void>;
@@ -296,6 +302,22 @@ export const useTasksStore = create<TasksState>()(
           set({ tasks: originalTasks });
           return false;
         }
+
+        // Apply automation engine side-effects (or updated payload from server)
+        if (result.data) {
+          set((state) => {
+            const index = state.tasks.findIndex((t) => t._id === taskId);
+            const newTasks = [...state.tasks];
+            if (index > -1) {
+              newTasks[index] = result.data;
+            }
+            return {
+              tasks: newTasks,
+              activeTask: state.activeTask?._id === taskId ? result.data : state.activeTask,
+            };
+          });
+        }
+
         return true;
       } catch (err) {
         console.error('Status transition sync error, rolling back:', err);
@@ -400,7 +422,28 @@ export const useTasksStore = create<TasksState>()(
         });
         const result = await res.json();
         if (result.success) {
-          const running = { taskId, startTime: new Date().toISOString() };
+          // Fetch task details for the widget display
+          let taskTitle = 'Task';
+          let projectName = '';
+          let estimatedHours = 0;
+          try {
+            const taskRes = await fetch(`/api/protected/tasks/${taskId}`);
+            const taskResult = await taskRes.json();
+            if (taskResult.success) {
+              taskTitle = taskResult.data.title || 'Task';
+              projectName = taskResult.data.projectId?.name || '';
+              estimatedHours = taskResult.data.estimatedHours || 0;
+            }
+          } catch (e) {
+            console.error('Failed to fetch task info for timer widget:', e);
+          }
+          const running = {
+            taskId,
+            startTime: new Date().toISOString(),
+            taskTitle,
+            projectName,
+            estimatedHours,
+          };
           set({ runningTimer: running });
           localStorage.setItem('syncgrid_running_timer', JSON.stringify(running));
         }

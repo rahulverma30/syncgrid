@@ -403,6 +403,84 @@ export function TaskDetailModal({ isOpen, onClose, taskCode }: TaskDetailModalPr
 
           {activeTab === 'time' && (
             <div className="space-y-5">
+              {/* S7: Time Management Panel */}
+              {activeTask.estimatedHours > 0 &&
+                (() => {
+                  const estimated = activeTask.estimatedHours || 0;
+                  const logged = activeTask.actualHours || 0;
+                  const remaining = Math.max(0, estimated - logged);
+                  const overrun = Math.max(0, logged - estimated);
+                  const pct =
+                    estimated > 0 ? Math.min(200, Math.round((logged / estimated) * 100)) : 0;
+                  const isOverrun = logged > estimated;
+                  const barColor =
+                    pct >= 100 ? 'bg-rose-500' : pct >= 80 ? 'bg-amber-500' : 'bg-emerald-500';
+                  return (
+                    <div className="border border-border/30 rounded-xl p-4 bg-muted/5 space-y-4">
+                      <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">
+                        Time Management Panel
+                      </span>
+                      <div className="grid grid-cols-4 gap-3 text-center">
+                        <div className="bg-primary/5 border border-primary/15 rounded-lg p-3">
+                          <span className="text-[9px] font-bold text-muted-foreground uppercase block">
+                            Estimated
+                          </span>
+                          <span className="text-base font-black text-foreground font-mono">
+                            {estimated}h
+                          </span>
+                        </div>
+                        <div
+                          className={`border rounded-lg p-3 ${isOverrun ? 'bg-rose-500/5 border-rose-500/20' : 'bg-emerald-500/5 border-emerald-500/15'}`}
+                        >
+                          <span className="text-[9px] font-bold text-muted-foreground uppercase block">
+                            Logged
+                          </span>
+                          <span
+                            className={`text-base font-black font-mono ${isOverrun ? 'text-rose-500' : 'text-emerald-500'}`}
+                          >
+                            {logged.toFixed(1)}h
+                          </span>
+                        </div>
+                        <div className="bg-muted/10 border border-border/20 rounded-lg p-3">
+                          <span className="text-[9px] font-bold text-muted-foreground uppercase block">
+                            {isOverrun ? 'Overrun' : 'Remaining'}
+                          </span>
+                          <span
+                            className={`text-base font-black font-mono ${isOverrun ? 'text-rose-500' : 'text-foreground'}`}
+                          >
+                            {isOverrun ? `+${overrun.toFixed(1)}h` : `${remaining.toFixed(1)}h`}
+                          </span>
+                        </div>
+                        <div className="bg-muted/10 border border-border/20 rounded-lg p-3">
+                          <span className="text-[9px] font-bold text-muted-foreground uppercase block">
+                            Utilization
+                          </span>
+                          <span
+                            className={`text-base font-black font-mono ${pct >= 100 ? 'text-rose-500' : pct >= 80 ? 'text-amber-500' : 'text-emerald-500'}`}
+                          >
+                            {pct}%
+                          </span>
+                        </div>
+                      </div>
+                      {/* Progress bar */}
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-[10px] text-muted-foreground font-bold">
+                          <span>Progress</span>
+                          <span>
+                            {pct}% utilized{isOverrun ? ' — OVERRUN' : ''}
+                          </span>
+                        </div>
+                        <div className="w-full bg-muted/20 h-2.5 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all duration-700 ${barColor} ${isOverrun ? 'shadow-[0_0_10px_rgba(244,63,94,0.4)]' : ''}`}
+                            style={{ width: `${Math.min(100, pct)}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
               {/* Active clock timer */}
               <div className="border border-border/30 rounded-xl p-5 bg-gradient-to-br from-primary/5 to-muted/10 flex justify-between items-center">
                 <div className="space-y-1">

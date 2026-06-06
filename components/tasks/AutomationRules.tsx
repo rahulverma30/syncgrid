@@ -60,14 +60,50 @@ export function AutomationRules() {
   }, [statuses]);
 
   const handleToggleRule = async (ruleId: string, currentActive: boolean) => {
-    // Optimistic Toggle UI
+    // Optimistic toggle
     setRules((prev) => prev.map((r) => (r._id === ruleId ? { ...r, active: !currentActive } : r)));
 
     try {
-      // No edit route exists directly, but we can configure status update or put it in place
-      toast.success(`Automation rule turned ${!currentActive ? 'ON' : 'OFF'}!`);
+      const res = await fetch('/api/protected/tasks/settings/automations', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: ruleId, action: 'toggle' }),
+      });
+      const result = await res.json();
+      if (!result.success) {
+        // Revert on failure
+        setRules((prev) =>
+          prev.map((r) => (r._id === ruleId ? { ...r, active: currentActive } : r))
+        );
+        toast.error('Failed to toggle rule.');
+      } else {
+        toast.success(`Automation rule turned ${!currentActive ? 'ON' : 'OFF'}!`);
+      }
     } catch {
+      setRules((prev) => prev.map((r) => (r._id === ruleId ? { ...r, active: currentActive } : r)));
       toast.error('Failed to toggle rule.');
+    }
+  };
+
+  const handleDeleteRule = async (ruleId: string) => {
+    // Optimistic remove
+    setRules((prev) => prev.filter((r) => r._id !== ruleId));
+
+    try {
+      const res = await fetch('/api/protected/tasks/settings/automations', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: ruleId, action: 'delete' }),
+      });
+      const result = await res.json();
+      if (!result.success) {
+        toast.error('Failed to delete rule.');
+        fetchRules(); // restore
+      } else {
+        toast.success('Automation rule deleted.');
+      }
+    } catch {
+      toast.error('Failed to delete rule.');
       fetchRules();
     }
   };
@@ -263,7 +299,7 @@ export function AutomationRules() {
             rules.map((rule) => (
               <div
                 key={rule._id}
-                className={`border p-4.5 rounded-xl transition duration-150 ${
+                className={`border p-4.5 rounded-xl transition duration-150 pt-0 px-[12px] pb-[12px] ${
                   rule.active
                     ? 'border-border/35 bg-muted/[0.02]'
                     : 'border-border/20 opacity-60 bg-muted/5'
@@ -271,16 +307,25 @@ export function AutomationRules() {
               >
                 <div className="flex justify-between items-center mb-3">
                   <span className="text-xs font-bold text-foreground">{rule.name}</span>
-                  <button
-                    onClick={() => handleToggleRule(rule._id, rule.active)}
-                    className="p-1 hover:bg-muted/10 rounded transition"
-                  >
-                    {rule.active ? (
-                      <ToggleRight className="w-8 h-8 text-primary" />
-                    ) : (
-                      <ToggleLeft className="w-8 h-8 text-muted-foreground" />
-                    )}
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => handleToggleRule(rule._id, rule.active)}
+                      className="p-1 hover:bg-muted/10 rounded transition"
+                    >
+                      {rule.active ? (
+                        <ToggleRight className="w-8 h-8 text-primary" />
+                      ) : (
+                        <ToggleLeft className="w-8 h-8 text-muted-foreground" />
+                      )}
+                    </button>
+                    <button
+                      onClick={() => handleDeleteRule(rule._id)}
+                      className="p-1 hover:bg-rose-500/10 rounded transition text-muted-foreground hover:text-rose-500"
+                      title="Delete rule"
+                    >
+                      <Trash className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-3 text-[10px] font-sans">

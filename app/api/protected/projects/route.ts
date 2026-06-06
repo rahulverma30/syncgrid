@@ -60,7 +60,7 @@ export const GET = withApiPermission(
       }
 
       const projects = await Project.find(query)
-        .select('-milestones -sprints -risks -documents -communicationLogs -timeline')
+        .select('-risks -documents -communicationLogs -timeline')
         .sort({ createdAt: -1 })
         .lean();
 

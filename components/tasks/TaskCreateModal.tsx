@@ -72,11 +72,14 @@ export function TaskCreateModal({ isOpen, onClose }: TaskCreateModalProps) {
     }
   }, [statuses, setValue]);
 
-  // Handle Project Change to load its team members or company users
+  // Handle Project Change — reset cascading fields and load team members
   const projectIdWatch = watch('projectId');
   useEffect(() => {
     if (projectIdWatch) {
       setSelectedProjectId(projectIdWatch);
+      // Reset sprint/milestone when project changes
+      setValue('sprintId', null);
+      setValue('milestoneId', null);
 
       // Load users
       fetch('/api/protected/team/members')
@@ -94,8 +97,13 @@ export function TaskCreateModal({ isOpen, onClose }: TaskCreateModalProps) {
               if (result.success) setProjectUsers([result.data]);
             });
         });
+    } else {
+      setSelectedProjectId('');
+      setValue('sprintId', null);
+      setValue('milestoneId', null);
+      setProjectUsers([]);
     }
-  }, [projectIdWatch]);
+  }, [projectIdWatch, setValue]);
 
   const onSubmit = async (data: any) => {
     setIsSubmitting(true);
@@ -168,12 +176,15 @@ export function TaskCreateModal({ isOpen, onClose }: TaskCreateModalProps) {
           </div>
         </div>
 
-        {/* Sprints & Milestones */}
+        {/* Sprints & Milestones — only shown after project selected */}
         {selectedProjectId && (
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex justify-between">
                 Sprint
+                <span className="text-primary/70 font-mono normal-case">
+                  {sprintOptions.length} available
+                </span>
               </label>
               <Select
                 value={watch('sprintId') || ''}
@@ -189,8 +200,11 @@ export function TaskCreateModal({ isOpen, onClose }: TaskCreateModalProps) {
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex justify-between">
                 Milestone
+                <span className="text-primary/70 font-mono normal-case">
+                  {milestoneOptions.length} available
+                </span>
               </label>
               <Select
                 value={watch('milestoneId') || ''}

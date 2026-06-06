@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { withApiAuth } from '@/lib/auth/api';
 import { connectToDatabase } from '@/lib/db/mongodb';
-import { Task, TaskTimeLog, TaskActivity } from '@/models';
+import { Task, TaskTimeLog, TaskActivity, TaskStatus } from '@/models';
+import { createNotification } from '@/lib/services/notificationService';
 import { TaskTimeLogSchema } from '@/schemas/task';
 import mongoose from 'mongoose';
 
@@ -58,19 +59,19 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     }
 
     if (action === 'start') {
-      // Check if there is an active running timer already for this user on this task
-      const activeTimer = await TaskTimeLog.findOne({
-        taskId: task._id,
+      // S8: Cross-task check — ONE active timer allowed per user across ALL tasks
+      const anyRunningTimer = await TaskTimeLog.findOne({
         userId,
         isRunning: true,
       });
 
-      if (activeTimer) {
+      if (anyRunningTimer) {
         return NextResponse.json(
           {
             success: false,
-            error: 'ACTIVE_TIMER_EXISTS',
-            message: 'You already have an active timer running on this task',
+            error: 'ONE_ACTIVE_TIMER_ALLOWED',
+            message:
+              'You already have an active timer running. Stop your current timer before starting a new one.',
           },
           { status: 400 }
         );
@@ -142,7 +143,7 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
 
       const endTime = new Date();
       const diffMs = endTime.getTime() - activeTimer.startTime.getTime();
-      const durationMinutes = Math.max(1, Math.round(diffMs / (1000 * 60))); // at least 1 minute
+      const durationMinutes = Math.max(1, Math.round(diffMs / (1000 * 60)));
 
       activeTimer.endTime = endTime;
       activeTimer.durationMinutes = durationMinutes;
@@ -157,8 +158,62 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
       task.actualHours = (task.actualHours || 0) + loggedHours;
       await task.save();
 
-      const Project = mongoose.model('Project');
-      await Project.findByIdAndUpdate(task.projectId, { $inc: { actualHours: loggedHours } });
+      // ── S6: Time Exhaustion Check ─────────────────────────────────────────────
+      if (task.estimatedHours > 0 && task.actualHours >= task.estimatedHours) {
+        const currentStatus = await TaskStatus.findById(task.statusId);
+        if (currentStatus && currentStatus.category !== 'done') {
+          // Find the first review/backlog status to flag for human review
+          const reviewStatus = await TaskStatus.findOne({
+            companyId,
+            $or: [{ category: 'in_review' }, { category: 'todo' }],
+          }).sort({ position: 1 });
+
+          if (reviewStatus) {
+            task.statusId = reviewStatus._id;
+            await task.save();
+
+            // Notify assignees about the overrun
+            for (const assigneeId of task.assignees) {
+              try {
+                await createNotification({
+                  companyId,
+                  userId: assigneeId.toString(),
+                  title: '⏱ Time Estimate Exceeded',
+                  description: `Task "${task.title}" has exceeded its estimated ${task.estimatedHours}h. It has been moved to "${reviewStatus.name}" for review.`,
+                  type: 'task',
+                  priority: 'high',
+                });
+              } catch (e) {
+                console.error('Notification error (time exhaustion):', e);
+              }
+            }
+
+            const exhaustionActivity = new TaskActivity({
+              companyId,
+              taskId: task._id,
+              userId,
+              type: 'time_exhausted',
+              title: 'Time Estimate Exhausted',
+              description: `Logged time (${task.actualHours.toFixed(1)}h) has exceeded the estimate (${task.estimatedHours}h). Task auto-transitioned to "${reviewStatus.name}".`,
+            });
+            await exhaustionActivity.save();
+          }
+        }
+      }
+
+      // ── S9: Trigger project health recalculation ─────────────────────────────
+      if (task.projectId) {
+        try {
+          const Project = mongoose.model('Project');
+          const project = await Project.findById(task.projectId);
+          if (project) {
+            project.actualHours = (project.actualHours || 0) + loggedHours;
+            await project.save(); // triggers pre('save') health recalculation hook
+          }
+        } catch (e) {
+          console.error('Project health update error:', e);
+        }
+      }
 
       // Log Activity
       const activity = new TaskActivity({
@@ -225,13 +280,55 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
 
       await timeLog.save();
 
-      // Accumulate actual hours onto task and project
+      // Accumulate actual hours onto task
       const loggedHours = validated.durationMinutes / 60;
       task.actualHours = (task.actualHours || 0) + loggedHours;
       await task.save();
 
-      const Project = mongoose.model('Project');
-      await Project.findByIdAndUpdate(task.projectId, { $inc: { actualHours: loggedHours } });
+      // ── S6: Time Exhaustion Check ─────────────────────────────────────────────
+      if (task.estimatedHours > 0 && task.actualHours >= task.estimatedHours) {
+        const currentStatus = await TaskStatus.findById(task.statusId);
+        if (currentStatus && currentStatus.category !== 'done') {
+          const reviewStatus = await TaskStatus.findOne({
+            companyId,
+            $or: [{ category: 'in_review' }, { category: 'todo' }],
+          }).sort({ position: 1 });
+
+          if (reviewStatus) {
+            task.statusId = reviewStatus._id;
+            await task.save();
+
+            for (const assigneeId of task.assignees) {
+              try {
+                await createNotification({
+                  companyId,
+                  userId: assigneeId.toString(),
+                  title: '⏱ Time Estimate Exceeded',
+                  description: `Task \"${task.title}\" has exceeded its estimated ${task.estimatedHours}h via manual log. Moved to \"${reviewStatus.name}\" for review.`,
+                  type: 'task',
+                  priority: 'high',
+                });
+              } catch (e) {
+                console.error('Notification error (manual time exhaustion):', e);
+              }
+            }
+          }
+        }
+      }
+
+      // ── S9: Trigger project health recalculation ─────────────────────────────
+      if (task.projectId) {
+        try {
+          const Project = mongoose.model('Project');
+          const project = await Project.findById(task.projectId);
+          if (project) {
+            project.actualHours = (project.actualHours || 0) + loggedHours;
+            await project.save(); // triggers pre('save') health recalculation hook
+          }
+        } catch (e) {
+          console.error('Project health update error (manual):', e);
+        }
+      }
 
       // Log Activity
       const activity = new TaskActivity({

@@ -88,35 +88,6 @@ export default function TasksPage() {
 
   return (
     <div className="space-y-6 font-sans">
-      {/* Active Running Timer Banner Alert */}
-      {runningTimer && (
-        <div className="bg-gradient-to-r from-emerald-600 to-teal-600 border border-emerald-500 text-white px-4 py-3 rounded-xl flex items-center justify-between shadow-lg animate-pulse select-none">
-          <div className="flex items-center gap-2.5">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-white"></span>
-            </span>
-            <span className="text-xs font-bold font-sans uppercase tracking-wider">
-              Active stopwatch running
-            </span>
-            <span className="text-xs font-semibold opacity-90">
-              You are currently logging work in the background on task.
-            </span>
-          </div>
-
-          <Button
-            size="sm"
-            onClick={async () => {
-              await stopTimer(runningTimer.taskId, 'Completed background tracking', true);
-              toast.success('Live tracked time logged successfully!');
-            }}
-            className="bg-white text-emerald-700 hover:bg-white/95 text-xs font-bold gap-1.5"
-          >
-            <StopCircle className="w-4 h-4 fill-emerald-700" /> Stop Timer & Log
-          </Button>
-        </div>
-      )}
-
       {/* Header and Title Control panel */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
@@ -283,7 +254,7 @@ export default function TasksPage() {
       <div className="transition-all duration-200">
         {activeTab === 'board' && <TaskBoard onSelectTask={handleSelectTask} />}
         {activeTab === 'list' && <TaskTable onSelectTask={handleSelectTask} />}
-        {activeTab === 'workload' && <WorkloadBalance />}
+        {activeTab === 'workload' && <WorkloadBalance projectId={filters.projectId || ''} />}
         {activeTab === 'metrics' && <TaskDashboard />}
         {activeTab === 'settings' && <AutomationRules />}
       </div>

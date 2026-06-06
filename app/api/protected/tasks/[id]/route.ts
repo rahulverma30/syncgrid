@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { withApiPermission } from '@/lib/auth/api';
 import { connectToDatabase } from '@/lib/db/mongodb';
-import { Task, TaskStatus, TaskActivity, TaskWatcher } from '@/models';
+import { Task, TaskStatus, TaskActivity, TaskWatcher, TaskAutomationRule } from '@/models';
 import { TaskUpdateSchema } from '@/schemas/task';
 import mongoose from 'mongoose';
 
@@ -246,6 +246,61 @@ export const PUT = withApiPermission(
       });
 
       await task.save();
+
+      // ── Automation Engine Execution ───────────────────────────────────────────
+      // After every save, check if any active automation rules should fire.
+      if (validated.statusId) {
+        try {
+          const activeRules = await TaskAutomationRule.find({
+            companyId,
+            active: true,
+            'trigger.type': 'on_status_change',
+            'trigger.statusId': validated.statusId,
+          });
+
+          for (const rule of activeRules) {
+            for (const actionDef of rule.actions) {
+              if (actionDef.type === 'change_status' && actionDef.statusId) {
+                // Apply status change action
+                task.statusId = actionDef.statusId;
+                await task.save();
+                const autoActivity = new TaskActivity({
+                  companyId,
+                  taskId: task._id,
+                  userId,
+                  type: 'automation_fired',
+                  title: 'Automation Rule Executed',
+                  description: `Rule "${rule.name}" auto-changed status.`,
+                });
+                await autoActivity.save();
+              } else if (actionDef.type === 'assign_user' && actionDef.assigneeId) {
+                // Apply assignee action
+                const alreadyAssigned = task.assignees.some(
+                  (a: any) => a.toString() === actionDef.assigneeId.toString()
+                );
+                if (!alreadyAssigned) {
+                  task.assignees.push(actionDef.assigneeId);
+                  await task.save();
+                  const autoActivity = new TaskActivity({
+                    companyId,
+                    taskId: task._id,
+                    userId,
+                    type: 'automation_fired',
+                    title: 'Automation Rule Executed',
+                    description: `Rule "${rule.name}" auto-assigned a team member.`,
+                  });
+                  await autoActivity.save();
+                }
+              }
+            }
+          }
+        } catch (automationErr) {
+          console.error('Automation engine execution error:', automationErr);
+          // Non-fatal: automation errors should not block the main response
+        }
+      }
+
+      // Also evaluate on_creation rules if it's a fresh create context (skip for now — handled in POST)
 
       // Log general update activity
       if (changes.length > 0) {
