@@ -238,7 +238,7 @@ export const ClientIngestModal: React.FC = () => {
             className="h-9 text-xs font-bold px-6 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white border-0 shadow-lg shadow-emerald-900/20"
             disabled={isSubmitting}
           >
-            {isSubmitting ? 'Provisioning Vault...' : 'Ingest Corporate Account'}
+            {isSubmitting ? 'Provisioning Vault...' : 'Create Corporate Account'}
           </Button>
         </div>
       </form>

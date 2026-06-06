@@ -52,7 +52,8 @@ export function Select({
 
   // Position coordinates state for Portal dropdown
   const [coords, setCoords] = useState<{
-    top: number;
+    top?: number;
+    bottom?: number;
     left: number;
     width: number;
     placement: 'bottom' | 'top';
@@ -103,21 +104,25 @@ export function Select({
   const updateCoords = () => {
     if (!triggerRef.current) return;
     const rect = triggerRef.current.getBoundingClientRect();
-    const dropdownHeight = 260; // Estimated height boundary
+    // Calculate dynamic height based on options count
+    const estimatedHeight = Math.min((isSearchEnabled ? 40 : 0) + options.length * 36 + 12, 280);
     const spaceBelow = window.innerHeight - rect.bottom;
     const spaceAbove = rect.top;
 
     let placement: 'bottom' | 'top' = 'bottom';
-    let top = rect.bottom + 6;
+    let top: number | undefined = rect.bottom + 6;
+    let bottom: number | undefined = undefined;
 
     // Flip upwards if there is not enough space below, and more space above
-    if (spaceBelow < dropdownHeight && spaceAbove > spaceBelow) {
+    if (spaceBelow < estimatedHeight && spaceAbove > spaceBelow) {
       placement = 'top';
-      top = rect.top - dropdownHeight - 6;
+      top = undefined;
+      bottom = window.innerHeight - rect.top + 6;
     }
 
     setCoords({
       top,
+      bottom,
       left: rect.left,
       width: rect.width,
       placement,
@@ -287,9 +292,10 @@ export function Select({
                   transition={{ duration: 0.12, ease: 'easeOut' }}
                   style={{
                     position: 'fixed',
-                    top: coords.top,
+                    ...(coords.top !== undefined ? { top: coords.top } : {}),
+                    ...(coords.bottom !== undefined ? { bottom: coords.bottom } : {}),
                     left: coords.left,
-                    width: coords.width,
+                    minWidth: Math.max(coords.width, 80),
                   }}
                   className="z-[9999] rounded-xl border border-border/60 bg-popover text-popover-foreground shadow-2xl shadow-black/40 p-1 max-h-[280px] overflow-hidden flex flex-col"
                 >

@@ -1843,7 +1843,7 @@ export default function CRMPage() {
               size="sm"
               className="h-8 text-xs font-bold"
             >
-              Ingest Lead
+              Create Lead
             </Button>
           </>
         }

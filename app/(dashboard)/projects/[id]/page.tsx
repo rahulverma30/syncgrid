@@ -805,15 +805,17 @@ export default function ProjectDetailPage() {
                     max="100"
                   />
                 </div>
-                <Button
-                  type="submit"
-                  variant="default"
-                  size="sm"
-                  className="w-full h-8 text-[10px]"
-                  disabled={isSubmitting}
-                >
-                  Assign Resource
-                </Button>
+                <div className="w-full flex justify-end">
+                  <Button
+                    type="submit"
+                    variant="default"
+                    size="sm"
+                    className="max-w-[200px] w-full ml-auto h-8 text-[12px]"
+                    disabled={isSubmitting}
+                  >
+                    Assign Resource
+                  </Button>
+                </div>
               </form>
 
               {/* Team list */}
@@ -969,16 +971,17 @@ export default function ProjectDetailPage() {
                     />
                   </div>
                 </div>
-
-                <Button
-                  type="submit"
-                  variant="default"
-                  size="sm"
-                  className="w-full h-8 text-[10px]"
-                  disabled={isSubmitting}
-                >
-                  Log Milestone Target
-                </Button>
+                <div className="w-full flex justify-end">
+                  <Button
+                    type="submit"
+                    variant="default"
+                    size="sm"
+                    className="max-w-[200px] w-full ml-auto h-8 text-[12px]"
+                    disabled={isSubmitting}
+                  >
+                    Log Milestone Target
+                  </Button>
+                </div>
               </form>
 
               {/* Milestones list */}
@@ -1125,15 +1128,17 @@ export default function ProjectDetailPage() {
                     />
                   </div>
                 </div>
-                <Button
-                  type="submit"
-                  variant="default"
-                  size="sm"
-                  className="w-full h-8 text-[10px]"
-                  disabled={isSubmitting}
-                >
-                  Launch Sprint Cycle
-                </Button>
+                <div className="w-full flex justify-end">
+                  <Button
+                    type="submit"
+                    variant="default"
+                    size="sm"
+                    className="max-w-[200px] w-full ml-auto h-8 text-[12px]"
+                    disabled={isSubmitting}
+                  >
+                    Launch Sprint Cycle
+                  </Button>
+                </div>
               </form>
 
               {/* Sprints list */}
@@ -1212,15 +1217,17 @@ export default function ProjectDetailPage() {
                   className="h-8 text-xs bg-background"
                   required
                 />
-                <Button
-                  type="submit"
-                  variant="default"
-                  size="sm"
-                  className="w-full h-8 text-[10px]"
-                  disabled={isSubmitting}
-                >
-                  Attach Link Asset
-                </Button>
+                <div className="w-full flex justify-end">
+                  <Button
+                    type="submit"
+                    variant="default"
+                    size="sm"
+                    className="max-w-[200px] w-full ml-auto h-8 text-[12px]"
+                    disabled={isSubmitting}
+                  >
+                    Attach Link Asset
+                  </Button>
+                </div>
               </form>
 
               {/* Documents list */}
@@ -1405,15 +1412,17 @@ export default function ProjectDetailPage() {
                   onChange={(e) => setNewRiskMitigation(e.target.value)}
                   className="w-full h-12 p-2 rounded border border-input bg-background focus:outline-none focus:ring-1 focus:ring-ring text-xs leading-relaxed"
                 />
-                <Button
-                  type="submit"
-                  variant="default"
-                  size="sm"
-                  className="w-full h-8 text-[10px]"
-                  disabled={isSubmitting}
-                >
-                  Register Risk Threat
-                </Button>
+                <div className="w-full flex justify-end">
+                  <Button
+                    type="submit"
+                    variant="default"
+                    size="sm"
+                    className="max-w-[200px] w-full ml-auto h-8 text-[12px]"
+                    disabled={isSubmitting}
+                  >
+                    Register Risk Threat
+                  </Button>
+                </div>
               </form>
 
               {/* Risks list */}
