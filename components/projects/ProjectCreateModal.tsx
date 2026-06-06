@@ -166,7 +166,7 @@ export const ProjectCreateModal: React.FC = () => {
               key={t.id}
               type="button"
               onClick={() => applyTemplate(t)}
-              className={`p-3 rounded-xl border text-left flex flex-col justify-between transition-all select-none cursor-pointer ${
+              className={`!p-3 h-auto rounded-xl border text-left flex flex-col justify-between transition-all select-none cursor-pointer ${
                 activeTemplate === t.id
                   ? 'bg-primary/10 border-primary shadow-lg shadow-primary/10 ring-1 ring-primary/20'
                   : 'bg-background/30 border-border/60 hover:bg-card/60'
