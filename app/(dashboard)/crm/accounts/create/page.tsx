@@ -32,13 +32,13 @@ export default function CreateAccountPage() {
 
   // Form states
   const [name, setName] = useState('');
-  const [clientType, setClientType] = useState('Startup');
-  const [industry, setIndustry] = useState('SaaS');
+  const [clientType, setClientType] = useState('Enterprise');
+  const [industry, setIndustry] = useState('Technology');
   const [website, setWebsite] = useState('');
-  const [revenueContribution, setRevenueContribution] = useState(25000);
+  const [revenueContribution, setRevenueContribution] = useState(0);
   const [companySize, setCompanySize] = useState('11-50');
   const [accountManager, setAccountManager] = useState('');
-  const [timezone, setTimezone] = useState('UTC');
+  const [timezone, setTimezone] = useState('IST');
   const [address, setAddress] = useState('');
   const [users, setUsers] = useState<any[]>([]);
 

@@ -36,13 +36,13 @@ export default function EditContactPage() {
   const [isLoadingCompanies, setIsLoadingCompanies] = useState(true);
 
   // Form states
-  const [name, setName] = useState('John Carter');
-  const [role, setRole] = useState('Chief Technology Officer');
-  const [email, setEmail] = useState('carter@acme.com');
-  const [phone, setPhone] = useState('415-555-0190');
-  const [companyId, setCompanyId] = useState('acme123');
-  const [isPrimary, setIsPrimary] = useState(true);
-  const [communicationPref, setCommunicationPref] = useState('slack');
+  const [name, setName] = useState('');
+  const [role, setRole] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [companyId, setCompanyId] = useState('');
+  const [isPrimary, setIsPrimary] = useState(false);
+  const [communicationPref, setCommunicationPref] = useState('email');
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect

@@ -38,7 +38,7 @@ export default function CreateContactPage() {
 
   // Form states
   const [name, setName] = useState('');
-  const [role, setRole] = useState('Director');
+  const [role, setRole] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [companyId, setCompanyId] = useState('');
