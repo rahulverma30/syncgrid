@@ -201,78 +201,82 @@ export default function CreateContactPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                  <Input
-                    required
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="doe@corporate.com"
-                    className="pl-10 bg-background/30 h-10 text-xs"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                  Phone Number
-                </label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                  <Input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="415-555-0199"
-                    className="pl-10 bg-background/30 h-10 text-xs"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                  Prefer Channel
-                </label>
-                <div className="relative">
-                  <MessageSquare className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                  <Select
-                    value={communicationPref}
-                    onChange={(val) => setCommunicationPref(val)}
-                    className="w-full pl-10 pr-4 bg-background/30 border border-border/60 hover:border-primary/20 rounded-xl h-10 text-xs text-slate-300 focus:ring-0 outline-none cursor-pointer"
-                    options={[
-                      { value: 'email', label: 'Email Only' },
-                      { value: 'phone', label: 'Phone Call' },
-                    ]}
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 bg-background/20 py-0 px-4 rounded-xl border border-border/40 select-none mt-8">
-                <input
-                  type="checkbox"
-                  id="primaryContact"
-                  checked={isPrimary}
-                  onChange={(e) => setIsPrimary(e.target.checked)}
-                  className="rounded border-border/60 text-primary h-4.5 w-4.5 focus:ring-0 cursor-pointer"
-                />
-                <div className="space-y-0.5">
-                  <label
-                    htmlFor="primaryContact"
-                    className="text-xs font-bold text-white block cursor-pointer"
-                  >
-                    Primary Key Contact
+            <div className="grid grid-cols-1 gap-4 bg-background/20 p-4 rounded-xl border border-border/40 select-none mt-2 mb-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    Prefer Channel
                   </label>
-                  <span className="text-[9px] text-slate-400 block leading-none">
-                    Target account decision-maker
-                  </span>
+                  <div className="relative">
+                    <MessageSquare className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                    <Select
+                      value={communicationPref}
+                      onChange={(val) => setCommunicationPref(val)}
+                      className="w-full pl-10 pr-4 bg-background/30 border border-border/60 hover:border-primary/20 rounded-xl h-10 text-xs text-slate-300 focus:ring-0 outline-none cursor-pointer"
+                      options={[
+                        { value: 'email', label: 'Email Only' },
+                        { value: 'phone', label: 'Phone Call' },
+                      ]}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col justify-center space-y-1 mt-4 sm:mt-0 pt-2 sm:pt-4 sm:pl-4">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      id="primaryContact"
+                      checked={isPrimary}
+                      onChange={(e) => setIsPrimary(e.target.checked)}
+                      className="rounded border-border/60 text-primary h-4.5 w-4.5 focus:ring-0 cursor-pointer"
+                    />
+                    <div className="space-y-0.5">
+                      <label
+                        htmlFor="primaryContact"
+                        className="text-xs font-bold text-white block cursor-pointer"
+                      >
+                        Primary Key Contact
+                      </label>
+                      <span className="text-[9px] text-slate-400 block leading-none">
+                        Target account decision-maker
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-border/20 mt-2">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    Email Address
+                  </label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                    <Input
+                      required
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="doe@corporate.com"
+                      className="pl-10 bg-background/30 h-10 text-xs"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    Phone Number
+                  </label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                    <Input
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="415-555-0199"
+                      className="pl-10 bg-background/30 h-10 text-xs"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
