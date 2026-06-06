@@ -6,6 +6,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Calendar,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   X,
   Search,
   Check,
@@ -63,31 +65,231 @@ export function FormFieldWrapper({
   );
 }
 
+// Helper functions for Custom DatePicker
+const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
+const getFirstDayOfMonth = (year: number, month: number) => new Date(year, month, 1).getDay();
+const parseISODate = (isoString?: string | number | readonly string[]) => {
+  if (typeof isoString !== 'string' || !isoString) return new Date();
+  const [y, m, d] = isoString.split('-').map(Number);
+  if (!y || !m || !d) return new Date();
+  return new Date(y, m - 1, d);
+};
+const toISODate = (date: Date) => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+};
+const MONTH_NAMES = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
+const WEEK_DAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+
 /**
- * Custom DatePicker using standard html5 calendar input with styled premium indicators
+ * Premium Custom DatePicker using Framer Motion with beautiful interactive calendar
  */
 export const DatePicker = forwardRef<
   HTMLInputElement,
   Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type'> & { label?: string; error?: string }
->(({ className, label, error, ...props }, ref) => {
-  return (
-    <FormFieldWrapper label={label} error={error} required={props.required}>
-      <div className="relative">
-        <input
-          {...props}
-          ref={ref}
-          type="date"
-          className={cn(
-            'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50',
-            'pl-10 block w-full dark:color-scheme-dark',
-            className
-          )}
-        />
-        <Calendar className="pointer-events-none absolute left-3.5 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-muted-foreground/80" />
-      </div>
-    </FormFieldWrapper>
-  );
-});
+>(
+  (
+    { className, label, error, value, onChange, placeholder = 'Select date', disabled, ...props },
+    ref
+  ) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [currentDate, setCurrentDate] = useState(() => parseISODate(value));
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+      if (typeof value === 'string' && value) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setCurrentDate(parseISODate(value));
+      }
+    }, [value]);
+
+    useEffect(() => {
+      function handleClickOutside(event: MouseEvent) {
+        if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+          setIsOpen(false);
+        }
+      }
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const handlePrevMonth = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+    };
+
+    const handleNextMonth = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+    };
+
+    const handleSelectDate = (day: number) => {
+      const selectedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+      const isoString = toISODate(selectedDate);
+      if (onChange) {
+        const e = { target: { value: isoString } } as React.ChangeEvent<HTMLInputElement>;
+        onChange(e);
+      }
+      setIsOpen(false);
+    };
+
+    // Generate calendar grid
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const daysInMonth = getDaysInMonth(year, month);
+    const firstDay = getFirstDayOfMonth(year, month);
+
+    const days = [];
+    const prevMonthDays = getDaysInMonth(year, month - 1);
+    for (let i = firstDay - 1; i >= 0; i--) {
+      days.push({ day: prevMonthDays - i, isCurrentMonth: false });
+    }
+    for (let i = 1; i <= daysInMonth; i++) {
+      days.push({ day: i, isCurrentMonth: true });
+    }
+    const remaining = 42 - days.length;
+    for (let i = 1; i <= remaining; i++) {
+      days.push({ day: i, isCurrentMonth: false });
+    }
+
+    const displayValue =
+      value && typeof value === 'string'
+        ? parseISODate(value).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+          })
+        : '';
+
+    return (
+      <FormFieldWrapper label={label} error={error} required={props.required}>
+        <div className="relative w-full" ref={containerRef}>
+          <input type="hidden" ref={ref} value={value} {...props} />
+          <button
+            type="button"
+            onClick={() => !disabled && setIsOpen(!isOpen)}
+            disabled={disabled}
+            className={cn(
+              'flex h-10 w-full items-center justify-between rounded-md border border-input bg-background/50 px-3.5 py-2 text-sm text-foreground ring-offset-background hover:bg-accent/40 focus:outline-none focus:ring-2 focus:ring-ring select-none text-left transition-colors',
+              disabled && 'cursor-not-allowed opacity-50',
+              className
+            )}
+          >
+            <div className="flex items-center gap-2.5">
+              <Calendar className="h-4 w-4 text-muted-foreground/80" />
+              <span className={cn('truncate', !displayValue && 'text-muted-foreground')}>
+                {displayValue || placeholder}
+              </span>
+            </div>
+            <ChevronDown
+              className={cn(
+                'h-4 w-4 text-muted-foreground/80 transition-transform duration-200 shrink-0',
+                isOpen && 'rotate-180'
+              )}
+            />
+          </button>
+
+          <AnimatePresence>
+            {isOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 6 }}
+                transition={{ duration: 0.15 }}
+                className="absolute z-50 mt-1.5 w-[280px] rounded-xl border border-border bg-popover/95 backdrop-blur-md p-3 text-popover-foreground shadow-2xl"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <button
+                    type="button"
+                    onClick={handlePrevMonth}
+                    className="h-7 w-7 flex items-center justify-center rounded-md hover:bg-accent/80 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  <div className="text-sm font-bold tracking-wide select-none">
+                    {MONTH_NAMES[month]} {year}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleNextMonth}
+                    className="h-7 w-7 flex items-center justify-center rounded-md hover:bg-accent/80 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-7 gap-1 mb-1">
+                  {WEEK_DAYS.map((d) => (
+                    <div
+                      key={d}
+                      className="text-center text-[10px] font-bold uppercase text-muted-foreground/80 select-none"
+                    >
+                      {d}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-7 gap-1">
+                  {days.map((d, idx) => {
+                    const isSelected =
+                      d.isCurrentMonth &&
+                      displayValue &&
+                      d.day === parseISODate(value as string).getDate() &&
+                      month === parseISODate(value as string).getMonth() &&
+                      year === parseISODate(value as string).getFullYear();
+                    const isToday =
+                      d.isCurrentMonth &&
+                      d.day === new Date().getDate() &&
+                      month === new Date().getMonth() &&
+                      year === new Date().getFullYear();
+
+                    return (
+                      <button
+                        key={idx}
+                        type="button"
+                        disabled={!d.isCurrentMonth}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSelectDate(d.day);
+                        }}
+                        className={cn(
+                          'h-8 w-8 rounded-md text-xs font-semibold flex items-center justify-center transition-all select-none mx-auto',
+                          d.isCurrentMonth
+                            ? 'hover:bg-accent hover:text-accent-foreground cursor-pointer text-foreground'
+                            : 'text-muted-foreground/30 cursor-default',
+                          isSelected &&
+                            'bg-primary text-primary-foreground shadow-md shadow-primary/20 hover:bg-primary/90',
+                          isToday && !isSelected && 'ring-1 ring-primary/50 text-primary'
+                        )}
+                      >
+                        {d.day}
+                      </button>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </FormFieldWrapper>
+    );
+  }
+);
 
 DatePicker.displayName = 'DatePicker';
 
@@ -114,24 +316,16 @@ export function DateRangePicker({
   return (
     <FormFieldWrapper label={label} error={error} required={required}>
       <div className="grid grid-cols-2 gap-3 w-full">
-        <div className="relative">
-          <Input
-            type="date"
-            value={startDate}
-            onChange={(e) => onStartChange(e.target.value)}
-            className="pl-9 text-xs sm:text-sm"
-          />
-          <Calendar className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/80" />
-        </div>
-        <div className="relative">
-          <Input
-            type="date"
-            value={endDate}
-            onChange={(e) => onEndChange(e.target.value)}
-            className="pl-9 text-xs sm:text-sm"
-          />
-          <Calendar className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/80" />
-        </div>
+        <DatePicker
+          value={startDate}
+          onChange={(e) => onStartChange(e.target.value)}
+          placeholder="Start date"
+        />
+        <DatePicker
+          value={endDate}
+          onChange={(e) => onEndChange(e.target.value)}
+          placeholder="End date"
+        />
       </div>
     </FormFieldWrapper>
   );

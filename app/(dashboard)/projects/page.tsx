@@ -14,6 +14,12 @@ export default function ProjectsPage() {
     activeSection,
     setActiveSection,
     searchQuery,
+    statusFilter,
+    priorityFilter,
+    managerFilter,
+    riskFilter,
+    billingFilter,
+    isArchivedFilter,
     setFilters,
     setCreateModalOpen,
   } = useProjectsStore();
@@ -21,12 +27,26 @@ export default function ProjectsPage() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const handle = setTimeout(() => {
-      setMounted(true);
-    }, 0);
-    fetchProjects();
+    const handle = setTimeout(() => setMounted(true), 0);
     return () => clearTimeout(handle);
-  }, [fetchProjects]);
+  }, []);
+
+  // Debounce API calls when filters change
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      fetchProjects();
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [
+    searchQuery,
+    statusFilter,
+    priorityFilter,
+    managerFilter,
+    riskFilter,
+    billingFilter,
+    isArchivedFilter,
+    fetchProjects,
+  ]);
 
   if (!mounted) {
     return (
