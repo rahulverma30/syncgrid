@@ -157,22 +157,7 @@ export const InvoiceBuilder: React.FC<InvoiceBuilderProps> = ({ onClose, onSubmi
   };
 
   return (
-    <div className="bg-card/20 border border-border/80 rounded-xl p-6 backdrop-blur-md space-y-6 select-none">
-      <div className="flex justify-between items-center pb-3 border-b border-border/60">
-        <div>
-          <h3 className="text-sm font-bold uppercase tracking-wider">Dynamic Invoice Builder</h3>
-          <p className="text-[10px] text-muted-foreground">
-            Construct and calculate itemized invoice bills
-          </p>
-        </div>
-        <button
-          onClick={onClose}
-          className="p-1 hover:bg-accent/40 rounded text-muted-foreground hover:text-foreground cursor-pointer"
-        >
-          <X className="h-4 w-4" />
-        </button>
-      </div>
-
+    <div className="space-y-6 select-none">
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Dropdowns header inputs */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
@@ -278,10 +263,10 @@ export const InvoiceBuilder: React.FC<InvoiceBuilderProps> = ({ onClose, onSubmi
               <thead>
                 <tr className="table-header-row">
                   <th className="table-header-cell">Item Description</th>
-                  <th className="table-header-cell w-16 text-center">Qty</th>
+                  <th className="table-header-cell w-28 text-center">Qty</th>
                   <th className="table-header-cell w-28">Unit Price</th>
-                  <th className="table-header-cell w-20">Tax (%)</th>
-                  <th className="table-header-cell w-24">Discount</th>
+                  <th className="table-header-cell w-28">Tax (%)</th>
+                  <th className="table-header-cell w-28">Discount</th>
                   <th className="table-header-cell w-28 text-right">Line Total</th>
                   <th className="table-header-cell w-12"></th>
                 </tr>

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useFinanceStore } from '@/store/financeStore';
-import { PageHeader, Button } from '@/components/ui';
+import { PageHeader, Button, Modal } from '@/components/ui';
 import {
   Sparkles,
   LayoutDashboard,
@@ -150,7 +150,23 @@ export default function FinancePage() {
 
         {activeTab === 'invoices' && (
           <>
-            {builderOpen ? (
+            <InvoiceManager
+              invoices={invoices}
+              onOpenCreate={() => setBuilderOpen(true)}
+              onSend={sendInvoice}
+              onDuplicate={duplicateInvoice}
+              onArchive={archiveInvoice}
+              onDelete={deleteInvoice}
+              onRecordPayment={markInvoicePaid}
+              role={role}
+            />
+            <Modal
+              isOpen={builderOpen}
+              onClose={() => setBuilderOpen(false)}
+              title="Dynamic Invoice Builder"
+              description="Construct and calculate itemized invoice bills"
+              size="xl"
+            >
               <InvoiceBuilder
                 onClose={() => setBuilderOpen(false)}
                 onSubmit={async (payload) => {
@@ -159,18 +175,7 @@ export default function FinancePage() {
                 }}
                 role={role}
               />
-            ) : (
-              <InvoiceManager
-                invoices={invoices}
-                onOpenCreate={() => setBuilderOpen(true)}
-                onSend={sendInvoice}
-                onDuplicate={duplicateInvoice}
-                onArchive={archiveInvoice}
-                onDelete={deleteInvoice}
-                onRecordPayment={markInvoicePaid}
-                role={role}
-              />
-            )}
+            </Modal>
           </>
         )}
 

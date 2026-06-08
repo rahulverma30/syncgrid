@@ -42,6 +42,7 @@ export function ActiveTimerWidget() {
         useTasksStore.setState({ runningTimer: parsed });
       } catch {}
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Live tick — update every second while timer runs

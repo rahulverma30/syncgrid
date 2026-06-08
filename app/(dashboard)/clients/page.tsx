@@ -5,12 +5,7 @@ import { PageHeader, Button, Input, LoadingSpinner } from '@/components/ui';
 import { Plus, Search, RefreshCw } from 'lucide-react';
 import { AnimatePresence } from 'framer-motion';
 import { useClientsStore } from '@/store/clientsStore';
-import {
-  ClientAnalytics,
-  ClientTable,
-  ClientIngestModal,
-  ClientDetailDrawer,
-} from '@/components/clients';
+import { ClientAnalytics, ClientTable, ClientIngestModal } from '@/components/clients';
 
 export default function ClientsPage() {
   const {
@@ -126,9 +121,6 @@ export default function ClientsPage() {
 
       {/* RENDER POPUPS & SLIDING DRAWER CHANNELS */}
       <ClientIngestModal />
-      <AnimatePresence>
-        <ClientDetailDrawer />
-      </AnimatePresence>
     </div>
   );
 }

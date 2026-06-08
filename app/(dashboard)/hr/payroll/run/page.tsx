@@ -3,7 +3,15 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { PageHeader, Card, CardContent, Button, Input, LoadingSpinner } from '@/components/ui';
+import {
+  PageHeader,
+  Card,
+  CardContent,
+  Button,
+  Input,
+  LoadingSpinner,
+  DateInput,
+} from '@/components/ui';
 import { DollarSign, ArrowLeft, Calendar, CheckCircle2, Users, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -87,9 +95,8 @@ export default function RunPayrollPage() {
                 </label>
                 <div className="relative">
                   <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                  <Input
+                  <DateInput
                     required
-                    type="date"
                     value={paymentDate}
                     onChange={(e) => setPaymentDate(e.target.value)}
                     className="pl-10 bg-background/30 h-10 text-xs"

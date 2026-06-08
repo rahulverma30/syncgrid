@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Button, Input, Select } from '@/components/ui';
+import { Button, Input, Select, DateInput } from '@/components/ui';
 import {
   Users,
   DollarSign,
@@ -897,8 +897,7 @@ export default function ProjectDetailPage() {
                     className="h-8 text-xs bg-background"
                     required
                   />
-                  <Input
-                    type="date"
+                  <DateInput
                     value={newMilestoneDate}
                     onChange={(e) => setNewMilestoneDate(e.target.value)}
                     className="h-8 text-xs bg-background"
@@ -1107,8 +1106,7 @@ export default function ProjectDetailPage() {
                     <label className="text-[8px] font-bold text-muted-foreground uppercase">
                       Start Date
                     </label>
-                    <Input
-                      type="date"
+                    <DateInput
                       value={newSprintStart}
                       onChange={(e) => setNewSprintStart(e.target.value)}
                       className="h-8 text-xs bg-background"
@@ -1119,8 +1117,7 @@ export default function ProjectDetailPage() {
                     <label className="text-[8px] font-bold text-muted-foreground uppercase">
                       End Date
                     </label>
-                    <Input
-                      type="date"
+                    <DateInput
                       value={newSprintEnd}
                       onChange={(e) => setNewSprintEnd(e.target.value)}
                       className="h-8 text-xs bg-background"

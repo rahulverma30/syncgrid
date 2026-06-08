@@ -71,3 +71,47 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     );
   }
 });
+
+export const DELETE = withApiAuth(async (request: Request, context: any, session: any) => {
+  try {
+    await connectToDatabase();
+    const companyId = session.user.companyId;
+    const params = await context.params;
+    const { id } = params;
+    const body = await request.json();
+    const { docId } = body;
+
+    const client = await Client.findOne({ _id: id, companyId });
+
+    if (!client) {
+      return NextResponse.json(
+        { success: false, error: 'NOT_FOUND', message: 'Client account not found.' },
+        { status: 404 }
+      );
+    }
+
+    client.documents = client.documents.filter((d: any) => d._id.toString() !== docId);
+
+    const activity = new ClientActivity({
+      companyId,
+      clientId: id,
+      type: 'document_uploaded',
+      title: 'Agreement Document Removed',
+      description: `Removed a document from the client folder.`,
+      userName: session.user.name,
+    });
+    await activity.save();
+
+    await client.save();
+
+    return NextResponse.json({
+      success: true,
+      data: client,
+    });
+  } catch (error: any) {
+    return NextResponse.json(
+      { success: false, error: 'ACTION_ERROR', message: error.message },
+      { status: 500 }
+    );
+  }
+});

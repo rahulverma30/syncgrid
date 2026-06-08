@@ -32,13 +32,10 @@ export default function CreateAccountPage() {
 
   // Form states
   const [name, setName] = useState('');
-  const [clientType, setClientType] = useState('Enterprise');
   const [industry, setIndustry] = useState('Technology');
   const [website, setWebsite] = useState('');
-  const [revenueContribution, setRevenueContribution] = useState(0);
-  const [companySize, setCompanySize] = useState('11-50');
-  const [accountManager, setAccountManager] = useState('');
-  const [timezone, setTimezone] = useState('IST');
+  const [revenue, setRevenue] = useState(0);
+  const [ownerId, setOwnerId] = useState('');
   const [address, setAddress] = useState('');
   const [users, setUsers] = useState<any[]>([]);
 
@@ -59,7 +56,7 @@ export default function CreateAccountPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !accountManager) {
+    if (!name || !ownerId) {
       toast.error('Company Name and designated Account Manager are required.');
       return;
     }
@@ -69,31 +66,23 @@ export default function CreateAccountPage() {
       return;
     }
 
-    if (revenueContribution < 0) {
+    if (revenue < 0) {
       toast.error('Annual revenue contribution cannot be negative.');
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const res = await fetch('/api/protected/clients', {
+      const res = await fetch('/api/protected/crm/accounts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name,
-          clientType,
           industry,
           website,
-          revenueContribution,
-          companySize,
-          accountManager,
-          timezone,
+          revenue,
+          ownerId,
           address,
-          emails: [],
-          phones: [],
-          socialLinks: {},
-          customFields: {},
-          tags: [industry.toLowerCase()],
         }),
       });
 
@@ -152,27 +141,6 @@ export default function CreateAccountPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                  Client Type Segment
-                </label>
-                <div className="relative">
-                  <Compass className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                  <Select
-                    value={clientType}
-                    onChange={(val) => setClientType(val)}
-                    className="w-full pl-10 pr-4 bg-background/30 border border-border/60 hover:border-primary/20 rounded-xl h-10 text-xs text-slate-300 focus:ring-0 outline-none cursor-pointer"
-                    options={[
-                      { value: 'Startup', label: 'Startup Profile' },
-                      { value: 'Enterprise', label: 'Enterprise Level' },
-                      { value: 'VIP', label: 'VIP Corporate' },
-                      { value: 'High Value', label: 'High Value Client' },
-                      { value: 'Retainer', label: 'Retainer Period' },
-                    ]}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                   Business Industry
                 </label>
                 <div className="relative">
@@ -191,9 +159,7 @@ export default function CreateAccountPage() {
                   />
                 </div>
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                   Website URL
@@ -218,8 +184,8 @@ export default function CreateAccountPage() {
                   <Input
                     required
                     type="number"
-                    value={revenueContribution}
-                    onChange={(e) => setRevenueContribution(Number(e.target.value))}
+                    value={revenue}
+                    onChange={(e) => setRevenue(Number(e.target.value))}
                     placeholder="50000"
                     className="pl-10 bg-background/30 h-10 text-xs"
                   />
@@ -235,49 +201,15 @@ export default function CreateAccountPage() {
                 <div className="relative">
                   <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 z-10" />
                   <Select
-                    value={accountManager}
-                    onChange={(val) => setAccountManager(val)}
+                    value={ownerId}
+                    onChange={(val) => setOwnerId(val)}
                     className="w-full pl-10 pr-4 bg-background/30 border border-border/60 hover:border-primary/20 rounded-xl h-10 text-xs text-slate-300 focus:ring-0 outline-none cursor-pointer"
                     options={[
                       { value: '', label: 'Select Manager...' },
-                      ...users.map((u) => ({ value: u.name, label: `${u.name}` })),
+                      ...users.map((u) => ({ value: u._id, label: `${u.name}` })),
                     ]}
                   />
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                  Company Scale (Employees)
-                </label>
-                <div className="relative">
-                  <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                  <Select
-                    value={companySize}
-                    onChange={(val) => setCompanySize(val)}
-                    className="w-full pl-10 pr-4 bg-background/30 border border-border/60 hover:border-primary/20 rounded-xl h-10 text-xs text-slate-300 focus:ring-0 outline-none cursor-pointer"
-                    options={[
-                      { value: '1-10', label: '1 - 10 employees' },
-                      { value: '11-50', label: '11 - 50 employees' },
-                      { value: '51-200', label: '51 - 200 employees' },
-                      { value: '201+', label: '201+ employees' },
-                    ]}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                  Timezone context
-                </label>
-                <Input
-                  value={timezone}
-                  onChange={(e) => setTimezone(e.target.value)}
-                  placeholder="UTC / America/New_York"
-                  className="bg-background/30 h-10 text-xs"
-                />
               </div>
 
               <div className="space-y-2">

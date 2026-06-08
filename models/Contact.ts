@@ -11,6 +11,11 @@ const ContactSchema = new Schema(
     },
     accountId: {
       type: Schema.Types.ObjectId,
+      ref: 'Account',
+      index: true,
+    },
+    clientId: {
+      type: Schema.Types.ObjectId,
       ref: 'Client',
       index: true,
     },
@@ -37,6 +42,11 @@ const ContactSchema = new Schema(
     role: {
       type: String,
       trim: true,
+    },
+    communicationPref: {
+      type: String,
+      enum: ['email', 'phone', 'slack', 'zoom'],
+      default: 'email',
     },
     isPrimary: {
       type: Boolean,

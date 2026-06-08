@@ -44,26 +44,16 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
       client = await Client.findOne({ companyId, name: account.name });
       if (!client) {
         // Create Client
-        const contacts = [];
-        if (contact) {
-          contacts.push({
-            name: `${contact.firstName} ${contact.lastName}`,
-            email: contact.email,
-            phone: contact.phone,
-            role: contact.role,
-            isPrimary: true,
-          });
-        }
-
         client = new Client({
           companyId,
           name: account.name,
+          crmAccountId: account._id,
           clientType: 'Startup', // default
           industry: account.industry || 'General',
           website: account.website,
           revenueContribution: deal.value,
           accountManager: userName,
-          contacts,
+          contacts: [], // Deprecated
           timeline: [
             {
               type: 'created',
@@ -77,8 +67,14 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
       } else {
         // Update existing client revenue
         client.revenueContribution += deal.value;
+        if (!client.crmAccountId) {
+          client.crmAccountId = account._id;
+        }
         await client.save();
       }
+
+      // Sync existing CRM contacts to the new/existing Client
+      await Contact.updateMany({ accountId: account._id }, { $set: { clientId: client._id } });
     }
 
     // 4. Activity Log

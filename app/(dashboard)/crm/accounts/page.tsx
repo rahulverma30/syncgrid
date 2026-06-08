@@ -34,15 +34,12 @@ import { toast } from 'sonner';
 interface Account {
   _id: string;
   name: string;
-  clientType: string;
-  industry: string;
-  website: string;
-  companySize: string;
-  revenueContribution: number;
-  healthScore: number;
-  onboardingStatus: string;
-  accountManager: string;
+  revenue: number;
+  ownerId?: { _id: string; name: string; email: string };
   createdAt: string;
+  industry?: string;
+  healthScore?: number;
+  website?: string;
 }
 
 export default function CRMAccountsPage() {
@@ -62,7 +59,7 @@ export default function CRMAccountsPage() {
   const fetchAccounts = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch('/api/protected/clients');
+      const res = await fetch('/api/protected/crm/accounts');
       const d = await res.json();
       if (d.success) {
         setAccounts(d.data);
@@ -104,25 +101,12 @@ export default function CRMAccountsPage() {
   };
 
   const handleExportCSV = () => {
-    const headers = [
-      'Account Name',
-      'Industry',
-      'Client Type',
-      'Size',
-      'Contribution ($)',
-      'Health Score',
-      'Status',
-      'Manager',
-    ];
+    const headers = ['Account Name', 'Industry', 'Revenue ($)', 'Owner'];
     const rows = filteredAccounts.map((a) => [
       a.name,
       a.industry || '',
-      a.clientType,
-      a.companySize,
-      a.revenueContribution,
-      a.healthScore,
-      a.onboardingStatus,
-      a.accountManager,
+      a.revenue,
+      a.ownerId?.name || '',
     ]);
 
     const csvContent = [
@@ -147,20 +131,16 @@ export default function CRMAccountsPage() {
     const matchesSearch =
       a.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (a.industry && a.industry.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      a.accountManager.toLowerCase().includes(searchQuery.toLowerCase());
+      (a.ownerId?.name && a.ownerId.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
     const matchesIndustry = industryFilter
       ? a.industry?.toLowerCase() === industryFilter.toLowerCase()
       : true;
-    const matchesStatus = statusFilter ? a.onboardingStatus === statusFilter : true;
 
-    return matchesSearch && matchesIndustry && matchesStatus;
+    return matchesSearch && matchesIndustry;
   });
 
-  const totalValue = filteredAccounts.reduce(
-    (acc, curr) => acc + (curr.revenueContribution || 0),
-    0
-  );
+  const totalValue = filteredAccounts.reduce((acc, curr) => acc + (curr.revenue || 0), 0);
   const avgHealth =
     filteredAccounts.length > 0
       ? Math.round(
@@ -223,15 +203,6 @@ export default function CRMAccountsPage() {
           </h3>
           <p className="text-[10px] text-slate-400 mt-1">Annual recurring revenue metrics</p>
         </Card>
-
-        <Card className="bg-card/40 border border-border/60 p-5 rounded-2xl select-none backdrop-blur-md">
-          <div className="flex justify-between items-center text-slate-400">
-            <span className="text-[10px] font-bold uppercase tracking-wider">Avg Health Index</span>
-            <Heart className="w-4 h-4 text-rose-500" />
-          </div>
-          <h3 className="text-2xl font-black font-mono text-rose-400 mt-1.5">{avgHealth}%</h3>
-          <p className="text-[10px] text-slate-400 mt-1">Satisfaction and retention index levels</p>
-        </Card>
       </div>
 
       {/* Filter and Control Bar */}
@@ -259,20 +230,6 @@ export default function CRMAccountsPage() {
                   { value: 'biotech', label: 'Biotech' },
                   { value: 'retail', label: 'Retail' },
                   { value: 'ecommerce', label: 'E-Commerce' },
-                ]}
-              />
-            </div>
-
-            <div className="flex items-center gap-1.5 bg-background/30 px-3 py-1.5 rounded-xl border border-border/40">
-              <TrendingUp className="h-3 w-3 text-slate-400" />
-              <Select
-                value={statusFilter}
-                onChange={(val) => setStatusFilter(val)}
-                className="bg-transparent border-0 text-[10px] font-bold uppercase tracking-wider text-slate-300 focus:ring-0 outline-none cursor-pointer"
-                options={[
-                  { value: 'pending', label: 'Pending' },
-                  { value: 'in-progress', label: 'Onboarding' },
-                  { value: 'completed', label: 'Completed' },
                 ]}
               />
             </div>
@@ -306,10 +263,8 @@ export default function CRMAccountsPage() {
                     />
                   </th>
                   <th className="py-3.5 px-4">Company</th>
-                  <th className="py-3.5 px-4">Segment / Size</th>
-                  <th className="py-3.5 px-4">Contribution</th>
-                  <th className="py-3.5 px-4">Health Index</th>
-                  <th className="py-3.5 px-4">Onboarding</th>
+                  <th className="py-3.5 px-4">Industry</th>
+                  <th className="py-3.5 px-4">Revenue</th>
                   <th className="py-3.5 px-4 text-right">Actions</th>
                 </tr>
               </thead>
@@ -343,50 +298,18 @@ export default function CRMAccountsPage() {
                             {a.website || 'No website'}
                           </span>
                           <span>•</span>
-                          <span>Managed by {a.accountManager}</span>
+                          <span>Managed by {a.ownerId?.name || 'Unassigned'}</span>
                         </div>
                       </td>
                       <td className="py-4 px-4">
-                        <div className="font-semibold text-slate-300">{a.clientType}</div>
-                        <div className="text-[10px] text-slate-500 mt-0.5">
-                          {a.companySize} employees
+                        <div className="font-semibold text-slate-300">
+                          {a.industry || 'Unknown'}
                         </div>
                       </td>
                       <td className="py-4 px-4 font-mono font-bold text-emerald-400">
-                        ${a.revenueContribution?.toLocaleString()} / yr
+                        ${a.revenue?.toLocaleString() || 0} / yr
                       </td>
-                      <td className="py-4 px-4">
-                        <div className="flex items-center gap-1.5">
-                          <div className="w-16 bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                            <div
-                              style={{ width: `${a.healthScore}%` }}
-                              className={`h-full rounded-full ${
-                                a.healthScore >= 80
-                                  ? 'bg-emerald-500'
-                                  : a.healthScore >= 50
-                                    ? 'bg-yellow-500'
-                                    : 'bg-red-500'
-                              }`}
-                            />
-                          </div>
-                          <span className="text-[10px] font-bold text-slate-300">
-                            {a.healthScore}%
-                          </span>
-                        </div>
-                      </td>
-                      <td className="py-4 px-4">
-                        <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold ${
-                            a.onboardingStatus === 'completed'
-                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                              : a.onboardingStatus === 'in-progress'
-                                ? 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
-                                : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-                          }`}
-                        >
-                          {a.onboardingStatus}
-                        </span>
-                      </td>
+
                       <td className="py-4 px-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
                           <Link href={`/crm/accounts/${a._id}`}>
@@ -465,7 +388,7 @@ export default function CRMAccountsPage() {
         onConfirm={async () => {
           if (accountToDeleteId) {
             try {
-              const res = await fetch(`/api/protected/clients/${accountToDeleteId}`, {
+              const res = await fetch(`/api/protected/crm/accounts/${accountToDeleteId}`, {
                 method: 'DELETE',
               });
               const d = await res.json();
@@ -497,7 +420,7 @@ export default function CRMAccountsPage() {
           let deletedCount = 0;
           for (const id of selectedRows) {
             try {
-              const res = await fetch(`/api/protected/clients/${id}`, { method: 'DELETE' });
+              const res = await fetch(`/api/protected/crm/accounts/${id}`, { method: 'DELETE' });
               const d = await res.json();
               if (d.success) deletedCount++;
             } catch (e) {}

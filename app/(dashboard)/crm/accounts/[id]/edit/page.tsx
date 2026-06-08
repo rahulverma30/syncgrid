@@ -18,10 +18,10 @@ import {
   DollarSign,
   Briefcase,
   Users,
-  Compass,
   MapPin,
   ArrowLeft,
   CheckCircle2,
+  FileText,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -35,57 +35,80 @@ export default function EditAccountPage() {
 
   // Form states
   const [name, setName] = useState('');
-  const [clientType, setClientType] = useState('Enterprise');
-  const [industry, setIndustry] = useState('Technology');
+  const [industry, setIndustry] = useState('');
   const [website, setWebsite] = useState('');
-  const [revenueContribution, setRevenueContribution] = useState(0);
-  const [companySize, setCompanySize] = useState('11-50');
-  const [accountManager, setAccountManager] = useState('');
-  const [timezone, setTimezone] = useState('IST');
+  const [revenue, setRevenue] = useState(0);
+  const [ownerId, setOwnerId] = useState('');
   const [address, setAddress] = useState('');
+  const [notes, setNotes] = useState('');
+
+  const [users, setUsers] = useState<any[]>([]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
     if (!accountId) return;
-    const fetchAccount = async () => {
+
+    const fetchData = async () => {
       setIsLoading(true);
       try {
-        const res = await fetch(`/api/protected/clients/${accountId}`);
-        const d = await res.json();
-        if (d.success && d.data) {
-          const a = d.data;
+        const [usersRes, accRes] = await Promise.all([
+          fetch('/api/protected/team/members'),
+          fetch(`/api/protected/crm/accounts/${accountId}`),
+        ]);
+
+        const ud = await usersRes.json();
+        if (ud.success) setUsers(ud.data);
+
+        const ad = await accRes.json();
+        if (ad.success && ad.data) {
+          const a = ad.data;
           setName(a.name);
-          setClientType(a.clientType);
-          setIndustry(a.industry);
+          setIndustry(a.industry || '');
           setWebsite(a.website || '');
-          setRevenueContribution(a.revenueContribution);
-          setCompanySize(a.companySize);
-          setAccountManager(a.accountManager);
-          setTimezone(a.timezone || 'UTC');
+          setRevenue(a.revenue || 0);
+          setOwnerId(a.ownerId?._id || a.ownerId || '');
           setAddress(a.address || '');
+          setNotes(a.notes || '');
         }
       } catch (err) {
-        toast.error('Failed to load corporate account details for editing. Using offline sandbox.');
+        toast.error('Failed to load account details.');
       } finally {
         setIsLoading(false);
       }
     };
-    fetchAccount();
+    fetchData();
   }, [accountId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !accountManager) {
+    if (!name || !ownerId) {
       toast.error('Company Name and designated Account Manager are required.');
       return;
     }
 
     setIsSubmitting(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 600));
-      toast.success(`Enterprise Account "${name}" details saved successfully.`);
-      router.push(`/crm/accounts/${accountId}`);
+      const res = await fetch(`/api/protected/crm/accounts/${accountId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          industry,
+          website,
+          revenue,
+          ownerId,
+          address,
+          notes,
+        }),
+      });
+      const d = await res.json();
+      if (d.success) {
+        toast.success(`Account details saved successfully.`);
+        router.push(`/crm/accounts/${accountId}`);
+      } else {
+        toast.error('Failed to save account details.');
+      }
     } catch (err) {
       toast.error('Failed to save account details.');
     } finally {
@@ -145,48 +168,19 @@ export default function EditAccountPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                  Client Type Segment
-                </label>
-                <div className="relative">
-                  <Compass className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                  <Select
-                    value={clientType}
-                    onChange={(val) => setClientType(val)}
-                    className="w-full pl-10 pr-4 bg-background/30 border border-border/60 hover:border-primary/20 rounded-xl h-10 text-xs text-slate-300 focus:ring-0 outline-none cursor-pointer"
-                    options={[
-                      { value: 'Startup', label: 'Startup Profile' },
-                      { value: 'Enterprise', label: 'Enterprise Level' },
-                      { value: 'VIP', label: 'VIP Corporate' },
-                      { value: 'High Value', label: 'High Value Client' },
-                      { value: 'Retainer', label: 'Retainer Period' },
-                    ]}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                   Business Industry
                 </label>
                 <div className="relative">
                   <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                  <Select
+                  <Input
                     value={industry}
-                    onChange={(val) => setIndustry(val)}
-                    className="w-full pl-10 pr-4 bg-background/30 border border-border/60 hover:border-primary/20 rounded-xl h-10 text-xs text-slate-300 focus:ring-0 outline-none cursor-pointer"
-                    options={[
-                      { value: 'SaaS', label: 'SaaS Products' },
-                      { value: 'Biotech', label: 'Biotech Medical' },
-                      { value: 'Retail', label: 'Retail / Logistics' },
-                      { value: 'E-Commerce', label: 'Digital E-Commerce' },
-                      { value: 'Finance', label: 'Financial Tech' },
-                    ]}
+                    onChange={(e) => setIndustry(e.target.value)}
+                    placeholder="e.g. SaaS, Fintech..."
+                    className="pl-10 bg-background/30 h-10 text-xs"
                   />
                 </div>
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                   Website URL
@@ -201,89 +195,71 @@ export default function EditAccountPage() {
                   />
                 </div>
               </div>
+            </div>
 
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                  Annual Expected Revenue Contribution
+                  Annual Expected Revenue
                 </label>
                 <div className="relative">
                   <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
                   <Input
                     required
                     type="number"
-                    value={revenueContribution}
-                    onChange={(e) => setRevenueContribution(Number(e.target.value))}
-                    placeholder="50000"
+                    value={revenue}
+                    onChange={(e) => setRevenue(Number(e.target.value))}
                     className="pl-10 bg-background/30 h-10 text-xs"
                   />
                 </div>
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                   Designated Account Manager
                 </label>
                 <div className="relative">
-                  <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                  <Input
-                    required
-                    value={accountManager}
-                    onChange={(e) => setAccountManager(e.target.value)}
-                    placeholder="Jane Doe (Sales Chief)"
-                    className="pl-10 bg-background/30 h-10 text-xs"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                  Company Scale (Employees)
-                </label>
-                <div className="relative">
-                  <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                  <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 z-10" />
                   <Select
-                    value={companySize}
-                    onChange={(val) => setCompanySize(val)}
+                    value={ownerId}
+                    onChange={(val) => setOwnerId(val)}
                     className="w-full pl-10 pr-4 bg-background/30 border border-border/60 hover:border-primary/20 rounded-xl h-10 text-xs text-slate-300 focus:ring-0 outline-none cursor-pointer"
                     options={[
-                      { value: '1-10', label: '1 - 10 employees' },
-                      { value: '11-50', label: '11 - 50 employees' },
-                      { value: '51-200', label: '51 - 200 employees' },
-                      { value: '201+', label: '201+ employees' },
+                      { value: '', label: 'Select Manager...' },
+                      ...users.map((u) => ({ value: u._id, label: `${u.name}` })),
                     ]}
                   />
                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                  Timezone context
-                </label>
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                Physical Address
+              </label>
+              <div className="relative">
+                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
                 <Input
-                  value={timezone}
-                  onChange={(e) => setTimezone(e.target.value)}
-                  placeholder="UTC / America/New_York"
-                  className="bg-background/30 h-10 text-xs"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  placeholder="100 Silicon Way, SF CA"
+                  className="pl-10 bg-background/30 h-10 text-xs"
                 />
               </div>
+            </div>
 
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                  Physical Address
-                </label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                  <Input
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    placeholder="100 Silicon Way, SF CA"
-                    className="pl-10 bg-background/30 h-10 text-xs"
-                  />
-                </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                General Notes
+              </label>
+              <div className="relative">
+                <FileText className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Enter context, background, or goals..."
+                  className="w-full pl-10 pr-4 py-2 bg-background/30 border border-border/60 hover:border-primary/20 rounded-xl text-xs text-slate-300 focus:outline-none focus:ring-1 focus:ring-primary min-h-[100px]"
+                />
               </div>
             </div>
 

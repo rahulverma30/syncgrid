@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { PageHeader, Card, CardContent, Button, Modal, Input } from '@/components/ui';
+import { PageHeader, Card, CardContent, Button, Modal, Input, DateInput } from '@/components/ui';
 import { Clock, Calendar, Users, Edit } from 'lucide-react';
 import { AttendanceWidget } from '@/components/attendance/AttendanceWidget';
 import { EmployeeActivityDrawer } from '@/components/hr/EmployeeActivityDrawer';
@@ -348,15 +348,13 @@ export default function AttendancePage() {
         description={`Modify session details for ${correctionLog?.user?.name}`}
       >
         <div className="space-y-4">
-          <Input
+          <DateInput
             label="Start Time"
-            type="datetime-local"
             value={newStartTime}
             onChange={(e) => setNewStartTime(e.target.value)}
           />
-          <Input
+          <DateInput
             label="End Time"
-            type="datetime-local"
             value={newEndTime}
             onChange={(e) => setNewEndTime(e.target.value)}
           />

@@ -149,13 +149,7 @@ export default function ContactDetailsPage() {
     }
   };
 
-  const handleSimulateCommunication = (channel: string) => {
-    if (channel === 'Email') {
-      window.location.href = `mailto:${email}`;
-    } else if (channel === 'Phone') {
-      window.location.href = `tel:${phone}`;
-    }
-  };
+  // Removed JS-based handler in favor of native anchor tags
 
   if (!mounted) return null;
 
@@ -214,24 +208,32 @@ export default function ContactDetailsPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2 select-none">
-            <Button
-              onClick={() => handleSimulateCommunication('Email')}
-              variant="outline"
-              size="sm"
-              className="h-8 text-xs gap-1 hover:bg-accent/40"
+            <a
+              href={`https://mail.google.com/mail/?view=cm&fs=1&to=${email}`}
+              target="_blank"
+              rel="noopener noreferrer"
             >
-              <Mail className="h-3.5 w-3.5" />
-              Email
-            </Button>
-            <Button
-              onClick={() => handleSimulateCommunication('Phone')}
-              variant="outline"
-              size="sm"
-              className="h-8 text-xs gap-1 hover:bg-accent/40"
-            >
-              <Phone className="h-3.5 w-3.5 text-blue-400" />
-              Phone Call
-            </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs gap-1 hover:bg-accent/40"
+              >
+                <Mail className="h-3.5 w-3.5" />
+                Email
+              </Button>
+            </a>
+            <a href={`tel:${phone}`}>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs gap-1 hover:bg-accent/40"
+              >
+                <Phone className="h-3.5 w-3.5 text-blue-400" />
+                Phone Call
+              </Button>
+            </a>
           </div>
         </div>
       </Card>

@@ -3,6 +3,7 @@ import { withApiAuth } from '@/lib/auth/api';
 import { connectToDatabase } from '@/lib/db/mongodb';
 import { Client } from '@/models/Client';
 import { ClientActivity } from '@/models/ClientActivity';
+import { Contact } from '@/models/Contact';
 import { ContactIngestSchema } from '@/lib/validators/client';
 
 export const POST = withApiAuth(async (request: Request, context: any, session: any) => {
@@ -38,25 +39,34 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
       );
     }
 
-    // If setting this contact as primary, unset other contacts
+    // If setting this contact as primary, unset other contacts for this Client
     if (validated.isPrimary) {
-      client.contacts.forEach((c: any) => {
-        c.isPrimary = false;
-      });
+      await Contact.updateMany({ clientId: id }, { $set: { isPrimary: false } });
     }
 
-    const newContact = {
-      name: validated.name,
+    // Split name into first/last
+    const nameParts = validated.name.trim().split(' ');
+    const firstName = nameParts[0];
+    const lastName = nameParts.slice(1).join(' ') || ' ';
+
+    const newContact = new Contact({
+      companyId,
+      clientId: id,
+      accountId: client.crmAccountId || undefined,
+      ownerId: session.user.id,
+      firstName,
+      lastName,
       role: validated.role,
       email: validated.email,
       phone: validated.phone,
       isPrimary: validated.isPrimary,
-      communicationPref: validated.communicationPref,
-    };
+      // Note: communicationPref is not natively in the CRM Contact schema currently,
+      // but we can append it if we update the schema later, or omit it.
+    });
 
-    client.contacts.push(newContact);
+    await newContact.save();
 
-    // Record inside account audit timeline - save to decoupled ClientActivity collection
+    // Record inside account audit timeline
     const activity = new ClientActivity({
       companyId,
       clientId: id,
@@ -67,11 +77,23 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     });
     await activity.save();
 
-    await client.save();
+    // Re-fetch contacts to return updated state
+    const contactQuery = client.crmAccountId
+      ? { $or: [{ clientId: id }, { accountId: client.crmAccountId }] }
+      : { clientId: id };
+
+    const unifiedContacts = await Contact.find({
+      companyId,
+      ...contactQuery,
+      isArchived: false,
+    }).sort({ isPrimary: -1, createdAt: -1 });
+
+    const clientObj = client.toObject();
+    clientObj.contacts = unifiedContacts;
 
     return NextResponse.json({
       success: true,
-      data: client,
+      data: clientObj,
     });
   } catch (error: any) {
     return NextResponse.json(

@@ -11,6 +11,7 @@ import {
   Input,
   LoadingSpinner,
   Select,
+  DateInput,
 } from '@/components/ui';
 import {
   DollarSign,
@@ -175,9 +176,8 @@ export default function CreateInvoicePage() {
                 </label>
                 <div className="relative">
                   <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                  <Input
+                  <DateInput
                     required
-                    type="date"
                     value={issueDate}
                     onChange={(e) => setIssueDate(e.target.value)}
                     className="pl-10 bg-background/30 h-10 text-xs"
@@ -191,9 +191,8 @@ export default function CreateInvoicePage() {
                 </label>
                 <div className="relative">
                   <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                  <Input
+                  <DateInput
                     required
-                    type="date"
                     value={dueDate}
                     onChange={(e) => setDueDate(e.target.value)}
                     className="pl-10 bg-background/30 h-10 text-xs"

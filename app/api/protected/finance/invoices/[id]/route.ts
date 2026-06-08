@@ -35,7 +35,7 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
     await connectToDatabase();
     const companyId = session.user.companyId;
     const userId = session.user.id;
-    const userName = session.user.name;
+    const userName = session.user.name || 'System User';
     const roles = session.user.roles || [];
     const { id } = context.params;
 
@@ -241,7 +241,7 @@ export const DELETE = withApiAuth(async (request: Request, context: any, session
     await connectToDatabase();
     const companyId = session.user.companyId;
     const userId = session.user.id;
-    const userName = session.user.name;
+    const userName = session.user.name || 'System User';
     const roles = session.user.roles || [];
     const { id } = context.params;
 
@@ -292,7 +292,7 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     await connectToDatabase();
     const companyId = session.user.companyId;
     const userId = session.user.id;
-    const userName = session.user.name;
+    const userName = session.user.name || 'System User';
     const roles = session.user.roles || [];
     const { id } = context.params;
 

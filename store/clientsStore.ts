@@ -135,6 +135,7 @@ interface ClientsState {
 
   // Actions
   fetchClients: () => Promise<void>;
+  refreshSelectedClient: () => Promise<void>;
   setSelectedClient: (client: ClientAccount | null) => void;
   setActiveTab: (tab: string) => void;
   setActiveSection: (section: 'analytics' | 'ledger') => void;
@@ -247,14 +248,9 @@ export const useClientsStore = create<ClientsState>((set, get) => {
         const d = await res.json();
         if (d.success) {
           set({ clients: d.data, currentPage: 1 }); // reset page on refetch
-          // If drawer has a client, refresh drawer content as well
-          const selected = get().selectedClient;
-          if (selected) {
-            const fresh = d.data.find((c: ClientAccount) => c._id === selected._id);
-            if (fresh) {
-              set({ selectedClient: fresh });
-            }
-          }
+          // Notice: We NO LONGER overwrite selectedClient here because the list API
+          // omits details like notes, contacts, and timeline. Overwriting it causes
+          // the UI to appear broken when saving or adding values.
         } else {
           set({ error: d.message || 'Failed to query dynamic customer vault.' });
         }
@@ -262,6 +258,20 @@ export const useClientsStore = create<ClientsState>((set, get) => {
         set({ error: e.message || 'DB connection offline. Cache failure.' });
       } finally {
         set({ isLoading: false });
+      }
+    },
+
+    refreshSelectedClient: async () => {
+      const selectedId = get().selectedClient?._id;
+      if (!selectedId) return;
+      try {
+        const res = await fetch(`/api/protected/clients/${selectedId}`);
+        const d = await res.json();
+        if (d.success) {
+          set({ selectedClient: d.data });
+        }
+      } catch (e) {
+        console.error('Failed to refresh selected client', e);
       }
     },
 

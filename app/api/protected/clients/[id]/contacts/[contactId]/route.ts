@@ -3,13 +3,14 @@ import { withApiAuth } from '@/lib/auth/api';
 import { connectToDatabase } from '@/lib/db/mongodb';
 import { Client } from '@/models/Client';
 import { ClientActivity } from '@/models/ClientActivity';
+import { Contact } from '@/models/Contact';
 
 export const DELETE = withApiAuth(async (request: Request, context: any, session: any) => {
   try {
     await connectToDatabase();
     const companyId = session.user.companyId;
     const userName = session.user.name;
-    const { id, contactId } = context.params;
+    const { id, contactId } = await context.params;
 
     const client = await Client.findOne({ _id: id, companyId });
 
@@ -20,7 +21,7 @@ export const DELETE = withApiAuth(async (request: Request, context: any, session
       );
     }
 
-    const contact = client.contacts.id(contactId);
+    const contact = await Contact.findOne({ _id: contactId });
     if (!contact) {
       return NextResponse.json(
         { success: false, error: 'NOT_FOUND', message: 'Contact not found.' },
@@ -28,8 +29,9 @@ export const DELETE = withApiAuth(async (request: Request, context: any, session
       );
     }
 
-    // Remove the contact
-    client.contacts.pull(contactId);
+    // Instead of completely deleting, we can either delete or just unlink from this Client.
+    // We will hard delete it.
+    await Contact.deleteOne({ _id: contactId });
 
     // Record inside account audit timeline
     const activity = new ClientActivity({
@@ -37,12 +39,10 @@ export const DELETE = withApiAuth(async (request: Request, context: any, session
       clientId: id,
       type: 'contact_removed',
       title: 'Account Contact Removed',
-      description: `Contact person "${contact.name}" removed by ${userName}.`,
+      description: `Contact person "${contact.firstName} ${contact.lastName}" removed by ${userName}.`,
       userName,
     });
     await activity.save();
-
-    await client.save();
 
     return NextResponse.json({
       success: true,

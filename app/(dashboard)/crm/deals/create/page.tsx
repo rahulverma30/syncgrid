@@ -11,6 +11,7 @@ import {
   Input,
   LoadingSpinner,
   Select,
+  DateInput,
 } from '@/components/ui';
 import {
   TrendingUp,
@@ -246,8 +247,7 @@ export default function CreateDealPage() {
                 </label>
                 <div className="relative">
                   <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                  <Input
-                    type="date"
+                  <DateInput
                     value={expectedCloseDate}
                     onChange={(e) => setExpectedCloseDate(e.target.value)}
                     className="pl-10 bg-background/30 h-10 text-xs"

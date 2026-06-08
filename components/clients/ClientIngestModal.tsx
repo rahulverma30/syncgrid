@@ -25,6 +25,20 @@ export const ClientIngestModal: React.FC = () => {
   const [formWebsite, setFormWebsite] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [users, setUsers] = useState<any[]>([]);
+
+  React.useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const res = await fetch('/api/protected/team/members');
+        const d = await res.json();
+        if (d.success) setUsers(d.data);
+      } catch (err) {
+        console.error('Failed to load users');
+      }
+    };
+    fetchUsers();
+  }, []);
 
   const handleCreateClient = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -164,16 +178,14 @@ export const ClientIngestModal: React.FC = () => {
           </div>
           <div className="space-y-1.5">
             <label className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">
-              Account Owner
+              Designated Account Manager
             </label>
             <Select
               value={formManager}
               onChange={(value) => setFormManager(value)}
               options={[
                 { value: '', label: 'Auto-assign...' },
-                { value: 'Pepper Potts', label: 'Pepper Potts' },
-                { value: 'Lucius Fox', label: 'Lucius Fox' },
-                { value: 'Samantha Vance', label: 'Samantha Vance' },
+                ...users.map((u) => ({ value: u.name, label: u.name })),
               ]}
               className="h-10 text-xs rounded-xl bg-background/30 border border-border/60 px-3 hover:border-primary/30 transition-colors text-slate-300 outline-none w-full"
             />

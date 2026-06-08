@@ -169,7 +169,7 @@ export function TaskTable({ onSelectTask }: TaskTableProps) {
   const paginatedTasks = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     return sortedTasks.slice(startIndex, startIndex + itemsPerPage);
-  }, [sortedTasks, currentPage]);
+  }, [sortedTasks, currentPage, itemsPerPage]);
 
   // Virtualization Window Calculations
   const virtualRows = useMemo(() => {

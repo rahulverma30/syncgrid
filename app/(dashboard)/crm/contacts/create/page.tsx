@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   PageHeader,
@@ -32,6 +32,9 @@ interface CompanyOption {
 
 export default function CreateContactPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const sourceAccountId = searchParams?.get('accountId');
+
   const [mounted, setMounted] = useState(false);
   const [companies, setCompanies] = useState<CompanyOption[]>([]);
   const [isLoadingCompanies, setIsLoadingCompanies] = useState(true);
@@ -56,7 +59,11 @@ export default function CreateContactPage() {
         if (d.success) {
           setCompanies(d.data.map((c: any) => ({ _id: c._id, name: c.name })));
           if (d.data.length > 0) {
-            setCompanyId(d.data[0]._id);
+            if (sourceAccountId && d.data.some((c: any) => c._id === sourceAccountId)) {
+              setCompanyId(sourceAccountId);
+            } else {
+              setCompanyId(d.data[0]._id);
+            }
           }
         }
       } catch (err) {
@@ -66,7 +73,7 @@ export default function CreateContactPage() {
       }
     };
     fetchCompanies();
-  }, []);
+  }, [sourceAccountId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -109,7 +116,11 @@ export default function CreateContactPage() {
 
       if (d.success) {
         toast.success(`Contact for "${name}" registered successfully!`);
-        router.push('/crm/contacts');
+        if (sourceAccountId) {
+          router.push(`/crm/accounts/${sourceAccountId}`);
+        } else {
+          router.push('/crm/contacts');
+        }
       } else {
         toast.error(d.message || 'Could not save contact record.');
       }
@@ -125,10 +136,10 @@ export default function CreateContactPage() {
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
       <div className="flex items-center gap-2 select-none">
-        <Link href="/crm/contacts">
+        <Link href={sourceAccountId ? `/crm/accounts/${sourceAccountId}` : '/crm/contacts'}>
           <Button variant="outline" size="sm" className="h-8 hover:bg-accent/40 text-xs gap-1">
             <ArrowLeft className="h-3.5 w-3.5" />
-            Back to Directory
+            {sourceAccountId ? 'Back to Account' : 'Back to Directory'}
           </Button>
         </Link>
       </div>
@@ -282,7 +293,7 @@ export default function CreateContactPage() {
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-4 border-t border-border/40 select-none">
-              <Link href="/crm/contacts">
+              <Link href={sourceAccountId ? `/crm/accounts/${sourceAccountId}` : '/crm/contacts'}>
                 <Button
                   variant="outline"
                   size="sm"

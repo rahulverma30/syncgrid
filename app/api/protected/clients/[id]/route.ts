@@ -3,6 +3,7 @@ import { withApiAuth } from '@/lib/auth/api';
 import { connectToDatabase } from '@/lib/db/mongodb';
 import { Client } from '@/models/Client';
 import { ClientActivity } from '@/models/ClientActivity';
+import { Contact } from '@/models/Contact';
 import { hasRole } from '@/lib/auth/permission-checks';
 import mongoose from 'mongoose';
 
@@ -29,6 +30,19 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
 
     const clientObj = client.toObject();
     clientObj.timeline = activities;
+
+    // Fetch unified contacts
+    const contactQuery = client.crmAccountId
+      ? { $or: [{ clientId: id }, { accountId: client.crmAccountId }] }
+      : { clientId: id };
+
+    const unifiedContacts = await Contact.find({
+      companyId,
+      ...contactQuery,
+      isArchived: false,
+    }).sort({ isPrimary: -1, createdAt: -1 });
+
+    clientObj.contacts = unifiedContacts;
 
     // Fetch aggregated projects
     const ProjectModel = mongoose.models.Project;

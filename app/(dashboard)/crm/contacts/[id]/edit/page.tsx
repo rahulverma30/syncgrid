@@ -100,7 +100,7 @@ export default function EditContactPage() {
       }
     };
     fetchContact();
-  }, [contactId]);
+  }, [contactId, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

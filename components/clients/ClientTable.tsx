@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Button,
   Input,
@@ -51,9 +52,10 @@ const ClientRow: React.FC<ClientRowProps> = React.memo(
     setClientToDelete,
     setIsDeleteConfirmOpen,
   }) => {
+    const router = useRouter();
     return (
       <tr
-        onClick={() => setSelectedClient(acc)}
+        onClick={() => router.push(`/clients/${acc._id}`)}
         className={`cursor-pointer group ${isSelected ? 'table-row-selected table-row' : 'table-row'}`}
       >
         <td className="table-body-cell" onClick={(e) => e.stopPropagation()}>
@@ -217,6 +219,8 @@ export const ClientTable: React.FC = () => {
     loadFilterPreset,
     deleteFilterPreset,
   } = useClientsStore();
+
+  const router = useRouter();
 
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [bulkManager, setBulkManager] = useState('');
@@ -702,7 +706,7 @@ export const ClientTable: React.FC = () => {
             {paginatedClients.map((acc) => (
               <div
                 key={acc._id}
-                onClick={() => setSelectedClient(acc)}
+                onClick={() => router.push(`/clients/${acc._id}`)}
                 className={`p-4 rounded-xl border border-border/80 bg-card/40 backdrop-blur-md space-y-3 hover:border-primary/40 cursor-pointer transition-all ${
                   selectedRows.includes(acc._id) ? 'ring-1 ring-primary bg-primary/5' : ''
                 }`}

@@ -112,6 +112,11 @@ const ClientSchema = new Schema(
       required: true,
       index: true,
     },
+    crmAccountId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Account',
+      index: true,
+    },
     name: {
       type: String,
       required: true,

@@ -1230,10 +1230,11 @@ export default function CRMPage() {
                         </td>
                         <td className="py-3 px-4">
                           <span
-                            className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-white select-none"
+                            className="inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[9px] font-black uppercase tracking-wider select-none shadow-sm"
                             style={{
-                              backgroundColor:
-                                stages.find((s) => s.id === lead.status)?.color || '#999',
+                              backgroundColor: `${stages.find((s) => s.id === lead.status)?.color || '#999999'}1a`,
+                              borderColor: `${stages.find((s) => s.id === lead.status)?.color || '#999999'}33`,
+                              color: stages.find((s) => s.id === lead.status)?.color || '#999999',
                             }}
                           >
                             {stages.find((s) => s.id === lead.status)?.label || lead.status}

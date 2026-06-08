@@ -6,7 +6,7 @@
 
 'use client';
 
-import React, { useState, useEffect, useRef, useId } from 'react';
+import React, { useState, useEffect, useRef, useId, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { cn } from '@/lib/cn';
 import { ChevronDown, Check, Search } from 'lucide-react';
@@ -101,7 +101,7 @@ export function Select({
   }, []);
 
   // Dynamic dropdown positioning and smart-flipping logic
-  const updateCoords = () => {
+  const updateCoords = useCallback(() => {
     if (!triggerRef.current) return;
     const rect = triggerRef.current.getBoundingClientRect();
     // Calculate dynamic height based on options count
@@ -127,7 +127,7 @@ export function Select({
       width: rect.width,
       placement,
     });
-  };
+  }, [isSearchEnabled, options.length]);
 
   // Recalculate dropdown boundaries on open, scroll, or resize
   useEffect(() => {
@@ -143,7 +143,7 @@ export function Select({
       window.removeEventListener('resize', updateCoords);
       window.removeEventListener('scroll', updateCoords, { capture: true });
     };
-  }, [isOpen]);
+  }, [isOpen, updateCoords]);
 
   const openDropdown = () => {
     setSearchQuery('');
