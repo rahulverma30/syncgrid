@@ -37,7 +37,7 @@ const DealSchema = new Schema(
     },
     accountId: {
       type: Schema.Types.ObjectId,
-      ref: 'Client',
+      ref: 'Account',
       index: true,
     },
     contactId: {

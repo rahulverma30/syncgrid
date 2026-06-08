@@ -23,6 +23,7 @@ import {
   Calendar,
   Tag,
   Users,
+  Building2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -37,22 +38,39 @@ export default function CreateDealPage() {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [budget, setBudget] = useState(15000);
-  const [status, setStatus] = useState('new');
+  const [status, setStatus] = useState('qualified');
   const [priority, setPriority] = useState('medium');
   const [source, setSource] = useState('website');
   const [expectedCloseDate, setExpectedCloseDate] = useState('');
   const [workType, setWorkType] = useState('Custom Portal Dev');
   const [techStack, setTechStack] = useState('');
 
+  const [accountId, setAccountId] = useState('');
+  const [accounts, setAccounts] = useState<any[]>([]);
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
+    const fetchAccounts = async () => {
+      try {
+        const res = await fetch('/api/protected/crm/accounts');
+        const d = await res.json();
+        if (d.success) setAccounts(d.data || []);
+      } catch (err) {
+        toast.error('Failed to load accounts.');
+      }
+    };
+    fetchAccounts();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !contactPerson) {
       toast.error('Deal Name and Lead Contact Person are required.');
+      return;
+    }
+    if (!accountId) {
+      toast.error('You must link this deal to an existing Corporate Account.');
       return;
     }
 
@@ -78,11 +96,16 @@ export default function CreateDealPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name,
+          accountId,
           value: budget,
           stage: status,
           expectedCloseDate: expectedCloseDate ? new Date(expectedCloseDate) : new Date(),
           probability: 50,
-          notes: `${workType} - ${priority} priority - Source: ${source}`,
+          notes: [
+            {
+              content: `${workType} - ${priority} priority - Source: ${source}`,
+            },
+          ],
         }),
       });
 
@@ -122,19 +145,39 @@ export default function CreateDealPage() {
       <Card className="bg-card/40 border border-border/60 backdrop-blur-md">
         <CardContent className="p-6">
           <form onSubmit={handleSubmit} className="space-y-5 text-left">
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                Opportunity Name (Corporate Account)
-              </label>
-              <div className="relative">
-                <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                <Input
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Globex Inc (SaaS Project)"
-                  className="pl-10 bg-background/30 h-10 text-xs"
-                />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Corporate Account
+                </label>
+                <div className="relative">
+                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                  <Select
+                    value={accountId}
+                    onChange={(val) => setAccountId(val)}
+                    className="w-full pl-10 pr-4 bg-background/30 border border-border/60 hover:border-primary/20 rounded-xl h-10 text-xs text-slate-300 focus:ring-0 outline-none cursor-pointer"
+                    options={[
+                      { value: '', label: 'Select Corporate Account...' },
+                      ...accounts.map((a) => ({ value: a._id, label: a.name })),
+                    ]}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Opportunity Name
+                </label>
+                <div className="relative">
+                  <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                  <Input
+                    required
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Q3 Enterprise Renewal"
+                    className="pl-10 bg-background/30 h-10 text-xs"
+                  />
+                </div>
               </div>
             </div>
 
@@ -217,8 +260,7 @@ export default function CreateDealPage() {
                   onChange={(val) => setStatus(val)}
                   className="w-full px-3 bg-background/30 border border-border/60 hover:border-primary/20 rounded-xl h-10 text-xs text-slate-300 focus:ring-0 outline-none cursor-pointer"
                   options={[
-                    { value: 'new', label: 'New Lead' },
-                    { value: 'contacted', label: 'Contacted' },
+                    { value: 'qualified', label: 'Qualified Lead' },
                     { value: 'proposal', label: 'Proposal Sent' },
                     { value: 'negotiation', label: 'Negotiating' },
                   ]}
