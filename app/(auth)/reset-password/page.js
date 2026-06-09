@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
+import { getClientError, SUCCESS_MESSAGES } from '@/lib/errors';
 import {
   Button,
   Card,
@@ -47,16 +48,16 @@ function ResetPasswordForm() {
     setIsLoading(false);
 
     if (!response.ok) {
-      setError(data.message || 'Unable to reset password.');
-      toast.error('Password reset failed', {
-        description: data.message || 'Unable to reset password.',
-      });
+      const err = getClientError(data);
+      setError(err.description);
+      toast.error(err.title, { description: err.description });
       return;
     }
 
-    toast.success('Password reset successfully!');
+    const success = SUCCESS_MESSAGES.passwordResetDone;
+    toast.success(success.title, { description: success.description });
     let countdown = 5;
-    setMessage(`Redirecting to login in ${countdown} seconds...`);
+    setMessage(`Redirecting to sign in in ${countdown} seconds...`);
 
     const timer = setInterval(() => {
       countdown -= 1;

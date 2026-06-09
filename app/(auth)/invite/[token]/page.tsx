@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { Eye, EyeOff, Loader2, User, Lock, CheckCircle2, ShieldAlert } from 'lucide-react';
 import { toast } from 'sonner';
+import { getAuthError, getClientError, SUCCESS_MESSAGES } from '@/lib/errors';
 import { Card, CardDescription, CardHeader, CardTitle, CardContent } from '@/components/ui';
 import { Input, Button } from '@/components/ui';
 
@@ -40,10 +41,13 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
         if (data.success) {
           setInviteData(data.data);
         } else {
-          setErrorMsg(data.message || 'The invitation link is invalid or has expired.');
+          const err = getAuthError(data.error || data.message);
+          setErrorMsg(err.description);
         }
       } catch (err) {
-        setErrorMsg('Network error verifying invitation. Please reload.');
+        setErrorMsg(
+          "We couldn't verify your invitation. Please check your connection and try reloading."
+        );
       } finally {
         setVerifying(false);
       }
@@ -59,13 +63,15 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
     event.preventDefault();
 
     if (password !== confirmPassword) {
-      toast.error('Validation error', { description: 'Passwords do not match.' });
+      toast.error('Passwords Do Not Match', {
+        description: 'The passwords you entered do not match. Please re-enter them carefully.',
+      });
       return;
     }
 
     if (password.length < 8) {
-      toast.error('Validation error', {
-        description: 'Password must be at least 8 characters long.',
+      toast.error('Password Too Short', {
+        description: 'Your password must be at least 8 characters long.',
       });
       return;
     }
@@ -84,8 +90,8 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
       const data = await res.json();
 
       if (data.success) {
-        toast.success('Account successfully provisioned!', {
-          description: 'Authenticating your session...',
+        toast.success(SUCCESS_MESSAGES.inviteAccepted.title, {
+          description: SUCCESS_MESSAGES.inviteAccepted.description,
         });
 
         // Auto-login after creation
@@ -98,21 +104,24 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
         setIsSubmitting(false);
 
         if (loginResult?.error) {
-          toast.info('Onboarding Complete', {
-            description: 'Please sign in manually with your password.',
+          toast.info('Account Ready', {
+            description: 'Your account is set up. Please sign in with your new password.',
           });
           router.push('/login');
         } else {
-          toast.success('Welcome aboard!');
+          toast.success('Welcome aboard! 🎉');
           router.push('/dashboard');
           router.refresh();
         }
       } else {
-        toast.error('Registration failed', { description: data.message });
+        const err = getClientError(data);
+        toast.error(err.title, { description: err.description });
         setIsSubmitting(false);
       }
     } catch (err) {
-      toast.error('Error during onboarding registration.');
+      toast.error('Something Went Wrong', {
+        description: "We couldn't complete your registration. Please try again.",
+      });
       setIsSubmitting(false);
     }
   }

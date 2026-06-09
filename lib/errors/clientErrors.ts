@@ -32,7 +32,7 @@ export interface ApiResponse {
 // ─────────────────────────────────────────────
 
 const ERROR_MAP: Record<string, ClientError> = {
-  // Auth
+  // Auth — general
   UNAUTHORIZED: {
     title: 'Session Expired',
     description: 'Your session has expired. Please sign in again to continue.',
@@ -41,6 +41,87 @@ const ERROR_MAP: Record<string, ClientError> = {
     title: 'Access Denied',
     description:
       "You don't have permission to perform this action. Contact your administrator if you need access.",
+  },
+
+  // Auth — sign-in specific
+  INVALID_CREDENTIALS: {
+    title: 'Sign In Failed',
+    description:
+      'The email or password you entered is incorrect. Please double-check and try again.',
+  },
+  ACCOUNT_LOCKED: {
+    title: 'Account Temporarily Locked',
+    description:
+      'Too many failed sign-in attempts. Your account has been locked for 15 minutes. Please try again later or reset your password.',
+  },
+  ACCOUNT_DISABLED: {
+    title: 'Account Deactivated',
+    description:
+      'Your account has been deactivated. Please contact your administrator to restore access.',
+  },
+  RATE_LIMITED: {
+    title: 'Too Many Attempts',
+    description:
+      'You have made too many sign-in attempts. Please wait 15 minutes before trying again.',
+  },
+
+  // Auth — registration
+  EMAIL_TAKEN: {
+    title: 'Email Already Registered',
+    description:
+      'An account with this email already exists. Try signing in instead, or use a different email address.',
+  },
+  WEAK_PASSWORD: {
+    title: 'Password Too Weak',
+    description:
+      'Your password must be at least 8 characters and include a mix of letters and numbers.',
+  },
+  REGISTRATION_FAILED: {
+    title: 'Could Not Create Account',
+    description:
+      "We couldn't create your account right now. Please check your details and try again.",
+  },
+
+  // Auth — password reset
+  INVALID_TOKEN: {
+    title: 'Link Invalid or Expired',
+    description:
+      'This reset link is no longer valid. Links expire after 1 hour. Please request a new one.',
+  },
+  TOKEN_EXPIRED: {
+    title: 'Link Expired',
+    description: 'This link has expired. Please go back and request a new password reset link.',
+  },
+  PASSWORD_MISMATCH: {
+    title: 'Passwords Do Not Match',
+    description: 'The passwords you entered do not match. Please re-enter them carefully.',
+  },
+  SAME_PASSWORD: {
+    title: 'Password Already Used',
+    description:
+      'Your new password must be different from your current password. Please choose a new one.',
+  },
+  RESET_FAILED: {
+    title: 'Password Reset Failed',
+    description:
+      "We couldn't update your password. The link may have already been used. Please request a new reset link.",
+  },
+
+  // Auth — invite
+  INVITE_INVALID: {
+    title: 'Invitation Invalid',
+    description:
+      'This invitation link is not valid. It may have already been used or the link is incorrect.',
+  },
+  INVITE_EXPIRED: {
+    title: 'Invitation Expired',
+    description:
+      'This invitation has expired. Please ask your administrator to send a new invitation.',
+  },
+  INVITE_ALREADY_USED: {
+    title: 'Invitation Already Accepted',
+    description:
+      'This invitation has already been used to create an account. Please sign in instead.',
   },
 
   // Not Found
@@ -190,6 +271,52 @@ export function getNetworkError(): ClientError {
   };
 }
 
+/**
+ * Translate a NextAuth `result.error` string into a user-friendly error.
+ * NextAuth passes error strings like "CredentialsSignin", "AccountLocked", etc.
+ * Use this on the login page instead of showing raw NextAuth error strings.
+ */
+export function getAuthError(nextAuthError: string | null | undefined): ClientError {
+  if (!nextAuthError) return DEFAULT_ERROR;
+
+  const normalized = decodeURIComponent(nextAuthError);
+
+  // Map NextAuth built-in error strings
+  if (
+    normalized.includes('CredentialsSignin') ||
+    normalized.includes('Invalid email or password')
+  ) {
+    return ERROR_MAP.INVALID_CREDENTIALS;
+  }
+  if (normalized.includes('Account is temporarily locked') || normalized.includes('locked')) {
+    return ERROR_MAP.ACCOUNT_LOCKED;
+  }
+  if (normalized.includes('Too many login attempts') || normalized.includes('rate limit')) {
+    return ERROR_MAP.RATE_LIMITED;
+  }
+  if (normalized.includes('disabled') || normalized.includes('deactivated')) {
+    return ERROR_MAP.ACCOUNT_DISABLED;
+  }
+  if (
+    normalized.includes('INVITE_EXPIRED') ||
+    (normalized.includes('invitation') && normalized.includes('expired'))
+  ) {
+    return ERROR_MAP.INVITE_EXPIRED;
+  }
+  if (
+    normalized.includes('INVITE_INVALID') ||
+    (normalized.includes('invalid') && normalized.includes('invitation'))
+  ) {
+    return ERROR_MAP.INVITE_INVALID;
+  }
+
+  // Return generic sign-in failure
+  return {
+    title: 'Sign In Failed',
+    description: 'We were unable to sign you in. Please check your credentials and try again.',
+  };
+}
+
 // ─────────────────────────────────────────────
 // Pre-built success messages
 // ─────────────────────────────────────────────
@@ -332,6 +459,28 @@ export const SUCCESS_MESSAGES = {
   roleCreated: { title: 'Role Created', description: 'The new role has been configured.' },
   roleUpdated: { title: 'Role Updated', description: 'Role permissions have been updated.' },
   roleDeleted: { title: 'Role Deleted', description: 'The role has been permanently removed.' },
+
+  // Auth
+  signedIn: { title: 'Welcome back!', description: "You've signed in successfully." },
+  signedOut: { title: 'Signed Out', description: 'You have been signed out securely.' },
+  accountCreated: {
+    title: 'Account Created!',
+    description: 'Your workspace has been set up. Welcome to SyncGrid.',
+  },
+  inviteAccepted: {
+    title: 'Welcome Aboard! 🎉',
+    description: 'Your account is ready. Redirecting you to your dashboard...',
+  },
+  passwordResetSent: {
+    title: 'Reset Link Sent',
+    description:
+      "If an account exists for this email, you'll receive reset instructions within a few minutes. Check your inbox.",
+  },
+  passwordResetDone: {
+    title: 'Password Updated',
+    description:
+      'Your password has been changed successfully. Please sign in with your new password.',
+  },
 } as const;
 
 // ─────────────────────────────────────────────

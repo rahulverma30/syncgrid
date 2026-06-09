@@ -20,5 +20,11 @@ export {
 export type { SanitizedError } from './apiErrors';
 
 // Frontend utilities
-export { getClientError, getNetworkError, SUCCESS_MESSAGES, EMPTY_STATES } from './clientErrors';
+export {
+  getClientError,
+  getNetworkError,
+  getAuthError,
+  SUCCESS_MESSAGES,
+  EMPTY_STATES,
+} from './clientErrors';
 export type { ClientError, ApiResponse, EmptyStateKey } from './clientErrors';

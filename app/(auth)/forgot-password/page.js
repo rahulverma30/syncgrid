@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { getClientError, SUCCESS_MESSAGES } from '@/lib/errors';
 import {
   Button,
   Card,
@@ -33,16 +34,14 @@ export default function ForgotPasswordPage() {
     });
     const data = await response.json().catch(() => ({}));
 
-    setMessage(data.message || 'If the account exists, password reset instructions will be sent.');
-
     if (response.ok) {
-      toast.success('Reset link sent', {
-        description: 'Check your email for password reset instructions.',
-      });
+      const msg = SUCCESS_MESSAGES.passwordResetSent;
+      setMessage(msg.description);
+      toast.success(msg.title, { description: msg.description });
     } else {
-      toast.error('Failed to send reset link', {
-        description: data.message || 'Please try again later.',
-      });
+      const err = getClientError(data);
+      setMessage(err.description);
+      toast.error(err.title, { description: err.description });
     }
 
     setIsLoading(false);

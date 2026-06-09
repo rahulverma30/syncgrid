@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
+import { getClientError, SUCCESS_MESSAGES } from '@/lib/errors';
 import {
   Button,
   Card,
@@ -45,14 +46,16 @@ export default function RegisterPage() {
 
     if (!response.ok) {
       const data = await response.json().catch(() => ({}));
-      const errorMsg = data.message || 'Unable to create account.';
-      setError(errorMsg);
-      toast.error('Registration failed', { description: errorMsg });
+      const err = getClientError(data);
+      setError(err.description);
+      toast.error(err.title, { description: err.description });
       setIsLoading(false);
       return;
     }
 
-    toast.success('Account created!');
+    toast.success(SUCCESS_MESSAGES.accountCreated.title, {
+      description: SUCCESS_MESSAGES.accountCreated.description,
+    });
 
     await signIn('credentials', {
       email: payload.email,
@@ -60,7 +63,9 @@ export default function RegisterPage() {
       redirect: false,
     });
 
-    toast.success('Signed in successfully!');
+    toast.success(SUCCESS_MESSAGES.signedIn.title, {
+      description: SUCCESS_MESSAGES.signedIn.description,
+    });
     router.push('/dashboard');
     router.refresh();
   }

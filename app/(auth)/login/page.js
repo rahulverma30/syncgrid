@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
+import { getAuthError, SUCCESS_MESSAGES } from '@/lib/errors';
 import { Card, CardDescription, CardHeader, CardTitle, CardContent } from '@/components/ui';
 import { Input, Button } from '@/components/ui';
 
@@ -32,25 +33,24 @@ function LoginForm() {
     setIsLoading(false);
 
     if (result?.error) {
-      const raw = result.error;
-      const decoded = decodeURIComponent(raw || 'Invalid email or password.');
-      const errorMsg = decoded || 'Invalid email or password.';
-      setError(errorMsg);
-      toast.error('Sign in failed', { description: errorMsg });
+      const err = getAuthError(result.error);
+      setError(err.description);
+      toast.error(err.title, { description: err.description });
       return;
     }
 
-    toast.success('Signed in successfully!');
+    toast.success(SUCCESS_MESSAGES.signedIn.title, {
+      description: SUCCESS_MESSAGES.signedIn.description,
+    });
     router.push(searchParams.get('callbackUrl') || '/dashboard');
     router.refresh();
   }
 
   useEffect(() => {
     if (errorParam) {
-      const decoded = decodeURIComponent(errorParam);
-      toast.error('Sign in failed', { description: decoded });
-      // Schedule state update to avoid synchronous cascading render and satisfy ESLint
-      setTimeout(() => setError(decoded), 0);
+      const err = getAuthError(errorParam);
+      toast.error(err.title, { description: err.description });
+      setTimeout(() => setError(err.description), 0);
     }
   }, [errorParam]);
 
