@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { apiErrorResponse } from '@/lib/errors';
 import { headers } from 'next/headers';
 import { withApiPermission } from '@/lib/auth/api';
 import { connectToDatabase } from '@/lib/db/mongodb';
@@ -85,10 +86,7 @@ export const PUT = withApiPermission(
 
       return NextResponse.json({ success: true, data: role });
     } catch (error: any) {
-      return NextResponse.json(
-        { success: false, error: 'API_ERROR', message: error.message },
-        { status: 500 }
-      );
+      return apiErrorResponse(error);
     }
   }
 );
@@ -161,10 +159,7 @@ export const DELETE = withApiPermission(
 
       return NextResponse.json({ success: true, message: 'Custom role removed successfully.' });
     } catch (error: any) {
-      return NextResponse.json(
-        { success: false, error: 'API_ERROR', message: error.message },
-        { status: 500 }
-      );
+      return apiErrorResponse(error);
     }
   }
 );

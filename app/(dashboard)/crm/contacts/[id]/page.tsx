@@ -21,6 +21,7 @@ import {
   Plus,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { getClientError, getNetworkError, SUCCESS_MESSAGES } from '@/lib/errors';
 import { useSession } from 'next-auth/react';
 
 interface Note {
@@ -142,7 +143,7 @@ export default function ContactDetailsPage() {
         setNoteText('');
         toast.success('Note attached to profile.');
       } else {
-        toast.error(d.message || 'Failed to add note.');
+        toast.error(getClientError(d).title, { description: getClientError(d).description });
       }
     } catch {
       toast.error('Network error.');

@@ -23,6 +23,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { getClientError, getNetworkError, SUCCESS_MESSAGES } from '@/lib/errors';
 
 export default function EditContactPage() {
   const router = useRouter();
@@ -134,7 +135,7 @@ export default function EditContactPage() {
         toast.success(`Contact details for "${name}" updated successfully.`);
         router.push(`/crm/contacts/${contactId}`);
       } else {
-        toast.error(d.message || 'Failed to save updates.');
+        toast.error(getClientError(d).title, { description: getClientError(d).description });
       }
     } catch (err) {
       toast.error('Network error during save.');

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { apiErrorResponse } from '@/lib/errors';
 import { withApiAuth } from '@/lib/auth/api';
 import { connectToDatabase } from '@/lib/db/mongodb';
 import { Client } from '@/models/Client';
@@ -84,10 +85,7 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
       data: clientObj,
     });
   } catch (error: any) {
-    return NextResponse.json(
-      { success: false, error: 'QUERY_ERROR', message: error.message },
-      { status: 500 }
-    );
+    return apiErrorResponse(error);
   }
 });
 
@@ -176,10 +174,7 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
       data: clientObj,
     });
   } catch (error: any) {
-    return NextResponse.json(
-      { success: false, error: 'UPDATE_ERROR', message: error.message },
-      { status: 500 }
-    );
+    return apiErrorResponse(error);
   }
 });
 
@@ -226,9 +221,6 @@ export const DELETE = withApiAuth(async (request: Request, context: any, session
       message: `Client "${client.name}" has been permanently purged from the system.`,
     });
   } catch (error: any) {
-    return NextResponse.json(
-      { success: false, error: 'DELETE_ERROR', message: error.message },
-      { status: 500 }
-    );
+    return apiErrorResponse(error);
   }
 });

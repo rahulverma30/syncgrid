@@ -24,6 +24,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { getClientError, getNetworkError, SUCCESS_MESSAGES } from '@/lib/errors';
 
 export default function CreateAccountPage() {
   const router = useRouter();
@@ -91,7 +92,7 @@ export default function CreateAccountPage() {
         toast.success(`Enterprise Account "${name}" onboarded successfully!`);
         router.push('/crm/accounts');
       } else {
-        toast.error(d.message || 'Validation error saving company.');
+        toast.error(getClientError(d).title, { description: getClientError(d).description });
       }
     } catch (err) {
       toast.error('Connection failure onboarding company.');

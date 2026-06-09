@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { apiErrorResponse } from '@/lib/errors';
 import { withApiAuth } from '@/lib/auth/api';
 import { connectToDatabase } from '@/lib/db/mongodb';
 import { WikiSpace, Document, ReadingProgress, KnowledgeActivity, Employee } from '@/models';
@@ -102,9 +103,6 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     });
   } catch (error: any) {
     logger.error('Failed to aggregate analytics:', error, { companyId: session?.user?.companyId });
-    return NextResponse.json(
-      { success: false, error: 'API_ERROR', message: error.message },
-      { status: 500 }
-    );
+    return apiErrorResponse(error);
   }
 });

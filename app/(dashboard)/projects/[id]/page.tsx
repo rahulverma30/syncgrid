@@ -35,6 +35,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useProjectsStore, ProjectAccount } from '@/store/projectsStore';
 import { toast } from 'sonner';
+import { getClientError, getNetworkError, SUCCESS_MESSAGES } from '@/lib/errors';
 import { ENTERPRISE_WORKFLOWS } from '@/config/enterpriseConfig';
 import { detectCircularDependency } from '@/utils/graphEngine';
 import { ConfirmationModal } from '@/components/ui';
@@ -465,7 +466,7 @@ export default function ProjectDetailPage() {
         setSelectedProject(d.data);
         fetchProjects();
       } else {
-        toast.error(d.message || 'Failed to remove document.');
+        toast.error(getClientError(d).title, { description: getClientError(d).description });
       }
     } catch {
       toast.error('Failed to remove document.');

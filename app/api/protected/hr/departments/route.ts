@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { apiErrorResponse } from '@/lib/errors';
 import { withApiAuth } from '@/lib/auth/api';
 import { connectToDatabase } from '@/lib/db/mongodb';
 import { Department, Employee } from '@/models';
@@ -53,10 +54,7 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     // Also return a flat list for dropdown menus
     return NextResponse.json({ success: true, data: { tree, list: deptList } });
   } catch (error: any) {
-    return NextResponse.json(
-      { success: false, error: 'QUERY_ERROR', message: error.message },
-      { status: 500 }
-    );
+    return apiErrorResponse(error);
   }
 });
 
@@ -121,9 +119,6 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
 
     return NextResponse.json({ success: true, data: populated }, { status: 201 });
   } catch (error: any) {
-    return NextResponse.json(
-      { success: false, error: 'ACTION_ERROR', message: error.message },
-      { status: 500 }
-    );
+    return apiErrorResponse(error);
   }
 });

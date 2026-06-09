@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { apiErrorResponse } from '@/lib/errors';
 import { withApiAuth } from '@/lib/auth/api';
 import { connectToDatabase } from '@/lib/db/mongodb';
 import { Document, DocumentVersion, KnowledgeActivity } from '@/models';
@@ -40,10 +41,7 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     return NextResponse.json({ success: true, data: document });
   } catch (error: any) {
     logger.error('Failed to get document detail:', error, { companyId: session?.user?.companyId });
-    return NextResponse.json(
-      { success: false, error: 'API_ERROR', message: error.message },
-      { status: 500 }
-    );
+    return apiErrorResponse(error);
   }
 });
 
@@ -198,10 +196,7 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
     return NextResponse.json({ success: true, data: updatedDocument });
   } catch (error: any) {
     logger.error('Failed to update document:', error, { companyId: session?.user?.companyId });
-    return NextResponse.json(
-      { success: false, error: 'API_ERROR', message: error.message },
-      { status: 500 }
-    );
+    return apiErrorResponse(error);
   }
 });
 
@@ -279,9 +274,6 @@ export const DELETE = withApiAuth(async (request: Request, context: any, session
     });
   } catch (error: any) {
     logger.error('Failed to soft delete document:', error, { companyId: session?.user?.companyId });
-    return NextResponse.json(
-      { success: false, error: 'API_ERROR', message: error.message },
-      { status: 500 }
-    );
+    return apiErrorResponse(error);
   }
 });

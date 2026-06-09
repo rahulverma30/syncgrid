@@ -7,6 +7,7 @@ import { Clock, Calendar, Users, Edit } from 'lucide-react';
 import { AttendanceWidget } from '@/components/attendance/AttendanceWidget';
 import { EmployeeActivityDrawer } from '@/components/hr/EmployeeActivityDrawer';
 import { toast } from 'sonner';
+import { getClientError, getNetworkError, SUCCESS_MESSAGES } from '@/lib/errors';
 
 export default function AttendancePage() {
   const { data: session } = useSession();

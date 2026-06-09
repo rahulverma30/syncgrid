@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { apiErrorResponse } from '@/lib/errors';
 import { withApiAuth } from '@/lib/auth/api';
 import { connectToDatabase } from '@/lib/db/mongodb';
 import { Client } from '@/models/Client';
@@ -66,10 +67,7 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
       data: clients,
     });
   } catch (error: any) {
-    return NextResponse.json(
-      { success: false, error: 'QUERY_ERROR', message: error.message },
-      { status: 500 }
-    );
+    return apiErrorResponse(error);
   }
 });
 
@@ -142,10 +140,7 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
       data: newClient,
     });
   } catch (error: any) {
-    return NextResponse.json(
-      { success: false, error: 'CREATE_ERROR', message: error.message },
-      { status: 500 }
-    );
+    return apiErrorResponse(error);
   }
 });
 
@@ -194,9 +189,6 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
       message: `Successfully batch reassigned ${result.modifiedCount} accounts.`,
     });
   } catch (error: any) {
-    return NextResponse.json(
-      { success: false, error: 'BULK_UPDATE_ERROR', message: error.message },
-      { status: 500 }
-    );
+    return apiErrorResponse(error);
   }
 });

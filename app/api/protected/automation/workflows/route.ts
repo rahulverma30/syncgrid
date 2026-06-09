@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { apiErrorResponse } from '@/lib/errors';
 import { withApiAuth } from '@/lib/auth/api';
 import { connectToDatabase } from '@/lib/db/mongodb';
 import { WorkflowDefinition } from '@/models';
@@ -48,10 +49,7 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
 
     return NextResponse.json({ success: true, data: workflows });
   } catch (error: any) {
-    return NextResponse.json(
-      { success: false, error: 'FETCH_WORKFLOWS_FAILED', message: error.message },
-      { status: 500 }
-    );
+    return apiErrorResponse(error);
   }
 });
 
@@ -84,9 +82,6 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
 
     return NextResponse.json({ success: true, data: workflow }, { status: 201 });
   } catch (error: any) {
-    return NextResponse.json(
-      { success: false, error: 'CREATE_WORKFLOW_FAILED', message: error.message },
-      { status: 500 }
-    );
+    return apiErrorResponse(error);
   }
 });

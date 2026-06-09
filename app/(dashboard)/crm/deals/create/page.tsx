@@ -26,6 +26,7 @@ import {
   Building2,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { getClientError, getNetworkError, SUCCESS_MESSAGES } from '@/lib/errors';
 
 export default function CreateDealPage() {
   const router = useRouter();
@@ -114,10 +115,10 @@ export default function CreateDealPage() {
         toast.success(`Sales Opportunity "${name}" created successfully!`);
         router.push('/crm/deals');
       } else {
-        toast.error(d.message || 'Validation error registering deal.');
+        toast.error(getClientError(d).title, { description: getClientError(d).description });
       }
     } catch (err) {
-      toast.error('Network failure recording sales deal.');
+      toast.error(getNetworkError().title, { description: getNetworkError().description });
     } finally {
       setIsSubmitting(false);
     }

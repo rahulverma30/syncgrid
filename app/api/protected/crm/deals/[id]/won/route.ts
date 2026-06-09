@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { apiErrorResponse } from '@/lib/errors';
 import { withApiAuth } from '@/lib/auth/api';
 import { connectToDatabase } from '@/lib/db/mongodb';
 import { Deal } from '@/models/Deal';
@@ -99,9 +100,6 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
       },
     });
   } catch (error: any) {
-    return NextResponse.json(
-      { success: false, error: 'WON_ERROR', message: error.message },
-      { status: 500 }
-    );
+    return apiErrorResponse(error);
   }
 });

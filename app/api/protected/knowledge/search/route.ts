@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { apiErrorResponse } from '@/lib/errors';
 import { withApiPermission } from '@/lib/auth/api';
 import { connectToDatabase } from '@/lib/db/mongodb';
 import { Document, Employee, WikiSpace } from '@/models';
@@ -82,10 +83,7 @@ export const GET = withApiPermission(
       return NextResponse.json({ success: true, data: rankedResults });
     } catch (error: any) {
       logger.error('Failed search execution:', error, { companyId: session?.user?.companyId });
-      return NextResponse.json(
-        { success: false, error: 'API_ERROR', message: error.message },
-        { status: 500 }
-      );
+      return apiErrorResponse(error);
     }
   }
 );

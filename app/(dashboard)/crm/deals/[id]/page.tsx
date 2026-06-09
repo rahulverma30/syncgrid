@@ -20,6 +20,7 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { getClientError, getNetworkError, SUCCESS_MESSAGES } from '@/lib/errors';
 
 interface Note {
   _id?: string;
@@ -185,7 +186,7 @@ export default function DealDetailsPage() {
         );
         router.push('/clients');
       } else {
-        toast.error(d.message || 'Failed to convert deal to client.');
+        toast.error(getClientError(d).title, { description: getClientError(d).description });
       }
     } catch (e) {
       toast.error('Network error while provisioning client.');

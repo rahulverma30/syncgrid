@@ -25,6 +25,7 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { getClientError, getNetworkError, SUCCESS_MESSAGES } from '@/lib/errors';
 
 export default function InternalPortalManagerPage() {
   const [clients, setClients] = useState<any[]>([]);
@@ -135,7 +136,7 @@ export default function InternalPortalManagerPage() {
         toast.error(body.message || 'Failed to save visibility policies.');
       }
     } catch (error: any) {
-      toast.error('Network failure while saving rules.');
+      toast.error(getNetworkError().title, { description: getNetworkError().description });
     } finally {
       setIsSaving(false);
     }

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { apiErrorResponse } from '@/lib/errors';
 import { withApiAuth } from '@/lib/auth/api';
 import { connectToDatabase } from '@/lib/db/mongodb';
 import { Contact } from '@/models/Contact';
@@ -34,10 +35,7 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
 
     return NextResponse.json({ success: true, data: contactObj });
   } catch (error: any) {
-    return NextResponse.json(
-      { success: false, error: 'FETCH_ERROR', message: error.message },
-      { status: 500 }
-    );
+    return apiErrorResponse(error);
   }
 });
 
@@ -79,10 +77,7 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
 
     return NextResponse.json({ success: true, data: contact });
   } catch (error: any) {
-    return NextResponse.json(
-      { success: false, error: 'UPDATE_ERROR', message: error.message },
-      { status: 500 }
-    );
+    return apiErrorResponse(error);
   }
 });
 
@@ -119,9 +114,6 @@ export const DELETE = withApiAuth(async (request: Request, context: any, session
 
     return NextResponse.json({ success: true, message: 'Contact archived' });
   } catch (error: any) {
-    return NextResponse.json(
-      { success: false, error: 'DELETE_ERROR', message: error.message },
-      { status: 500 }
-    );
+    return apiErrorResponse(error);
   }
 });

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { apiErrorResponse } from '@/lib/errors';
 import { withApiPermission } from '@/lib/auth/api';
 import { connectToDatabase } from '@/lib/db/mongodb';
 import { Task, TaskStatus, TaskActivity, TaskWatcher, TaskAutomationRule } from '@/models';
@@ -53,10 +54,7 @@ export const GET = withApiPermission(
         },
       });
     } catch (error: any) {
-      return NextResponse.json(
-        { success: false, error: 'QUERY_ERROR', message: error.message },
-        { status: 500 }
-      );
+      return apiErrorResponse(error);
     }
   },
   {
@@ -339,10 +337,7 @@ export const PUT = withApiPermission(
 
       return NextResponse.json({ success: true, data: populated });
     } catch (error: any) {
-      return NextResponse.json(
-        { success: false, error: 'ACTION_ERROR', message: error.message },
-        { status: 500 }
-      );
+      return apiErrorResponse(error);
     }
   },
   {
@@ -414,10 +409,7 @@ export const DELETE = withApiPermission(
         return NextResponse.json({ success: true, data: task });
       }
     } catch (error: any) {
-      return NextResponse.json(
-        { success: false, error: 'ACTION_ERROR', message: error.message },
-        { status: 500 }
-      );
+      return apiErrorResponse(error);
     }
   },
   {

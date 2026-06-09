@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { apiErrorResponse } from '@/lib/errors';
 import { headers } from 'next/headers';
 import { withApiPermission } from '@/lib/auth/api';
 import { connectToDatabase } from '@/lib/db/mongodb';
@@ -22,10 +23,7 @@ export const GET = withApiPermission(
 
       return NextResponse.json({ success: true, data: roles });
     } catch (error: any) {
-      return NextResponse.json(
-        { success: false, error: 'API_ERROR', message: error.message },
-        { status: 500 }
-      );
+      return apiErrorResponse(error);
     }
   }
 );
@@ -96,10 +94,7 @@ export const POST = withApiPermission(
 
       return NextResponse.json({ success: true, data: newRole }, { status: 201 });
     } catch (error: any) {
-      return NextResponse.json(
-        { success: false, error: 'API_ERROR', message: error.message },
-        { status: 500 }
-      );
+      return apiErrorResponse(error);
     }
   }
 );

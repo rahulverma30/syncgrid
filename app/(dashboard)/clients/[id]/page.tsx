@@ -35,6 +35,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useClientsStore, ClientAccount } from '@/store/clientsStore';
 import { toast } from 'sonner';
+import { getClientError, getNetworkError, SUCCESS_MESSAGES } from '@/lib/errors';
 
 const DEFAULT_MANAGERS = ['Pepper Potts', 'Tony Stark'];
 
@@ -208,7 +209,7 @@ export default function ClientDetailsPage() {
         toast.error('Failed to synchronize status.');
       }
     } catch (e) {
-      toast.error('Network sync error.');
+      toast.error(getNetworkError().title, { description: getNetworkError().description });
     }
   };
 
@@ -241,10 +242,10 @@ export default function ClientDetailsPage() {
         setContactPrimary(false);
         toast.success('New customer point of contact registered!');
       } else {
-        toast.error(d.message || 'Failed to append contact.');
+        toast.error(getClientError(d).title, { description: getClientError(d).description });
       }
     } catch (e) {
-      toast.error('API connection error.');
+      toast.error(getNetworkError().title, { description: getNetworkError().description });
     }
   };
 
@@ -271,10 +272,10 @@ export default function ClientDetailsPage() {
         setNotePrivate(false);
         toast.success('Internal relationship note logged!');
       } else {
-        toast.error(d.message || 'Failed to append note.');
+        toast.error(getClientError(d).title, { description: getClientError(d).description });
       }
     } catch (e) {
-      toast.error('API connection error.');
+      toast.error(getNetworkError().title, { description: getNetworkError().description });
     }
   };
 
@@ -303,7 +304,7 @@ export default function ClientDetailsPage() {
         toast.error('Failed to update note.');
       }
     } catch {
-      toast.error('Sync failure during note edit.');
+      toast.error(getNetworkError().title, { description: getNetworkError().description });
     }
   };
 
@@ -332,10 +333,10 @@ export default function ClientDetailsPage() {
         setContractValue(5000);
         toast.success('Contract pricing agreement registered!');
       } else {
-        toast.error(d.message || 'Failed to log contract.');
+        toast.error(getClientError(d).title, { description: getClientError(d).description });
       }
     } catch (e) {
-      toast.error('API connection error.');
+      toast.error(getNetworkError().title, { description: getNetworkError().description });
     }
   };
 
@@ -368,7 +369,7 @@ export default function ClientDetailsPage() {
         toast.error('Failed to log meeting.');
       }
     } catch (e) {
-      toast.error('API connection error.');
+      toast.error(getNetworkError().title, { description: getNetworkError().description });
     }
   };
 
@@ -396,7 +397,7 @@ export default function ClientDetailsPage() {
         toast.error('Failed to log communication.');
       }
     } catch (e) {
-      toast.error('API connection error.');
+      toast.error(getNetworkError().title, { description: getNetworkError().description });
     }
   };
 
@@ -424,10 +425,10 @@ export default function ClientDetailsPage() {
         setFileName('');
         toast.success('Secure PDF document appended to ledger!');
       } else {
-        toast.error(d.message || 'File validation mismatch.');
+        toast.error(getClientError(d).title, { description: getClientError(d).description });
       }
     } catch (err) {
-      toast.error('Upload sync error.');
+      toast.error(getNetworkError().title, { description: getNetworkError().description });
     } finally {
       setUploadPercentage(-1);
     }
@@ -456,7 +457,7 @@ export default function ClientDetailsPage() {
         setActiveDuplicateToMerge(null);
         setMergeOverrides({});
       } else {
-        toast.error(d.message || 'Merge action failed.');
+        toast.error(getClientError(d).title, { description: getClientError(d).description });
       }
     } catch {
       toast.error('Database transaction merge failed.');

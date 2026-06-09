@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { apiErrorResponse } from '@/lib/errors';
 import { withApiPermission } from '@/lib/auth/api';
 import { connectToDatabase } from '@/lib/db/mongodb';
 import { WikiSpace, KnowledgeActivity } from '@/models';
@@ -33,10 +34,7 @@ export const GET = withApiPermission(
       return NextResponse.json({ success: true, data: spaces });
     } catch (error: any) {
       logger.error('Failed to load wiki spaces:', error, { companyId: session?.user?.companyId });
-      return NextResponse.json(
-        { success: false, error: 'API_ERROR', message: error.message },
-        { status: 500 }
-      );
+      return apiErrorResponse(error);
     }
   }
 );
@@ -108,10 +106,7 @@ export const POST = withApiPermission(
       return NextResponse.json({ success: true, data: space });
     } catch (error: any) {
       logger.error('Failed to create wiki space:', error, { companyId: session?.user?.companyId });
-      return NextResponse.json(
-        { success: false, error: 'API_ERROR', message: error.message },
-        { status: 500 }
-      );
+      return apiErrorResponse(error);
     }
   }
 );

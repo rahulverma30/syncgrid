@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { apiErrorResponse } from '@/lib/errors';
 import crypto from 'crypto';
 import { withApiAuth } from '@/lib/auth/api';
 import { connectToDatabase } from '@/lib/db/mongodb';
@@ -84,10 +85,7 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     });
   } catch (error: any) {
     console.error('[GET Members Error]:', error);
-    return NextResponse.json(
-      { success: false, error: 'QUERY_ERROR', message: error.message },
-      { status: 500 }
-    );
+    return apiErrorResponse(error);
   }
 });
 
@@ -220,9 +218,6 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     );
   } catch (error: any) {
     console.error('[POST Members Error]:', error);
-    return NextResponse.json(
-      { success: false, error: 'ACTION_FAILED', message: error.message },
-      { status: 500 }
-    );
+    return apiErrorResponse(error);
   }
 });

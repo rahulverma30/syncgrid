@@ -24,6 +24,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { getClientError, getNetworkError, SUCCESS_MESSAGES } from '@/lib/errors';
 
 interface CompanyOption {
   _id: string;
@@ -122,7 +123,7 @@ export default function CreateContactPage() {
           router.push('/crm/contacts');
         }
       } else {
-        toast.error(d.message || 'Could not save contact record.');
+        toast.error(getClientError(d).title, { description: getClientError(d).description });
       }
     } catch (err) {
       toast.error('Connection error saving contact.');

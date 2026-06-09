@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
+import { getClientError, getNetworkError, SUCCESS_MESSAGES } from '@/lib/errors';
 import { useRouter } from 'next/navigation';
 
 interface Contact {
@@ -521,7 +522,9 @@ export default function CRMContactsPage() {
                   toast.error(data.message || 'Failed to delete contact.');
                 }
               } catch (err) {
-                toast.error('Network failure deleting contact.');
+                toast.error(getNetworkError().title, {
+                  description: getNetworkError().description,
+                });
               }
             }
           }

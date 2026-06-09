@@ -49,6 +49,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
+import { getClientError, getNetworkError, SUCCESS_MESSAGES } from '@/lib/errors';
 import { useSession } from 'next-auth/react';
 import { AreaChartWrapper, PieChartWrapper, BarChartWrapper } from '@/components/ui/charts';
 
@@ -299,7 +300,7 @@ export default function CRMPage() {
         setFormBudget(10000);
         setFormStack('');
       } else {
-        toast.error(d.message || 'Failed to save lead.');
+        toast.error(getClientError(d).title, { description: getClientError(d).description });
       }
     } catch (e) {
       toast.error('Connection error while saving lead.');
@@ -557,7 +558,7 @@ export default function CRMPage() {
         fetchLeadsAndSettings();
         setDrawerOpen(false);
       } else {
-        toast.error(d.message || 'Failed to convert lead.');
+        toast.error(getClientError(d).title, { description: getClientError(d).description });
       }
     } catch (e) {
       toast.error('Network error while converting lead.');
@@ -1991,7 +1992,9 @@ export default function CRMPage() {
                 if (selectedLead?._id === leadToDeleteId) setDrawerOpen(false);
                 toast.success('Lead permanently deleted successfully.');
               } else {
-                toast.error(d.message || 'Unauthorized delete request.');
+                toast.error(getClientError(d).title, {
+                  description: getClientError(d).description,
+                });
               }
             } catch (e) {
               toast.error('Error deleting lead record.');

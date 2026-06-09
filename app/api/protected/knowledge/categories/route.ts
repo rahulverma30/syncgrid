@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { apiErrorResponse } from '@/lib/errors';
 import { withApiAuth } from '@/lib/auth/api';
 import { connectToDatabase } from '@/lib/db/mongodb';
 import { KnowledgeCategory } from '@/models';
@@ -13,10 +14,7 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
     return NextResponse.json({ success: true, data: categories });
   } catch (error: any) {
     logger.error('Failed to load categories:', error, { companyId: session?.user?.companyId });
-    return NextResponse.json(
-      { success: false, error: 'API_ERROR', message: error.message },
-      { status: 500 }
-    );
+    return apiErrorResponse(error);
   }
 });
 
@@ -61,9 +59,6 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     return NextResponse.json({ success: true, data: category });
   } catch (error: any) {
     logger.error('Failed to create category:', error, { companyId: session?.user?.companyId });
-    return NextResponse.json(
-      { success: false, error: 'API_ERROR', message: error.message },
-      { status: 500 }
-    );
+    return apiErrorResponse(error);
   }
 });

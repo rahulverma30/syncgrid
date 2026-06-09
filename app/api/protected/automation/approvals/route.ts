@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { apiErrorResponse } from '@/lib/errors';
 import { withApiAuth } from '@/lib/auth/api';
 import { connectToDatabase } from '@/lib/db/mongodb';
 import { ApprovalChain, WorkflowExecution, WorkflowLog } from '@/models';
@@ -27,10 +28,7 @@ export const GET = withApiAuth(async (request: Request, context: any, session: a
 
     return NextResponse.json({ success: true, data: activeApprovals });
   } catch (error: any) {
-    return NextResponse.json(
-      { success: false, error: 'FETCH_APPROVALS_FAILED', message: error.message },
-      { status: 500 }
-    );
+    return apiErrorResponse(error);
   }
 });
 
@@ -150,9 +148,6 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
 
     return NextResponse.json({ success: true, data: approval });
   } catch (error: any) {
-    return NextResponse.json(
-      { success: false, error: 'RESOLVE_APPROVAL_FAILED', message: error.message },
-      { status: 500 }
-    );
+    return apiErrorResponse(error);
   }
 });
