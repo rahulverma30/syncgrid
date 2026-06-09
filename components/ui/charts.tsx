@@ -109,7 +109,7 @@ export function AreaChartWrapper({ data, xKey, metrics, height = 300, className 
       className={cn('select-none text-xs font-mono', className)}
     >
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+        <AreaChart data={data} margin={{ top: 10, right: 10, left: 20, bottom: 0 }}>
           <defs>
             {metrics.map((m, idx) => {
               const color = m.color || CHART_THEME_COLORS[idx % CHART_THEME_COLORS.length];
@@ -135,6 +135,7 @@ export function AreaChartWrapper({ data, xKey, metrics, height = 300, className 
             className="text-muted-foreground/80 font-mono text-[9px]"
             tickLine={false}
             axisLine={false}
+            tickFormatter={(value) => `$${value / 1000}K`}
             dx={-8}
           />
           <Tooltip

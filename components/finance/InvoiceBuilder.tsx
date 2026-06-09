@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Plus, Trash2, Calculator, Save, X, DollarSign } from 'lucide-react';
-import { Button, Input, Select } from '@/components/ui';
+import { Button, Input, Select, DatePicker } from '@/components/ui';
 import { toast } from 'sonner';
 
 interface InvoiceBuilderProps {
@@ -18,7 +18,6 @@ export const InvoiceBuilder: React.FC<InvoiceBuilderProps> = ({ onClose, onSubmi
   const [selectedProject, setSelectedProject] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [currency, setCurrency] = useState('USD');
-  const [exchangeRate, setExchangeRate] = useState('1.0');
   const [notes, setNotes] = useState('');
   const [terms, setTerms] = useState('Net 30. Payment clear within 30 days of bill transmission.');
 
@@ -71,6 +70,11 @@ export const InvoiceBuilder: React.FC<InvoiceBuilderProps> = ({ onClose, onSubmi
       toast.info('No billable hours found for this project');
     }
   };
+
+  const availableProjects = useMemo(() => {
+    if (!selectedClient) return projects;
+    return projects.filter((p) => p.clientId === selectedClient || !p.clientId);
+  }, [projects, selectedClient]);
 
   // Compute live arithmetic during render
   const totals = useMemo(() => {
@@ -141,7 +145,7 @@ export const InvoiceBuilder: React.FC<InvoiceBuilderProps> = ({ onClose, onSubmi
       projectId: selectedProject || undefined,
       dueDate: new Date(dueDate),
       currency,
-      exchangeRate: Number(exchangeRate) || 1.0,
+      exchangeRate: 1.0,
       lineItems: lineItems.map((item) => ({
         description: item.description,
         quantity: Number(item.quantity),
@@ -160,7 +164,7 @@ export const InvoiceBuilder: React.FC<InvoiceBuilderProps> = ({ onClose, onSubmi
     <div className="space-y-6 select-none">
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Dropdowns header inputs */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-start">
           <div className="space-y-1">
             <Select
               label="Customer Client"
@@ -180,7 +184,7 @@ export const InvoiceBuilder: React.FC<InvoiceBuilderProps> = ({ onClose, onSubmi
               value={selectedProject}
               onChange={(val) => setSelectedProject(val)}
               placeholder="No Linked Project..."
-              options={projects.map((p) => ({
+              options={availableProjects.map((p) => ({
                 value: p._id,
                 label: p.name,
               }))}
@@ -199,44 +203,26 @@ export const InvoiceBuilder: React.FC<InvoiceBuilderProps> = ({ onClose, onSubmi
           </div>
 
           <div className="space-y-1">
-            <label className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
-              Due Date
-            </label>
-            <Input
-              type="date"
+            <DatePicker
+              label="Due Date"
               required
               value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-              className="h-10 text-xs"
+              onChange={(e: any) => setDueDate(e.target.value)}
             />
           </div>
 
-          <div className="space-y-1 flex gap-2 items-end">
-            <div className="flex-1">
-              <Select
-                label="Currency"
-                value={currency}
-                onChange={(val) => setCurrency(val)}
-                options={[
-                  { value: 'USD', label: 'USD ($)' },
-                  { value: 'EUR', label: 'EUR (€)' },
-                  { value: 'GBP', label: 'GBP (£)' },
-                  { value: 'INR', label: 'INR (₹)' },
-                ]}
-              />
-            </div>
-            <div className="w-20">
-              <label className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
-                Ex Rate
-              </label>
-              <Input
-                type="number"
-                step="0.001"
-                value={exchangeRate}
-                onChange={(e) => setExchangeRate(e.target.value)}
-                className="h-10 text-xs"
-              />
-            </div>
+          <div className="space-y-1">
+            <Select
+              label="Currency"
+              value={currency}
+              onChange={(val) => setCurrency(val)}
+              options={[
+                { value: 'USD', label: 'USD ($)' },
+                { value: 'EUR', label: 'EUR (€)' },
+                { value: 'GBP', label: 'GBP (£)' },
+                { value: 'INR', label: 'INR (₹)' },
+              ]}
+            />
           </div>
         </div>
 

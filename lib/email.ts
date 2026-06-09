@@ -122,3 +122,102 @@ If you did not expect this, please ignore this message.
 
   await transporter.sendMail(message);
 }
+
+export async function sendPortalWelcomeEmail({
+  to,
+  companyName,
+  invitedBy,
+  portalLink,
+  temporaryPassword,
+}: {
+  to: string;
+  companyName: string;
+  invitedBy: string;
+  portalLink: string;
+  temporaryPassword?: string;
+}) {
+  const transporter = getEmailTransporter();
+
+  const message = {
+    from: env.EMAIL_FROM || 'SyncGrid CRM <syncgrid.crm@gmail.com>',
+    to,
+    subject: `Access to ${companyName} Client Portal`,
+    text: `Hi there,\n\n${invitedBy} has invited you to the ${companyName} Client Portal.\n\nYou can log in here: ${portalLink}\n\nYour temporary password is: ${temporaryPassword}\n\nPlease log in to access your projects and invoices.\n`,
+    html: `
+      <div style="font-family:system-ui, -apple-system, sans-serif; line-height:1.5; color:#1f2937; max-width: 580px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 12px;">
+        <h2 style="color: #1e3a8a; margin-top: 0;">Welcome to the Client Portal</h2>
+        <p><strong>${invitedBy}</strong> has invited you to the <strong>${companyName}</strong> Client Portal.</p>
+        <p>You can access your projects, view invoices, and collaborate with us directly through the portal.</p>
+        <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; margin: 20px 0;">
+          <p style="margin: 0 0 8px 0; font-size: 14px; color: #6b7280;">Your login credentials:</p>
+          <p style="margin: 0; font-family: monospace; font-size: 16px;"><strong>Email:</strong> ${to}</p>
+          <p style="margin: 4px 0 0 0; font-family: monospace; font-size: 16px;"><strong>Password:</strong> ${temporaryPassword}</p>
+        </div>
+        <div style="text-align: center; margin: 24px 0;">
+          <a href="${portalLink}" style="display:inline-block;padding:12px 24px;background:#2563eb;color:#fff;border-radius:8px;text-decoration:none;font-weight:bold;">
+            Login to Portal
+          </a>
+        </div>
+      </div>
+    `,
+  };
+
+  await transporter.sendMail(message);
+}
+
+export async function sendInvoiceEmail({
+  to,
+  invoiceNumber,
+  companyName,
+  totalAmount,
+  currency,
+  dueDate,
+  invoiceLink,
+}: {
+  to: string;
+  invoiceNumber: string;
+  companyName: string;
+  totalAmount: number;
+  currency: string;
+  dueDate: Date;
+  invoiceLink: string;
+}) {
+  const transporter = getEmailTransporter();
+  const formattedAmount = new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(
+    totalAmount
+  );
+
+  const message = {
+    from: env.EMAIL_FROM || 'SyncGrid CRM <syncgrid.crm@gmail.com>',
+    to,
+    subject: `Invoice ${invoiceNumber} from ${companyName}`,
+    text: `Hi there,
+              
+          You have received a new invoice (${invoiceNumber}) from ${companyName} for ${formattedAmount}.
+          Due Date: ${new Date(dueDate).toLocaleDateString()}
+
+          You can view and download your invoice here:
+          ${invoiceLink}
+
+          Thank you for your business!
+          `,
+    html: `
+      <div style="font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height:1.5; color:#1f2937; max-width: 580px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 12px; background: #fff;">
+        <h2 style="color: #1e3a8a; margin-top: 0;">New Invoice from ${companyName}</h2>
+        <p style="font-size: 14px;">You have received a new invoice (<strong>${invoiceNumber}</strong>) for <strong>${formattedAmount}</strong>.</p>
+        <p style="font-size: 14px;"><strong>Due Date:</strong> ${new Date(dueDate).toLocaleDateString()}</p>
+        <div style="margin: 24px 0; text-align: center;">
+          <a href="${invoiceLink}" style="display:inline-block;padding:12px 24px;background:#2563eb;color:#fff;border-radius:10px;text-decoration:none;font-weight:bold;font-size:14px;box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.1), 0 2px 4px -1px rgba(37, 99, 235, 0.06);">
+            View Invoice
+          </a>
+        </div>
+        <p style="font-size: 12px; color: #6b7280;">If the button above does not work, copy and paste this URL into your browser:</p>
+        <p style="font-size: 12px; word-break: break-all;"><a href="${invoiceLink}" style="color: #2563eb;">${invoiceLink}</a></p>
+        <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 20px 0;" />
+        <p style="font-size: 11px; color: #9ca3af; text-align: center;">Thank you for your business!</p>
+      </div>
+    `,
+  };
+
+  await transporter.sendMail(message);
+}

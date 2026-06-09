@@ -45,6 +45,23 @@ export const InvoiceManager: React.FC<InvoiceManagerProps> = ({
   // Record Payment Dialog state
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [payAmount, setPayAmount] = useState('');
+
+  // Delete Confirmation state
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [invoiceToDelete, setInvoiceToDelete] = useState<any | null>(null);
+
+  const handleDeleteClick = (inv: any) => {
+    setInvoiceToDelete(inv);
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (invoiceToDelete) {
+      onDelete(invoiceToDelete._id);
+      setDeleteModalOpen(false);
+      setInvoiceToDelete(null);
+    }
+  };
   const [payMethod, setPayMethod] = useState<any>('bank_transfer');
   const [payRef, setPayRef] = useState('');
   const [payNotes, setPayNotes] = useState('');
@@ -255,7 +272,7 @@ export const InvoiceManager: React.FC<InvoiceManagerProps> = ({
                           <Archive className="h-3.5 w-3.5" />
                         </button>
                         <button
-                          onClick={() => onDelete(inv._id)}
+                          onClick={() => handleDeleteClick(inv)}
                           title="Void / Delete invoice"
                           className="p-1.5 hover:bg-rose-500/20 rounded text-rose-400 cursor-pointer"
                         >
@@ -343,6 +360,42 @@ export const InvoiceManager: React.FC<InvoiceManagerProps> = ({
             </div>
           </form>
         )}
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={deleteModalOpen}
+        onClose={() => {
+          setDeleteModalOpen(false);
+          setInvoiceToDelete(null);
+        }}
+        title="Confirm Deletion"
+        description={
+          invoiceToDelete
+            ? `Are you sure you want to delete invoice ${invoiceToDelete.invoiceNumber}? This action cannot be undone.`
+            : ''
+        }
+        size="sm"
+      >
+        <div className="flex justify-end gap-2 pt-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              setDeleteModalOpen(false);
+              setInvoiceToDelete(null);
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            onClick={confirmDelete}
+          >
+            Delete Invoice
+          </Button>
+        </div>
       </Modal>
     </div>
   );

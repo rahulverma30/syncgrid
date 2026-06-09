@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useFinanceStore } from '@/store/financeStore';
-import { PageHeader, Button, Modal } from '@/components/ui';
+import { PageHeader, Button, Modal, SkeletonPage } from '@/components/ui';
 import {
   Sparkles,
   LayoutDashboard,
@@ -146,7 +146,14 @@ export default function FinancePage() {
 
       {/* Render active Tab panels */}
       <div className="relative z-0 min-h-[50vh]">
-        {activeTab === 'dashboard' && <FinanceDashboard data={dashboardData} role={role} />}
+        {activeTab === 'dashboard' &&
+          (loading.dashboard ? (
+            <div className="py-6">
+              <SkeletonPage cards={4} />
+            </div>
+          ) : (
+            <FinanceDashboard data={dashboardData} role={role} />
+          ))}
 
         {activeTab === 'invoices' && (
           <>
@@ -166,6 +173,7 @@ export default function FinancePage() {
               title="Dynamic Invoice Builder"
               description="Construct and calculate itemized invoice bills"
               size="xl"
+              className="w-full max-w-[calc(90vw-2rem)] h-auto overflow-y-auto"
             >
               <InvoiceBuilder
                 onClose={() => setBuilderOpen(false)}

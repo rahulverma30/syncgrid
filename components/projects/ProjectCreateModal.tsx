@@ -28,6 +28,8 @@ export const ProjectCreateModal: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTemplate, setActiveTemplate] = useState<string>('blank');
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
+  const [clients, setClients] = useState<any[]>([]);
+  const [formClient, setFormClient] = useState('');
 
   React.useEffect(() => {
     if (createModalOpen) {
@@ -36,6 +38,15 @@ export const ProjectCreateModal: React.FC = () => {
         .then((data) => {
           if (data.success) {
             setTeamMembers(data.data);
+          }
+        })
+        .catch(console.error);
+
+      fetch('/api/protected/clients')
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success) {
+            setClients(data.data);
           }
         })
         .catch(console.error);
@@ -114,6 +125,7 @@ export const ProjectCreateModal: React.FC = () => {
         body: JSON.stringify({
           name: formName,
           description: formDescription,
+          clientId: formClient || undefined,
           priority: formPriority,
           billingType: formBillingType,
           budget: formBudget,
@@ -133,6 +145,7 @@ export const ProjectCreateModal: React.FC = () => {
         setCreateModalOpen(false);
         setFormName('');
         setFormDescription('');
+        setFormClient('');
         setFormBudget(50000);
         setFormEstimatedHours(240);
         setFormTechnologies('');
@@ -186,18 +199,38 @@ export const ProjectCreateModal: React.FC = () => {
       </div>
 
       <form onSubmit={handleCreate} className="space-y-5 text-sm py-2">
-        <div className="space-y-1.5">
-          <label className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">
-            Project Name *
-          </label>
-          <div className="relative">
-            <Layers className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-            <Input
-              value={formName}
-              onChange={(e) => setFormName(e.target.value)}
-              placeholder="SyncGrid Enterprise Platform"
-              className="pl-10 h-10 bg-background/30 border border-border/60 hover:border-primary/30 transition-colors text-xs rounded-xl"
-              required
+        <div className="grid align-baseline grid-cols-1 md:grid-cols-2 gap-5 items-end">
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">
+              Project Name *
+            </label>
+            <div className="relative">
+              <Layers className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+              <Input
+                value={formName}
+                onChange={(e) => setFormName(e.target.value)}
+                placeholder="SyncGrid Enterprise Platform"
+                className="pl-10 h-10 bg-background/30 border border-border/60 hover:border-primary/30 transition-colors text-xs rounded-xl"
+                required
+              />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">
+              Customer Client (Optional)
+            </label>
+            <Select
+              value={formClient}
+              onChange={(val) => setFormClient(val)}
+              placeholder="Internal Project (No Client)"
+              options={[
+                { value: '', label: 'Internal Project (No Client)' },
+                ...clients.map((c) => ({
+                  value: c._id,
+                  label: `${c.name} (${c.company || 'Private'})`,
+                })),
+              ]}
+              className="h-10 text-xs rounded-xl bg-background/30 border border-border/60 px-3 hover:border-primary/30 transition-colors text-slate-300 outline-none w-full"
             />
           </div>
         </div>

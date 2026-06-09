@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { PageHeader, Button, Select } from '@/components/ui';
+import { PageHeader, Button, Select, SkeletonPage } from '@/components/ui';
 import { useCommandPaletteStore } from '@/store';
 import { Command, Shield, Sliders, RefreshCw } from 'lucide-react';
 import { getAnalyticsData } from '@/lib/services/analytics';
@@ -38,12 +38,8 @@ const WorkforceView = dynamic(
 
 function DashboardSkeleton() {
   return (
-    <div className="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-4 animate-pulse">
-      {[1, 2, 3, 4].map((i) => (
-        <div key={i} className="h-28 rounded-xl border border-border/80 bg-muted/10" />
-      ))}
-      <div className="col-span-1 md:col-span-2 xl:col-span-3 h-80 rounded-xl border border-border/80 bg-muted/10" />
-      <div className="col-span-1 h-80 rounded-xl border border-border/80 bg-muted/10" />
+    <div className="py-6">
+      <SkeletonPage cards={4} />
     </div>
   );
 }
@@ -203,19 +199,9 @@ export default function DashboardPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-4"
+              className="py-6"
             >
-              {/* Dynamic KPI Skeletal grid */}
-              {[1, 2, 3, 4].map((i) => (
-                <div
-                  key={i}
-                  className="h-28 rounded-xl border border-border/80 bg-muted/10 animate-pulse"
-                />
-              ))}
-              {/* Large Chart Skeleton */}
-              <div className="col-span-1 md:col-span-2 xl:col-span-3 h-80 rounded-xl border border-border/80 bg-muted/10 animate-pulse" />
-              {/* Pie/Radial Skeleton */}
-              <div className="col-span-1 h-80 rounded-xl border border-border/80 bg-muted/10 animate-pulse" />
+              <SkeletonPage cards={4} />
             </motion.div>
           ) : (
             <motion.div

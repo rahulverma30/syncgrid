@@ -4,12 +4,13 @@ import { withApiAuth } from '@/lib/auth/api';
 import { connectToDatabase } from '@/lib/db/mongodb';
 import { Invoice, Transaction, Client, Project, FinancialActivity, Budget } from '@/models';
 import { hasRole } from '@/lib/auth/permission-checks';
+import { sendInvoiceEmail } from '@/lib/email';
 
 export const GET = withApiAuth(async (request: Request, context: any, session: any) => {
   try {
     await connectToDatabase();
     const companyId = session.user.companyId;
-    const { id } = context.params;
+    const { id } = await context.params;
 
     const invoice = await Invoice.findOne({ _id: id, companyId, isSoftDeleted: false })
       .populate({ path: 'clientId', select: 'name email phone company billingAddress' })
@@ -35,7 +36,7 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
     const userId = session.user.id;
     const userName = session.user.name || 'System User';
     const roles = session.user.roles || [];
-    const { id } = context.params;
+    const { id } = await context.params;
 
     // RBAC check: admin/finance can update or process invoices
     const isAuthorized = hasRole(roles, ['super-admin', 'admin', 'finance']);
@@ -46,7 +47,9 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
       );
     }
 
-    const invoice = await Invoice.findOne({ _id: id, companyId, isSoftDeleted: false });
+    const invoice = await Invoice.findOne({ _id: id, companyId, isSoftDeleted: false }).populate(
+      'clientId'
+    );
     if (!invoice) {
       return NextResponse.json(
         { success: false, error: 'NOT_FOUND', message: 'Invoice not found' },
@@ -60,6 +63,36 @@ export const PUT = withApiAuth(async (request: Request, context: any, session: a
     if (action === 'send') {
       invoice.status = 'sent';
       await invoice.save();
+
+      // Send Email
+      let targetEmail = '';
+      if (invoice.clientId) {
+        const primaryContact = invoice.clientId.contacts?.find((c: any) => c.isPrimary);
+        if (primaryContact && primaryContact.email) {
+          targetEmail = primaryContact.email;
+        } else if (invoice.clientId.emails && invoice.clientId.emails.length > 0) {
+          targetEmail = invoice.clientId.emails[0];
+        } else if (invoice.clientId.email) {
+          targetEmail = invoice.clientId.email;
+        }
+      }
+
+      if (targetEmail) {
+        const invoiceLink = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/portal`;
+        try {
+          await sendInvoiceEmail({
+            to: targetEmail,
+            invoiceNumber: invoice.invoiceNumber,
+            companyName: session.user.companyName || 'Our Company',
+            totalAmount: invoice.totalAmount,
+            currency: invoice.currency,
+            dueDate: invoice.dueDate,
+            invoiceLink,
+          });
+        } catch (error) {
+          console.error('Failed to send invoice email:', error);
+        }
+      }
 
       // Log Financial Activity
       const audit = new FinancialActivity({
@@ -238,7 +271,7 @@ export const DELETE = withApiAuth(async (request: Request, context: any, session
     const userId = session.user.id;
     const userName = session.user.name || 'System User';
     const roles = session.user.roles || [];
-    const { id } = context.params;
+    const { id } = await context.params;
 
     const isAuthorized = hasRole(roles, ['super-admin', 'admin', 'finance']);
     if (!isAuthorized) {
@@ -286,7 +319,7 @@ export const POST = withApiAuth(async (request: Request, context: any, session: 
     const userId = session.user.id;
     const userName = session.user.name || 'System User';
     const roles = session.user.roles || [];
-    const { id } = context.params;
+    const { id } = await context.params;
 
     const url = new URL(request.url);
     const action = url.searchParams.get('action');

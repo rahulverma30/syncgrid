@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useHRStore } from '@/store/hrStore';
-import { PageHeader, Button } from '@/components/ui';
+import { PageHeader, Button, SkeletonPage } from '@/components/ui';
 import {
   Sparkles,
   Users,
@@ -24,8 +24,14 @@ import { HrPerformance } from '@/components/hr/HrPerformance';
 import { HrSettings } from '@/components/hr/HrSettings';
 
 export default function HRPage() {
-  const { fetchEmployees, fetchDepartments, fetchAttendance, fetchLeaves, fetchAnnouncements } =
-    useHRStore();
+  const {
+    fetchEmployees,
+    fetchDepartments,
+    fetchAttendance,
+    fetchLeaves,
+    fetchAnnouncements,
+    loading,
+  } = useHRStore();
 
   const [activeTab, setActiveTab] = useState('dashboard');
 
@@ -91,7 +97,14 @@ export default function HRPage() {
             exit={{ opacity: 0, y: -15 }}
             transition={{ duration: 0.25 }}
           >
-            {activeTab === 'dashboard' && <HrDashboard />}
+            {activeTab === 'dashboard' &&
+              (loading.employees || loading.attendance ? (
+                <div className="py-6">
+                  <SkeletonPage cards={4} />
+                </div>
+              ) : (
+                <HrDashboard />
+              ))}
             {activeTab === 'directory' && <HrDirectory />}
             {activeTab === 'orgchart' && <HrOrgChart />}
             {activeTab === 'leaves' && <HrLeaves />}

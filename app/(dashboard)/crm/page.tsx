@@ -15,6 +15,7 @@ import {
   ConfirmationModal,
   Select,
   Modal,
+  SkeletonPage,
 } from '@/components/ui';
 import {
   Users,
@@ -702,11 +703,8 @@ export default function CRMPage() {
       </div>
 
       {isLoading ? (
-        <div className="h-96 flex flex-col items-center justify-center space-y-4">
-          <LoadingSpinner className="h-10 w-10 text-primary" />
-          <p className="text-xs text-muted-foreground animate-pulse uppercase font-bold tracking-wider">
-            Loading active corporate leads database...
-          </p>
+        <div className="py-6">
+          <SkeletonPage cards={4} />
         </div>
       ) : leads.length === 0 ? (
         <div className="h-96 flex flex-col items-center justify-center border border-dashed border-border/80 rounded-2xl p-8 text-center max-w-md mx-auto bg-card/10 backdrop-blur-md space-y-5">

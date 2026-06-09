@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { PageHeader, Button, Input, LoadingSpinner } from '@/components/ui';
+import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+import { PageHeader, Button, Input, SkeletonPage } from '@/components/ui';
 import { Plus, Search, RefreshCw } from 'lucide-react';
 import { AnimatePresence } from 'framer-motion';
 import { useProjectsStore } from '@/store/projectsStore';
@@ -121,10 +123,7 @@ export default function ProjectsPage() {
       </div>
 
       {isLoading ? (
-        <div className="h-96 flex flex-col items-center justify-center space-y-3">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-primary" />
-          <p className="text-sm text-muted-foreground">Loading projects...</p>
-        </div>
+        <SkeletonPage cards={4} />
       ) : (
         <AnimatePresence mode="wait">
           {activeSection === 'analytics' ? (

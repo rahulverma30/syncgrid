@@ -190,7 +190,7 @@ const ProjectSchema = new Schema(
 
     // Dates
     startDate: { type: Date },
-    dueDate: { type: Date },
+    deadline: { type: Date },
     deliveryDate: { type: Date },
 
     // Technical

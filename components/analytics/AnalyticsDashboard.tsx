@@ -6,6 +6,7 @@ import { useAnalyticsStore } from '@/store/analyticsStore';
 import { ChartWrapper } from './ChartWrapper';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { SkeletonPage } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { cn } from '@/lib/cn';
 import {
@@ -215,11 +216,8 @@ export function AnalyticsDashboard() {
 
   if (!dashboardData) {
     return (
-      <div className="flex flex-col items-center justify-center py-32 space-y-4">
-        <RefreshCw className="h-10 w-10 text-primary animate-spin" />
-        <p className="text-sm text-muted-foreground font-semibold">
-          Executing corporate MongoDB aggregation pipelines...
-        </p>
+      <div className="py-6">
+        <SkeletonPage cards={4} />
       </div>
     );
   }
