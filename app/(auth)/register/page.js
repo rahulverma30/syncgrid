@@ -53,8 +53,8 @@ export default function RegisterPage() {
       return;
     }
 
-    toast.success(SUCCESS_MESSAGES.accountCreated.title, {
-      description: SUCCESS_MESSAGES.accountCreated.description,
+    toast.success(SUCCESS_MESSAGES.workspaceCreated.title, {
+      description: SUCCESS_MESSAGES.workspaceCreated.description,
     });
 
     await signIn('credentials', {

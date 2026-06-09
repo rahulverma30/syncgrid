@@ -463,7 +463,7 @@ export const SUCCESS_MESSAGES = {
   // Auth
   signedIn: { title: 'Welcome back!', description: "You've signed in successfully." },
   signedOut: { title: 'Signed Out', description: 'You have been signed out securely.' },
-  accountCreated: {
+  workspaceCreated: {
     title: 'Account Created!',
     description: 'Your workspace has been set up. Welcome to SyncGrid.',
   },
