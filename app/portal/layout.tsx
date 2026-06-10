@@ -23,6 +23,7 @@ import {
   Search,
   Loader2,
   Lock,
+  DollarSign,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -208,6 +209,7 @@ function PortalLayoutContent({ children }: { children: React.ReactNode }) {
     { label: 'Activity Feed', href: '/portal/activity', icon: Clock },
     { label: 'Branding & Theme', href: '/portal/settings', icon: Sliders },
     { label: 'Analytics Insights', href: '/portal/analytics', icon: BarChart2 },
+    { label: 'Billing & Invoices', href: '/portal/invoices', icon: DollarSign },
   ];
 
   return (

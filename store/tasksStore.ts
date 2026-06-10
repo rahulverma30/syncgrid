@@ -23,6 +23,8 @@ export interface TaskType {
   completedDate?: string;
   isArchived: boolean;
   healthScore: number;
+  requiresClientApproval?: boolean;
+  clientApprovalStatus?: 'pending' | 'approved' | 'rejected';
   checklistItems: any[];
   attachments: any[];
   dependencies: any[];
@@ -510,7 +512,9 @@ export const useTasksStore = create<TasksState>()(
       eventSource.addEventListener('task_updated', (event: any) => {
         try {
           const sseEvent = JSON.parse(event.data);
-          const updatedTask = sseEvent.payload;
+          const updatedTask = sseEvent.payload || sseEvent;
+
+          if (!updatedTask || !updatedTask._id) return;
 
           set((state) => {
             const index = state.tasks.findIndex((t) => t._id === updatedTask._id);

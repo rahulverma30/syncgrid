@@ -756,6 +756,52 @@ export function TaskDetailModal({ isOpen, onClose, taskCode }: TaskDetailModalPr
               />
             </div>
 
+            {/* Client Approval Flag */}
+            <div className="space-y-1 pt-2 border-t border-border/20">
+              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
+                Client Visibility
+              </label>
+              <div className="flex items-center gap-2 mt-1">
+                <input
+                  type="checkbox"
+                  id="clientApproval"
+                  checked={activeTask.requiresClientApproval || false}
+                  onChange={async (e) => {
+                    const success = await updateTask(activeTask._id, {
+                      requiresClientApproval: e.target.checked,
+                    });
+                    if (success) {
+                      toast.success('Client approval requirement updated!');
+                      fetchTasks();
+                    }
+                  }}
+                  className="rounded border-border text-primary focus:ring-primary h-4 w-4 cursor-pointer"
+                />
+                <label
+                  htmlFor="clientApproval"
+                  className="text-xs font-semibold text-foreground cursor-pointer"
+                >
+                  Requires Client Approval
+                </label>
+              </div>
+              {activeTask.requiresClientApproval && (
+                <div className="mt-2 text-[10px] font-bold flex items-center gap-1.5">
+                  <span className="text-muted-foreground">Status:</span>
+                  <span
+                    className={`uppercase px-1.5 py-0.5 rounded border ${
+                      activeTask.clientApprovalStatus === 'approved'
+                        ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+                        : activeTask.clientApprovalStatus === 'rejected'
+                          ? 'bg-rose-500/10 text-rose-500 border-rose-500/20'
+                          : 'bg-amber-500/10 text-amber-500 border-amber-500/20'
+                    }`}
+                  >
+                    {activeTask.clientApprovalStatus || 'pending'}
+                  </span>
+                </div>
+              )}
+            </div>
+
             {/* Story Points */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">

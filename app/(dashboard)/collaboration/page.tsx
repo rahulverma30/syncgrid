@@ -281,6 +281,29 @@ export default function CollaborationDashboard() {
               registered and active in the system dashboard. Workspaces and collaboration channels
               will synchronize automatically.
             </p>
+            <div className="pt-4">
+              <Button
+                onClick={async () => {
+                  try {
+                    const res = await fetch('/api/protected/collaboration/seed', {
+                      method: 'POST',
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                      toast.success('Workspace initialized! Reloading...');
+                      window.location.reload();
+                    } else {
+                      toast.error('Failed to initialize workspace');
+                    }
+                  } catch (e) {
+                    toast.error('Network error');
+                  }
+                }}
+                className="w-full bg-primary text-primary-foreground font-bold hover:scale-105 transition-transform"
+              >
+                Initialize Collaboration Workspace
+              </Button>
+            </div>
           </div>
         </div>
       </div>

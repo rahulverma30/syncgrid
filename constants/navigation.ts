@@ -78,6 +78,7 @@ export const SIDEBAR_GROUPS = [
           { label: 'Contacts', href: '/crm/contacts' },
           { label: 'Accounts', href: '/crm/accounts' },
           { label: 'Deals', href: '/crm/deals' },
+          { label: 'Tickets', href: '/crm/tickets' },
         ],
       },
       {

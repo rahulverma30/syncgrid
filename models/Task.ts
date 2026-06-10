@@ -163,6 +163,15 @@ const TaskSchema = new Schema(
       nextRunDate: { type: Date },
       active: { type: Boolean, default: false },
     },
+    requiresClientApproval: {
+      type: Boolean,
+      default: false,
+    },
+    clientApprovalStatus: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'pending',
+    },
     automationMetadata: {
       type: Map,
       of: Schema.Types.Mixed,
